@@ -1,0 +1,2687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DECKFIELD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --turf-dark:#0E2018;
+    --turf:#163A2A;
+    --turf-light:#1E4B36;
+    --turf-lighter:#275C41;
+    --chalk:#EDEDE2;
+    --chalk-dim:#9FB0A5;
+    --home:#22456F;
+    --home-bright:#7FA8D9;
+    --home-tint:rgba(34,69,111,0.55);
+    --away:#9C2740;
+    --away-bright:#EE9074;
+    --away-tint:rgba(156,39,64,0.55);
+    --gold:#E9C46A;
+    --ink:#081911;
+    --panel:#0B2118;
+    --panel-line:#1D4230;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at top, #133226 0%, var(--turf-dark) 55%, #060F0B 100%);
+    color:var(--chalk);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:20px 14px 60px;
+  }
+  .wrap{max-width:1040px;margin:0 auto;}
+
+  /* ---- Header / Scoreboard ---- */
+  header{
+    display:flex;flex-direction:column;
+    gap:10px;margin-bottom:18px;border-bottom:2px solid var(--panel-line);padding-bottom:12px;
+  }
+  .brand{
+    font-family:'Anton',sans-serif;
+    font-size:clamp(26px,4.5vw,40px);
+    letter-spacing:1px;
+    color:var(--chalk);
+    text-transform:uppercase;
+    line-height:1;
+  }
+  .brand span{color:var(--gold);}
+
+  .scoreboard-row{display:flex;justify-content:center;flex-wrap:wrap;}
+  .scoreboard{
+    display:flex;align-items:stretch;gap:14px;
+    font-family:'JetBrains Mono',monospace;font-weight:700;
+  }
+  .team-score{
+    display:flex;align-items:center;gap:8px;
+    min-width:340px;padding:8px 12px;border-radius:6px;flex:0 0 auto;
+  }
+  .team-score.home{background:var(--home-tint);border:1px solid var(--home-bright);}
+  .team-score.away{background:var(--away-tint);border:1px solid var(--away-bright);}
+  .team-score-col{text-align:center;flex:0 0 auto;}
+  .team-score-col .label{
+    font-size:12px;letter-spacing:2px;color:var(--chalk);text-transform:uppercase;
+    max-width:126px;margin:0 auto;line-height:1.3;overflow-wrap:break-word;
+  }
+  .team-score-col .num{font-family:'Anton',sans-serif;font-size:34px;line-height:1.1;color:var(--chalk);}
+  .team-score-col .team-rank{font-size:12px;color:var(--chalk);letter-spacing:0.5px;margin-top:1px;font-family:'JetBrains Mono',monospace;}
+  .team-score-col .team-atk{font-size:12px;color:var(--chalk);letter-spacing:1px;margin-top:3px;font-family:'JetBrains Mono',monospace;font-weight:700;}
+  .team-score-col .every-x{font-size:9px;color:var(--chalk);letter-spacing:0.4px;margin-top:0px;font-family:'JetBrains Mono',monospace;}
+  .mini-stats{
+    flex:0 0 108px;
+    display:flex;flex-direction:column;gap:1px;
+    font-family:'JetBrains Mono',monospace;font-size:9.5px;text-align:left;
+  }
+  .team-score.away .mini-stats{border-right:1px solid rgba(255,255,255,0.14);padding-right:8px;}
+  .team-score.home .mini-stats{border-left:1px solid rgba(255,255,255,0.14);padding-left:8px;}
+  .mini-stats .mrow{display:flex;justify-content:space-between;gap:8px;}
+  .mini-stats .mrow span:first-child{color:var(--chalk);letter-spacing:0.5px;}
+  .mini-stats .mrow span:last-child{color:var(--chalk);font-weight:700;white-space:nowrap;}
+  .team-records{
+    flex:1 1 36px;
+    display:flex;flex-direction:column;gap:0px;
+    font-family:'JetBrains Mono',monospace;font-size:9.5px;text-align:left;
+  }
+  .team-score.away .team-records{border-right:1px solid rgba(255,255,255,0.14);padding-right:8px;}
+  .team-score.home .team-records{border-left:1px solid rgba(255,255,255,0.14);padding-left:8px;}
+  .team-records .mrow{display:flex;justify-content:space-between;gap:8px;}
+  .team-records .mrow span:first-child{color:var(--chalk);letter-spacing:0.3px;white-space:nowrap;}
+  .team-records .mrow span:last-child{color:var(--chalk);font-weight:700;white-space:nowrap;}
+  .team-records .overall-row{font-size:12px;margin-top:1px;}
+  .team-records .type-row-gap{margin-top:5px;}
+  .clock-box{
+    display:flex;flex-direction:column;justify-content:center;
+    text-align:center;font-size:13px;color:var(--chalk);width:200px;flex:0 0 200px;
+  }
+  .clock-box .round-label{font-size:11px;color:var(--chalk);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;font-family:'JetBrains Mono',monospace;}
+  .clock-box .time{font-size:18px;color:var(--gold);font-weight:700;font-variant-numeric:tabular-nums;}
+  .clock-box .period{font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+  .clock-box .goals-count{font-size:11px;color:var(--chalk-dim);margin-top:2px;font-family:'JetBrains Mono',monospace;}
+  .clock-box .weather-spread-note{font-size:10px;color:var(--chalk);margin-top:2px;font-family:'JetBrains Mono',monospace;letter-spacing:0.3px;}
+  .clock-box .spread-note{font-size:14px;color:var(--gold);font-weight:700;margin-top:4px;font-family:'JetBrains Mono',monospace;letter-spacing:0.3px;}
+
+  .goal-banner{
+    text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:2px;
+    text-transform:uppercase;padding:6px;margin-top:10px;border-radius:5px;
+    background:var(--panel);border:1px dashed var(--panel-line);color:var(--gold);
+    height:30px;line-height:18px;box-sizing:border-box;
+    opacity:0;visibility:hidden;transition:opacity .2s ease;
+  }
+  .goal-banner.show{opacity:1;visibility:visible;}
+
+  /* ---- Layout ---- */
+  .layout{
+    display:grid;
+    grid-template-columns: 1.5fr 1fr;
+    grid-template-areas:
+      "pitch cards"
+      "pitch log";
+    gap:16px;
+  }
+  @media(max-width:800px){
+    .layout{grid-template-columns:1fr;grid-template-areas:"pitch" "cards" "log";}
+  }
+
+  /* ---- Pitch ---- */
+  .pitch-panel{grid-area:pitch;}
+  .legend{
+    display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--chalk-dim);
+    margin-bottom:8px;font-family:'JetBrains Mono',monospace;letter-spacing:0.5px;
+  }
+  .legend .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+  .dot.home{background:var(--home-bright);}
+  .dot.away{background:var(--away-bright);}
+
+  .pitch{
+    position:relative;
+    display:grid;
+    grid-template-columns:repeat(17,1fr);
+    grid-template-rows:repeat(7,1fr);
+    aspect-ratio:17/7;
+    width:100%;
+    border-radius:8px;
+    overflow:hidden;
+    border:2px solid var(--panel-line);
+    box-shadow:inset 0 0 40px rgba(0,0,0,0.45);
+  }
+  .cell{
+    position:relative;
+    background:var(--turf);
+    border-right:1px solid rgba(255,255,255,0.04);
+  }
+  .cell.alt{background:var(--turf-light);}
+  .cell.center-col{border-left:2px dashed rgba(237,237,226,0.35);border-right:2px dashed rgba(237,237,226,0.35);}
+  .cell.home-end{background:var(--home-tint) !important;}
+  .cell.away-end{background:var(--away-tint) !important;}
+
+  .zone-vals{
+    position:absolute;inset:0;z-index:1;pointer-events:none;
+    display:flex;flex-direction:row;align-items:center;justify-content:center;gap:1px;
+    font-family:'JetBrains Mono',monospace;line-height:1;
+  }
+  .zone-vals .zv-home{font-size:10px;color:var(--home-bright);opacity:0.6;}
+  .zone-vals .zv-away{font-size:10px;color:var(--away-bright);opacity:0.6;}
+  .zone-vals .zv-slash{font-size:10px;color:var(--chalk-dim);opacity:0.55;}
+  .zone-vals .zv-same{font-size:10px;color:var(--chalk-dim);opacity:0.55;}
+
+  .marker{
+    position:relative;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    pointer-events:none;
+  }
+  .ball{
+    width:62%;height:62%;margin:auto;
+    background:radial-gradient(circle at 35% 30%, #fff6da, var(--gold) 55%, #b98c33 100%);
+    box-shadow:0 0 10px rgba(233,196,106,0.85), 0 2px 4px rgba(0,0,0,0.5);
+    transition:all .35s ease;
+    z-index:5;
+  }
+  .trail{
+    width:34%;height:34%;margin:auto;
+    border-radius:50%;
+    background:var(--gold);
+    transition:all .35s ease;
+  }
+
+  /* ---- Cards / Controls ---- */
+  .cards-panel{grid-area:cards;background:var(--panel);border:1px solid var(--panel-line);border-radius:8px;padding:14px;}
+  .cards-row{display:flex;gap:12px;justify-content:center;margin-bottom:12px;}
+  .card{
+    width:84px;height:112px;border-radius:8px;background:var(--chalk);color:var(--ink);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    box-shadow:0 3px 8px rgba(0,0,0,0.5);
+    font-family:'JetBrains Mono',monospace;
+    position:relative;
+  }
+  .card .tag{position:absolute;top:6px;left:0;right:0;text-align:center;font-size:9px;letter-spacing:1.5px;color:#6b6b60;text-transform:uppercase;}
+  .card .rank{font-size:30px;font-weight:700;line-height:1;margin-top:6px;}
+  .card .suit{font-size:22px;line-height:1;}
+  .card .val{font-size:10px;color:#6b6b60;margin-top:4px;}
+  .card.red .rank,.card.red .suit{color:#A4243B;}
+  .card.black .rank,.card.black .suit{color:#111;}
+  .card.empty{opacity:0.35;}
+  .card.empty .rank{font-size:14px;color:#8a8a80;}
+
+  .controls{display:flex;flex-direction:column;gap:8px;}
+  .button-row{display:flex;gap:8px;}
+  .button-row button{flex:1;min-width:0;}
+  button{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:14px;
+    padding:10px 12px;border-radius:6px;border:none;cursor:pointer;
+    transition:transform .1s ease, filter .15s ease;
+  }
+  button:active{transform:scale(0.97);}
+  button:disabled{opacity:0.4;cursor:not-allowed;}
+  #dealBtn{background:var(--gold);color:var(--ink);}
+  #simGameBtn{background:var(--turf-lighter);color:var(--chalk);border:1px solid var(--panel-line);}
+  #simGameBtn:hover:not(:disabled){filter:brightness(1.15);}
+  #dealBtn:hover:not(:disabled){filter:brightness(1.08);}
+  .load-match-row-btn{
+    font-size:11px;padding:4px 8px;background:var(--turf-lighter);color:var(--chalk);
+    border:1px solid var(--panel-line);white-space:nowrap;
+  }
+  .load-match-row-btn:hover{filter:brightness(1.2);border-color:var(--gold);}
+  #autoBtn{background:var(--turf-lighter);color:var(--chalk);border:1px solid var(--panel-line);}
+  #autoBtn:hover:not(:disabled){filter:brightness(1.15);}
+  #resetBtn{background:transparent;color:var(--chalk-dim);border:1px solid var(--panel-line);}
+  #resetBtn:hover{color:var(--chalk);border-color:var(--chalk-dim);}
+  #nextMatchBtn{background:transparent;color:var(--gold);border:1px solid var(--gold);}
+  #nextMatchBtn:hover:not(:disabled){background:rgba(233,196,106,0.1);}
+
+  .result-banner{
+    display:none;text-align:center;font-family:'Anton',sans-serif;letter-spacing:1px;
+    font-size:18px;color:var(--gold);margin-top:10px;padding:10px;border-radius:6px;
+    background:rgba(233,196,106,0.08);border:1px solid var(--gold);
+  }
+  .result-banner.show{display:block;}
+
+  /* ---- Log ---- */
+  .log-panel{grid-area:log;background:var(--panel);border:1px solid var(--panel-line);border-radius:8px;padding:12px;
+    display:flex;flex-direction:column;min-height:220px;max-height:420px;}
+  .log-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--chalk-dim);margin-bottom:8px;font-family:'JetBrains Mono',monospace;}
+  .log-body{overflow-y:auto;flex:1;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.55;}
+  .log-body::-webkit-scrollbar{width:6px;}
+  .log-body::-webkit-scrollbar-thumb{background:var(--panel-line);border-radius:3px;}
+  .log-line{padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .log-line.home{color:var(--home-bright);}
+  .log-line.away{color:var(--away-bright);}
+  .log-line.system{color:var(--chalk-dim);text-align:center;letter-spacing:1px;font-size:11px;text-transform:uppercase;}
+  .log-line.goal{color:var(--gold);font-weight:700;}
+  .log-line.final{color:var(--gold);font-weight:700;text-align:center;}
+
+  footer{text-align:center;color:var(--chalk-dim);font-size:11px;margin-top:22px;font-family:'JetBrains Mono',monospace;}
+
+  /* ---- Stats ---- */
+  .stats-panel{
+    background:var(--panel);border:1px solid var(--panel-line);border-radius:8px;
+    padding:14px 16px;margin-top:12px;
+  }
+  .stats-row{margin-bottom:14px;}
+  .stats-row:last-child{margin-bottom:0;}
+  .stats-label{
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.5px;
+    text-transform:uppercase;color:var(--chalk-dim);margin-bottom:6px;
+  }
+  .bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--turf-dark);}
+  .bar .seg{height:100%;width:0%;transition:width .4s ease;}
+  .bar .seg.home{background:var(--home-bright);}
+  .bar .seg.away{background:var(--away-bright);}
+  .bar .seg.tied{background:var(--chalk-dim);}
+  .stats-nums{
+    display:flex;justify-content:space-between;
+    font-family:'JetBrains Mono',monospace;font-size:11px;margin-top:5px;
+  }
+  .stats-nums .n-home{color:var(--home-bright);}
+  .stats-nums .n-away{color:var(--away-bright);}
+  .stats-nums .n-tied{color:var(--chalk-dim);}
+  .crit-row{display:flex;align-items:center;justify-content:space-between;}
+  .crit-row .stats-label{margin-bottom:0;}
+  .crit-values{display:flex;gap:8px;}
+  .crit-value{
+    font-family:'Anton',sans-serif;font-size:18px;
+    border-radius:5px;padding:2px 10px;line-height:1.3;
+  }
+  .crit-value.crit-home{color:var(--home-bright);background:rgba(127,168,217,0.1);border:1px solid var(--home-bright);}
+  .crit-value.crit-away{color:var(--away-bright);background:rgba(238,144,116,0.1);border:1px solid var(--away-bright);}
+  .crit-value.crit-neutral{color:var(--gold);background:rgba(233,196,106,0.1);border:1px solid var(--gold);}
+
+  /* ---- DMAX ---- */
+  .dmax-panel{
+    display:none;background:var(--panel);border:1px solid var(--gold);border-radius:8px;
+    padding:14px 16px;margin-top:12px;
+  }
+  .dmax-panel.show{display:block;}
+  .dmax-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;}
+  .dmax-team-label{
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.5px;
+    text-transform:uppercase;margin-bottom:2px;
+  }
+  .dmax-big{font-family:'Anton',sans-serif;font-size:32px;color:var(--gold);line-height:1.1;margin-bottom:6px;}
+  .dmax-rows{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--chalk-dim);line-height:1.7;}
+  .dmax-rows .drow{display:flex;justify-content:space-between;gap:8px;}
+  .dmax-rows .drow span:last-child{color:var(--chalk);}
+  .dmax-rows .dtotal{margin-top:4px;padding-top:4px;border-top:1px solid var(--panel-line);color:var(--chalk);}
+
+  /* ---- Collapsible panels (DMAX / Game Interest / Elo Update) ---- */
+  .panel-header{
+    display:flex;align-items:center;justify-content:space-between;
+    cursor:pointer;user-select:none;margin-bottom:8px;
+  }
+  .panel-header .log-title{margin-bottom:0;}
+  .toggle-icon{font-size:10px;color:var(--chalk-dim);transition:transform .15s ease;}
+  .panel-header:hover .toggle-icon{color:var(--chalk);}
+  .collapsible.collapsed .dmax-rows{display:none;}
+  .collapsible:not(.collapsed) .toggle-icon{transform:rotate(90deg);}
+
+  /* ---- Game Interest ---- */
+  .gi-panel{
+    display:none;background:var(--panel);border:1px solid var(--home-bright);border-radius:8px;
+    padding:14px 16px;margin-top:12px;
+  }
+  .gi-panel.show{display:block;}
+  .gi-big{font-family:'Anton',sans-serif;font-size:36px;color:var(--home-bright);line-height:1.1;margin:6px 0;}
+  .elo-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:8px 0;}
+  .elo-change{font-family:'Anton',sans-serif;font-size:20px;color:var(--gold);line-height:1.2;}
+
+  /* ---- Tabs ---- */
+  .tab-bar{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--panel-line);}
+  .tab-btn{
+    background:none;border:none;color:var(--chalk-dim);
+    font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;
+    padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;transition:color .15s ease;
+  }
+  .tab-btn:hover{color:var(--chalk);}
+  .tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+  .tab-content{display:none;}
+  .tab-content.active{display:block;}
+
+  /* ---- Roster importer ---- */
+  .roster-panel{
+    background:var(--panel);border:1px solid var(--panel-line);border-radius:8px;
+    padding:18px 20px;max-width:100%;
+  }
+  .sched-import-row{
+    display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;
+  }
+  @media(max-width:800px){
+    .sched-import-row{grid-template-columns:1fr;}
+  }
+  .roster-help{
+    font-family:'Inter',sans-serif;font-size:13px;color:var(--chalk-dim);line-height:1.6;
+    margin:6px 0 14px;
+  }
+  .roster-help code{
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold);
+    background:rgba(233,196,106,0.08);padding:1px 4px;border-radius:3px;
+  }
+  .roster-checkbox{
+    display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;
+    font-size:12px;color:var(--chalk-dim);margin-bottom:10px;cursor:pointer;
+  }
+  .paste-box{
+    width:100%;box-sizing:border-box;resize:vertical;min-height:140px;
+    background:var(--turf-dark);border:1px solid var(--panel-line);border-radius:6px;
+    color:var(--chalk);font-family:'JetBrains Mono',monospace;font-size:12px;
+    padding:10px;line-height:1.5;
+  }
+  .paste-box:focus{outline:none;border-color:var(--gold);}
+  .roster-controls{display:flex;gap:10px;margin-top:12px;}
+  .roster-controls button{flex:0 0 auto;}
+  #rosterClearBtn{background:transparent;color:var(--chalk-dim);border:1px solid var(--panel-line);}
+  #rosterClearBtn:hover{color:var(--chalk);border-color:var(--chalk-dim);}
+  .roster-status{
+    margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:12px;min-height:16px;
+  }
+  .roster-status.ok{color:var(--home-bright);}
+  .roster-status.warn{color:var(--gold);}
+  .roster-table-wrap{margin-top:16px;overflow-x:auto;border:1px solid var(--panel-line);border-radius:6px;}
+  .roster-table{
+    border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:11px;
+    white-space:nowrap;min-width:100%;
+  }
+  .roster-table th, .roster-table td{
+    padding:6px 10px;border-bottom:1px solid var(--panel-line);text-align:left;
+  }
+  .roster-table th{
+    background:var(--turf-dark);color:var(--chalk-dim);text-transform:uppercase;
+    letter-spacing:0.5px;font-size:10px;position:sticky;top:0;
+  }
+  .roster-table tbody tr:nth-child(even){background:rgba(255,255,255,0.03);}
+  .roster-table td{color:var(--chalk);}
+
+  .sched-settings-grid{
+    display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:14px;
+  }
+  .sched-settings-grid label{
+    display:flex;flex-direction:column;gap:5px;
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.8px;
+    text-transform:uppercase;color:var(--chalk-dim);
+  }
+  .sched-settings-grid select, .sched-settings-grid input{
+    background:var(--turf-dark);border:1px solid var(--panel-line);border-radius:5px;
+    color:var(--chalk);font-family:'JetBrains Mono',monospace;font-size:13px;
+    padding:7px 8px;
+  }
+  .sched-settings-grid select:focus, .sched-settings-grid input:focus{outline:none;border-color:var(--gold);}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">DECK<span>FIELD</span></div>
+    <div class="scoreboard-row">
+    <div class="scoreboard">
+      <div class="team-score away">
+        <div class="mini-stats" id="awayMiniStats"></div>
+        <div class="team-records" id="awayRecords"></div>
+        <div class="team-score-col">
+          <div class="label" id="scoreboardAwayLabel">Away</div>
+          <div class="team-rank" id="awayRankDisplay">#0</div>
+          <div class="num" id="awayScore">0</div>
+          <div class="team-atk" id="awayAtk">ATK +0</div>
+          <div class="every-x" id="awayEveryX">Every 0</div>
+        </div>
+      </div>
+      <div class="clock-box">
+        <div class="round-label" id="roundLabelDisplay"></div>
+        <div class="time" id="clockTime">0 / 250</div>
+        <div class="period" id="periodLabel">1st Half</div>
+        <div class="weather-spread-note" id="weatherNote">Weather: Fair (ATK +0)</div>
+        <div class="spread-note" id="spreadNoteTeam">—</div>
+        <div class="spread-note" id="spreadNoteValue"></div>
+      </div>
+      <div class="team-score home">
+        <div class="team-score-col">
+          <div class="label" id="scoreboardHomeLabel">Home</div>
+          <div class="team-rank" id="homeRankDisplay">#0</div>
+          <div class="num" id="homeScore">0</div>
+          <div class="team-atk" id="homeAtk">ATK +0</div>
+          <div class="every-x" id="homeEveryX">Every 0</div>
+        </div>
+        <div class="team-records" id="homeRecords"></div>
+        <div class="mini-stats" id="homeMiniStats"></div>
+      </div>
+    </div>
+    </div>
+  </header>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="fieldTab">Field</button>
+    <button class="tab-btn" data-tab="teamsTab">Teams</button>
+    <button class="tab-btn" data-tab="scheduleTab">Schedule</button>
+    <button class="tab-btn" data-tab="resultsTab">Results</button>
+  </div>
+
+  <div class="tab-content active" id="fieldTab">
+  <div class="layout">
+    <div class="pitch-panel">
+      <div class="legend">
+        <span><span class="dot home"></span><span id="legendHomeText">Home attacks ← (left end)</span></span>
+        <span><span class="dot away"></span><span id="legendAwayText">Away attacks → (right end)</span></span>
+      </div>
+      <div class="pitch" id="pitch"></div>
+      <div class="goal-banner" id="goalBanner"></div>
+
+      <div class="stats-panel" id="statsPanel">
+        <div class="stats-row crit-row">
+          <div class="stats-label">Goals Scored</div>
+          <div class="crit-values">
+            <span class="crit-value crit-away" id="goalsAwayValue">Away 0</span>
+            <span class="crit-value crit-home" id="goalsHomeValue">Home 0</span>
+          </div>
+        </div>
+        <div class="stats-row crit-row">
+          <div class="stats-label">Total Ticks</div>
+          <div class="crit-values">
+            <span class="crit-value crit-neutral" id="ticksTotalValue">0</span>
+          </div>
+        </div>
+        <div class="stats-row crit-row">
+          <div class="stats-label">Crit Counter</div>
+          <div class="crit-values">
+            <span class="crit-value crit-away" id="critAwayValue">Away 0</span>
+            <span class="crit-value crit-home" id="critHomeValue">Home 0</span>
+          </div>
+        </div>
+        <div class="stats-row">
+          <div class="stats-label">Clock Ticks Spent In The Lead</div>
+          <div class="bar">
+            <div class="seg away" id="leadAwayBar"></div>
+            <div class="seg tied" id="leadTiedBar"></div>
+            <div class="seg home" id="leadHomeBar"></div>
+          </div>
+          <div class="stats-nums">
+            <span class="n-away" id="leadAwayNum">Away 0%</span>
+            <span class="n-tied" id="leadTiedNum">Tied 0%</span>
+            <span class="n-home" id="leadHomeNum">Home 0%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dmax-panel collapsible collapsed" id="dmaxPanel">
+        <div class="panel-header" data-target="dmaxPanel">
+          <span class="log-title">DMAX Report</span>
+          <span class="toggle-icon">▶</span>
+        </div>
+        <div class="dmax-cols">
+          <div class="dmax-col">
+            <div class="dmax-team-label n-away" id="dmaxAwayLabel">Away</div>
+            <div class="dmax-big" id="dmaxAwayBig">0.0</div>
+            <div class="dmax-rows" id="dmaxAwayRows"></div>
+          </div>
+          <div class="dmax-col">
+            <div class="dmax-team-label n-home" id="dmaxHomeLabel">Home</div>
+            <div class="dmax-big" id="dmaxHomeBig">0.0</div>
+            <div class="dmax-rows" id="dmaxHomeRows"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gi-panel collapsible collapsed" id="giPanel">
+        <div class="panel-header" data-target="giPanel">
+          <span class="log-title">Game Interest</span>
+          <span class="toggle-icon">▶</span>
+        </div>
+        <div class="gi-big" id="giBig">0.0</div>
+        <div class="dmax-rows" id="giRows"></div>
+      </div>
+
+      <div class="gi-panel collapsible collapsed" id="eloPanel">
+        <div class="panel-header" data-target="eloPanel">
+          <span class="log-title">Elo Update</span>
+          <span class="toggle-icon">▶</span>
+        </div>
+        <div class="elo-cols">
+          <div class="elo-col">
+            <div class="dmax-team-label n-away" id="eloAwayLabel">Away</div>
+            <div class="elo-change" id="eloAwayChange">1500 → 1500</div>
+          </div>
+          <div class="elo-col">
+            <div class="dmax-team-label n-home" id="eloHomeLabel">Home</div>
+            <div class="elo-change" id="eloHomeChange">1500 → 1500</div>
+          </div>
+        </div>
+        <div class="dmax-rows" id="eloRows"></div>
+      </div>
+
+      <div class="gi-panel collapsible collapsed" id="exPanel">
+        <div class="panel-header" data-target="exPanel">
+          <span class="log-title">EX Bonus</span>
+          <span class="toggle-icon">▶</span>
+        </div>
+        <div class="gi-big" id="exFinalBig">+0</div>
+        <div class="dmax-cols dmax-rows">
+          <div class="dmax-col">
+            <div class="dmax-team-label n-away" id="exAwayLabel">Away</div>
+            <div class="dmax-big" id="exAwayBig">0</div>
+            <div class="dmax-rows" id="exAwayRows"></div>
+          </div>
+          <div class="dmax-col">
+            <div class="dmax-team-label n-home" id="exHomeLabel">Home</div>
+            <div class="dmax-big" id="exHomeBig">0</div>
+            <div class="dmax-rows" id="exHomeRows"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cards-panel">
+      <div class="cards-row">
+        <div class="card empty" id="cardMove"><div class="tag">Move</div><div class="rank">—</div></div>
+        <div class="card empty" id="cardClock"><div class="tag">Clock</div><div class="rank">—</div></div>
+      </div>
+      <div class="controls">
+        <div class="button-row">
+          <button id="dealBtn">Deal Next Turn</button>
+          <button id="simGameBtn">Sim Game</button>
+        </div>
+        <button id="autoBtn">Auto-Play</button>
+        <button id="resetBtn">Reset Match</button>
+        <button id="nextMatchBtn">Load Next Match →</button>
+      </div>
+      <div class="roster-status" id="nextMatchStatus"></div>
+      <div class="result-banner" id="resultBanner"></div>
+    </div>
+
+    <div class="log-panel">
+      <div class="log-title">Play-by-Play</div>
+      <div class="log-body" id="logBody"></div>
+    </div>
+  </div>
+
+  <footer>Home always drives left · Away always drives right · Scoring team kicks off next</footer>
+  </div>
+
+  <div class="tab-content" id="teamsTab">
+    <div class="roster-panel">
+      <div class="log-title">Import Team Roster</div>
+      <p class="roster-help">
+        Copy a range of rows from Excel and paste below — one row per team, in this exact
+        column order: <code>Team Rank, DEX #, Region, Team Name, League Division, Accolades,
+        Fatigue, Climate, PF, PA, DSCR, Skill Rating, Elo, Rating Grade, Region Record,
+        League Record, Cup Record, Overall Record, Primary Type, Secondary Type</code>.
+        Excel copies cells as tab-separated text, so this just works with a normal paste.
+      </p>
+      <label class="roster-checkbox">
+        <input type="checkbox" id="rosterHasHeader" checked>
+        First pasted row is a header row (skip it)
+      </label>
+      <textarea id="rosterPasteBox" class="paste-box" rows="8" placeholder="Paste your Excel rows here..."></textarea>
+      <div class="roster-controls">
+        <button id="rosterParseBtn">Parse Roster</button>
+        <button id="rosterClearBtn">Clear</button>
+      </div>
+      <div class="roster-status" id="rosterStatus"></div>
+      <div class="roster-table-wrap">
+        <table class="roster-table" id="rosterTable"></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="scheduleTab">
+    <div class="roster-panel">
+      <div class="log-title">Schedule Batch Settings</div>
+      <p class="roster-help">
+        These apply to every matchup pasted below as one batch — paste a new list each
+        time any of these change (e.g. a new round, or switching from Regional to Cup play).
+      </p>
+      <div class="sched-settings-grid">
+        <label>Game Type
+          <select id="schedGameType">
+            <option>Regional</option>
+            <option>League</option>
+            <option>Cup</option>
+            <option>Playoffs</option>
+            <option>Finals</option>
+          </select>
+        </label>
+        <label>Format
+          <select id="schedAgg">
+            <option value="false">Single Game</option>
+            <option value="true">AGG (2-leg / Bo3)</option>
+          </select>
+        </label>
+        <label>Day
+          <select id="schedWeekend">
+            <option value="true">Weekend</option>
+            <option value="false" selected>Midweek</option>
+          </select>
+        </label>
+        <label>Round Label
+          <input type="text" id="schedRound" value="Round 1">
+        </label>
+        <label>Starting Timeslot
+          <input type="number" id="schedStartSlot" min="1" max="10" value="1">
+        </label>
+        <label>Games per Timeslot
+          <input type="number" id="schedGamesPerSlot" min="1" max="20" value="8">
+        </label>
+      </div>
+    </div>
+
+    <div class="sched-import-row" style="margin-top:16px;">
+      <div class="roster-panel">
+        <div class="log-title">Import Matchups</div>
+        <p class="roster-help">
+          Paste rows in this order: <code>Away Team Rank, Home Team Rank, Adv</code>.
+          Adv is the modifier from the tail end of the Spread calculation — leave it blank
+          for a normal game; it defaults to 0.
+        </p>
+        <label class="roster-checkbox">
+          <input type="checkbox" id="schedHasHeader" checked>
+          First pasted row is a header row (skip it)
+        </label>
+        <textarea id="schedPasteBox" class="paste-box" rows="8" placeholder="Paste Away Rank / Home Rank / Adv rows here..."></textarea>
+        <div class="roster-controls">
+          <button id="schedParseBtn">Parse Matchups</button>
+          <button id="schedClearBtn">Clear</button>
+        </div>
+        <div class="roster-status" id="schedStatus"></div>
+      </div>
+
+      <div class="roster-panel">
+        <div class="log-title">Region Climate</div>
+        <p class="roster-help">
+          Paste rows in this order: <code>Region, Region Climate</code>. Region Climate is a
+          number between 0 and 1 — it drives both the Climate Bonus (per team, by their own
+          region) and this match's Weather (from the Home team's region, since that's the venue):
+          Perfect ≥0.9, Good ≥0.8, Fair ≥0.65, Bad ≥0.5, Terrible &lt;0.5.
+        </p>
+        <label class="roster-checkbox">
+          <input type="checkbox" id="climateHasHeader" checked>
+          First pasted row is a header row (skip it)
+        </label>
+        <textarea id="climatePasteBox" class="paste-box" rows="6" placeholder="Paste Region / Region Climate rows here..."></textarea>
+        <div class="roster-controls">
+          <button id="climateParseBtn">Parse Region Climate</button>
+          <button id="climateClearBtn">Clear</button>
+        </div>
+        <div class="roster-status" id="climateStatus"></div>
+        <div class="roster-table-wrap">
+          <table class="roster-table" id="climateTable"></table>
+        </div>
+      </div>
+    </div>
+
+    <div class="roster-panel" style="margin-top:16px;">
+      <div class="log-title">Scheduled Matchups</div>
+      <p class="roster-help">
+        Click <strong>Load →</strong> on any row to send that matchup to the Field
+        tab — or use the shortcut below for whichever match is first in the list.
+      </p>
+      <div class="roster-table-wrap">
+        <table class="roster-table" id="schedTable"></table>
+      </div>
+      <div class="roster-controls" style="margin-top:16px;">
+        <button id="loadMatchBtn">Load First Match into Field</button>
+      </div>
+      <div class="roster-status" id="loadMatchStatus"></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="resultsTab">
+    <div class="roster-panel">
+      <div class="log-title">Match Results Log</div>
+      <p class="roster-help">
+        Every completed game on the Field tab gets appended here automatically as one row.
+        Copy the whole block below and paste it straight into Excel — it's already
+        tab-separated with a header row.
+      </p>
+      <div class="roster-controls">
+        <button id="resultsCopyBtn">Copy All to Clipboard</button>
+        <button id="resultsClearBtn">Clear Log</button>
+      </div>
+      <div class="roster-status" id="resultsStatus"></div>
+      <div class="roster-table-wrap">
+        <table class="roster-table" id="resultsTable"></table>
+      </div>
+      <textarea id="resultsTsvBox" class="paste-box" rows="6" readonly
+        placeholder="Play a game on the Field tab to populate this..."
+        style="margin-top:14px;"></textarea>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  const RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+  const SUITS = ['clubs','spades','diamonds','hearts'];
+  const SUIT_SYMBOL = {clubs:'♣',spades:'♠',diamonds:'♦',hearts:'♥'};
+  const SUIT_COLOR = {clubs:'black',spades:'black',diamonds:'red',hearts:'red'};
+
+  function cardValue(rank){
+    if (rank === 'J') return 11;
+    if (rank === 'Q') return 12;
+    if (rank === 'K') return 13;
+    if (rank === 'A') return 15;
+    return parseInt(rank, 10);
+  }
+  function freshDeck(){
+    const deck = [];
+    for (const r of RANKS) for (const s of SUITS) deck.push({rank:r, suit:s});
+    return deck;
+  }
+  function shuffle(deck){
+    for (let i = deck.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    return deck;
+  }
+  // Point values for columns 3–15 (edge columns 1,2,16,17 are always 0),
+  // keyed by ATK modifier level (-8 to +9). Each team's own ATK modifier
+  // picks a different table row-band, per the offsets in pointsForPosition().
+  const ATK_TABLE = {
+    '-8': [3,3,3,2,1,1,1,1,1,2,3,3,3],
+    '-7': [4,3,3,2,2,1,1,1,2,2,3,3,4],
+    '-6': [4,4,3,3,2,2,1,2,2,3,3,4,4],
+    '-5': [4,4,4,3,2,2,2,2,2,3,4,4,4],
+    '-4': [5,4,4,3,2,2,2,2,2,3,4,4,5],
+    '-3': [5,5,4,3,3,2,2,2,3,3,4,5,5],
+    '-2': [5,5,4,3,3,3,2,3,3,3,4,5,5],
+    '-1': [6,5,4,4,3,3,3,3,3,4,4,5,6],
+    '0':  [6,6,4,4,4,3,3,3,4,4,4,6,6],
+    '1':  [6,6,5,4,4,4,3,4,4,4,5,6,6],
+    '2':  [7,6,5,5,4,4,4,4,4,5,5,6,7],
+    '3':  [7,7,5,5,5,4,4,4,5,5,5,7,7],
+    '4':  [8,7,6,5,5,5,4,5,5,5,6,7,8],
+    '5':  [8,7,6,6,5,5,5,5,5,6,6,7,8],
+    '6':  [8,7,7,6,6,5,5,5,6,6,7,7,8],
+    '7':  [8,8,7,7,6,6,5,6,6,7,7,8,8],
+    '8':  [9,8,8,7,7,6,5,6,7,7,8,8,9],
+    '9':  [9,9,8,8,7,6,5,6,7,8,8,9,9],
+  };
+  const ATK_MIN = -8, ATK_MAX = 9;
+
+  // Row offset relative to a team's own ATK modifier:
+  // middle row = ATK+1, rows 3&5 = ATK+0, rows 2&6 = ATK-1, rows 1&7 = ATK-2.
+  function rowAtkOffset(y){
+    if (y === 4) return 1;
+    if (y === 3 || y === 5) return 0;
+    if (y === 2 || y === 6) return -1;
+    return -2; // y === 1 or 7
+  }
+
+  function pointsForPosition(x, y, teamAtkModifier){
+    if ([1,2,16,17].includes(x)) return 0;
+    let level = teamAtkModifier + rowAtkOffset(y);
+    level = Math.max(ATK_MIN, Math.min(ATK_MAX, level)); // clamp to the defined table range
+    const idx = x - 3; // 0..12
+    return ATK_TABLE[String(level)][idx];
+  }
+
+  // ---- Type system ----
+  // Each team has a permanent primary type and a secondary type that changes per match.
+  // Type chart rows = attacking type, columns = defending type, in TYPE_ORDER.
+  const TYPE_ORDER = ['NORMAL','FIRE','WATER','ELECTRIC','GRASS','ICE','FIGHTING','POISON',
+    'GROUND','FLYING','PSYCHIC','BUG','ROCK','GHOST','DRAGON','DARK','STEEL','FAIRY'];
+
+  const TYPE_CHART = {
+    NORMAL:   [0,0,0,0,0,0,0,0,0,0,0,0,-1,-2,0,0,-1,0],
+    FIRE:     [0,-1,-1,0,1,1,0,0,0,0,0,1,-1,0,-1,0,1,0],
+    WATER:    [0,1,-1,0,-1,0,0,0,1,0,0,0,1,0,-1,0,0,0],
+    ELECTRIC: [0,0,1,-1,-1,0,0,0,-2,1,0,0,0,0,-1,0,0,0],
+    GRASS:    [0,-1,1,0,-1,0,0,-1,1,-1,0,-1,1,0,-1,0,-1,0],
+    ICE:      [0,-1,-1,0,1,-1,0,0,1,1,0,0,0,0,1,0,-1,0],
+    FIGHTING: [1,0,0,0,0,1,0,-1,0,-1,-1,-1,1,-2,0,1,1,-1],
+    POISON:   [0,0,0,0,1,0,0,-1,-1,0,0,0,-1,-1,0,0,-2,1],
+    GROUND:   [0,1,0,1,-1,0,0,1,0,-2,0,-1,1,0,0,0,1,0],
+    FLYING:   [0,0,0,-1,1,0,1,0,0,0,0,1,-1,0,0,0,-1,0],
+    PSYCHIC:  [0,0,0,0,0,0,1,1,0,0,-1,0,0,0,0,-2,-1,0],
+    BUG:      [0,-1,0,0,1,0,-1,-1,0,-1,1,0,0,-1,0,1,-1,-1],
+    ROCK:     [0,1,0,0,0,1,-1,0,-1,1,0,1,0,0,0,0,-1,0],
+    GHOST:    [-2,0,0,0,0,0,0,0,0,0,1,0,0,1,0,-1,0,0],
+    DRAGON:   [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,-1,-2],
+    DARK:     [0,0,0,0,0,0,-1,0,0,0,1,0,0,1,0,-1,0,-1],
+    STEEL:    [0,-1,-1,-1,0,1,0,0,0,0,0,0,1,0,0,0,-1,1],
+    FAIRY:    [0,-1,0,0,0,0,1,-1,0,0,0,0,0,0,1,1,-1,0],
+  };
+
+  let TEAM_TYPES = {
+    home: {primary:'ELECTRIC', secondary:'STEEL'}, // placeholder
+    away: {primary:'NORMAL', secondary:'FLYING'}   // placeholder
+  };
+
+  // A team's two types are each summed against one of the opponent's two types
+  // (attacker rows summed, looked up by the opponent's defending type as the column).
+  // If the opponent's two types are identical, both sums are halved. The average of
+  // the two sums is rounded to the nearest integer, then +1 — this result both shifts the team's own ATK
+  // modifier and (Home's result minus Away's) becomes the Eye Test's Type Advantage.
+  function computeTypeMatchupResult(teamTypes, oppTypes){
+    const idx1 = TYPE_ORDER.indexOf(oppTypes.primary);
+    const idx2 = TYPE_ORDER.indexOf(oppTypes.secondary);
+    let num1 = TYPE_CHART[teamTypes.primary][idx1] + TYPE_CHART[teamTypes.secondary][idx1];
+    let num2 = TYPE_CHART[teamTypes.primary][idx2] + TYPE_CHART[teamTypes.secondary][idx2];
+    if (oppTypes.primary === oppTypes.secondary){
+      num1 = num1 / 2;
+      num2 = num2 / 2;
+    }
+    const avg = (num1 + num2) / 2;
+    const result = Math.round(avg) + 1;
+    return {num1, num2, avg, result};
+  }
+
+  let HOME_TYPE_RESULT, AWAY_TYPE_RESULT;
+
+  // ---- Weather ----
+  // Perfect +2, Good +1, Fair 0, Bad -1, Terrible -2 — applied equally to both teams,
+  // folded directly into the ATK modifier build below (not added separately).
+  // Weather itself is derived from the HOME team's Region Climate (the match venue),
+  // using the same thresholds as the Climate Bonus's underlying Region Climate table.
+  const WEATHER_ATK_DELTA = {Perfect:2, Good:1, Fair:0, Bad:-1, Terrible:-2};
+  function computeWeatherFromClimate(climate){
+    if (climate < 0.5) return 'Terrible';
+    if (climate < 0.65) return 'Bad';
+    if (climate < 0.8) return 'Fair';
+    if (climate < 0.9) return 'Good';
+    return 'Perfect'; // 0.9 and above
+  }
+  let WEATHER;
+
+  // ---- Off/Def Rating ----
+  // Off/Def Rating = (PF - PA)/100, banded into a 1-9 value.
+  let TEAM_PF = {home:80, away:80}; // placeholder
+  let TEAM_PA = {home:75, away:75}; // placeholder
+
+  // Off/Def Rating = (own PF - OPPONENT's PA) / 100, banded into a 1-9 value.
+  function computeOffDefBand(ownPF, oppPA){
+    const rating = (ownPF - oppPA) / 100;
+    let band;
+    if (rating < -0.6) band = 1;
+    else if (rating < -0.4) band = 2;
+    else if (rating < -0.25) band = 3;
+    else if (rating < -0.15) band = 4;
+    else if (rating < -0.05) band = 5;
+    else if (rating < 0.05) band = 6;
+    else if (rating < 0.15) band = 7;
+    else if (rating < 0.30) band = 8;
+    else band = 9;
+    return {rating, band};
+  }
+  let HOME_OFFDEF, AWAY_OFFDEF;
+
+  // ---- Home/away ATK modifiers ----
+  // Raw number = Off/Def band + Type-matchup result + Weather + 4, clamped to 1-18.
+  // ATK modifier = that raw number - 9 (so a raw number of 9 is ATK+0).
+  function computeAtkModifier(offDefBand, typeResult, weatherDelta){
+    let raw = offDefBand + typeResult + weatherDelta + 4;
+    raw = Math.max(1, Math.min(18, raw));
+    return {raw, modifier: raw - 9};
+  }
+  let HOME_ATK_RESULT, AWAY_ATK_RESULT, HOME_ATK_MODIFIER, AWAY_ATK_MODIFIER;
+
+  // ---- Every-X-goals bonus threshold ----
+  // X (1-7) is derived from each team's own Off/Def rating (same rating used for the
+  // ATK band above). Both teams score +2 on every Xth goal, but X can differ per team.
+  function computeBonusEveryXGoals(offDefRating){
+    if (offDefRating < -0.75) return 7;
+    if (offDefRating < -0.50) return 6;
+    if (offDefRating < -0.25) return 5;
+    if (offDefRating < 0) return 4;
+    if (offDefRating < (1/3)) return 3;
+    if (offDefRating < (2/3)) return 2;
+    return 1; // < 1, and also the catch-all for 1 and above (chart doesn't define past 1)
+  }
+  let HOME_BONUS_EVERY_X_GOALS, AWAY_BONUS_EVERY_X_GOALS;
+  const BONUS_EVERY_X_POINTS = 2; // corrected from 1 to 2 points per triggering goal
+
+  let SKILL_RATING = {home:50, away:50}; // per-team skill rating used in DMAX
+
+  // ---- League / match context (for Spread and Game Interest) ----
+  // 160-team league; ranking 1 = best. Game types: Regional, League, Cup, Playoffs, Finals.
+  // AGG = two-game aggregate or best-of-three series (a format flag, independent of game type).
+  // Matches are played on two midweek dates and on the weekend, in one of 10 timeslots.
+  let RANK_HOME = 1;          // placeholder — teams declared as #1 (home) and #2 (away)
+  let RANK_AWAY = 2;
+  let GAME_TYPE = 'Regional'; // Regional | League | Cup | Playoffs | Finals
+  let IS_AGG = false;
+  let IS_WEEKEND = true;
+  let TIMESLOT = 10;          // 1-10
+  const GAME_TYPE_DEDUCTION = {Regional:0.06, League:0.08, Cup:0.10, Playoffs:0.12, Finals:0.14};
+  let TEAM_REGION = {home:'Lanakila', away:'Vertress'};     // placeholder — one of the 10 regions
+  let TEAM_DISPLAY_NAME = {home:'Home', away:'Away'};       // real team name once a match is loaded
+  let CURRENT_ROUND = '';                                    // Round Label of whichever match is loaded
+  let TEAM_DIVISION = {home:'Second Div.', away:'Second Div.'}; // placeholder — team's league division
+  let TEAM_REGION_RECORD = {home:'0-0', away:'0-0'};   // placeholder — from the roster's Region Record column (W-L, no draws)
+  let TEAM_LEAGUE_RECORD = {home:'0-0', away:'0-0'};   // from League Record
+  let TEAM_CUP_RECORD = {home:'0-0', away:'0-0'};      // from Cup Record
+  let TEAM_OVERALL_RECORD = {home:'0-0', away:'0-0'};  // from Overall Record
+
+  // ---- Region colors ----
+  // Each of the 10 regions has its own color; a team's whole color scheme (previously
+  // a fixed blue/red) now derives from its own region, independent of its opponent's.
+  const REGION_COLORS = {
+    'Indigo':      {colorName:'Red',        dark:'#7A2A24', bright:'#E4574A', tint:'rgba(228,87,74,0.55)'},
+    'Silver':      {colorName:'Silver',     dark:'#4A4E56', bright:'#C7CDD6', tint:'rgba(199,205,214,0.45)'},
+    'Delta':       {colorName:'Orange',     dark:'#7A4A1E', bright:'#F2994A', tint:'rgba(242,153,74,0.5)'},
+    'Lily Valley': {colorName:'Green',      dark:'#2E5C3E', bright:'#6FCF97', tint:'rgba(111,207,151,0.45)'},
+    'Vertress':    {colorName:'Light Blue', dark:'#1E5C6E', bright:'#56CCF2', tint:'rgba(86,204,242,0.45)'},
+    'Kalosite':    {colorName:'Purple',     dark:'#4A2E7A', bright:'#B18AF2', tint:'rgba(177,138,242,0.5)'},
+    'Lanakila':    {colorName:'Pink',       dark:'#7A2E4E', bright:'#F28CB1', tint:'rgba(242,140,177,0.5)'},
+    'Dynamax':     {colorName:'Dark Blue',  dark:'#1E2E6E', bright:'#5B7FD6', tint:'rgba(91,127,214,0.5)'},
+    'Phoenix':     {colorName:'Brown',      dark:'#5C3E24', bright:'#C08A5C', tint:'rgba(192,138,92,0.5)'},
+    'Terastal':    {colorName:'Gold',       dark:'#6E5A1E', bright:'#E9C46A', tint:'rgba(233,196,106,0.5)'},
+  };
+  // Fallback keeps the original blue/red scheme if a region isn't recognized.
+  const DEFAULT_HOME_COLOR = {dark:'#22456F', bright:'#7FA8D9', tint:'rgba(34,69,111,0.55)'};
+  const DEFAULT_AWAY_COLOR = {dark:'#9C2740', bright:'#EE9074', tint:'rgba(156,39,64,0.55)'};
+  let HOME_REGION_COLOR, AWAY_REGION_COLOR;
+
+  // ---- Spread formula ----
+  // Raw Spread = (Home Skill - Away Skill)/5 + Home Field Advantage + Climate + Eye Test + ELO.
+  // Spread = Raw Spread * Fatigue multiplier * (factors multiplier) + (factors modifier).
+  // Always computed from the home team's perspective; a negative result flips the
+  // favorite to away (magnitude becomes that team's spread).
+  const HOME_FIELD_ADVANTAGE = {Regional:1.2, League:1.4, Cup:1.6, Playoffs:1.8, Finals:2.0};
+
+  // ---- Climate Bonus ----
+  // 160 teams in 10 regions of 16; each region has its own Climate condition (changes weekly,
+  // imported on the Schedule tab), and each team has its own Team Climate value.
+  //   Home's result = Home Regional Climate × Home Team Climate
+  //   Away's result = (Away Team Climate / 3) × Away Regional Climate
+  //   Climate Bonus = Home's result / (Home's result + Away's result)
+  let REGION_CLIMATE_TABLE = {}; // Region name -> current Region Climate (0-1), from the Schedule tab
+  const DEFAULT_REGION_CLIMATE = 0.5; // fallback when a team's region isn't in the table
+  let REGIONAL_CLIMATE = {home:0.5, away:0.5}; // derived each recompute from REGION_CLIMATE_TABLE
+  let TEAM_CLIMATE = {home:5, away:5};         // placeholder — each team's own climate value
+
+  function computeClimateBonus(){
+    const homeResult = REGIONAL_CLIMATE.home * TEAM_CLIMATE.home;
+    const awayResult = (TEAM_CLIMATE.away / 3) * REGIONAL_CLIMATE.away;
+    const sum = homeResult + awayResult;
+    const climateBonus = sum ? (homeResult / sum) : 0;
+    return {climateBonus, homeResult, awayResult, sum};
+  }
+  let CLIMATE_RESULT, CLIMATE_BONUS;
+
+  // ---- Eye Test Bonus ----
+  // DSCR = a team's average DMAX score across its previous games.
+  //   Eye Test Bonus = ((Home DSCR - Away DSCR)/2) + Type Advantage + Rating Grade
+  let TEAM_DSCR = {home:7, away:7}; // placeholder — average of each team's previous DMAX scores
+  let TYPE_ADVANTAGE;
+  // ---- Rating Grade ----
+  // Letter-grade scale from F (1) up to SS (14). Rating Grade = Home's value - Away's value.
+  const RATING_SCALE = {F:1, 'F+':2, EF:3, E:4, DE:5, D:6, CD:7, C:8, BC:9, B:10, AB:11, A:12, S:13, SS:14};
+  let TEAM_RATING = {home:'A', away:'A'}; // placeholder
+  let RATING_GRADE;
+
+  function computeEyeTestBonus(){
+    const dscrTerm = (TEAM_DSCR.home - TEAM_DSCR.away) / 2;
+    const eyeTestBonus = dscrTerm + TYPE_ADVANTAGE + RATING_GRADE;
+    return {dscrTerm, typeAdvantage: TYPE_ADVANTAGE, ratingGrade: RATING_GRADE, eyeTestBonus};
+  }
+  let EYE_TEST_RESULT, EYE_TEST_BONUS;
+
+  // ---- ELO ----
+  // Expected win % (logistic Elo formula, home field folded in as ratingDiff += HFA*50):
+  //   HomeWin% = 100 / (1 + 10^(-(HomeElo-AwayElo+HFA*50)/400)),  AwayWin% = 100-HomeWin%
+  // ELO Bonus (feeds the Spread formula) = (HomeWin% - AwayWin%, as decimals) * 2.
+  let TEAM_ELO = {home:1500, away:1500}; // placeholder — starting Elo rating for each team
+
+  function computeEloWinProbabilities(){
+    const hfa = HOME_FIELD_ADVANTAGE[GAME_TYPE] || 0;
+    const ratingDiff = TEAM_ELO.home - TEAM_ELO.away + (hfa * 50);
+    const homeWinPct = 100 / (Math.pow(10, -ratingDiff / 400) + 1);
+    const awayWinPct = 100 - homeWinPct;
+    return {homeWinPct, awayWinPct, ratingDiff};
+  }
+  let ELO_WIN_PROB, ELO_BONUS;
+
+  let TEAM_FATIGUE = {home:0, away:0}; // placeholder — both teams fresh for now
+  let SPREAD_FACTOR_MULTIPLIER = 1;    // placeholder for future conditional multiplier
+  let SPREAD_FACTOR_MODIFIER = 0;      // this is "Adv" from the Schedule tab
+
+  // ---- ELO K-Value and post-game rating update ----
+  // K = 24 + game-type adjustment + (8 if the Spread factor multiplier > 1.0) + (Point Differential - 4)
+  // Elo delta = (1 - winner's pre-game expected win%/100) * K, always rounded UP.
+  // Delta is added to the winner's Elo and subtracted from the loser's.
+  const K_GAME_TYPE_ADJUST = {Regional:0, League:4, Cup:8, Playoffs:12, Finals:16};
+
+  function computeEloUpdate(game){
+    if (!game.gameOver) return null;
+    const winner = game.score.home > game.score.away ? 'home' : 'away';
+    const loser = game.otherTeam(winner);
+    const pointDifferential = Math.abs(game.score.home - game.score.away);
+
+    const gameTypeK = K_GAME_TYPE_ADJUST[GAME_TYPE] || 0;
+    const multiplierBonus = (SPREAD_FACTOR_MULTIPLIER > 1.0) ? 8 : 0;
+    const kValue = 24 + gameTypeK + multiplierBonus + (pointDifferential - 4);
+
+    const winnerExpectedPct = (winner === 'home') ? ELO_WIN_PROB.homeWinPct : ELO_WIN_PROB.awayWinPct;
+    const rawDelta = (1 - (winnerExpectedPct / 100)) * kValue;
+    const delta = Math.ceil(rawDelta);
+
+    return {
+      winner, loser, pointDifferential, gameTypeK, multiplierBonus, kValue,
+      winnerExpectedPct, rawDelta, delta,
+      winnerOldElo: TEAM_ELO[winner], loserOldElo: TEAM_ELO[loser],
+      winnerNewElo: TEAM_ELO[winner] + delta, loserNewElo: TEAM_ELO[loser] - delta
+    };
+  }
+
+  // Truncates (never rounds) a non-negative number to 4 decimal places. If that would
+  // display as 0.0000, instead truncates only as far as the first non-zero decimal digit,
+  // so a tiny spread still shows something readable. Returns {value, decimals} so the UI
+  // knows how many decimal places to render.
+  function truncateSpreadMagnitude(value){
+    if (value === 0) return {value: 0, decimals: 4};
+    let decimals = 4;
+    let truncated = Math.trunc(value * 10000) / 10000;
+    while (truncated === 0 && decimals < 20){
+      decimals++;
+      const factor = Math.pow(10, decimals);
+      truncated = Math.trunc(value * factor) / factor;
+    }
+    return {value: truncated, decimals};
+  }
+
+  function computeSpread(){
+    const skillTerm = (SKILL_RATING.home - SKILL_RATING.away) / 5;
+    const hfa = HOME_FIELD_ADVANTAGE[GAME_TYPE] || 0;
+    const rawSpread = skillTerm + hfa + CLIMATE_BONUS + EYE_TEST_BONUS + ELO_BONUS;
+
+    const fatigueMult = 1 + (TEAM_FATIGUE.home - TEAM_FATIGUE.away) * 0.005;
+    let spread = rawSpread * fatigueMult;
+    spread *= SPREAD_FACTOR_MULTIPLIER;
+    spread += SPREAD_FACTOR_MODIFIER;
+
+    const team = spread < 0 ? 'away' : 'home';
+    const truncResult = truncateSpreadMagnitude(Math.abs(spread));
+    return {
+      team, value: truncResult.value, decimals: truncResult.decimals,
+      breakdown: {skillTerm, hfa, climate:CLIMATE_BONUS, eyeTest:EYE_TEST_BONUS, elo:ELO_BONUS, rawSpread, fatigueMult, spread}
+    };
+  }
+
+  let SPREAD_RESULT, SPREAD_TEAM, SPREAD_VALUE, SPREAD_DECIMALS, SPREAD_VALUE_FOR_BONUS;
+
+  // Recomputes every derived value in dependency order from whatever the current raw
+  // inputs are. Called once at load with the placeholder defaults above, and again
+  // whenever a match is loaded from the Schedule tab with real team data.
+  function recomputeMatchContext(){
+    HOME_TYPE_RESULT = computeTypeMatchupResult(TEAM_TYPES.home, TEAM_TYPES.away);
+    AWAY_TYPE_RESULT = computeTypeMatchupResult(TEAM_TYPES.away, TEAM_TYPES.home);
+
+    HOME_OFFDEF = computeOffDefBand(TEAM_PF.home, TEAM_PA.away);
+    AWAY_OFFDEF = computeOffDefBand(TEAM_PF.away, TEAM_PA.home);
+
+    // Regional Climate is looked up per team's own region; Weather (used below for the
+    // ATK build) is derived from the HOME team's Region Climate specifically, since
+    // that's the match venue.
+    REGIONAL_CLIMATE = {
+      home: Object.prototype.hasOwnProperty.call(REGION_CLIMATE_TABLE, TEAM_REGION.home) ? REGION_CLIMATE_TABLE[TEAM_REGION.home] : DEFAULT_REGION_CLIMATE,
+      away: Object.prototype.hasOwnProperty.call(REGION_CLIMATE_TABLE, TEAM_REGION.away) ? REGION_CLIMATE_TABLE[TEAM_REGION.away] : DEFAULT_REGION_CLIMATE
+    };
+    WEATHER = computeWeatherFromClimate(REGIONAL_CLIMATE.home);
+
+    HOME_ATK_RESULT = computeAtkModifier(HOME_OFFDEF.band, HOME_TYPE_RESULT.result, WEATHER_ATK_DELTA[WEATHER]);
+    AWAY_ATK_RESULT = computeAtkModifier(AWAY_OFFDEF.band, AWAY_TYPE_RESULT.result, WEATHER_ATK_DELTA[WEATHER]);
+    HOME_ATK_MODIFIER = HOME_ATK_RESULT.modifier;
+    AWAY_ATK_MODIFIER = AWAY_ATK_RESULT.modifier;
+
+    HOME_BONUS_EVERY_X_GOALS = computeBonusEveryXGoals(HOME_OFFDEF.rating);
+    AWAY_BONUS_EVERY_X_GOALS = computeBonusEveryXGoals(AWAY_OFFDEF.rating);
+
+    HOME_REGION_COLOR = REGION_COLORS[TEAM_REGION.home] || DEFAULT_HOME_COLOR;
+    AWAY_REGION_COLOR = REGION_COLORS[TEAM_REGION.away] || DEFAULT_AWAY_COLOR;
+
+    CLIMATE_RESULT = computeClimateBonus();
+    CLIMATE_BONUS = CLIMATE_RESULT.climateBonus;
+
+    TYPE_ADVANTAGE = HOME_TYPE_RESULT.result - AWAY_TYPE_RESULT.result;
+    RATING_GRADE = RATING_SCALE[TEAM_RATING.home] - RATING_SCALE[TEAM_RATING.away];
+    EYE_TEST_RESULT = computeEyeTestBonus();
+    EYE_TEST_BONUS = EYE_TEST_RESULT.eyeTestBonus;
+
+    ELO_WIN_PROB = computeEloWinProbabilities();
+    ELO_BONUS = ((ELO_WIN_PROB.homeWinPct / 100) - (ELO_WIN_PROB.awayWinPct / 100)) * 2;
+
+    SPREAD_RESULT = computeSpread();
+    SPREAD_TEAM = SPREAD_RESULT.team;
+    SPREAD_VALUE = SPREAD_RESULT.value;
+    SPREAD_DECIMALS = SPREAD_RESULT.decimals;
+    SPREAD_VALUE_FOR_BONUS = Math.round(SPREAD_VALUE);
+  }
+  recomputeMatchContext();
+
+  // Returns the spread bonus for a team's Nth goal of the match (goalIndex is 1-indexed).
+  // Spread 1-24: front-load 2 points per goal until the spread total is used up (rest get 0).
+  // Spread >24: the first 12 goals split into a 3-point band and a 2-point band, with
+  // any leftover beyond a full 3/2 split spread across additional 12-goal bands.
+  function spreadBonusForGoalIndex(spread, goalIndex){
+    if (goalIndex > 12 || spread <= 0) return 0;
+    if (spread <= 24){
+      return Math.min(2, Math.max(0, spread - 2*(goalIndex-1)));
+    }
+    const excess = spread - 24;
+    const base = Math.floor(excess/12);
+    const rem = excess % 12;
+    return 2 + base + (goalIndex <= rem ? 1 : 0);
+  }
+  function lateralDelta(suit){
+    switch(suit){
+      case 'clubs': return -1;
+      case 'spades': return -2;
+      case 'diamonds': return 1;
+      case 'hearts': return 2;
+    }
+  }
+  function ordinalSuffix(n){
+    const j = n % 10, k = n % 100;
+    if (j === 1 && k !== 11) return 'st';
+    if (j === 2 && k !== 12) return 'nd';
+    if (j === 3 && k !== 13) return 'rd';
+    return 'th';
+  }
+  function periodLabel(n){
+    if (n === 1) return '1st Half';
+    if (n === 2) return '2nd Half';
+    return 'Overtime ' + (n - 2);
+  }
+
+  // ---- Crit counter ----
+  // +1 goal scored in stoppage time, +2 goal scored on a kickoff return,
+  // +3 Ace goal the long way from column 4/14, +4 Ace goal the long way from column 3/15.
+  // "The long way" means the scoring team was far from that edge (used almost the whole
+  // field), as opposed to the team that starts right next to that column (the close-up goal).
+  function aceLongWayCritBonus(team, prevX, cardRank){
+    if (cardRank !== 'A') return 0;
+    if (team === 'away' && prevX === 3) return 4;
+    if (team === 'away' && prevX === 4) return 3;
+    if (team === 'home' && prevX === 15) return 4;
+    if (team === 'home' && prevX === 14) return 3;
+    return 0;
+  }
+
+  class Game {
+    constructor(){
+      this.score = {home:0, away:0};
+      this.ball = {x:9, y:4};
+      this.trail = [];
+      this.periodIndex = 0;
+      this.clock = 0;
+      this.log = [];
+      this.gameOver = false;
+      this.possessionTicks = {home:0, away:0};
+      this.goalsScored = {home:0, away:0};
+      this.leadTicks = {home:0, away:0, tied:0};
+      this.critCounter = {home:0, away:0};
+      this.rawZonePoints = {home:0, away:0}; // grid points only, no crit/spread/every-X bonuses — for DMAX
+      this.spreadBonusEarned = {home:0, away:0}; // sum of spread bonus actually awarded per team — for EX bonus
+      this.marginTickSum = {home:0, away:0}; // tick-weighted running score margin — for DMAX
+      this.lastTurnWasKickoff = false;
+      this.lastGoalAnnouncement = null; // {team, points, time} of the most recent goal, for the persistent banner
+      this.startPeriod(1);
+    }
+    draw(){
+      if (this.deck.length < 2){
+        this.deck = shuffle(freshDeck());
+        this.log.push({type:'system', text:'Deck exhausted — reshuffling fresh 52.'});
+      }
+      return [this.deck.pop(), this.deck.pop()];
+    }
+    maxTime(){ return this.periodBase + this.periodTarget + this.stoppageAccrued; }
+    otherTeam(t){ return t === 'home' ? 'away' : 'home'; }
+    startPeriod(n){
+      this.periodIndex = n;
+      this.periodBase = (n===1) ? 0 : (n===2 ? 250 : 500 + (n-3)*100);
+      this.periodTarget = (n<=2) ? 250 : 100;
+      this.stoppageAccrued = 0;
+      this.clock = this.periodBase;
+      this.ball = {x:9, y:4};
+      this.trail = [];
+      this.kickoffPending = true;
+      this.kickoffTeam = (n % 2 === 1) ? 'away' : 'home';
+      this.turnTeam = this.kickoffTeam;
+      this.deck = shuffle(freshDeck());
+      this.log.push({type:'system', text:'Deck reshuffled for the new period.'});
+      this.log.push({type:'system', text:'— ' + periodLabel(n).toUpperCase() + ' BEGINS: ' + TEAM_DISPLAY_NAME[this.kickoffTeam].toUpperCase() + ' KICKS OFF —'});
+    }
+    processTurn(){
+      if (this.gameOver) return null;
+      const [c1, c2] = this.draw();
+      const v1 = cardValue(c1.rank), v2 = cardValue(c2.rank);
+      const team = this.turnTeam;
+      const isKickoff = this.kickoffPending;
+      let scored = false, goalPoints = 0;
+      const clockBeforeThisTurn = this.clock;
+      const wasKickoffLastTurn = this.lastTurnWasKickoff;
+
+      this.trail.push({...this.ball});
+      if (this.trail.length > 3) this.trail.shift();
+
+      if (isKickoff){
+        const dir = team === 'home' ? -1 : 1;
+        const prospectiveX = 9 + dir*v1;
+        if (prospectiveX < 1 || prospectiveX > 17){
+          this.ball = prospectiveX < 1 ? {x:3,y:4} : {x:15,y:4};
+          this.log.push({type:team, text:`[${TEAM_DISPLAY_NAME[team].toUpperCase()}] Kickoff: ${cardStr(c1)} would leave the field — ball placed at (${this.ball.x},${this.ball.y}). No score.`});
+        } else {
+          let y = 4 + lateralDelta(c1.suit);
+          y = Math.max(1, Math.min(7, y));
+          this.ball = {x:prospectiveX, y};
+          this.log.push({type:team, text:`[${TEAM_DISPLAY_NAME[team].toUpperCase()}] Kickoff: ${cardStr(c1)} → ball to (${this.ball.x},${this.ball.y}).`});
+        }
+        this.kickoffPending = false;
+      } else {
+        const prevX = this.ball.x;
+        const prevY = this.ball.y;
+        const dir = team === 'home' ? -1 : 1;
+        const newX = prevX + dir*v1;
+        let y = this.ball.y + lateralDelta(c1.suit);
+        y = Math.max(1, Math.min(7, y));
+        if (newX < 1 || newX > 17){
+          scored = true;
+          // Weather is now folded into HOME_ATK_MODIFIER/AWAY_ATK_MODIFIER themselves
+          // (see the Off/Def + Type + Weather build above), so no separate addition here.
+          const teamAtk = (team === 'home') ? HOME_ATK_MODIFIER : AWAY_ATK_MODIFIER;
+          const zonePoints = pointsForPosition(prevX, prevY, teamAtk);
+          this.rawZonePoints[team] += zonePoints;
+          this.goalsScored[team] += 1;
+          const goalIndex = this.goalsScored[team];
+          const teamBonusEveryX = (team === 'home') ? HOME_BONUS_EVERY_X_GOALS : AWAY_BONUS_EVERY_X_GOALS;
+          const everyXBonus = (goalIndex % teamBonusEveryX === 0) ? BONUS_EVERY_X_POINTS : 0;
+          const spreadBonus = (team === SPREAD_TEAM) ? spreadBonusForGoalIndex(SPREAD_VALUE_FOR_BONUS, goalIndex) : 0;
+          this.spreadBonusEarned[team] += spreadBonus;
+          goalPoints = zonePoints + everyXBonus + spreadBonus;
+          this.score[team] += goalPoints;
+          this.lastGoalAnnouncement = {team, points: goalPoints, time: clockBeforeThisTurn};
+          this.stoppageAccrued += 5;
+
+          let critGain = 0;
+          const inStoppageTime = clockBeforeThisTurn > (this.periodBase + this.periodTarget);
+          if (inStoppageTime) critGain += 1;
+          if (wasKickoffLastTurn) critGain += 2;
+          const aceBonus = aceLongWayCritBonus(team, prevX, c1.rank);
+          critGain += aceBonus;
+          this.critCounter[team] += critGain;
+
+          this.ball = {x:9, y:4};
+          this.trail = [];
+          this.kickoffPending = true;
+          this.kickoffTeam = team;
+          this.turnTeam = team;
+          let breakdown = `+${zonePoints} zone`;
+          if (everyXBonus) breakdown += ` +${everyXBonus} (every ${teamBonusEveryX}${ordinalSuffix(teamBonusEveryX)} goal)`;
+          if (spreadBonus) breakdown += ` +${spreadBonus} (spread)`;
+          let critNote = '';
+          if (critGain){
+            const parts = [];
+            if (inStoppageTime) parts.push('stoppage time');
+            if (wasKickoffLastTurn) parts.push('kickoff return');
+            if (aceBonus) parts.push('Ace the long way');
+            critNote = ` ⚡Crit +${critGain} (${parts.join(', ')}) [${team} total ${this.critCounter[team]}]`;
+          }
+          this.log.push({type:'goal', text:`★ GOAL ${TEAM_DISPLAY_NAME[team].toUpperCase()}! ${cardStr(c1)} carries it past the line: ${breakdown} = ${goalPoints}.${critNote} Score: ${TEAM_DISPLAY_NAME.away.toUpperCase()} ${this.score.away} – ${TEAM_DISPLAY_NAME.home.toUpperCase()} ${this.score.home}`});
+        } else {
+          this.ball = {x:newX, y};
+          this.log.push({type:team, text:`[${TEAM_DISPLAY_NAME[team].toUpperCase()}] ${cardStr(c1)} → ball to (${this.ball.x},${this.ball.y}).`});
+        }
+      }
+
+      // Period-end is decided using the clock as it stood ENTERING this turn —
+      // i.e. already past the maximum because of prior turns' clock cards —
+      // so the qualifying move genuinely happens after time has expired.
+      let periodEnded = false;
+      if (!isKickoff && !scored){
+        const overtime = clockBeforeThisTurn > this.maxTime();
+        const teamHasLead = this.score[team] > this.score[this.otherTeam(team)];
+        if (overtime && !teamHasLead){
+          periodEnded = true;
+        }
+      }
+
+      this.clock += v2;
+      this.log.push({type:'system', text:`Clock +${v2} (${cardStr(c2)}) → ${this.clock}`});
+
+      this.possessionTicks[team] += v2;
+      const leadState = this.score.home > this.score.away ? 'home'
+        : (this.score.away > this.score.home ? 'away' : 'tied');
+      this.leadTicks[leadState] += v2;
+      const marginHome = this.score.home - this.score.away;
+      this.marginTickSum.home += marginHome * v2;
+      this.marginTickSum.away += (-marginHome) * v2;
+      this.lastTurnWasKickoff = isKickoff;
+
+      if (!scored){
+        this.turnTeam = this.otherTeam(team);
+      }
+
+      if (periodEnded){
+        this.endPeriod();
+      }
+
+      return {c1, c2, team, isKickoff, scored, goalPoints, periodEnded};
+    }
+    endPeriod(){
+      this.log.push({type:'system', text:`— END OF ${periodLabel(this.periodIndex).toUpperCase()}: ${TEAM_DISPLAY_NAME.away.toUpperCase()} ${this.score.away} – ${TEAM_DISPLAY_NAME.home.toUpperCase()} ${this.score.home} —`});
+      if (this.periodIndex === 1){
+        this.startPeriod(2);
+      } else {
+        if (this.score.home !== this.score.away){
+          this.gameOver = true;
+          const winner = this.score.home > this.score.away ? 'home' : 'away';
+          this.log.push({type:'final', text:`★ FINAL — ${TEAM_DISPLAY_NAME.away.toUpperCase()} ${this.score.away}, ${TEAM_DISPLAY_NAME.home.toUpperCase()} ${this.score.home} — ${TEAM_DISPLAY_NAME[winner].toUpperCase()} WINS ★`});
+        } else {
+          this.startPeriod(this.periodIndex + 1);
+        }
+      }
+    }
+  }
+
+  function cardStr(c){
+    return c.rank + SUIT_SYMBOL[c.suit];
+  }
+
+  // ---- DMAX score ----
+  // Computed once the game is over. Returns a breakdown object for the given team
+  // so the UI can show both the final DMAX and how it was built.
+  function computeDMAX(game, team){
+    if (!game.gameOver) return null;
+    const opp = game.otherTeam(team);
+    const winner = game.score.home > game.score.away ? 'home' : 'away';
+    const isWinner = (team === winner);
+    const winnerScore = game.score[winner];
+    const loserScore = game.score[game.otherTeam(winner)];
+    const isFavorite = (team === SPREAD_TEAM);
+
+    // 1. OT Decay — starts at 0, and only becomes nonzero once overtime is played.
+    // It's the delta the 25%-per-OT-period spread decay would apply: negative for the
+    // favorite (their edge shrinks toward 0), positive for the underdog (their deficit
+    // shrinks toward 0).
+    const otPeriods = Math.max(0, game.periodIndex - 2);
+    const spreadDecay = Math.pow(0.75, otPeriods);
+    const fullSpread = isFavorite ? SPREAD_VALUE : -SPREAD_VALUE;
+    const otDecayComponent = (fullSpread * spreadDecay) - fullSpread;
+
+    // 2. Combined Spread / Point-Differential. PD is the (non-negative) final-score
+    // margin of victory; S is the spread magnitude. Six cases collapse into three
+    // outcome scenarios, each with a favorite-side and underdog-side formula.
+    const favoriteWon = (winner === SPREAD_TEAM);
+    const S = SPREAD_VALUE;
+    const PD = Math.abs(game.score.home - game.score.away);
+    let favoriteAward, underdogAward;
+    if (favoriteWon){
+      if (PD > S){
+        // Favorite won by more than they were favored by.
+        favoriteAward = (PD / S) + 1;
+        underdogAward = -(PD / S);
+      } else {
+        // Favorite won, but not by more than they were favored by.
+        favoriteAward = PD / S;
+        underdogAward = 3 * (1 - (PD / S));
+      }
+    } else {
+      // Underdog won outright.
+      favoriteAward = (-S) - (0.25 * PD);
+      underdogAward = S + (0.5 * (S + PD));
+    }
+    const spreadPointDiffComponent = isFavorite ? favoriteAward : underdogAward;
+
+    // 3. This team's own Crit Counter.
+    const critComponent = game.critCounter[team];
+
+    // 4. Ball-control efficiency (ticks moved per point scored) — the OPPONENT's
+    // ratio share (scaled by 3) is awarded to this team. If a team scored 0, it gets
+    // 0 here and the other team gets the full 3 (ratio is undefined/"infinite" at 0 points).
+    let movementComponent;
+    if (game.score[team] === 0 && game.score[opp] === 0){
+      movementComponent = 0;
+    } else if (game.score[opp] === 0){
+      movementComponent = 3;
+    } else if (game.score[team] === 0){
+      movementComponent = 0;
+    } else {
+      const ratioTeam = game.possessionTicks[team] / game.score[team];
+      const ratioOpp = game.possessionTicks[opp] / game.score[opp];
+      movementComponent = (ratioOpp / (ratioTeam + ratioOpp)) * 3;
+    }
+
+    // 5. Share of game time spent in the lead, times 3.
+    const totalLeadTicks = game.leadTicks.home + game.leadTicks.away + game.leadTicks.tied;
+    const leadPctComponent = totalLeadTicks ? (game.leadTicks[team] / totalLeadTicks) * 3 : 0;
+
+    // 6. Tick-weighted average scoring margin across the whole game (floored at 0).
+    const totalTicks = game.possessionTicks.home + game.possessionTicks.away;
+    const avgMarginComponent = totalTicks ? Math.max(0, game.marginTickSum[team] / totalTicks) : 0;
+
+    // 7. Goal differential — 0 for the loser; winner gets goalDiff * (0.25 if favorite, 1.0 if underdog).
+    let goalDiffComponent = 0;
+    if (isWinner){
+      const goalDiff = game.goalsScored[team] - game.goalsScored[opp];
+      goalDiffComponent = goalDiff * (isFavorite ? 0.25 : 1.0);
+    }
+
+    // 8. Raw points-per-goal (grid points only, no bonuses).
+    const rawPPGComponent = game.goalsScored[team] ? (game.rawZonePoints[team] / game.goalsScored[team]) : 0;
+
+    const sum = otDecayComponent + spreadPointDiffComponent + critComponent + movementComponent
+      + leadPctComponent + avgMarginComponent + goalDiffComponent + rawPPGComponent;
+
+    // Multiplier — uses the OPPOSING team's skill rating in both branches.
+    let multiplier;
+    if (isWinner){
+      multiplier = (loserScore === 0)
+        ? winnerScore * ((SKILL_RATING[opp] / 100) + 1)
+        : (winnerScore / loserScore) * ((SKILL_RATING[opp] / 100) + 1);
+    } else {
+      multiplier = (loserScore / winnerScore) * ((SKILL_RATING[opp] / 100) + 1);
+    }
+
+    const rawdmax = sum * multiplier;
+
+    // Final piecewise transform. A negative RAWDMAX always yields a DMAX of 0.
+    let dmax;
+    if (rawdmax < 0){
+      dmax = 0;
+    } else {
+      const x = rawdmax / 100;
+      const sqrtX = Math.sqrt(x);
+      dmax = (sqrtX < 1)
+        ? ((sqrtX + x) / 2) * 100
+        : Math.pow(((rawdmax - 100) / 100) + 10, 2);
+    }
+
+    return {
+      dmax, rawdmax, sum, multiplier, isWinner, isFavorite,
+      components: {
+        otDecayComponent, spreadPointDiffComponent, critComponent, movementComponent,
+        leadPctComponent, avgMarginComponent, goalDiffComponent, rawPPGComponent
+      }
+    };
+  }
+
+  // ---- Game Interest ----
+  // A single whole-match metric (not per-team). Parsed structure of the formula:
+  //   innerSum   = avgRanking*(0.872+sumRankings/1000) + winner's signed spread
+  //   typeFactor = 1 - (0.06 if AGG) - (type-specific deduction)
+  //   base       = (1 - (innerSum*typeFactor)/200) * 100
+  //   base      += 1 per overtime period played
+  //   result     = base * (0.97+0.01*timeslot) * (1+0.00025*ticksOver600) * (1.02 weekend / 0.98 midweek)
+  function computeGameInterest(game){
+    if (!game.gameOver) return null;
+    const winner = game.score.home > game.score.away ? 'home' : 'away';
+
+    const avgRanking = (RANK_HOME + RANK_AWAY) / 2;
+    const sumRankings = RANK_HOME + RANK_AWAY;
+    const rankTerm = avgRanking * (0.872 + sumRankings / 1000);
+
+    // Each team's own fixed spread version (positive if favorite, negative if underdog);
+    // the winner's version is the one used, regardless of which team that is.
+    const homeSpreadVersion = (SPREAD_TEAM === 'home') ? SPREAD_VALUE : -SPREAD_VALUE;
+    const awaySpreadVersion = (SPREAD_TEAM === 'away') ? SPREAD_VALUE : -SPREAD_VALUE;
+    const winnerSpreadVersion = (winner === 'away') ? awaySpreadVersion : homeSpreadVersion;
+
+    const innerSum = rankTerm + winnerSpreadVersion;
+
+    let deductions = IS_AGG ? 0.06 : 0;
+    deductions += (GAME_TYPE_DEDUCTION[GAME_TYPE] || 0);
+    const typeFactor = 1 - deductions;
+
+    const scaled = (innerSum * typeFactor) / 200;
+    let value = (1 - scaled) * 100;
+
+    const otPeriods = Math.max(0, game.periodIndex - 2);
+    value += otPeriods;
+
+    const timeslotMult = 0.97 + 0.01 * TIMESLOT;
+    value *= timeslotMult;
+
+    // totalTicks already sums every clock tick across the whole match — first half,
+    // second half, and any overtime periods, each including their own stoppage time —
+    // since possessionTicks accumulates continuously and is never reset per period.
+    const totalTicks = game.possessionTicks.home + game.possessionTicks.away;
+    const ticksOver600 = Math.max(0, totalTicks - 600);
+    const tickMult = 1 + 0.00025 * ticksOver600;
+    value *= tickMult;
+
+    const weekendMult = IS_WEEKEND ? 1.02 : 0.98;
+    value *= weekendMult;
+
+    return {
+      gameInterest: value,
+      breakdown: {
+        avgRanking, sumRankings, rankTerm, winnerSpreadVersion, innerSum,
+        deductions, typeFactor, scaled, otPeriods, timeslotMult,
+        totalTicks, ticksOver600, tickMult, weekendMult
+      }
+    };
+  }
+
+  // ---- EX Bonus ----
+  // Each team tracks its own EX total from the rules below (all whole numbers — every
+  // "per X above Y" rule floors to an integer). Final result = winner's EX - loser's EX;
+  // the winner keeps whatever's left (the loser's total isn't separately awarded).
+  function computeEXBonus(game, team){
+    if (!game.gameOver) return null;
+    const opp = game.otherTeam(team);
+    const winner = game.score.home > game.score.away ? 'home' : 'away';
+    const isWinner = (team === winner);
+    const isFavorite = (team === SPREAD_TEAM);
+
+    const ownDMAX = computeDMAX(game, team).dmax;
+    const oppDMAX = computeDMAX(game, opp).dmax;
+    const totalLeadTicks = game.leadTicks.home + game.leadTicks.away + game.leadTicks.tied;
+    const ownLeadPct = totalLeadTicks ? game.leadTicks[team] / totalLeadTicks : 0;
+    const oppLeadPct = totalLeadTicks ? game.leadTicks[opp] / totalLeadTicks : 0;
+    const gameInterest = computeGameInterest(game).gameInterest;
+
+    // 1. +1 per 10 points scored above 30.
+    const scoreAbove30 = Math.max(0, Math.floor((game.score[team] - 30) / 10));
+    // 2. +1 for a DMAX of 100 or more.
+    const dmax100 = (ownDMAX >= 100) ? 1 : 0;
+    // 3. -2 if won but had a lower DMAX than the opponent.
+    const lowerDmax = (isWinner && ownDMAX < oppDMAX) ? -2 : 0;
+    // 4. +2 if won but led for a lower share of the game than the opponent.
+    const lowerLeadShare = (isWinner && ownLeadPct < oppLeadPct) ? 2 : 0;
+    // 5. -5 for scoring 0 points.
+    const zeroScore = (game.score[team] === 0) ? -5 : 0;
+    // 6. +5 if the opponent scored 0 points.
+    const oppZeroScore = (game.score[opp] === 0) ? 5 : 0;
+    // 7. +1 per 6 crit points above 6.
+    const critAbove6 = Math.max(0, Math.floor((game.critCounter[team] - 6) / 6));
+    // 8. -2 if lost, was the favorite, and didn't earn the full theoretical spread bonus.
+    let maxSpreadBonus = 0;
+    for (let i = 1; i <= 12; i++) maxSpreadBonus += spreadBonusForGoalIndex(SPREAD_VALUE_FOR_BONUS, i);
+    const spreadShortfall = maxSpreadBonus - game.spreadBonusEarned[team];
+    const missedSpreadBonus = (!isWinner && isFavorite && spreadShortfall > 0) ? -2 : 0;
+    // 9. +1 per 2 points of Game Interest above 100, only if won.
+    const giAbove100 = isWinner ? Math.max(0, Math.floor((gameInterest - 100) / 2)) : 0;
+
+    const ex = scoreAbove30 + dmax100 + lowerDmax + lowerLeadShare + zeroScore
+      + oppZeroScore + critAbove6 + missedSpreadBonus + giAbove100;
+
+    return {
+      ex, isWinner, isFavorite,
+      components: {
+        scoreAbove30, dmax100, lowerDmax, lowerLeadShare, zeroScore,
+        oppZeroScore, critAbove6, missedSpreadBonus, giAbove100
+      }
+    };
+  }
+
+  function computeEXFinal(game){
+    if (!game.gameOver) return null;
+    const winner = game.score.home > game.score.away ? 'home' : 'away';
+    const loser = game.otherTeam(winner);
+    const winnerEX = computeEXBonus(game, winner);
+    const loserEX = computeEXBonus(game, loser);
+    return {winner, loser, winnerEX, loserEX, finalEX: winnerEX.ex - loserEX.ex};
+  }
+
+  // ---------- Rendering ----------
+  const pitchEl = document.getElementById('pitch');
+  const homeScoreEl = document.getElementById('homeScore');
+  const awayScoreEl = document.getElementById('awayScore');
+  const clockTimeEl = document.getElementById('clockTime');
+  const periodLabelEl = document.getElementById('periodLabel');
+  const goalBanner = document.getElementById('goalBanner');
+  const cardMoveEl = document.getElementById('cardMove');
+  const cardClockEl = document.getElementById('cardClock');
+  const dealBtn = document.getElementById('dealBtn');
+  const autoBtn = document.getElementById('autoBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const resultBanner = document.getElementById('resultBanner');
+  const logBody = document.getElementById('logBody');
+
+  let game = new Game();
+  let autoTimer = null;
+
+  function buildPitchCells(){
+    pitchEl.innerHTML = '';
+    for (let row=1; row<=7; row++){
+      for (let col=1; col<=17; col++){
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        if (col % 2 === 0) cell.classList.add('alt');
+        if (col === 9) cell.classList.add('center-col');
+        if (col === 1) cell.classList.add('home-end');
+        if (col === 17) cell.classList.add('away-end');
+        cell.style.gridColumn = col;
+        cell.style.gridRow = row;
+
+        if (col !== 1 && col !== 2 && col !== 16 && col !== 17){
+          const homeVal = pointsForPosition(col, row, HOME_ATK_MODIFIER);
+          const awayVal = pointsForPosition(col, row, AWAY_ATK_MODIFIER);
+          const zv = document.createElement('div');
+          zv.className = 'zone-vals';
+          zv.innerHTML = (homeVal === awayVal)
+            ? `<span class="zv-same">${homeVal}</span>`
+            : `<span class="zv-away">${awayVal}</span><span class="zv-slash">/</span><span class="zv-home">${homeVal}</span>`;
+          cell.appendChild(zv);
+        }
+
+        pitchEl.appendChild(cell);
+      }
+    }
+    const ball = document.createElement('div');
+    ball.className = 'marker ball';
+    ball.id = 'ballMarker';
+    pitchEl.appendChild(ball);
+    for (let i=0;i<3;i++){
+      const t = document.createElement('div');
+      t.className = 'marker trail';
+      t.id = 'trail'+i;
+      t.style.opacity = 0;
+      pitchEl.appendChild(t);
+    }
+  }
+
+  function placeMarker(el, x, y, opacity){
+    el.style.gridColumn = x;
+    el.style.gridRow = y;
+    if (opacity !== undefined) el.style.opacity = opacity;
+  }
+
+  function renderBallAndTrail(){
+    placeMarker(document.getElementById('ballMarker'), game.ball.x, game.ball.y, 1);
+    const opac = [0.15, 0.3, 0.5];
+    for (let i=0;i<3;i++){
+      const t = document.getElementById('trail'+i);
+      const pos = game.trail[game.trail.length-3+i];
+      if (pos){
+        placeMarker(t, pos.x, pos.y, opac[i]);
+      } else {
+        t.style.opacity = 0;
+      }
+    }
+  }
+
+  function renderScoreboard(){
+    homeScoreEl.textContent = game.score.home;
+    awayScoreEl.textContent = game.score.away;
+    clockTimeEl.textContent = `${game.clock} / ${game.periodBase + game.periodTarget}` + (game.stoppageAccrued ? ` (+${game.stoppageAccrued})` : '');
+    periodLabelEl.textContent = periodLabel(game.periodIndex);
+    document.getElementById('goalsAwayValue').textContent = `${TEAM_DISPLAY_NAME.away} ${game.goalsScored.away}`;
+    document.getElementById('goalsHomeValue').textContent = `${TEAM_DISPLAY_NAME.home} ${game.goalsScored.home}`;
+    const totalTicksSoFar = game.possessionTicks.home + game.possessionTicks.away;
+    document.getElementById('ticksTotalValue').textContent = totalTicksSoFar;
+    if (game.lastGoalAnnouncement){
+      const g = game.lastGoalAnnouncement;
+      goalBanner.textContent = `${TEAM_DISPLAY_NAME[g.team].toUpperCase()} SCORED ${g.points} AT ${g.time}`;
+      goalBanner.classList.add('show');
+    } else {
+      goalBanner.classList.remove('show');
+    }
+  }
+
+  function renderCard(el, card, valueLabel){
+    el.classList.remove('empty');
+    el.classList.remove('red','black');
+    if (!card){ el.classList.add('empty'); el.querySelector('.rank').textContent='—'; return; }
+    el.classList.add(SUIT_COLOR[card.suit]);
+    el.innerHTML = `<div class="tag">${valueLabel}</div><div class="rank">${card.rank}</div><div class="suit">${SUIT_SYMBOL[card.suit]}</div><div class="val">value ${cardValue(card.rank)}</div>`;
+    el.animate([
+      {transform:'rotateY(90deg)', opacity:0.2},
+      {transform:'rotateY(0deg)', opacity:1}
+    ], {duration:320, easing:'ease-out'});
+  }
+
+  function appendLog(entry){
+    const line = document.createElement('div');
+    line.className = 'log-line ' + entry.type;
+    line.textContent = entry.text;
+    logBody.insertBefore(line, logBody.firstChild);
+    logBody.scrollTop = 0;
+  }
+
+  function renderStats(){
+    const totalLead = game.leadTicks.home + game.leadTicks.away + game.leadTicks.tied;
+    const homeLeadPct = totalLead ? (game.leadTicks.home / totalLead * 100) : 0;
+    const awayLeadPct = totalLead ? (game.leadTicks.away / totalLead * 100) : 0;
+    const tiedPct = totalLead ? Math.max(0, 100 - homeLeadPct - awayLeadPct) : 0;
+    document.getElementById('leadHomeBar').style.width = homeLeadPct + '%';
+    document.getElementById('leadTiedBar').style.width = tiedPct + '%';
+    document.getElementById('leadAwayBar').style.width = awayLeadPct + '%';
+    document.getElementById('leadHomeNum').textContent = `${TEAM_DISPLAY_NAME.home} ${homeLeadPct.toFixed(1)}%`;
+    document.getElementById('leadTiedNum').textContent = `Tied ${tiedPct.toFixed(1)}%`;
+    document.getElementById('leadAwayNum').textContent = `${TEAM_DISPLAY_NAME.away} ${awayLeadPct.toFixed(1)}%`;
+
+    document.getElementById('critHomeValue').textContent = `${TEAM_DISPLAY_NAME.home} ${game.critCounter.home}`;
+    document.getElementById('critAwayValue').textContent = `${TEAM_DISPLAY_NAME.away} ${game.critCounter.away}`;
+  }
+
+  // Formats a number for display, and quietly turns "-0" into "0".
+  function fmt(n, decimals){
+    const v = Math.abs(n) < 1e-9 ? 0 : n;
+    return v.toFixed(decimals);
+  }
+
+  const DMAX_ROW_LABELS = [
+    ['otDecayComponent', 'OT Decay'],
+    ['spreadPointDiffComponent', 'Spread / Point Diff'],
+    ['critComponent', 'Crit Counter'],
+    ['movementComponent', 'Movement efficiency'],
+    ['leadPctComponent', 'Time in lead ×3'],
+    ['avgMarginComponent', 'Avg. lead margin'],
+    ['goalDiffComponent', 'Goal differential'],
+    ['rawPPGComponent', 'Raw points/goal'],
+  ];
+
+  function renderDMAXColumn(report, bigEl, rowsEl){
+    bigEl.textContent = fmt(report.dmax, 1);
+    let html = '';
+    for (const [key, label] of DMAX_ROW_LABELS){
+      html += `<div class="drow"><span>${label}</span><span>${fmt(report.components[key], 2)}</span></div>`;
+    }
+    html += `<div class="drow dtotal"><span>Sum</span><span>${fmt(report.sum, 2)}</span></div>`;
+    html += `<div class="drow"><span>× Multiplier</span><span>${fmt(report.multiplier, 3)}</span></div>`;
+    html += `<div class="drow dtotal"><span>RAWDMAX</span><span>${fmt(report.rawdmax, 2)}</span></div>`;
+    rowsEl.innerHTML = html;
+  }
+
+  function renderDMAX(){
+    const dmaxPanel = document.getElementById('dmaxPanel');
+    if (!game.gameOver){
+      dmaxPanel.classList.remove('show');
+      return;
+    }
+    const home = computeDMAX(game, 'home');
+    const away = computeDMAX(game, 'away');
+    renderDMAXColumn(home, document.getElementById('dmaxHomeBig'), document.getElementById('dmaxHomeRows'));
+    renderDMAXColumn(away, document.getElementById('dmaxAwayBig'), document.getElementById('dmaxAwayRows'));
+    dmaxPanel.classList.add('show');
+  }
+
+  const GI_ROW_LABELS = [
+    ['avgRanking', 'Avg. ranking'],
+    ['rankTerm', 'Ranking term'],
+    ['winnerSpreadVersion', "Winner's spread"],
+    ['innerSum', 'Inner sum'],
+    ['typeFactor', 'Type factor'],
+    ['otPeriods', 'OT periods'],
+    ['timeslotMult', '× Timeslot mult.'],
+    ['tickMult', '× Tick mult.'],
+    ['weekendMult', '× Weekend mult.'],
+  ];
+
+  function renderGameInterest(){
+    const giPanel = document.getElementById('giPanel');
+    if (!game.gameOver){
+      giPanel.classList.remove('show');
+      return;
+    }
+    const r = computeGameInterest(game);
+    document.getElementById('giBig').textContent = fmt(r.gameInterest, 2);
+    let html = '';
+    for (const [key, label] of GI_ROW_LABELS){
+      html += `<div class="drow"><span>${label}</span><span>${fmt(r.breakdown[key], 3)}</span></div>`;
+    }
+    document.getElementById('giRows').innerHTML = html;
+    giPanel.classList.add('show');
+  }
+
+  const ELO_ROW_LABELS = [
+    ['pointDifferential', 'Point differential'],
+    ['gameTypeK', 'K: game-type adj.'],
+    ['multiplierBonus', 'K: multiplier bonus'],
+    ['kValue', 'K-Value'],
+    ['winnerExpectedPct', "Winner's expected win%"],
+    ['rawDelta', 'Raw delta'],
+    ['delta', 'Delta (rounded up)'],
+  ];
+
+  function renderEloUpdate(){
+    const eloPanel = document.getElementById('eloPanel');
+    if (!game.gameOver){
+      eloPanel.classList.remove('show');
+      return;
+    }
+    const r = computeEloUpdate(game);
+    const homeWon = (r.winner === 'home');
+    const homeOldElo = homeWon ? r.winnerOldElo : r.loserOldElo;
+    const homeNewElo = homeWon ? r.winnerNewElo : r.loserNewElo;
+    const awayOldElo = homeWon ? r.loserOldElo : r.winnerOldElo;
+    const awayNewElo = homeWon ? r.loserNewElo : r.winnerNewElo;
+
+    document.getElementById('eloAwayLabel').textContent = `${TEAM_DISPLAY_NAME.away.toUpperCase()} (${homeWon ? 'loser' : 'winner'})`;
+    document.getElementById('eloAwayChange').textContent = `${awayOldElo} → ${awayNewElo}`;
+    document.getElementById('eloHomeLabel').textContent = `${TEAM_DISPLAY_NAME.home.toUpperCase()} (${homeWon ? 'winner' : 'loser'})`;
+    document.getElementById('eloHomeChange').textContent = `${homeOldElo} → ${homeNewElo}`;
+
+    let html = '';
+    for (const [key, label] of ELO_ROW_LABELS){
+      const decimals = (key === 'gameTypeK' || key === 'multiplierBonus' || key === 'kValue' || key === 'delta') ? 0 : 3;
+      html += `<div class="drow"><span>${label}</span><span>${fmt(r[key], decimals)}</span></div>`;
+    }
+    document.getElementById('eloRows').innerHTML = html;
+    eloPanel.classList.add('show');
+  }
+
+  const EX_ROW_LABELS = [
+    ['scoreAbove30', 'Score >30 (÷10)'],
+    ['dmax100', 'DMAX ≥100'],
+    ['lowerDmax', 'Won w/ lower DMAX'],
+    ['lowerLeadShare', 'Won w/ less lead time'],
+    ['zeroScore', 'Shutout (scored 0)'],
+    ['oppZeroScore', 'Opponent shutout'],
+    ['critAbove6', 'Crit >6 (÷6)'],
+    ['missedSpreadBonus', 'Missed spread bonus'],
+    ['giAbove100', 'GI >100 (÷2, if won)'],
+  ];
+
+  function renderEXColumn(report, bigEl, rowsEl){
+    bigEl.textContent = (report.ex >= 0 ? '+' : '') + report.ex;
+    let html = '';
+    for (const [key, label] of EX_ROW_LABELS){
+      const v = report.components[key];
+      if (v === 0) continue;
+      html += `<div class="drow"><span>${label}</span><span>${v >= 0 ? '+' : ''}${v}</span></div>`;
+    }
+    if (!html) html = `<div class="drow"><span>No bonuses triggered</span><span>—</span></div>`;
+    rowsEl.innerHTML = html;
+  }
+
+  function renderEXBonus(){
+    const exPanel = document.getElementById('exPanel');
+    if (!game.gameOver){
+      exPanel.classList.remove('show');
+      return;
+    }
+    document.getElementById('exAwayLabel').textContent = TEAM_DISPLAY_NAME.away;
+    document.getElementById('exHomeLabel').textContent = TEAM_DISPLAY_NAME.home;
+    const r = computeEXFinal(game);
+    const homeReport = (r.winner === 'home') ? r.winnerEX : r.loserEX;
+    const awayReport = (r.winner === 'away') ? r.winnerEX : r.loserEX;
+    renderEXColumn(homeReport, document.getElementById('exHomeBig'), document.getElementById('exHomeRows'));
+    renderEXColumn(awayReport, document.getElementById('exAwayBig'), document.getElementById('exAwayRows'));
+    const finalEl = document.getElementById('exFinalBig');
+    finalEl.textContent = `${TEAM_DISPLAY_NAME[r.winner].toUpperCase()} ${r.finalEX >= 0 ? '+' : ''}${r.finalEX}`;
+    exPanel.classList.add('show');
+  }
+
+  function renderAll(){
+    renderScoreboard();
+    renderBallAndTrail();
+    renderStats();
+    renderDMAX();
+    renderGameInterest();
+    renderEloUpdate();
+    renderEXBonus();
+    if (game.gameOver){
+      resultBanner.classList.add('show');
+      const winnerText = game.score.home > game.score.away ? `${TEAM_DISPLAY_NAME.home.toUpperCase()} WINS`
+        : (game.score.away > game.score.home ? `${TEAM_DISPLAY_NAME.away.toUpperCase()} WINS` : 'TIE');
+      resultBanner.textContent = `FINAL — ${TEAM_DISPLAY_NAME.away.toUpperCase()} ${game.score.away}, ${TEAM_DISPLAY_NAME.home.toUpperCase()} ${game.score.home} — ${winnerText}`;
+      dealBtn.disabled = true;
+      autoBtn.disabled = true;
+      document.getElementById('simGameBtn').disabled = true;
+      stopAuto();
+      recordResultIfNeeded();
+    } else {
+      resultBanner.classList.remove('show');
+      dealBtn.disabled = false;
+      autoBtn.disabled = false;
+      document.getElementById('simGameBtn').disabled = false;
+    }
+  }
+
+  function doTurn(){
+    if (game.gameOver) return;
+    const flushFrom = game.log.length;
+    const result = game.processTurn();
+    if (!result) return;
+    renderCard(cardMoveEl, result.c1, 'Move');
+    renderCard(cardClockEl, result.c2, 'Clock');
+    for (let i=flushFrom;i<game.log.length;i++) appendLog(game.log[i]);
+    renderAll();
+  }
+
+  function simGame(){
+    if (game.gameOver) return;
+    stopAuto();
+    const flushFrom = game.log.length;
+    let lastResult = null;
+    let guard = 0;
+    while (!game.gameOver && guard < 20000){
+      lastResult = game.processTurn();
+      guard++;
+    }
+    for (let i=flushFrom;i<game.log.length;i++) appendLog(game.log[i]);
+    if (lastResult){
+      renderCard(cardMoveEl, lastResult.c1, 'Move');
+      renderCard(cardClockEl, lastResult.c2, 'Clock');
+    }
+    renderAll();
+  }
+
+  function startAuto(){
+    autoBtn.textContent = 'Pause';
+    autoTimer = setInterval(()=>{
+      doTurn();
+      if (game.gameOver) stopAuto();
+    }, 550);
+  }
+  function stopAuto(){
+    autoBtn.textContent = 'Auto-Play';
+    if (autoTimer){ clearInterval(autoTimer); autoTimer = null; }
+  }
+
+  dealBtn.addEventListener('click', ()=>{ stopAuto(); doTurn(); });
+  document.getElementById('simGameBtn').addEventListener('click', simGame);
+  autoBtn.addEventListener('click', ()=>{
+    if (autoTimer) stopAuto(); else startAuto();
+  });
+  resetBtn.addEventListener('click', ()=>{
+    stopAuto();
+    game = new Game();
+    logBody.innerHTML = '';
+    for (const entry of game.log) appendLog(entry);
+    renderCard(cardMoveEl, null, 'Move');
+    renderCard(cardClockEl, null, 'Clock');
+    renderAll();
+  });
+
+  document.querySelectorAll('.panel-header').forEach(header => {
+    header.addEventListener('click', () => {
+      document.getElementById(header.dataset.target).classList.toggle('collapsed');
+    });
+  });
+
+  // ---------- Tabs ----------
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ---------- Team roster importer ----------
+  // In-memory only for now — not yet wired into match simulation, which still runs off
+  // the fixed constants above. This just parses and previews pasted rows.
+  const ROSTER_COLUMNS = [
+    'Team Rank', 'DEX #', 'Region', 'Team Name', 'League Division', 'Accolades',
+    'Fatigue', 'Climate', 'PF', 'PA', 'DSCR', 'Skill Rating', 'Elo', 'Rating Grade',
+    'Region Record', 'League Record', 'Cup Record', 'Overall Record',
+    'Primary Type', 'Secondary Type'
+  ];
+  let TEAM_ROSTER = [];
+
+  // The spreadsheet's League Division column is a plain numeral (1, 2, 3...); displayed
+  // form spells it out ("First Div.", "Second Div.", ...), matching the existing
+  // TEAM_DIVISION placeholder format used elsewhere.
+  const ORDINAL_WORDS = [
+    null, 'First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth', 'Seventh', 'Eighth',
+    'Ninth', 'Tenth', 'Eleventh', 'Twelfth', 'Thirteenth', 'Fourteenth', 'Fifteenth',
+    'Sixteenth', 'Seventeenth', 'Eighteenth', 'Nineteenth', 'Twentieth'
+  ];
+  function formatDivision(value){
+    const num = parseInt(value, 10);
+    if (isNaN(num) || num < 1) return value; // not a recognizable numeral — leave as-is
+    if (num < ORDINAL_WORDS.length) return `${ORDINAL_WORDS[num]} Div.`;
+    return `${num}th Div.`; // beyond the spelled-out range; rough fallback
+  }
+
+  // The spreadsheet's Primary/Secondary Type columns are numerals (1-18) mapping onto
+  // TYPE_ORDER (1=NORMAL ... 18=FAIRY) — same idea as League Division, spelled out here
+  // to the actual type name so the rest of the app (which matches on type names) just works.
+  function formatType(value){
+    const num = parseInt(value, 10);
+    if (isNaN(num) || num < 1 || num > TYPE_ORDER.length) return value; // not recognizable — leave as-is
+    return TYPE_ORDER[num - 1];
+  }
+
+  // Excel wraps a cell in double quotes when copying it to the clipboard if that cell
+  // contains an embedded line break (Alt+Enter), a tab, or a quote character — with any
+  // literal quote inside doubled ("" -> "). A naive split on newline/tab breaks on those
+  // embedded line breaks; this walks the text character by character so a quoted field's
+  // internal newlines stay part of that one field instead of starting a new row.
+  function parseDelimitedText(text, delimiter){
+    const rows = [];
+    let row = [];
+    let field = '';
+    let inQuotes = false;
+    let i = 0;
+    const len = text.length;
+
+    while (i < len){
+      const char = text[i];
+
+      if (inQuotes){
+        if (char === '"'){
+          if (text[i + 1] === '"'){
+            field += '"';
+            i += 2;
+          } else {
+            inQuotes = false;
+            i++;
+          }
+        } else {
+          field += char;
+          i++;
+        }
+        continue;
+      }
+
+      if (char === '"'){
+        inQuotes = true;
+        i++;
+      } else if (char === delimiter){
+        row.push(field);
+        field = '';
+        i++;
+      } else if (char === '\r' || char === '\n'){
+        row.push(field);
+        field = '';
+        rows.push(row);
+        row = [];
+        i++;
+        if (char === '\r' && text[i] === '\n') i++;
+      } else {
+        field += char;
+        i++;
+      }
+    }
+
+    if (field.length > 0 || row.length > 0){
+      row.push(field);
+      rows.push(row);
+    }
+
+    return rows;
+  }
+
+  function parseRosterPaste(text, hasHeader){
+    const rows = parseDelimitedText(text, '\t')
+      .filter(row => !(row.length === 1 && row[0].trim() === ''));
+    if (hasHeader && rows.length) rows.shift();
+    return rows;
+  }
+
+  const LEAGUE_DIVISION_COL_INDEX = ROSTER_COLUMNS.indexOf('League Division');
+  const PRIMARY_TYPE_COL_INDEX = ROSTER_COLUMNS.indexOf('Primary Type');
+  const SECONDARY_TYPE_COL_INDEX = ROSTER_COLUMNS.indexOf('Secondary Type');
+
+  function formatRosterCell(i, raw){
+    if (i === LEAGUE_DIVISION_COL_INDEX) return formatDivision(raw);
+    if (i === PRIMARY_TYPE_COL_INDEX || i === SECONDARY_TYPE_COL_INDEX) return formatType(raw);
+    return raw;
+  }
+
+  function renderRosterTable(rows){
+    const table = document.getElementById('rosterTable');
+    let html = '<thead><tr>' + ROSTER_COLUMNS.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+    for (const row of rows){
+      html += '<tr>' + ROSTER_COLUMNS.map((_, i) => {
+        const raw = row[i] !== undefined ? row[i] : '';
+        return `<td>${formatRosterCell(i, raw)}</td>`;
+      }).join('') + '</tr>';
+    }
+    html += '</tbody>';
+    table.innerHTML = html;
+  }
+
+  document.getElementById('rosterParseBtn').addEventListener('click', () => {
+    const text = document.getElementById('rosterPasteBox').value;
+    const hasHeader = document.getElementById('rosterHasHeader').checked;
+    const rows = parseRosterPaste(text, hasHeader);
+    const statusEl = document.getElementById('rosterStatus');
+
+    if (rows.length === 0){
+      statusEl.textContent = 'No rows found — paste some tab-separated data first.';
+      statusEl.className = 'roster-status warn';
+      document.getElementById('rosterTable').innerHTML = '';
+      TEAM_ROSTER = [];
+      return;
+    }
+
+    const badRows = rows.filter(r => r.length !== ROSTER_COLUMNS.length);
+    TEAM_ROSTER = rows.map(r => {
+      const obj = {};
+      ROSTER_COLUMNS.forEach((col, i) => {
+        const raw = r[i] !== undefined ? r[i] : '';
+        obj[col] = formatRosterCell(i, raw);
+      });
+      return obj;
+    });
+    renderRosterTable(rows);
+
+    let msg = `Parsed ${rows.length} team${rows.length === 1 ? '' : 's'}.`;
+    if (badRows.length){
+      msg += ` ⚠ ${badRows.length} row(s) didn't have exactly ${ROSTER_COLUMNS.length} columns — check for missing tabs or an extra header row.`;
+    }
+    statusEl.textContent = msg;
+    statusEl.className = 'roster-status ' + (badRows.length ? 'warn' : 'ok');
+  });
+
+  document.getElementById('rosterClearBtn').addEventListener('click', () => {
+    document.getElementById('rosterPasteBox').value = '';
+    document.getElementById('rosterTable').innerHTML = '';
+    document.getElementById('rosterStatus').textContent = '';
+    TEAM_ROSTER = [];
+  });
+
+  // ---------- Schedule importer ----------
+  // Rows are just [Away Rank, Home Rank, Adv]; everything else (game type, AGG,
+  // weekend/midweek, round label, timeslot assignment) comes from the batch settings
+  // above and applies to the whole pasted list at once.
+  const SCHEDULE_COLUMNS = ['Away Team Rank', 'Home Team Rank', 'Adv'];
+  let SCHEDULE = [];
+  let nextMatchIndex = 0; // which SCHEDULE entry "Load Next Match" will load
+
+  function findTeamByRank(rank){
+    const num = parseInt(rank, 10);
+    if (isNaN(num)) return null;
+    return TEAM_ROSTER.find(t => parseInt(t['Team Rank'], 10) === num) || null;
+  }
+
+  function parseSchedulePaste(text, hasHeader){
+    const rows = parseDelimitedText(text, '\t')
+      .filter(row => !(row.length === 1 && row[0].trim() === ''));
+    if (hasHeader && rows.length) rows.shift();
+    return rows;
+  }
+
+  function renderScheduleTable(entries){
+    const table = document.getElementById('schedTable');
+    const headers = ['', '#', 'Round', 'Away', 'Home', 'Adv', 'Type', 'Format', 'Day', 'Timeslot'];
+    let html = '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead><tbody>';
+    entries.forEach((e, idx) => {
+      html += '<tr>'
+        + `<td><button class="load-match-row-btn" data-index="${idx}">Load →</button></td>`
+        + `<td>${idx + 1}</td>`
+        + `<td>${e.round}</td>`
+        + `<td>${e.awayRank}${e.awayName ? ' — ' + e.awayName : ''}</td>`
+        + `<td>${e.homeRank}${e.homeName ? ' — ' + e.homeName : ''}</td>`
+        + `<td>${e.adv}</td>`
+        + `<td>${e.gameType}</td>`
+        + `<td>${e.agg ? 'AGG' : 'Single'}</td>`
+        + `<td>${e.weekend ? 'Weekend' : 'Midweek'}</td>`
+        + `<td>${e.timeslot}</td>`
+        + '</tr>';
+    });
+    html += '</tbody>';
+    table.innerHTML = html;
+  }
+
+  document.getElementById('schedParseBtn').addEventListener('click', () => {
+    const text = document.getElementById('schedPasteBox').value;
+    const hasHeader = document.getElementById('schedHasHeader').checked;
+    const rows = parseSchedulePaste(text, hasHeader);
+    const statusEl = document.getElementById('schedStatus');
+
+    if (rows.length === 0){
+      statusEl.textContent = 'No rows found — paste some tab-separated data first.';
+      statusEl.className = 'roster-status warn';
+      document.getElementById('schedTable').innerHTML = '';
+      SCHEDULE = [];
+      return;
+    }
+
+    const gameType = document.getElementById('schedGameType').value;
+    const agg = document.getElementById('schedAgg').value === 'true';
+    const weekend = document.getElementById('schedWeekend').value === 'true';
+    const round = document.getElementById('schedRound').value.trim() || 'Round 1';
+    const startSlot = Math.max(1, parseInt(document.getElementById('schedStartSlot').value, 10) || 1);
+    const gamesPerSlot = Math.max(1, parseInt(document.getElementById('schedGamesPerSlot').value, 10) || 1);
+
+    const badRows = rows.filter(r => r.length !== SCHEDULE_COLUMNS.length);
+    let overflowCount = 0;
+
+    SCHEDULE = rows.map((r, idx) => {
+      const awayRank = (r[0] || '').trim();
+      const homeRank = (r[1] || '').trim();
+      const advRaw = (r[2] || '').trim();
+      const advParsed = advRaw === '' ? 0 : parseFloat(advRaw);
+      const timeslot = startSlot + Math.floor(idx / gamesPerSlot);
+      if (timeslot > 10) overflowCount++;
+      const awayTeam = findTeamByRank(awayRank);
+      const homeTeam = findTeamByRank(homeRank);
+      return {
+        round, gameType, agg, weekend, timeslot,
+        awayRank, homeRank, adv: isNaN(advParsed) ? 0 : advParsed,
+        awayName: awayTeam ? awayTeam['Team Name'] : '',
+        homeName: homeTeam ? homeTeam['Team Name'] : ''
+      };
+    });
+    nextMatchIndex = 0;
+
+    renderScheduleTable(SCHEDULE);
+
+    let msg = `Parsed ${rows.length} matchup${rows.length === 1 ? '' : 's'} for ${round} `
+      + `(${gameType}${agg ? ', AGG' : ''}, ${weekend ? 'Weekend' : 'Midweek'}).`;
+    if (badRows.length){
+      msg += ` ⚠ ${badRows.length} row(s) didn't have exactly ${SCHEDULE_COLUMNS.length} columns.`;
+    }
+    if (overflowCount){
+      msg += ` ⚠ ${overflowCount} matchup(s) would land past timeslot 10 — lower the starting timeslot or raise games-per-timeslot.`;
+    }
+    if (TEAM_ROSTER.length === 0){
+      msg += ' (Import the Teams roster first to see team names next to each rank.)';
+    }
+    statusEl.textContent = msg;
+    statusEl.className = 'roster-status ' + ((badRows.length || overflowCount) ? 'warn' : 'ok');
+  });
+
+  document.getElementById('schedClearBtn').addEventListener('click', () => {
+    document.getElementById('schedPasteBox').value = '';
+    document.getElementById('schedTable').innerHTML = '';
+    document.getElementById('schedStatus').textContent = '';
+    SCHEDULE = [];
+    nextMatchIndex = 0;
+  });
+
+  // ---------- Region Climate importer ----------
+  // Two columns: Region, Region Climate (0-1). Feeds REGION_CLIMATE_TABLE, which both
+  // the Climate Bonus (per team's own region) and Weather (from the Home team's region)
+  // are derived from. Re-applies immediately to whatever match is currently loaded.
+  function parseClimatePaste(text, hasHeader){
+    const rows = parseDelimitedText(text, '\t')
+      .filter(row => !(row.length === 1 && row[0].trim() === ''));
+    if (hasHeader && rows.length) rows.shift();
+    return rows;
+  }
+
+  function renderClimateTable(){
+    const table = document.getElementById('climateTable');
+    const regions = Object.keys(REGION_CLIMATE_TABLE);
+    let html = '<thead><tr><th>Region</th><th>Region Climate</th><th>Weather (if Home)</th></tr></thead><tbody>';
+    for (const region of regions){
+      const climate = REGION_CLIMATE_TABLE[region];
+      html += `<tr><td>${region}</td><td>${climate}</td><td>${computeWeatherFromClimate(climate)}</td></tr>`;
+    }
+    html += '</tbody>';
+    table.innerHTML = html;
+  }
+
+  document.getElementById('climateParseBtn').addEventListener('click', () => {
+    const text = document.getElementById('climatePasteBox').value;
+    const hasHeader = document.getElementById('climateHasHeader').checked;
+    const rows = parseClimatePaste(text, hasHeader);
+    const statusEl = document.getElementById('climateStatus');
+
+    if (rows.length === 0){
+      statusEl.textContent = 'No rows found — paste some tab-separated data first.';
+      statusEl.className = 'roster-status warn';
+      return;
+    }
+
+    const badRows = [];
+    rows.forEach(r => {
+      const region = (r[0] || '').trim();
+      const climateVal = parseFloat(r[1]);
+      if (!region || isNaN(climateVal)){
+        badRows.push(r);
+        return;
+      }
+      REGION_CLIMATE_TABLE[region] = climateVal;
+    });
+
+    renderClimateTable();
+    recomputeMatchContext();
+    renderMatchSetup();
+    renderAll();
+
+    let msg = `Loaded climate for ${rows.length - badRows.length} region${(rows.length - badRows.length) === 1 ? '' : 's'}.`;
+    if (badRows.length){
+      msg += ` ⚠ ${badRows.length} row(s) skipped (missing region name or non-numeric climate value).`;
+    }
+    statusEl.textContent = msg;
+    statusEl.className = 'roster-status ' + (badRows.length ? 'warn' : 'ok');
+  });
+
+  document.getElementById('climateClearBtn').addEventListener('click', () => {
+    document.getElementById('climatePasteBox').value = '';
+    document.getElementById('climateTable').innerHTML = '';
+    document.getElementById('climateStatus').textContent = '';
+    REGION_CLIMATE_TABLE = {};
+    recomputeMatchContext();
+    renderMatchSetup();
+    renderAll();
+  });
+
+  // ---------- Load a scheduled match into the Field tab ----------
+  // Pulls SCHEDULE[0], looks up both teams' full data from TEAM_ROSTER by rank,
+  // overwrites every raw match-context input, recomputes everything derived from
+  // them, starts a fresh Game, and re-renders the whole Field tab.
+  function safeNum(val, fallback){
+    const n = parseFloat(val);
+    return isNaN(n) ? fallback : n;
+  }
+
+  document.getElementById('loadMatchBtn').addEventListener('click', () => loadScheduledMatch(0));
+  document.getElementById('nextMatchBtn').addEventListener('click', () => loadScheduledMatch(nextMatchIndex));
+
+  document.getElementById('schedTable').addEventListener('click', (event) => {
+    const btn = event.target.closest('.load-match-row-btn');
+    if (!btn) return;
+    loadScheduledMatch(parseInt(btn.dataset.index, 10));
+  });
+
+  function setLoadStatus(msg, isWarn){
+    const cls = 'roster-status ' + (isWarn ? 'warn' : 'ok');
+    const scheduleStatusEl = document.getElementById('loadMatchStatus');
+    const fieldStatusEl = document.getElementById('nextMatchStatus');
+    scheduleStatusEl.textContent = msg;
+    scheduleStatusEl.className = cls;
+    fieldStatusEl.textContent = msg;
+    fieldStatusEl.className = cls;
+  }
+
+  function loadScheduledMatch(matchIndex){
+    if (SCHEDULE.length === 0){
+      setLoadStatus('No matchups parsed yet — import a schedule first.', true);
+      return;
+    }
+    const match = SCHEDULE[matchIndex];
+    if (!match){
+      setLoadStatus(`No matchup #${matchIndex + 1} in the current schedule — you may have loaded the whole list already.`, true);
+      return;
+    }
+    const homeTeam = findTeamByRank(match.homeRank);
+    const awayTeam = findTeamByRank(match.awayRank);
+
+    if (!homeTeam || !awayTeam){
+      const missing = [];
+      if (!homeTeam) missing.push(`Home rank ${match.homeRank}`);
+      if (!awayTeam) missing.push(`Away rank ${match.awayRank}`);
+      setLoadStatus(`Couldn't find ${missing.join(' and ')} in the Teams roster — import Teams first.`, true);
+      return;
+    }
+
+    RANK_HOME = safeNum(homeTeam['Team Rank'], RANK_HOME);
+    RANK_AWAY = safeNum(awayTeam['Team Rank'], RANK_AWAY);
+    TEAM_REGION = {home: homeTeam['Region'] || TEAM_REGION.home, away: awayTeam['Region'] || TEAM_REGION.away};
+    TEAM_DIVISION = {home: homeTeam['League Division'] || TEAM_DIVISION.home, away: awayTeam['League Division'] || TEAM_DIVISION.away};
+    TEAM_REGION_RECORD = {home: homeTeam['Region Record'] || TEAM_REGION_RECORD.home, away: awayTeam['Region Record'] || TEAM_REGION_RECORD.away};
+    TEAM_LEAGUE_RECORD = {home: homeTeam['League Record'] || TEAM_LEAGUE_RECORD.home, away: awayTeam['League Record'] || TEAM_LEAGUE_RECORD.away};
+    TEAM_CUP_RECORD = {home: homeTeam['Cup Record'] || TEAM_CUP_RECORD.home, away: awayTeam['Cup Record'] || TEAM_CUP_RECORD.away};
+    TEAM_OVERALL_RECORD = {home: homeTeam['Overall Record'] || TEAM_OVERALL_RECORD.home, away: awayTeam['Overall Record'] || TEAM_OVERALL_RECORD.away};
+    TEAM_FATIGUE = {home: safeNum(homeTeam['Fatigue'], 0), away: safeNum(awayTeam['Fatigue'], 0)};
+    TEAM_CLIMATE = {home: safeNum(homeTeam['Climate'], TEAM_CLIMATE.home), away: safeNum(awayTeam['Climate'], TEAM_CLIMATE.away)};
+    TEAM_PF = {home: safeNum(homeTeam['PF'], TEAM_PF.home), away: safeNum(awayTeam['PF'], TEAM_PF.away)};
+    TEAM_PA = {home: safeNum(homeTeam['PA'], TEAM_PA.home), away: safeNum(awayTeam['PA'], TEAM_PA.away)};
+    TEAM_DSCR = {home: safeNum(homeTeam['DSCR'], TEAM_DSCR.home), away: safeNum(awayTeam['DSCR'], TEAM_DSCR.away)};
+    SKILL_RATING = {home: safeNum(homeTeam['Skill Rating'], SKILL_RATING.home), away: safeNum(awayTeam['Skill Rating'], SKILL_RATING.away)};
+    TEAM_ELO = {home: safeNum(homeTeam['Elo'], TEAM_ELO.home), away: safeNum(awayTeam['Elo'], TEAM_ELO.away)};
+
+    const homeGrade = (homeTeam['Rating Grade'] || '').trim().toUpperCase();
+    const awayGrade = (awayTeam['Rating Grade'] || '').trim().toUpperCase();
+    const dataWarnings = [];
+    if (!Object.prototype.hasOwnProperty.call(RATING_SCALE, homeGrade)) dataWarnings.push(`Home Rating Grade "${homeTeam['Rating Grade']}"`);
+    if (!Object.prototype.hasOwnProperty.call(RATING_SCALE, awayGrade)) dataWarnings.push(`Away Rating Grade "${awayTeam['Rating Grade']}"`);
+    TEAM_RATING = {
+      home: Object.prototype.hasOwnProperty.call(RATING_SCALE, homeGrade) ? homeGrade : TEAM_RATING.home,
+      away: Object.prototype.hasOwnProperty.call(RATING_SCALE, awayGrade) ? awayGrade : TEAM_RATING.away
+    };
+
+    const homePrimary = (homeTeam['Primary Type'] || '').trim().toUpperCase();
+    const homeSecondary = (homeTeam['Secondary Type'] || '').trim().toUpperCase();
+    const awayPrimary = (awayTeam['Primary Type'] || '').trim().toUpperCase();
+    const awaySecondary = (awayTeam['Secondary Type'] || '').trim().toUpperCase();
+    if (!Object.prototype.hasOwnProperty.call(TYPE_CHART, homePrimary)) dataWarnings.push(`Home Primary Type "${homeTeam['Primary Type']}"`);
+    if (!Object.prototype.hasOwnProperty.call(TYPE_CHART, homeSecondary)) dataWarnings.push(`Home Secondary Type "${homeTeam['Secondary Type']}"`);
+    if (!Object.prototype.hasOwnProperty.call(TYPE_CHART, awayPrimary)) dataWarnings.push(`Away Primary Type "${awayTeam['Primary Type']}"`);
+    if (!Object.prototype.hasOwnProperty.call(TYPE_CHART, awaySecondary)) dataWarnings.push(`Away Secondary Type "${awayTeam['Secondary Type']}"`);
+    TEAM_TYPES = {
+      home: {
+        primary: Object.prototype.hasOwnProperty.call(TYPE_CHART, homePrimary) ? homePrimary : TEAM_TYPES.home.primary,
+        secondary: Object.prototype.hasOwnProperty.call(TYPE_CHART, homeSecondary) ? homeSecondary : TEAM_TYPES.home.secondary
+      },
+      away: {
+        primary: Object.prototype.hasOwnProperty.call(TYPE_CHART, awayPrimary) ? awayPrimary : TEAM_TYPES.away.primary,
+        secondary: Object.prototype.hasOwnProperty.call(TYPE_CHART, awaySecondary) ? awaySecondary : TEAM_TYPES.away.secondary
+      }
+    };
+
+    GAME_TYPE = match.gameType;
+    IS_AGG = match.agg;
+    IS_WEEKEND = match.weekend;
+    TIMESLOT = match.timeslot;
+    SPREAD_FACTOR_MODIFIER = match.adv || 0;
+
+    const awayLabel = awayTeam['Team Name'] || 'Away';
+    const homeLabel = homeTeam['Team Name'] || 'Home';
+    TEAM_DISPLAY_NAME = {home: homeLabel, away: awayLabel};
+    CURRENT_ROUND = match.round || '';
+
+    recomputeMatchContext();
+
+    stopAuto();
+    game = new Game();
+    logBody.innerHTML = '';
+    renderMatchSetup();
+    for (const entry of game.log) appendLog(entry);
+    renderCard(cardMoveEl, null, 'Move');
+    renderCard(cardClockEl, null, 'Clock');
+    renderAll();
+
+    nextMatchIndex = matchIndex + 1;
+
+    let msg = `Loaded match #${matchIndex + 1}: ${awayLabel} (rank ${RANK_AWAY}) @ ${homeLabel} (rank ${RANK_HOME}) — `
+      + `${GAME_TYPE}${IS_AGG ? ' AGG' : ''}, ${IS_WEEKEND ? 'Weekend' : 'Midweek'}, timeslot ${TIMESLOT}.`;
+    if (dataWarnings.length){
+      msg += ` ⚠ Unrecognized value(s), kept previous: ${dataWarnings.join(', ')}.`;
+    }
+    setLoadStatus(msg, dataWarnings.length > 0);
+
+    const fieldTabBtn = document.querySelector('.tab-btn[data-tab="fieldTab"]');
+    if (fieldTabBtn) fieldTabBtn.click();
+  }
+
+  // ---------- Results log ----------
+  // One row per completed game, in the exact column order needed for pasting into Excel.
+  const RESULTS_COLUMNS = [
+    'Spread', 'Elo Delta', 'Game Interest', 'H/A', 'Winning Team Rank', 'Winning Team Name',
+    'Winning Team Score', 'Losing Team Score', 'Losing Team Name', 'Losing Team Rank',
+    'Goals', 'DMAX', 'W Info', 'L Info', 'MAX/INVT', 'EX Bonus', 'Notes'
+  ];
+  let RESULTS_LOG = [];
+
+  // Game-type letters for the Home/Away Info string, per the spec: Regional/League/Cup/
+  // Playoffs/Finals map to R/L/S/P/F (yes, Cup is "S" — that's the given mapping).
+  const GAME_TYPE_LETTER = {Regional:'R', League:'L', Cup:'S', Playoffs:'P', Finals:'F'};
+
+  // Builds one team's awkward all-in-one-string Info column. `team` is 'home' or 'away';
+  // `isWinner` says whether THAT team won this game (independent of home/away identity).
+  function buildTeamInfoString(g, team, isWinner){
+    const opp = g.otherTeam(team);
+    const otPlayed = (Math.max(0, g.periodIndex - 2)) > 0;
+    const firstChar = isWinner ? (otPlayed ? '2' : '3') : (otPlayed ? '1' : '0');
+    const gameTypeLetter = GAME_TYPE_LETTER[GAME_TYPE] || '?';
+
+    const oppRank = (opp === 'home') ? RANK_HOME : RANK_AWAY;
+    const oppTeamData = findTeamByRank(oppRank);
+    const oppDex = oppTeamData ? oppTeamData['DEX #'] : '';
+
+    const rawGoalAvg = g.goalsScored[team] ? (g.rawZonePoints[team] / g.goalsScored[team]) : 0;
+    const isFavorite = (team === SPREAD_TEAM);
+    const ownSpread = isFavorite ? SPREAD_VALUE : -SPREAD_VALUE;
+
+    const giResult = computeGameInterest(g);
+    const dmaxResult = computeDMAX(g, team);
+    const eloResult = computeEloUpdate(g);
+    const teamNewElo = (team === eloResult.winner) ? eloResult.winnerNewElo : eloResult.loserNewElo;
+
+    return `${firstChar}${gameTypeLetter}!${oppDex}+${g.score[team]}-${g.score[opp]}`
+      + `^${rawGoalAvg.toFixed(2)}(${ownSpread.toFixed(2)})[${Math.round(giResult.gameInterest)}]`
+      + `{${fmt(dmaxResult.dmax, 1)}}${teamNewElo}`;
+  }
+
+  function buildResultsRow(g){
+    const winner = g.score.home > g.score.away ? 'home' : 'away';
+    const loser = g.otherTeam(winner);
+    const winnerRank = (winner === 'home') ? RANK_HOME : RANK_AWAY;
+    const loserRank = (loser === 'home') ? RANK_HOME : RANK_AWAY;
+    const winnerTeam = findTeamByRank(winnerRank);
+    const loserTeam = findTeamByRank(loserRank);
+    const winnerName = winnerTeam ? winnerTeam['Team Name'] : TEAM_DISPLAY_NAME[winner];
+    const loserName = loserTeam ? loserTeam['Team Name'] : TEAM_DISPLAY_NAME[loser];
+
+    const spreadSigned = (winner === SPREAD_TEAM) ? SPREAD_VALUE : -SPREAD_VALUE;
+    const eloResult = computeEloUpdate(g);
+    const giResult = computeGameInterest(g);
+    const dmaxWinner = computeDMAX(g, winner).dmax;
+    const dmaxLoser = computeDMAX(g, loser).dmax;
+    const exResult = computeEXFinal(g);
+
+    let maxInvtFlag = '';
+    if (dmaxWinner >= 100) maxInvtFlag = 'MAX';
+    else if (dmaxWinner < dmaxLoser) maxInvtFlag = 'INVT';
+
+    const winnerInfo = buildTeamInfoString(g, winner, true);
+    const loserInfo = buildTeamInfoString(g, loser, false);
+
+    return [
+      spreadSigned.toFixed(SPREAD_DECIMALS),
+      eloResult.delta,
+      fmt(giResult.gameInterest, 2),
+      winner === 'home' ? 'H' : 'A',
+      winnerRank,
+      winnerName,
+      g.score[winner],
+      g.score[loser],
+      loserName,
+      loserRank,
+      `[${g.goalsScored[winner]}-${g.goalsScored[loser]}]`,
+      `{${fmt(dmaxWinner, 1)}-${fmt(dmaxLoser, 1)}}`,
+      winnerInfo,
+      loserInfo,
+      maxInvtFlag,
+      `/${exResult.finalEX}/`,
+      ''  // Notes — provided later
+    ];
+  }
+
+  function renderResultsTab(){
+    const table = document.getElementById('resultsTable');
+    let html = '<thead><tr>' + RESULTS_COLUMNS.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+    for (const row of RESULTS_LOG){
+      html += '<tr>' + row.map(v => `<td>${v}</td>`).join('') + '</tr>';
+    }
+    html += '</tbody>';
+    table.innerHTML = html;
+
+    const tsvLines = RESULTS_LOG.map(row => row.join('\t'));
+    document.getElementById('resultsTsvBox').value = tsvLines.join('\n');
+  }
+
+  function recordResultIfNeeded(){
+    if (!game.gameOver || game.resultsRecorded) return;
+    game.resultsRecorded = true;
+    RESULTS_LOG.push(buildResultsRow(game));
+    renderResultsTab();
+  }
+
+  document.getElementById('resultsCopyBtn').addEventListener('click', () => {
+    const statusEl = document.getElementById('resultsStatus');
+    const box = document.getElementById('resultsTsvBox');
+    if (!RESULTS_LOG.length){
+      statusEl.textContent = 'No completed games yet — play one out on the Field tab first.';
+      statusEl.className = 'roster-status warn';
+      return;
+    }
+    box.select();
+    navigator.clipboard.writeText(box.value).then(() => {
+      statusEl.textContent = `Copied ${RESULTS_LOG.length} row${RESULTS_LOG.length === 1 ? '' : 's'} to the clipboard.`;
+      statusEl.className = 'roster-status ok';
+    }).catch(() => {
+      statusEl.textContent = 'Could not access the clipboard automatically — the text is selected above, so Ctrl/Cmd+C will still work.';
+      statusEl.className = 'roster-status warn';
+    });
+  });
+
+  document.getElementById('resultsClearBtn').addEventListener('click', () => {
+    RESULTS_LOG = [];
+    renderResultsTab();
+    document.getElementById('resultsStatus').textContent = '';
+  });
+
+  function renderMiniStats(elId, team){
+    const winPct = (team === 'home' ? ELO_WIN_PROB.homeWinPct : ELO_WIN_PROB.awayWinPct).toFixed(1);
+    const rows = [
+      ['SKILL', `${SKILL_RATING[team]} (${TEAM_RATING[team]})`],
+      ['DSCR', TEAM_DSCR[team]],
+      ['OFF/DEF', (team === 'home' ? HOME_OFFDEF.rating : AWAY_OFFDEF.rating).toFixed(2)],
+      ['FATIGUE', TEAM_FATIGUE[team]],
+      ['CLIMATE', (team === 'home' ? CLIMATE_RESULT.homeResult : CLIMATE_RESULT.awayResult).toFixed(2)],
+      ['ELO', TEAM_ELO[team]],
+      ['WIN%', `${winPct}%`],
+    ];
+    document.getElementById(elId).innerHTML = rows
+      .map(([label, value]) => `<div class="mrow"><span>${label}</span><span>${value}</span></div>`)
+      .join('');
+  }
+
+  // Renders every piece of match setup that depends on the current team-context
+  // variables — called once at page load, and again whenever a new match is loaded
+  // from the Schedule tab. (Score/clock/ball rendering is handled separately by
+  // renderAll(), called after this.)
+  function renderMatchSetup(){
+    document.documentElement.style.setProperty('--home-bright', HOME_REGION_COLOR.bright);
+    document.documentElement.style.setProperty('--home-tint', HOME_REGION_COLOR.tint);
+    document.documentElement.style.setProperty('--away-bright', AWAY_REGION_COLOR.bright);
+    document.documentElement.style.setProperty('--away-tint', AWAY_REGION_COLOR.tint);
+
+    buildPitchCells();
+
+    document.getElementById('roundLabelDisplay').textContent = CURRENT_ROUND;
+
+    const weatherDelta = WEATHER_ATK_DELTA[WEATHER];
+    document.getElementById('weatherNote').textContent =
+      `${WEATHER} Weather (${weatherDelta >= 0 ? '+' : ''}${weatherDelta})`;
+    document.getElementById('spreadNoteTeam').textContent = TEAM_DISPLAY_NAME[SPREAD_TEAM].toUpperCase();
+    document.getElementById('spreadNoteValue').textContent = `+${SPREAD_VALUE.toFixed(SPREAD_DECIMALS)}`;
+
+    renderMiniStats('awayMiniStats', 'away');
+    renderMiniStats('homeMiniStats', 'home');
+    renderTeamRecords('awayRecords', 'away');
+    renderTeamRecords('homeRecords', 'home');
+    document.getElementById('awayRankDisplay').textContent = `#${RANK_AWAY}`;
+    document.getElementById('homeRankDisplay').textContent = `#${RANK_HOME}`;
+    document.getElementById('awayAtk').textContent = `ATK ${AWAY_ATK_MODIFIER >= 0 ? '+' : ''}${AWAY_ATK_MODIFIER}`;
+    document.getElementById('homeAtk').textContent = `ATK ${HOME_ATK_MODIFIER >= 0 ? '+' : ''}${HOME_ATK_MODIFIER}`;
+    document.getElementById('awayEveryX').textContent = `Every ${AWAY_BONUS_EVERY_X_GOALS}`;
+    document.getElementById('homeEveryX').textContent = `Every ${HOME_BONUS_EVERY_X_GOALS}`;
+
+    // Team-identity labels throughout the app — real name once a match is loaded.
+    document.getElementById('scoreboardAwayLabel').textContent = TEAM_DISPLAY_NAME.away;
+    document.getElementById('scoreboardHomeLabel').textContent = TEAM_DISPLAY_NAME.home;
+    document.getElementById('dmaxAwayLabel').textContent = TEAM_DISPLAY_NAME.away;
+    document.getElementById('dmaxHomeLabel').textContent = TEAM_DISPLAY_NAME.home;
+    document.getElementById('exAwayLabel').textContent = TEAM_DISPLAY_NAME.away;
+    document.getElementById('exHomeLabel').textContent = TEAM_DISPLAY_NAME.home;
+    document.getElementById('legendHomeText').textContent = `${TEAM_DISPLAY_NAME.home} attacks ← (left end)`;
+    document.getElementById('legendAwayText').textContent = `${TEAM_DISPLAY_NAME.away} attacks → (right end)`;
+  }
+
+  // Populates the new middle "records" column: Region name+record, Division name+record,
+  // then the fixed Cup/Overall Record rows (Overall gets a slightly larger font via CSS).
+  function titleCase(s){
+    return s ? s.charAt(0) + s.slice(1).toLowerCase() : s;
+  }
+
+  function renderTeamRecords(elId, team){
+    const types = TEAM_TYPES[team];
+    const rows = [
+      [TEAM_REGION[team], team === 'home' ? TEAM_REGION_RECORD.home : TEAM_REGION_RECORD.away, ''],
+      [TEAM_DIVISION[team], team === 'home' ? TEAM_LEAGUE_RECORD.home : TEAM_LEAGUE_RECORD.away, ''],
+      ['Cup Record', team === 'home' ? TEAM_CUP_RECORD.home : TEAM_CUP_RECORD.away, ''],
+      ['Overall', team === 'home' ? TEAM_OVERALL_RECORD.home : TEAM_OVERALL_RECORD.away, 'overall-row'],
+      ['P Type', titleCase(types.primary), 'type-row-gap'],
+      ['S Type', titleCase(types.secondary), ''],
+    ];
+    document.getElementById(elId).innerHTML = rows
+      .map(([label, value, extraClass]) => `<div class="mrow ${extraClass}"><span>${label}</span><span>${value}</span></div>`)
+      .join('');
+  }
+
+  renderMatchSetup();
+  for (const entry of game.log) appendLog(entry);
+  renderAll();
+})();
+</script>
+</body>
+</html>

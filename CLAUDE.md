@@ -1,0 +1,407 @@
+# DECKFIELD Ratings Engine — Project Memory
+
+This file exists so a fresh Claude Code session doesn't need everything
+re-explained. It captures decisions, formulas, and conventions that aren't
+always obvious from the code alone.
+
+## What this project is
+
+A SQLite-backed ratings engine for DECKFIELD, a 160-team card-driven sports
+league simulator ("Baccer"). It replaces the original Excel workbook
+(`Baccer_Game_S9_Stats.xlsm`) as the source of truth for team ratings,
+standings, schedules, and cup brackets. `deckfield.html` — the actual
+game-playing tool, a single-file HTML/JS match simulator — now lives
+alongside this engine as **the version of record** (originally built in a
+separate conversation, but that copy is no longer authoritative as of
+2026-07-29 — this project's copy is what gets edited and played going
+forward, and the two should stay in this one place together, not
+cross-referenced between conversations).
+
+## File map
+
+- `deckfield_ratings.py` — the engine: schema, all rating formulas, fatigue,
+  S8 carryover, RLStr, Regional/League schedule generator, RDS Cup and PA
+  Cup bracket generators, the Regional Tournament (postseason) generator,
+  the weekly schedule / next-matchday system, region colors, and the
+  DECKFIELD export functions (Teams roster, Schedule, Region Climate).
+- `deckfield.html` — the game itself (match simulator). Version of record
+  as of 2026-07-29; edit this copy, not one in another conversation.
+- `migrate_s9.py` — one-shot migration from the real Excel workbook into
+  the database. Exposes `run_full_migration(workbook_path=None)`.
+- `deckfield_cli.py` — the CLI for local use without going through chat.
+  Commands: `migrate`, `add-results <csv>`, `recompute --from N`, `status`,
+  `next-matchday [--output file]`, `export-teams [--output file]`,
+  `region-climate [--output file]`.
+- `deckfield.db` — the SQLite database (not checked in; regenerate via
+  `deckfield migrate`).
+- `deckfield_dashboard.html` — a **static snapshot** dashboard: Rankings,
+  Standings, RL Strength, Schedule, RDS Cup, PA Cup, Next Matchday,
+  Calendar, Regional Playoffs. Rebuilt by re-running the export scripts
+  described below; there's no `dashboard` CLI command yet — this is the
+  biggest piece of unfinished plumbing.
+- Static data files bundled alongside the engine (needed by the export/
+  schedule functions, not regenerated per-run): `conf_pods.json`,
+  `league_pods.json` (Regional/League pod structures), `cup_seeds_full.json`
+  (Ribbon/Dream/Star seeding), `pa_cup_seeds.json` (PA Cup Draw seeding),
+  `pa_process_real_seeds_v2.json` (PA Cup Process seeding, real and
+  conflict-resolved).
+- `CLAUDE.md` — this file.
+
+## Adding new game results
+
+**Always use the CSV format**, not the old packed-string format
+(`3R!113+36-33^4.13(0.93)[102]{42.7}2183`). One row = one full game, both
+teams at once:
+
+```
+round,game_type,team_a,team_b,result_a,pf_a,pa_a,raw_goal_a,raw_goal_b,spread_a,interest,dscr_a,dscr_b,elo_a_after,elo_b_after,home,ex_a,ex_b,cup_name,cup_bracket,cup_round
+```
+
+- `team_a`/`team_b` are `team_id` (dex) integers, not names.
+- `result_a`: points team_a earned — 3 win, 2 OT win, 1 OT loss, 0 loss. No draws exist.
+- `home`: `"A"` or `"B"` — resolves `host_region` automatically, which drives fatigue tracking.
+- `ex_a`/`ex_b`: optional, default 0.
+- `cup_name`/`cup_bracket`/`cup_round`: optional, but **required for any cup
+  game** (`Ribbon`/`Dream`/`Star`/`PA`, `Draw`/`Process`, integer round) — the
+  weekly-schedule completion check (`next_matchday`) can't tell a cup game
+  was played without these, and would loop on the same event forever.
+
+Ingest via `deckfield add-results results.csv` (recomputes ratings
+automatically from the earliest affected round) or `add_game_from_dict()` /
+`add_game_csv()` in Python directly.
+
+**`migrate` is safe to re-run** — `init_db()` explicitly drops all tables
+before recreating them. This was a real bug once: `CREATE TABLE IF NOT
+EXISTS` doesn't touch existing data, so re-running migrate on an existing
+database silently duplicated every row (caught because Canalave's record
+suddenly read "10-0" instead of "5-0"). Don't remove the DROP statements.
+
+## Schema essentials
+
+- `games`: one row per game, `team_a`/`team_b` perspective. **Team B's
+  stats are never stored separately** — `pf_b == pa_a`, `pa_b == pf_a`,
+  `result_b == 3 - result_a`. This is deliberate (see `_team_game_rows`):
+  a single source of truth instead of double entry, which is exactly the
+  bug class the old Excel format was prone to.
+- `game_type`: `R` (Regional), `L` (League), `S` (Cup/Swiss), `P`
+  (Playoffs — includes the Regional Tournament), `F` (Finals).
+- `cup_name`/`cup_bracket`/`cup_round` on `games`: populated for RDS Cup
+  games matched against real Archive data, and for any cup game entered
+  going forward via the CSV's optional fields. Everything else with
+  `game_type='S'` and no cup tag is an untagged cup/swiss game.
+- `host_region`: backfilled for all historical S9 games from the Archive
+  tab's Home/Away column; set automatically for new games via the CSV's
+  `home` field.
+- `fatigue_deltas`: per-round travel fatigue, **recomputed from real
+  host_region history**, not trusted from the original sheet — the sheet's
+  own fatigue numbers didn't match its own Home/Away data on cross-check.
+  `team_seasons.starting_fatigue` is the one value still sourced directly
+  from the sheet (column AJX position 1 in Calcs).
+
+## The weekly schedule & "what's next" system
+
+`WEEKLY_SCHEDULE` (in the engine) is the full go-forward calendar — 26
+weeks, each with Tue/Thu/Weekend slots — replacing the historical
+Excel-run order for everything from here on. Event kinds: `("R", n)`,
+`("L", n)` (Regional/League, own 1-15 sequence), `("RDS", bracket,
+cup_round)`, `("PA", bracket, cup_round)`, `("RT", matchday)` (Regional
+Tournament, matchday 1-9). Weeks 24-26 are the Regional Tournament
+(RT1-RT9, one per Tue/Thu/Weekend slot).
+
+**Week 6 is a permanent one-time special case**: it replaces the original
+weeks 5 and 6 (PA Draw/Process round 1 + R4, then L2/L3/R5) with `{Tue:
+PA-D-1st, Thu: PA-P-1st, Weekend: L3}`, because R4, L2, and R5 were
+already played (in the old Excel-run order) before this reconciliation was
+needed. Applied once in `WEEKLY_SCHEDULE` directly; don't try to derive it
+from a formula, and don't expect this pattern to recur.
+
+**Absolute round numbers**: `abs_round_for_event()` /
+`full_schedule_abs_round_mapping()` walk `WEEKLY_SCHEDULE` in order,
+using the confirmed historical values (`_CONFIRMED_ABS_ROUND`, validated
+against real Archive data for rounds 1-11) where they exist, and assigning
+the next sequential integer to everything else. This is the single source
+of truth for "what absolute round number goes in `games.round`" — always
+call `abs_round_for_event()` rather than hand-picking a number. Two-legged
+ties and best-of-three slots (RDS SF/Final, PA QF/SF/Final — `cup_round is
+None`) need week+day folded into their lookup key, since the same
+`(kind, bracket, None)` repeats across Tue/Thu/Weekend for each leg —
+handled in `_schedule_event_key`, but worth remembering if extending this.
+
+**`next_matchday(season)`** walks the schedule and returns the first slot
+without real data — this is genuinely determined by checking the database,
+not a fixed pointer, so it advances correctly as real results come in.
+**`export_matchday_for_deckfield()`** returns the matchday's games in
+DECKFIELD's Schedule paste format, plus `abs_round` — the exact value to
+use when logging that matchday's results back via the CSV format above.
+
+**What's actually reachable** via `_games_for_event()`: Regional/League any
+round (via the pod schedule), RDS Cup rounds 1-5 (resolving through real
+prior-round winners where needed — round 3+ isn't a placeholder, it's
+generated live), PA Cup rounds 1-7 (same). RDS's mutual semifinal/final and
+PA's mutual quarterfinal/semifinal/final raise `NotImplementedError`
+deliberately — not modeled yet, see "Known open items."
+
+## Ratings formulas (validated against real S9 data)
+
+- **RW/LW**: exact match, 160/160 teams. Full formula in
+  `deckfield_ranking_spec.md`-equivalent docstrings in the engine.
+- **OVR** = weighted blend of 12 components (RW, LW, PF, PA, PDG, SOS, SOV,
+  DSCR, EYE, Elo, Cups, EX), each normalized 0–100 (except RW/LW, which can
+  exceed 100). PDG's denominator is `avg_raw_goal_score` (the `^X.XX` field
+  in the packed string), **not** PF/games_played — this was a real early
+  bug.
+- **OVR's EX taper** (`taper_n`, `N/14` in Block E and the overall
+  denominator) — changed from an original `N/12` scheme. Full weight (14)
+  through week 6, decreasing 1/week starting week 7, reaching 1 at week 19,
+  0 starting week 20. Confirmed this changes nothing retroactively: week 6
+  is the latest week with real data (round 11), where 14/14 and 12/12 are
+  both exactly 1 — Canalave's OVR came out byte-identical (101.76, Grade
+  SS) before and after the change.
+- **RLStr** (Regional/League Strength): a **from-scratch revamp**, not a
+  faithful port of the sheet's original formula (which the person
+  confirmed had manual entry errors). Current version: 7 z-scored
+  components per region/division (Rank ×2 flipped, OVR ×2, Wins ×1, DSCR
+  ×2, Elo ×1, TOT ×1, GI ×1 — GI is a plain average, deliberately
+  non-circular), summed, then passed through
+  `1.0 + 0.75 * tanh(weighted_sum / (2 * population_stdev))`. No
+  iteration/fixed-point convergence needed — earlier circular versions did,
+  this one doesn't.
+- **Fatigue**: `fatigue(prev_region, curr_region, skipped_matchdays) = REGION_DISTANCE_MATRIX[a][b] / 2^skipped`.
+  Cumulative fatigue = `starting_fatigue + sum(deltas)`. Season transition:
+  `fatigue_seed = ceil(prev_season_final_fatigue / 5)` — round **up**, confirmed explicitly.
+- **S8 Carryover**: `ovr_seed = (prev_ovr - 50) * 0.75 + 50`; PF/PA seeds
+  use the **normalized 0–100 OVR components** (`pf_norm`/`pa_norm`), not
+  raw season point totals — this was a real bug, caught and fixed. DSCR
+  seed uses the raw 0–10 D-Sqrt value, not the normalized component. Blend
+  window is matchdays 1–8 (`blend_stat`/`blend_weights`).
+- **STARTING_ELO = 1800.0** — confirmed value, matters only for a team's
+  very first game ever (relevant if new teams are ever added).
+
+## Regional/League pod schedule
+
+16 teams per region/division split into 4 pods of 4 (2×2: UL/UR/LL/LR),
+each pod's 4 teams also position-ordered 1–4 from the Conf/League tabs.
+15-round full round robin:
+
+- **Pod rounds** (1, 8, 15): within-pod matchups, explicit position pairs.
+- **Across/Same/Diag rounds** (4 rounds each, appearing twice across the
+  cycle): pod-pairs use a primary position pattern (e.g. `1v3/2v4`) plus
+  an automatic **complementary pairing** (mirror each pair: `1v3` also
+  implies `3v1`) to cover all 4×4 cross-games across the 4 rounds. "At X"
+  fixes which side hosts for both primary and complementary games.
+
+Verified exactly against real Archive data (pairings *and* host side) for
+multiple round types before trusting the algorithm.
+
+## RDS Cup (Ribbon/Dream/Star)
+
+64-seed Draw-and-Process croquet-style knockout. Ribbon = Indigo/Silver/
+Delta/Lily Valley (64 real teams, no byes). Dream = Vertress/Phoenix/
+Lanakila, Star = Kalosite/Dynamax/Terastal (48 real teams each, seeds
+49–64 are byes in **both** Draw and Process).
+
+- **Draw**: standard bracket, seed *K* vs seed *(65−K)* round 1. Must use
+  proper recursive seed-placement order (`_draw_round1_pairs`), **not**
+  naive ascending `K, 65-K` order — the pairs are identical either way,
+  but only the recursive order correctly encodes who meets whom in round
+  2+. This was a real bug, found by cross-checking real round-2 results.
+  Higher (better) seed hosts.
+- **Process**: fixed round-1 seeding list (`PROCESS_ROUND1_PAIRS`) — every
+  seed 1–16 pairs with a seed 49–64. Lower (worse) seed hosts.
+- Both validated **exactly** against all 128 real round-1 games and all 96
+  real round-2 games (one game, `Hau'oli City`, has a confirmed data-entry
+  error in the source sheet — a team appears to lose round 1 but plays
+  again in round 2. Accepted as a known sheet error, not modeled around).
+- **Rounds 3-5 are fully generated**, not placeholders — `_rds_round_games()`
+  resolves through real prior-round winners for any target round, raising a
+  clear error (not a guess) if a prior round isn't complete yet.
+- After **5 rounds** each, Draw and Process reach 2 remaining teams, which
+  combine into a shared final stage:
+  - 4 distinct finalists: Draw pair plays a semifinal, Process pair plays
+    a semifinal, winners meet in the final.
+  - 3 distinct (1 team reached the final 2 on both sides): that team byes
+    to the final; the other two play the lone semifinal.
+  - 2 distinct (same pair both sides): no semifinal, straight to final.
+  - Home team for the semifinal/final: whichever team has the better
+    original seed (a separate rule from either bracket's own convention).
+  - **Not yet built**: the mutual semifinal/final stage itself isn't
+    modeled in `_games_for_event` (raises `NotImplementedError`) — the
+    resolution *logic* above is confirmed correct, just not wired up as a
+    playable event yet.
+
+## PA Cup (160 teams)
+
+A **ladder** structure, not a shared nested bracket — this took several
+wrong turns to land on, worth preserving the final model precisely. 32
+independent ladder rows, row *i* = seeds `(128+i, 96+i, 64+i, 32+i, i)`:
+
+- Round 1: `(128+i) vs (96+i)` — both always tier D (seeds 97–160, no bye).
+- Round 2 winner faces `64+i` (tier C, seeds 65–96, bye to round 2).
+- Round 3 winner faces `32+i` (tier B, seeds 33–64, bye to round 3).
+- Round 4 winner faces `i` (tier A, seeds 1–32, bye to round 4).
+- Rounds 5–7: standard bracket among the 32 row-champions (row *k* vs row
+  *33-k* in round 5, standard progression after).
+- After round 7: 4 teams remain per bracket → mutual **quarterfinal**
+  (Draw pairs vs Draw pairs, Process pairs vs Process pairs), then the
+  same duplicate-handling rules as RDS Cup for the semifinal/final.
+- **Rounds 2-7 are fully generated** via `_pa_round_games()`, same
+  real-winner resolution pattern as RDS. **Not yet built**: the mutual
+  quarterfinal+ stage (raises `NotImplementedError`).
+
+**Draw seeding**: real, from the PA Cup tab (`pa_cup_seeds.json`).
+**Process seeding**: a real, separately-provided seed list
+(`pa_process_real_seeds_v2.json`) — not derived from Draw. Two rounds of
+data-entry corrections were needed before it was trusted (team name
+mismatches — "Resort Area"/"Battle Zone", "Fight Area"/"Cabo Poco" — and
+later a full corrected re-send). Always verify a fresh Process list covers
+the same 160 teams as Draw before using it.
+
+**Conflict-resolution rules** for Process round 1 (Draw is never modified):
+1. Same division: not allowed before round 6.
+2. Same region: not allowed before the mutual quarterfinal.
+3. Repeat matchup (same two teams already met in Draw or Process, at any
+   point): never allowed.
+4. **Top-half/bottom-half must never cross** during a swap — with N teams
+   remaining, a team can only be swapped with another team in the same
+   half (e.g. with 16 remaining, seed #8 can never end up facing #7 or
+   better; only #9–16 are valid swap targets).
+5. If no valid swap satisfies all of the above, the **original pairing
+   stands**, even if it breaks a rule — never leave a game unresolved.
+
+Implemented in `resolve_pa_cup_conflicts()`. Tested against a fully
+duplicate Process list (worst case) before trusting it on real data.
+
+## Regional Tournament (postseason)
+
+One per region (10 total), 16 teams seeded by final **Regional Standings**
+(`regional_standings_seeds()` — reuses the exact same group-based tiebreak
+algorithm as the dashboard's Standings tab, ported carefully from the JS:
+complete round-robin or a sweep within a tied group uses head-to-head,
+otherwise falls straight through to TB score. A naive pairwise-H2H
+shortcut was tried first and gave a real wrong answer — caught by
+cross-checking against the already-validated LilyValley standings, where
+Eterna/Mossui/Celestic never played each other and should resolve by DSCR).
+
+**Structure**: 4 independent "lanes" (`REGIONAL_TOURNAMENT_LANES`), lane =
+`[MD1 away-seed, MD1 home-seed, MD2/3 entrant, MD4/5 entrant]`:
+```
+16 9 8 1
+15 10 7 2
+14 11 6 3
+13 12 5 4
+```
+- MD1: single game, better (lower-numbered) seed hosts.
+- MD2/3 and MD4/5: two-legged ties. Leg 1 hosted by the **worse**-seeded of
+  the two teams (using each team's own original seed), leg 2 by the
+  **better**-seeded. Same rule confirmed to also govern MD6/7 (semifinal)
+  and MD8/9 (final) — not a separate convention.
+- Semifinal (MD6/7): lane 4's survivor vs lane 1's, lane 2's vs lane 3's
+  (given directly, not inferred).
+- Game type is Playoffs (`P`), tagged with `host_region` = the region and
+  `cup_round` = the matchday number (1-9) for completion-checking (`_rt_*`
+  helper functions look games up by `host_region` + `cup_round`, not
+  `cup_name`/`cup_bracket` the way RDS/PA do).
+- Calendar: weeks 24-26, `("RT", matchday)` events, confirmed placement.
+
+## Region colors & Region Climate (confirmed against DECKFIELD's real code)
+
+`REGION_COLORS` (bright/dark hex per region) matches DECKFIELD's own
+`REGION_COLORS` **exactly** — pulled directly from that project's code, not
+picked independently, so the two stay visually consistent. Used for: the
+Rankings tab's Reg/Div badge, RL Strength's Regional Strength labels,
+Standings/Regional Playoffs box headers, and winner-name highlighting in
+Schedule/RDS/PA Cup tabs (each winner colored by *their own* region,
+resolved via a name→region lookup, not a fixed green).
+
+**`export_region_climate_for_deckfield()`** generates DECKFIELD's actual
+"Region Climate" input (confirmed against its own `parseClimatePaste`) —
+**not** the same thing as on-screen Weather (DECKFIELD derives
+Perfect/Good/Fair/Bad/Terrible from this value via its own thresholds in
+`computeWeatherFromClimate`). Formula: `sqrt(average of three uniform(0,1)
+draws)`, fresh per region, regenerate every matchday. The dashboard's
+Next Matchday tab has a client-side "Reroll" button using the identical
+formula, so a fresh roll doesn't require regenerating the whole dashboard.
+
+**Region naming mismatch, fixed**: this database's internal region field
+is `"LilyValley"` (no space), but DECKFIELD's `TEAM_REGION.home =
+homeTeam['Region']` is taken **verbatim** from the roster with zero
+transformation, and `REGION_COLORS['Lily Valley']` (with the space) is
+what it actually looks up. `region_display_name()` / `REGION_DISPLAY_NAME`
+converts before any export leaves this engine — every other region name is
+already identical either way, so this is the *only* region needing the
+conversion, but it's easy to reintroduce if a new export is added without
+routing through `region_display_name()`.
+
+## DECKFIELD export formats (verified against its real parser code, not guessed)
+
+All three exports below were checked directly against DECKFIELD's actual
+`parseRosterPaste` / `parseSchedulePaste` / `parseClimatePaste` /
+`ROSTER_COLUMNS` / `SCHEDULE_COLUMNS` — this caught real bugs that guessing
+from a conversation summary alone had missed:
+
+1. **Delimiter is tab (`\t`) for all three**, not comma. The Schedule
+   export used commas until this was checked directly against
+   `parseSchedulePaste`, which splits on `'\t'` — every matchday export
+   before this fix would have silently failed to parse in DECKFIELD.
+2. **All three importers default to expecting a header row**
+   (`rosterHasHeader`, `schedHasHeader`, `climateHasHeader` all default
+   `checked`). None of the exports included one before this was checked —
+   the first real data row would have been silently discarded as a header
+   every time. All three now include the exact header DECKFIELD expects
+   (`ROSTER_COLUMNS`, `SCHEDULE_COLUMNS` = `['Away Team Rank', 'Home Team
+   Rank', 'Adv']`, `['Region', 'Region Climate']`).
+3. **Region naming** — see above.
+
+`export_teams_for_deckfield()`: PF/PA/DSCR/Skill Rating use the normalized
+0–100 OVR components (same numbers the dashboard's Rankings tab shows), not
+raw season totals — confirmed intentional. Secondary Type is a fresh
+random 1-18 generated by **this** export (`random.randint(1, 18)`), not
+read from anywhere — the dashboard owns it, regenerated new every export
+(i.e. new each matchday), not DECKFIELD itself. Accolades needed sanitizing:
+the source data has embedded double-newlines separating distinct accolades
+and single-newlines as pure line-wrapping within one — collapsed to
+`"; "`-separated single-line text so one team never spans multiple TSV
+rows.
+
+## Dashboard
+
+Currently a **static HTML snapshot** — one big file with data embedded as
+inline `const X = {...}` JSON blocks, regenerated by re-running a series of
+Python export scripts (scattered across the session, not yet consolidated
+into one script — this is real follow-up work if `deckfield dashboard`
+should become a CLI command). Tabs: Rankings, Standings, RL Strength,
+Schedule, RDS Cup, PA Cup, Next Matchday (matchup table + copy-paste boxes
+for DECKFIELD's Schedule/Teams/Region Climate inputs), Calendar (full
+26-week schedule, played/next/pending status), Regional Playoffs (all 10
+regions shown at once in a grid, no dropdown).
+
+**Before shipping any dashboard change**: extract the `<script>` block and
+actually execute it in Node with a mocked `document` object (not just
+confirm it parses) — this caught multiple real bugs tonight (accidentally
+deleted helper functions, stale variable references, a `re.sub()` gotcha
+where Python silently reinterpreted `\t` in a replacement string as a
+literal tab, producing invalid JS) that looked fine on visual inspection
+alone. When re-embedding large JSON blocks via regex, use a **lambda**
+replacement function, not a raw string — `re.sub()` processes backslash
+escapes in string replacements, which corrupts anything containing `\t`/`\n`.
+
+## Known open items
+
+- Dashboard regeneration isn't in the CLI yet — still manual script runs.
+- Round numbering: the *historical* R1-R5/L1-L2 mapping is confirmed
+  against real Archive data; everything from PA Draw round 1 onward uses
+  `abs_round_for_event()`'s sequential assignment, which is only "confirmed
+  right" in the sense that it's internally consistent, not independently
+  cross-checked against a second source the way the historical portion was.
+- RDS Cup mutual semifinal/final and PA Cup mutual quarterfinal/semifinal/
+  final: the resolution *logic* (`resolve_mutual_stage`, the lane-4-vs-1
+  semifinal rule, etc.) is built and tested in isolation, but not wired
+  into `_games_for_event` as playable events yet — both raise
+  `NotImplementedError` deliberately rather than guessing.
+- DECKFIELD's own results export (its Outputs tab) isn't finished/verified
+  against the `add-results` CSV format this engine expects — the *export*
+  direction (dashboard → DECKFIELD) is now verified against real code; the
+  *import* direction (DECKFIELD → dashboard) still isn't.
+- `deckfield.html` is now the version of record in this project (see top of
+  file) — don't let a separate conversation's copy drift back into being
+  treated as authoritative.
