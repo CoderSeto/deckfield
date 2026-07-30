@@ -657,11 +657,33 @@
         <label>Round Label
           <input type="text" id="schedRound" value="Round 1">
         </label>
+        <label>Round # (abs_round, for results CSV)
+          <input type="number" id="schedRoundNum" min="1">
+        </label>
         <label>Starting Timeslot
           <input type="number" id="schedStartSlot" min="1" max="10" value="1">
         </label>
         <label>Games per Timeslot
           <input type="number" id="schedGamesPerSlot" min="1" max="20" value="8">
+        </label>
+        <label>Cup Name (Cup games only)
+          <select id="schedCupName">
+            <option value="">—</option>
+            <option>Ribbon</option>
+            <option>Dream</option>
+            <option>Star</option>
+            <option>PA</option>
+          </select>
+        </label>
+        <label>Cup Bracket (Cup games only)
+          <select id="schedCupBracket">
+            <option value="">—</option>
+            <option>Draw</option>
+            <option>Process</option>
+          </select>
+        </label>
+        <label>Cup Round # (Cup games only)
+          <input type="number" id="schedCupRound" min="1">
         </label>
       </div>
     </div>
@@ -730,9 +752,12 @@
     <div class="roster-panel">
       <div class="log-title">Match Results Log</div>
       <p class="roster-help">
-        Every completed game on the Field tab gets appended here automatically as one row.
-        Copy the whole block below and paste it straight into Excel — it's already
-        tab-separated with a header row.
+        Every completed game on the Field tab gets appended here automatically as one row,
+        in the DECKFIELD ratings engine's <code>add-results</code> CSV format (comma-separated,
+        header row included) — set <strong>Round #</strong> (and, for Cup games, Cup Name/
+        Bracket/Round #) on the Schedule tab before playing so it comes through filled in.
+        Copy the whole block below and save it as a .csv file, then run
+        <code>deckfield add-results &lt;file&gt;</code>.
       </p>
       <div class="roster-controls">
         <button id="resultsCopyBtn">Copy All to Clipboard</button>
@@ -951,6 +976,8 @@
   let TEAM_REGION = {home:'Lanakila', away:'Vertress'};     // placeholder — one of the 10 regions
   let TEAM_DISPLAY_NAME = {home:'Home', away:'Away'};       // real team name once a match is loaded
   let CURRENT_ROUND = '';                                    // Round Label of whichever match is loaded
+  let CURRENT_ROUND_NUM = '';                                // abs_round integer for the add-results CSV
+  let CUP_NAME = '', CUP_BRACKET = '', CUP_ROUND_NUM = '';    // only meaningful when GAME_TYPE === 'Cup'
   let TEAM_DIVISION = {home:'Second Div.', away:'Second Div.'}; // placeholder — team's league division
   let TEAM_REGION_RECORD = {home:'0-0', away:'0-0'};   // placeholder — from the roster's Region Record column (W-L, no draws)
   let TEAM_LEAGUE_RECORD = {home:'0-0', away:'0-0'};   // from League Record
@@ -2224,8 +2251,14 @@
     const agg = document.getElementById('schedAgg').value === 'true';
     const weekend = document.getElementById('schedWeekend').value === 'true';
     const round = document.getElementById('schedRound').value.trim() || 'Round 1';
+    const roundNumRaw = document.getElementById('schedRoundNum').value.trim();
+    const roundNum = roundNumRaw === '' ? '' : parseInt(roundNumRaw, 10);
     const startSlot = Math.max(1, parseInt(document.getElementById('schedStartSlot').value, 10) || 1);
     const gamesPerSlot = Math.max(1, parseInt(document.getElementById('schedGamesPerSlot').value, 10) || 1);
+    const cupName = document.getElementById('schedCupName').value;
+    const cupBracket = document.getElementById('schedCupBracket').value;
+    const cupRoundRaw = document.getElementById('schedCupRound').value.trim();
+    const cupRoundNum = cupRoundRaw === '' ? '' : parseInt(cupRoundRaw, 10);
 
     const badRows = rows.filter(r => r.length !== SCHEDULE_COLUMNS.length);
     let overflowCount = 0;
@@ -2240,10 +2273,11 @@
       const awayTeam = findTeamByRank(awayRank);
       const homeTeam = findTeamByRank(homeRank);
       return {
-        round, gameType, agg, weekend, timeslot,
+        round, roundNum, gameType, agg, weekend, timeslot,
         awayRank, homeRank, adv: isNaN(advParsed) ? 0 : advParsed,
         awayName: awayTeam ? awayTeam['Team Name'] : '',
-        homeName: homeTeam ? homeTeam['Team Name'] : ''
+        homeName: homeTeam ? homeTeam['Team Name'] : '',
+        cupName, cupBracket, cupRoundNum
       };
     });
     nextMatchIndex = 0;
@@ -2446,6 +2480,10 @@
     const homeLabel = homeTeam['Team Name'] || 'Home';
     TEAM_DISPLAY_NAME = {home: homeLabel, away: awayLabel};
     CURRENT_ROUND = match.round || '';
+    CURRENT_ROUND_NUM = match.roundNum || '';
+    CUP_NAME = match.cupName || '';
+    CUP_BRACKET = match.cupBracket || '';
+    CUP_ROUND_NUM = match.cupRoundNum || '';
 
     recomputeMatchContext();
 
@@ -2472,86 +2510,75 @@
   }
 
   // ---------- Results log ----------
-  // One row per completed game, in the exact column order needed for pasting into Excel.
+  // One row per completed game, matching deckfield_ratings.py's CSV_GAME_FIELDS order
+  // exactly (plus the optional ex_a/ex_b and cup_name/cup_bracket/cup_round columns) --
+  // this is the `deckfield add-results results.csv` format, not the old packed-string
+  // Excel Archive format. team_a is always the home team, team_b always away, so `home`
+  // is always "A" -- a valid, if unvaried, use of the schema.
   const RESULTS_COLUMNS = [
-    'Spread', 'Elo Delta', 'Game Interest', 'H/A', 'Winning Team Rank', 'Winning Team Name',
-    'Winning Team Score', 'Losing Team Score', 'Losing Team Name', 'Losing Team Rank',
-    'Goals', 'DMAX', 'W Info', 'L Info', 'MAX/INVT', 'EX Bonus', 'Notes'
+    'round', 'game_type', 'team_a', 'team_b', 'result_a', 'pf_a', 'pa_a',
+    'raw_goal_a', 'raw_goal_b', 'spread_a', 'interest', 'dscr_a', 'dscr_b',
+    'elo_a_after', 'elo_b_after', 'home', 'ex_a', 'ex_b',
+    'cup_name', 'cup_bracket', 'cup_round'
   ];
   let RESULTS_LOG = [];
 
-  // Game-type letters for the Home/Away Info string, per the spec: Regional/League/Cup/
+  // Game-type letters, per the engine's games.game_type column: Regional/League/Cup/
   // Playoffs/Finals map to R/L/S/P/F (yes, Cup is "S" — that's the given mapping).
   const GAME_TYPE_LETTER = {Regional:'R', League:'L', Cup:'S', Playoffs:'P', Finals:'F'};
 
-  // Builds one team's awkward all-in-one-string Info column. `team` is 'home' or 'away';
-  // `isWinner` says whether THAT team won this game (independent of home/away identity).
-  function buildTeamInfoString(g, team, isWinner){
-    const opp = g.otherTeam(team);
+  // result_a points: 3 win, 2 OT win, 1 OT loss, 0 loss (see add_game_from_dict).
+  function resultPointsForTeam(g, team){
+    const winner = g.score.home > g.score.away ? 'home' : 'away';
+    const isWinner = (team === winner);
     const otPlayed = (Math.max(0, g.periodIndex - 2)) > 0;
-    const firstChar = isWinner ? (otPlayed ? '2' : '3') : (otPlayed ? '1' : '0');
-    const gameTypeLetter = GAME_TYPE_LETTER[GAME_TYPE] || '?';
-
-    const oppRank = (opp === 'home') ? RANK_HOME : RANK_AWAY;
-    const oppTeamData = findTeamByRank(oppRank);
-    const oppDex = oppTeamData ? oppTeamData['DEX #'] : '';
-
-    const rawGoalAvg = g.goalsScored[team] ? (g.rawZonePoints[team] / g.goalsScored[team]) : 0;
-    const isFavorite = (team === SPREAD_TEAM);
-    const ownSpread = isFavorite ? SPREAD_VALUE : -SPREAD_VALUE;
-
-    const giResult = computeGameInterest(g);
-    const dmaxResult = computeDMAX(g, team);
-    const eloResult = computeEloUpdate(g);
-    const teamNewElo = (team === eloResult.winner) ? eloResult.winnerNewElo : eloResult.loserNewElo;
-
-    return `${firstChar}${gameTypeLetter}!${oppDex}+${g.score[team]}-${g.score[opp]}`
-      + `^${rawGoalAvg.toFixed(2)}(${ownSpread.toFixed(2)})[${Math.round(giResult.gameInterest)}]`
-      + `{${fmt(dmaxResult.dmax, 1)}}${teamNewElo}`;
+    if (isWinner) return otPlayed ? 2 : 3;
+    return otPlayed ? 1 : 0;
   }
 
   function buildResultsRow(g){
-    const winner = g.score.home > g.score.away ? 'home' : 'away';
-    const loser = g.otherTeam(winner);
-    const winnerRank = (winner === 'home') ? RANK_HOME : RANK_AWAY;
-    const loserRank = (loser === 'home') ? RANK_HOME : RANK_AWAY;
-    const winnerTeam = findTeamByRank(winnerRank);
-    const loserTeam = findTeamByRank(loserRank);
-    const winnerName = winnerTeam ? winnerTeam['Team Name'] : TEAM_DISPLAY_NAME[winner];
-    const loserName = loserTeam ? loserTeam['Team Name'] : TEAM_DISPLAY_NAME[loser];
+    const homeDex = (findTeamByRank(RANK_HOME) || {})['DEX #'] || '';
+    const awayDex = (findTeamByRank(RANK_AWAY) || {})['DEX #'] || '';
 
-    const spreadSigned = (winner === SPREAD_TEAM) ? SPREAD_VALUE : -SPREAD_VALUE;
     const eloResult = computeEloUpdate(g);
+    const homeEloAfter = (eloResult.winner === 'home') ? eloResult.winnerNewElo : eloResult.loserNewElo;
+    const awayEloAfter = (eloResult.winner === 'away') ? eloResult.winnerNewElo : eloResult.loserNewElo;
+
     const giResult = computeGameInterest(g);
-    const dmaxWinner = computeDMAX(g, winner).dmax;
-    const dmaxLoser = computeDMAX(g, loser).dmax;
-    const exResult = computeEXFinal(g);
+    const dmaxHome = computeDMAX(g, 'home').dmax;
+    const dmaxAway = computeDMAX(g, 'away').dmax;
+    const exHome = computeEXBonus(g, 'home').ex;
+    const exAway = computeEXBonus(g, 'away').ex;
 
-    let maxInvtFlag = '';
-    if (dmaxWinner >= 100) maxInvtFlag = 'MAX';
-    else if (dmaxWinner < dmaxLoser) maxInvtFlag = 'INVT';
+    const rawGoalHome = g.goalsScored.home ? (g.rawZonePoints.home / g.goalsScored.home) : 0;
+    const rawGoalAway = g.goalsScored.away ? (g.rawZonePoints.away / g.goalsScored.away) : 0;
+    const homeIsFavorite = (SPREAD_TEAM === 'home');
+    const spreadHome = homeIsFavorite ? SPREAD_VALUE : -SPREAD_VALUE;
 
-    const winnerInfo = buildTeamInfoString(g, winner, true);
-    const loserInfo = buildTeamInfoString(g, loser, false);
+    const isCup = (GAME_TYPE === 'Cup');
 
     return [
-      spreadSigned.toFixed(SPREAD_DECIMALS),
-      eloResult.delta,
+      CURRENT_ROUND_NUM,
+      GAME_TYPE_LETTER[GAME_TYPE] || '',
+      homeDex,
+      awayDex,
+      resultPointsForTeam(g, 'home'),
+      g.score.home,
+      g.score.away,
+      rawGoalHome.toFixed(2),
+      rawGoalAway.toFixed(2),
+      spreadHome.toFixed(SPREAD_DECIMALS),
       fmt(giResult.gameInterest, 2),
-      winner === 'home' ? 'H' : 'A',
-      winnerRank,
-      winnerName,
-      g.score[winner],
-      g.score[loser],
-      loserName,
-      loserRank,
-      `[${g.goalsScored[winner]}-${g.goalsScored[loser]}]`,
-      `{${fmt(dmaxWinner, 1)}-${fmt(dmaxLoser, 1)}}`,
-      winnerInfo,
-      loserInfo,
-      maxInvtFlag,
-      `/${exResult.finalEX}/`,
-      ''  // Notes — provided later
+      fmt(dmaxHome, 1),
+      fmt(dmaxAway, 1),
+      Math.round(homeEloAfter),
+      Math.round(awayEloAfter),
+      'A',
+      exHome,
+      exAway,
+      isCup ? CUP_NAME : '',
+      isCup ? CUP_BRACKET : '',
+      isCup ? CUP_ROUND_NUM : ''
     ];
   }
 
@@ -2564,8 +2591,8 @@
     html += '</tbody>';
     table.innerHTML = html;
 
-    const tsvLines = RESULTS_LOG.map(row => row.join('\t'));
-    document.getElementById('resultsTsvBox').value = tsvLines.join('\n');
+    const csvLines = [RESULTS_COLUMNS.join(',')].concat(RESULTS_LOG.map(row => row.join(',')));
+    document.getElementById('resultsTsvBox').value = csvLines.join('\n');
   }
 
   function recordResultIfNeeded(){

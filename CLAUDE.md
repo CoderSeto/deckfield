@@ -398,10 +398,17 @@ escapes in string replacements, which corrupts anything containing `\t`/`\n`.
   semifinal rule, etc.) is built and tested in isolation, but not wired
   into `_games_for_event` as playable events yet — both raise
   `NotImplementedError` deliberately rather than guessing.
-- DECKFIELD's own results export (its Outputs tab) isn't finished/verified
-  against the `add-results` CSV format this engine expects — the *export*
-  direction (dashboard → DECKFIELD) is now verified against real code; the
-  *import* direction (DECKFIELD → dashboard) still isn't.
+- DECKFIELD's Results tab now exports directly in the `add-results` CSV
+  format (comma-separated, header row, `CSV_GAME_FIELDS` order + `ex_a`/
+  `ex_b`/`cup_name`/`cup_bracket`/`cup_round`) instead of the old
+  packed-string Excel Archive format — round-trip verified end to end
+  (Playwright-driven game → exported row → `deckfield add-results` →
+  ingested with no errors, 2026-07-30). `team_a` is always the home team,
+  `team_b` always away (`home` is therefore always `"A"`). The Schedule
+  tab gained a **Round #** field (the abs_round integer, separate from the
+  existing free-text Round Label) and Cup Name/Bracket/Round # fields
+  (only populated into the export when Game Type is Cup) — these must be
+  set before playing a match for that game's exported row to carry them.
 - `deckfield.html` is now the version of record in this project (see top of
   file) — don't let a separate conversation's copy drift back into being
   treated as authoritative.
