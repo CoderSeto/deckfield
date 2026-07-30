@@ -60,7 +60,13 @@ round,game_type,team_a,team_b,result_a,pf_a,pa_a,raw_goal_a,raw_goal_b,spread_a,
 - `team_a`/`team_b` are `team_id` (dex) integers, not names.
 - `result_a`: points team_a earned — 3 win, 2 OT win, 1 OT loss, 0 loss. No draws exist.
 - `home`: `"A"` or `"B"` — resolves `host_region` automatically, which drives fatigue tracking.
-- `ex_a`/`ex_b`: optional, default 0.
+- `ex_a`/`ex_b`: optional, default 0. As of 2026-07-30, both teams bank their
+  own independently-computed EX Bonus every game (win or lose) — this is a
+  deliberate departure from the historical S9 data, where `migrate_ex_bonus()`
+  only ever awarded a bonus to the winner, and as the *differential*
+  (`winnerEX.ex - loserEX.ex`), never a raw per-team score. Going forward,
+  `deckfield.html`'s Results tab exports each team's own raw EX score
+  independently for both `ex_a` and `ex_b`.
 - `cup_name`/`cup_bracket`/`cup_round`: optional, but **required for any cup
   game** (`Ribbon`/`Dream`/`Star`/`PA`, `Draw`/`Process`, integer round) — the
   weekly-schedule completion check (`next_matchday`) can't tell a cup game
@@ -157,6 +163,15 @@ deliberately — not modeled yet, see "Known open items."
   is the latest week with real data (round 11), where 14/14 and 12/12 are
   both exactly 1 — Canalave's OVR came out byte-identical (101.76, Grade
   SS) before and after the change.
+- **TOT floor**: `TOT = max(0, RP + LP + SP + P + F + B + STARTING_TOT)`
+  (`_points_buckets()`). `STARTING_TOT = 20` was always meant as a floor
+  against going negative, but that only held by construction while `B` (EX
+  Bonus) was winner-only and positive-biased. Now that both teams bank
+  their own EX Bonus every game — including negative components on a loss
+  — a bad enough streak could push the raw sum below zero without an
+  explicit clamp. Confirmed a no-op against real S9 data: minimum `TOT`
+  across all 1,920 historical `team_round_ratings` rows is exactly 20.0,
+  never lower, so nothing changes retroactively.
 - **RLStr** (Regional/League Strength): a **from-scratch revamp**, not a
   faithful port of the sheet's original formula (which the person
   confirmed had manual entry errors). Current version: 7 z-scored

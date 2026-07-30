@@ -574,7 +574,12 @@ def _points_buckets(games, walkovers=None):
     p  = type_points("P") * GAME_TYPE_POINT_MULTIPLIER["P"]
     f  = type_points("F") * GAME_TYPE_POINT_MULTIPLIER["F"]
     b  = sum(g["ex_bonus"] or 0 for g in games)
-    tot = rp + lp + sp + p + f + b + STARTING_TOT
+    # Both teams now bank their own EX Bonus every game (win or lose), unlike the
+    # historical S9 data where only the winner ever got a (positive-biased) bonus --
+    # so a team on a bad enough streak of negative EX components could otherwise
+    # drag TOT below zero. Floor it at 0 the same way STARTING_TOT was always meant
+    # to act as a floor.
+    tot = max(0.0, rp + lp + sp + p + f + b + STARTING_TOT)
 
     return {
         "rp": rp, "lp": lp, "sp": sp, "p": p, "f": f, "b": b, "tot": tot,
