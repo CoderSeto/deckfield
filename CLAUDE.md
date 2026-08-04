@@ -243,6 +243,22 @@ Lanakila, Star = Kalosite/Dynamax/Terastal (48 real teams each, seeds
     modeled in `_games_for_event` (raises `NotImplementedError`) — the
     resolution *logic* above is confirmed correct, just not wired up as a
     playable event yet.
+- **Dashboard bug, fixed 2026-08-04**: the RDS Cup tab's Round 2 section
+  (`rdsRound2RowHtml` in `deckfield_dashboard.html`) was rendering the
+  *winner* into the home column and the loser into away, unconditionally —
+  it had no seed data at all and no notion of who actually hosted. Real
+  host is determined by the seed rule above (Draw: lower-numbered/better
+  seed hosts; Process: higher-numbered/worse seed hosts), independently of
+  who won, and was cross-checked directly against the Archive tab's
+  winner-home/away column (`G` = 'H'/'A' for whether the row's winner
+  hosted) for several Round 1 and Round 2 games to confirm the rule holds
+  for real games, not just in theory. Round 1 and Round 3 were already
+  correct (seed-based, from `CUP_BRACKET_DATA`/`RDS_ROUND3`) — only Round 2
+  was wrong, because it rendered straight from `CUP_REAL_RESULTS` (winner/
+  loser only, no seed) instead of a seed-aware structure. Fixed by adding
+  a `RDS_ROUND2` constant (home/away/seed per game, computed the same way
+  as `RDS_ROUND3`) and reusing `rdsRound1RowHtml` for Round 2's rows
+  instead of the now-deleted `rdsRound2RowHtml`.
 
 ## PA Cup (160 teams)
 
