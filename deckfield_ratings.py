@@ -1340,59 +1340,36 @@ def _pair_key(game):
     return frozenset([game['home'], game['away']])
 
 
-def resolve_pa_cup_conflicts(draw_games, process_games, process_seed_to_team,
-                              team_region, team_division, home_is_lower_seed=False):
-    """
-    Mutates process_games / process_seed_to_team in place to remove round-1
-    conflicts, per the confirmed rules (checked for BOTH the row being fixed
-    and the candidate's own row, since a fix must not create a new violation
-    elsewhere):
-      1. Same division -- not allowed until round 6.
-      2. Same region -- not allowed until the mutual quarterfinal.
-      3. Repeat matchup (same two teams already met in Draw or Process) --
-         not allowed until the mutual quarterfinal. Process changes first
-         if the same repeat shows up in both brackets in the same round.
-    Swap candidates are restricted to the SAME half (top/bottom, by current
-    seed strength) as the team being replaced -- round 1's 64-team field
-    splits into top half 97-128 and bottom half 129-160, and a swap must
-    never cross that line (e.g. #8 can never end up facing #7, only 9-16).
-    If no valid same-half swap exists, the original pairing stands even if
-    it breaks one of the three rules above -- this constraint always wins.
-
-    team_region / team_division: {team_name: region_or_division}.
-    Returns a log of swaps made (and any conflicts left unresolved).
-    """
-    draw_pairs = {_pair_key(g) for g in draw_games}
+def _pa_swap_pass(games, seed_to_team, violates_fn, home_is_lower_seed):
+    """Shared swap-search engine, one pass over one bracket's round-1
+    games against a single violation predicate. For every game that fails
+    violates_fn, search same-half seeds (round 1's 64-team field splits
+    into top half 97-128 / bottom half 129-160, and a swap must never
+    cross that line -- e.g. #8 can never end up facing #7, only 9-16) for
+    a replacement that doesn't itself violate, checked for BOTH the row
+    being fixed and the candidate's own row, so a fix never creates a new
+    violation elsewhere. Mutates games/seed_to_team in place. Returns a
+    log of swaps made (and any conflicts left unresolved -- if no valid
+    same-half swap exists, the original pairing stands)."""
     log = []
 
-    def violates(team_a, team_b):
-        if team_a is None or team_b is None:
-            return None
-        if team_division.get(team_a) == team_division.get(team_b):
-            return 'same division'
-        if team_region.get(team_a) == team_region.get(team_b):
-            return 'same region'
-        if frozenset([team_a, team_b]) in draw_pairs:
-            return 'repeat matchup (Draw)'
-        return None
-
     def rebuild_row(row_idx):
-        row = pa_cup_ladder_rows()[row_idx]
+        row = games[row_idx]['row']
         seed_a, seed_b = row[0], row[1]
         if home_is_lower_seed:
             home_seed, away_seed = min(seed_a, seed_b), max(seed_a, seed_b)
         else:
             home_seed, away_seed = max(seed_a, seed_b), min(seed_a, seed_b)
-        process_games[row_idx] = {
+        games[row_idx] = {
             'row': row, 'home_seed': home_seed, 'away_seed': away_seed,
-            'home': process_seed_to_team.get(home_seed), 'away': process_seed_to_team.get(away_seed),
+            'home': seed_to_team.get(home_seed), 'away': seed_to_team.get(away_seed),
         }
 
     TOP_HALF = range(97, 129)   # better half of round 1's 64-team field
     BOTTOM_HALF = range(129, 161)  # worse half
 
-    for idx, game in enumerate(process_games):
-        reason = violates(game['home'], game['away'])
+    for idx, game in enumerate(games):
+        reason = violates_fn(game['home'], game['away'])
         if reason is None:
             continue
 
@@ -1405,36 +1382,108 @@ def resolve_pa_cup_conflicts(draw_games, process_games, process_seed_to_team,
 
         swapped = False
         for candidate in search_order:
-            other_team = process_seed_to_team[other_seed_in_row]
-            incoming_team = process_seed_to_team[candidate]
-            if violates(other_team, incoming_team) is not None:
+            other_team = seed_to_team[other_seed_in_row]
+            incoming_team = seed_to_team[candidate]
+            if violates_fn(other_team, incoming_team) is not None:
                 continue
 
-            candidate_row = next(r for r in pa_cup_ladder_rows() if candidate in (r[0], r[1]))
+            candidate_row_idx = next(i for i, g in enumerate(games) if candidate in (g['row'][0], g['row'][1]))
+            candidate_row = games[candidate_row_idx]['row']
             candidate_partner_seed = candidate_row[1] if candidate_row[0] == candidate else candidate_row[0]
-            candidate_partner_team = process_seed_to_team[candidate_partner_seed]
-            outgoing_team = process_seed_to_team[worse_seed]
-            if violates(candidate_partner_team, outgoing_team) is not None:
+            candidate_partner_team = seed_to_team[candidate_partner_seed]
+            outgoing_team = seed_to_team[worse_seed]
+            if violates_fn(candidate_partner_team, outgoing_team) is not None:
                 continue
 
-            process_seed_to_team[worse_seed], process_seed_to_team[candidate] = \
-                process_seed_to_team[candidate], process_seed_to_team[worse_seed]
-            log.append({
-                'row': idx + 1, 'swapped_seed': worse_seed, 'with_seed': candidate,
-                'reason': reason,
-            })
+            seed_to_team[worse_seed], seed_to_team[candidate] = \
+                seed_to_team[candidate], seed_to_team[worse_seed]
+            log.append({'row': idx + 1, 'swapped_seed': worse_seed, 'with_seed': candidate, 'reason': reason})
             swapped = True
             break
 
         if swapped:
             rebuild_row(idx)
-            candidate_row_idx = next(
-                i for i, r in enumerate(pa_cup_ladder_rows()) if candidate in (r[0], r[1])
-            )
             rebuild_row(candidate_row_idx)
         else:
             log.append({'row': idx + 1, 'swapped_seed': None, 'with_seed': None,
                         'reason': f'{reason} -- no valid same-half swap found, original pairing stands'})
+
+    return log
+
+
+def resolve_pa_cup_conflicts(draw_games, draw_seed_to_team, process_games, process_seed_to_team,
+                              team_region, team_division):
+    """
+    Mutates both draw_games/draw_seed_to_team and process_games/
+    process_seed_to_team in place to remove round-1 conflicts, in this
+    exact order (per explicit instruction):
+      1. (up until round 6) Fix the Draw for same-region/same-division
+         pairings.
+      2. (up until the mutual quarterfinal) Fix the Process for any
+         pairing that repeats a Draw pairing (checked against the Draw's
+         now-final round-1 pairings from step 1).
+      3. (up until round 6) Fix the Process for same-region/same-division
+         pairings.
+      4. Confirm both brackets satisfy all three rules in their final
+         state (catches any interaction between steps 1-3, e.g. step 3
+         accidentally reintroducing a duplicate step 2 already fixed).
+      5. If no valid swap exists, the pairing is left as-is -- this always
+         wins over the three rules above.
+    Swap candidates are always restricted to the SAME half (top/bottom, by
+    seed strength) as the team being replaced.
+
+    team_region / team_division: {team_name: region_or_division}.
+    Returns a log of swaps made (and any conflicts left unresolved), each
+    entry tagged with which bracket ('Draw' or 'Process') it applies to.
+    """
+    def region_division_violation(team_a, team_b):
+        if team_a is None or team_b is None:
+            return None
+        if team_division.get(team_a) == team_division.get(team_b):
+            return 'same division'
+        if team_region.get(team_a) == team_region.get(team_b):
+            return 'same region'
+        return None
+
+    # 1. Draw's own region/division conflicts.
+    draw_log = _pa_swap_pass(draw_games, draw_seed_to_team, region_division_violation, home_is_lower_seed=True)
+
+    # 2. Process pairings that repeat a (now-final) Draw pairing.
+    draw_pairs = {_pair_key(g) for g in draw_games}
+
+    def duplicate_violation(team_a, team_b):
+        if team_a is None or team_b is None:
+            return None
+        return 'repeat matchup (Draw)' if frozenset([team_a, team_b]) in draw_pairs else None
+
+    dup_log = _pa_swap_pass(process_games, process_seed_to_team, duplicate_violation, home_is_lower_seed=False)
+
+    # 3. Process's own region/division conflicts.
+    region_log = _pa_swap_pass(process_games, process_seed_to_team, region_division_violation, home_is_lower_seed=False)
+
+    log = (
+        [dict(bracket='Draw', **e) for e in draw_log]
+        + [dict(bracket='Process', **e) for e in dup_log]
+        + [dict(bracket='Process', **e) for e in region_log]
+    )
+
+    # 4. Confirm -- re-check every game in its final state against all
+    # three rules combined, catching anything the sequential passes above
+    # didn't already log as unresolved.
+    already_flagged = {(e['bracket'], e['row']) for e in log if e['swapped_seed'] is None}
+    draw_pairs_final = {_pair_key(g) for g in draw_games}
+    for bracket, games in (('Draw', draw_games), ('Process', process_games)):
+        for idx, g in enumerate(games):
+            row = idx + 1
+            if (bracket, row) in already_flagged:
+                continue
+            reason = region_division_violation(g['home'], g['away'])
+            if reason is None and bracket == 'Process' and frozenset([g['home'], g['away']]) in draw_pairs_final:
+                reason = 'repeat matchup (Draw)'
+            if reason is not None:
+                log.append({'row': row, 'swapped_seed': None, 'with_seed': None,
+                            'reason': f'{reason} -- found during final confirmation, no swap attempted',
+                            'bracket': bracket})
 
     return log
 
@@ -1632,8 +1681,8 @@ def _rds_round_games(conn, cup, bracket, target_round):
 def _pa_round1_games(conn):
     """(draw_games, process_games, draw_seed_to_team, process_seed_to_team,
     swap_log) -- the real, conflict-resolved PA Cup round-1 game dicts (from
-    pa_cup_round1_pairs + resolve_pa_cup_conflicts), with Process's
-    seed_to_team already reflecting the resolution swaps."""
+    pa_cup_round1_pairs + resolve_pa_cup_conflicts), with BOTH brackets'
+    seed_to_team reflecting their resolution swaps."""
     with open("pa_cup_seeds.json") as f:
         draw_seed_to_team = {int(k): v for k, v in json.load(f).items()}
     with open("pa_process_real_seeds_v2.json") as f:
@@ -1646,8 +1695,8 @@ def _pa_round1_games(conn):
 
     draw_games = pa_cup_round1_pairs(draw_seed_to_team, home_is_lower_seed=True)
     process_games = pa_cup_round1_pairs(process_seed_to_team, home_is_lower_seed=False)
-    swap_log = resolve_pa_cup_conflicts(draw_games, process_games, process_seed_to_team,
-                                         team_region, team_division, home_is_lower_seed=False)
+    swap_log = resolve_pa_cup_conflicts(draw_games, draw_seed_to_team, process_games, process_seed_to_team,
+                                         team_region, team_division)
     return draw_games, process_games, draw_seed_to_team, process_seed_to_team, swap_log
 
 

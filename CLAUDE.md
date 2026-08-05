@@ -346,20 +346,46 @@ mismatches — "Resort Area"/"Battle Zone", "Fight Area"/"Cabo Poco" — and
 later a full corrected re-send). Always verify a fresh Process list covers
 the same 160 teams as Draw before using it.
 
-**Conflict-resolution rules** for Process round 1 (Draw is never modified):
-1. Same division: not allowed before round 6.
-2. Same region: not allowed before the mutual quarterfinal.
-3. Repeat matchup (same two teams already met in Draw or Process, at any
-   point): never allowed.
-4. **Top-half/bottom-half must never cross** during a swap — with N teams
-   remaining, a team can only be swapped with another team in the same
-   half (e.g. with 16 remaining, seed #8 can never end up facing #7 or
-   better; only #9–16 are valid swap targets).
-5. If no valid swap satisfies all of the above, the **original pairing
-   stands**, even if it breaks a rule — never leave a game unresolved.
+**Conflict-resolution order of operations for round 1, fixed 2026-08-06
+(per explicit instruction — Draw now gets checked too, not just Process):**
+1. (up until round 6) Check the **Draw** for same-region/same-division
+   pairings and make appropriate switches.
+2. (up until the mutual quarterfinal) Check the **Process** for any
+   pairing that repeats a Draw pairing from any round (including the
+   current one) — checked against Draw's now-final round-1 pairings from
+   step 1 — and make appropriate switches.
+3. (up until round 6) Check the **Process** for same-region/same-division
+   pairings and make appropriate switches.
+4. Confirm both brackets satisfy all three rules in their final state —
+   catches any interaction between steps 1–3 (e.g. step 3 accidentally
+   reintroducing a duplicate step 2 already fixed).
+5. If no valid swap satisfies a rule, the **original pairing stands**,
+   even if it breaks that rule — this always wins, and nothing is ever
+   left artificially "fixed" by force.
 
-Implemented in `resolve_pa_cup_conflicts()`. Tested against a fully
-duplicate Process list (worst case) before trusting it on real data.
+**Top-half/bottom-half must never cross** during any swap, in either
+bracket — with N teams remaining, a team can only be swapped with another
+team in the same half (e.g. with 16 remaining, seed #8 can never end up
+facing #7 or better; only #9–16 are valid swap targets).
+
+Implemented in `resolve_pa_cup_conflicts()`, built on a shared
+`_pa_swap_pass()` engine (one violation-predicate pass over one bracket)
+reused for all three steps. Previously Draw was never modified at all —
+only Process got conflict resolution, on the theory that Draw's seeding
+was "real, authoritative data" that shouldn't be touched. That was wrong:
+found when a same-region Draw round-1 pairing (Lacunosa Town vs Driftveil
+City, both Vertress) surfaced after the round-1 pairing formula fix above.
+Cross-checking confirmed it wasn't a coincidence — the *old* (also-wrong)
+pairing formula produced zero same-region Draw collisions across all 32
+rows, the corrected formula produced three, meaning Draw's seed-to-team
+assignment was never actually conflict-free by construction; it just
+happened not to collide under the old, incorrect pairing. Tested against
+a fully duplicate Process list (worst case) before trusting it on real
+data, and reverified end-to-end after this fix: 0 unresolved
+region/division violations in either bracket, 0 repeat matchups between
+final Draw and final Process, all 160 seeds still map to exactly one team
+in each bracket, and every swap made respects the top/bottom-half
+boundary.
 
 ## Regional Tournament (postseason)
 
