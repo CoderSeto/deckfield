@@ -299,6 +299,68 @@ for *i* = 1..32:
 - **Rounds 2-7 are fully generated** via `_pa_round_games()`, same
   real-winner resolution pattern as RDS. **Not yet built**: the mutual
   quarterfinal+ stage (raises `NotImplementedError`).
+- **Rounds 2-4 conflict resolution and seed-based home/away, fixed
+  2026-08-06.** `_pa_round_games()` previously just walked each row's
+  ladder climb assuming the tier entrant (row[2]/row[3]/row[4]) was fixed
+  and un-conflict-checked, and had the round-(N-1) *survivor* always host
+  round N regardless of seed. Both were wrong:
+  - **Home/away must be seed-based at every round, not "survivor hosts".**
+    An upset winner (the worse seed) does not suddenly host just because
+    they won — Draw still seats the lower/better seed, Process the
+    higher/worse seed, exactly like round 1. This is the same class of
+    bug already found and fixed once for RDS Cup's Round 2
+    (winner-rendered-as-home instead of seed-based). Fixed by tracking
+    each survivor's *own* seed forward through every round they win
+    (never reassigned just because they keep winning) and comparing it
+    against the tier entrant's seed at each round.
+  - **Conflict resolution (the 5-step order below) now also runs at
+    rounds 2-4**, restricted each round to swaps within that round's own
+    tier-seed range (65-96 for round 2, 33-64 for round 3, 1-32 for round
+    4) — only the tier *entrant* is swappable at these rounds (the
+    round-(N-1) survivor is a real, already-played result and never
+    changes). `_pa_swap_tier_entrants()` is the shared engine for this,
+    parallel to round 1's `_pa_swap_pass()`.
+  - **Neither round N's pairing nor its conflict resolution can be
+    reconstructed by guessing the opponent from a static, once-computed
+    seed mapping** — if round N's own resolution swapped an entrant, a
+    naive prediction from an unmutated mapping won't match the game that
+    was actually played, and a `_real_bracket_winner()` lookup keyed on
+    the wrong two names silently returns "not played yet" even though it
+    was. `_pa_ladder_walk()` fixes this by walking rounds 1→N **one round
+    at a time**, resolving each round's conflicts and using that round's
+    own just-computed (correct) pairing to look up its real winner before
+    moving to the next round — never guessing.
+  - **Settling either bracket's round N+1 pairing now waits for BOTH
+    Draw and Process to finish round N first**, not just the bracket
+    being asked about (`_pa_bracket_round_complete()`, checked for both
+    brackets before generating anything past round 1) — per explicit
+    instruction. This also happens to be structurally required anyway:
+    the cross-bracket duplicate check (step 2) needs the other bracket's
+    same-round pairing to exist before it can run.
+  - **Rounds 5-7 (the champions bracket among the 32 row-champions) do
+    NOT yet get conflict resolution** — deliberately deferred, not
+    silently skipped. Unlike rounds 1-4, there's no fixed "seed pool" of
+    not-yet-committed teams to swap at this stage; every entrant is
+    already a fully-determined real team by the time round 5 starts, so a
+    "swap" there would mean reassigning which two already-decided
+    champions face each other (a re-seeding operation, not a seed-holder
+    swap) — a genuinely different, untested mechanism with no real data
+    to validate against yet (round 4 hasn't been played). Round 5-7
+    pairing generation itself (seed-based home/away, no entrant-swap
+    conflicts) was re-verified working end to end regardless.
+  - **Verified via a full synthetic walk** (a scratch copy of the
+    database, not the real one): round 2 is correctly gated (`None`)
+    until both brackets finish round 1, and remains gated symmetrically
+    if only one bracket finishes a later round while the other hasn't
+    (checked explicitly for round 3 with round 2 lopsided); an engineered
+    round-1 upset confirmed the survivor does *not* automatically host
+    round 2 (the better seed does, regardless of who won); all 5
+    naturally-occurring same-region round-2 collisions (Draw) resolved to
+    zero after conflict resolution; a full round 1→7 walk with synthetic
+    results produced the exact expected game count every round (32, 32,
+    32, 32, 16, 8, 4) with no blocked/failed step; and `_games_for_event`
+    (the real matchday-export consumer) was confirmed working end to end
+    against the synthetic walk's round 3 data.
 
 **Round-1 pairing bug, found and fixed 2026-08-06.** The formula above
 replaces an earlier, wrong version that paired row *i* as `(128+i) vs
@@ -346,8 +408,11 @@ mismatches — "Resort Area"/"Battle Zone", "Fight Area"/"Cabo Poco" — and
 later a full corrected re-send). Always verify a fresh Process list covers
 the same 160 teams as Draw before using it.
 
-**Conflict-resolution order of operations for round 1, fixed 2026-08-06
-(per explicit instruction — Draw now gets checked too, not just Process):**
+**Conflict-resolution order of operations, fixed 2026-08-06 (per explicit
+instruction — Draw now gets checked too, not just Process). Originally
+built for round 1 only; extended to rounds 2-4 the same day (see above) —
+this exact 5-step order applies at every round, just scoped each round to
+that round's own tier-seed range for swaps:**
 1. (up until round 6) Check the **Draw** for same-region/same-division
    pairings and make appropriate switches.
 2. (up until the mutual quarterfinal) Check the **Process** for any
