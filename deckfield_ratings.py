@@ -1378,11 +1378,14 @@ def _pa_swap_opponents(rows, opponent_of, seed_to_team, violates_fn, pool_lo, po
     Swap candidates restricted to the same half of [pool_lo, pool_hi]
     (e.g. round 1's swap-relevant field is 32 opponent seeds; a team can
     only be swapped with another opponent in the same half -- #8 can
-    never end up facing #7 or better, only #9-16). Checked for BOTH the
-    row being fixed and the candidate's own row, so a fix never creates a
-    new violation elsewhere. Returns a log of swaps made (and any
-    conflicts left unresolved -- if no valid same-half swap exists, the
-    original pairing stands). row is 1-indexed in the log.
+    never end up facing #7 or better, only #9-16). The next-BETTER
+    (numerically lower) opponent seed is tried first, then the next after
+    that, and so on; only once every better option in the same half is
+    exhausted does the search fall back to worse (higher) seeds. Checked
+    for BOTH the row being fixed and the candidate's own row, so a fix
+    never creates a new violation elsewhere. Returns a log of swaps made
+    (and any conflicts left unresolved -- if no valid same-half swap
+    exists, the original pairing stands). row is 1-indexed in the log.
     """
     log = []
     anchor_team_of = dict(rows)
@@ -1398,8 +1401,12 @@ def _pa_swap_opponents(rows, opponent_of, seed_to_team, violates_fn, pool_lo, po
             continue
 
         same_half = upper_half if opp_seed in upper_half else lower_half
-        search_order = [s for s in same_half if s > opp_seed] + \
-                       [s for s in reversed(same_half) if s < opp_seed]
+        # Try the next-better (numerically lower) opponent seed first, then
+        # the next after that, etc; only fall back to worse (higher) seeds
+        # if nothing better in the same half works. Never crosses into the
+        # other half.
+        search_order = [s for s in reversed(same_half) if s < opp_seed] + \
+                       [s for s in same_half if s > opp_seed]
 
         swapped = False
         for candidate_seed in search_order:
