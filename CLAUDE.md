@@ -479,13 +479,35 @@ formula-derived opponent, mutable only via conflict resolution) instead
 of reading `row[1]` directly; the same pattern extends to rounds 2-4's
 tier entrants via `_pa_default_opponents(round_slot)`. Reverified:
 `draw_round1[0]` still reads `160 vs 97`, the swap log now names the two
-*opponent* seeds exchanged (e.g. `Swapped seed #100 ↔ #101`, both drawn
-from the row's own tier-D opponent range) instead of the row's own
-permanent seeds, `draw_seed_to_team[157]`/`[158]` are confirmed unchanged
-from the raw JSON after resolution, and a full synthetic round 1→2 walk
-confirmed a team who wins round 1 via a swapped-in opponent still climbs
-through their *own* row's round-2 tier-C entrant, not the row they were
-paired against.
+*opponent* seeds exchanged instead of the row's own permanent seeds,
+`draw_seed_to_team[157]`/`[158]` are confirmed unchanged from the raw
+JSON after resolution, and a full synthetic round 1→2 walk confirmed a
+team who wins round 1 via a swapped-in opponent still climbs through
+their *own* row's round-2 tier-C entrant, not the row they were paired
+against.
+
+**Swap search direction was backwards, fixed 2026-08-06, same day.** The
+first version of the opponent-swap fix above searched worse (numerically
+higher) candidate seeds before better ones, which produced `Swapped seed
+#100 ↔ #101` for row 4's conflict — pairing row 4 (seed 157) with row 5's
+opponent instead of row 3's, even though row 3 (seed 158) is the
+immediately-adjacent, next-worse-seeded row and was available. The bug:
+opponent seed and anchor seed move in *opposite* directions as row index
+increases (anchor `161-i` decreases, round-1 opponent `96+i` increases),
+so searching opponent seeds ascending-first actually reaches toward
+*better*-anchored neighboring rows first, backwards from "try the next-
+worst row first." Per explicit instruction, corrected `_pa_swap_opponents`
+to search the next-*better* (numerically lower) opponent seed first, then
+the next after that, and so on, only falling back to worse (higher) seeds
+once every better option in the same half is exhausted. Row 4's conflict
+now resolves to `Swapped seed #100 ↔ #99` — `157 vs 99`, `158 vs 100` —
+exactly the original worked example. Reverified end-to-end after the
+fix: 0 unresolved region/division violations in either bracket, 0 repeat
+matchups between final Draw and Process, all 160 seeds still map to
+exactly one team in each bracket, every swap still respects the
+top/bottom-half boundary, and a full synthetic round 1-7 walk (including
+an engineered round-1 upset) still produces the exact expected game count
+every round with correct seed-based hosting throughout.
 
 ## Regional Tournament (postseason)
 
