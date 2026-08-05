@@ -1294,16 +1294,25 @@ def resolve_mutual_stage(draw_finalists, process_finalists, seed_lookup):
 
 # ---------------------------------------------------------------- PA Cup --
 # 160-team Draw-and-Process ladder tournament. Seeds 1-32/33-64/65-96/97-160
-# form 32 independent "ladder rows" -- row i = (128+i, 96+i, 64+i, 32+i, i) --
-# climbing sequentially: round1 is 128+i vs 96+i (both tier D, no bye);
-# round2 winner faces 64+i (tier C entrant); round3 winner faces 32+i (tier
-# B); round4 winner faces i (tier A). From round5 on, the 32 row-champions
-# play a standard seeded bracket (row i vs row 33-i in round5, standard
-# progression after). Confirmed directly against the user's own example.
+# form 32 independent "ladder rows" -- row i = (161-i, 96+i, 97-i, 32+i, 33-i)
+# for i=1..32 -- climbing sequentially: round1 is (161-i) vs (96+i), the
+# proper seed-vs-mirror-seed pairing within the full tier-D range (97-160,
+# no bye) -- e.g. row 1 is 160 vs 97, row 32 is 129 vs 128 -- NOT the naive
+# first-half/second-half pairing (128+i vs 96+i) used before 2026-08-06,
+# which was confirmed wrong (produced entirely incorrect PA Cup Draw Round 1
+# matchups in real play, reverted). Round2 winner faces 97-i (tier C entrant,
+# also mirrored within its own 32-seed range -- NOT 64+i); round3 winner
+# faces 32+i (tier B entrant, unmirrored -- unchanged from before); round4
+# winner faces 33-i (tier A entrant, mirrored -- NOT i). From round5 on, the
+# 32 row-champions play a standard seeded bracket keyed on each row's final
+# seed identity (33-i, not i) -- row-seed k vs row-seed 33-k in round5,
+# standard progression after; this rule itself is unchanged, it just
+# inherits the corrected row[4] value. Confirmed against the user's own
+# explicit example, round1 through round5, for rows 1 and 2.
 
 def pa_cup_ladder_rows():
-    """32 rows, each [128+i, 96+i, 64+i, 32+i, i] for i=1..32."""
-    return [[128 + i, 96 + i, 64 + i, 32 + i, i] for i in range(1, 33)]
+    """32 rows, each [161-i, 96+i, 97-i, 32+i, 33-i] for i=1..32."""
+    return [[161 - i, 96 + i, 97 - i, 32 + i, 33 - i] for i in range(1, 33)]
 
 
 def pa_cup_round1_pairs(seed_to_team, home_is_lower_seed):
@@ -1315,7 +1324,7 @@ def pa_cup_round1_pairs(seed_to_team, home_is_lower_seed):
     """
     games = []
     for row in pa_cup_ladder_rows():
-        seed_a, seed_b = row[0], row[1]  # 128+i, 96+i -- both real, tier D
+        seed_a, seed_b = row[0], row[1]  # 161-i, 96+i -- both real, tier D
         if home_is_lower_seed:
             home_seed, away_seed = min(seed_a, seed_b), max(seed_a, seed_b)
         else:
@@ -1654,7 +1663,7 @@ def _pa_round_games(conn, bracket, target_round):
     if target_round <= 4:
         games = []
         for g in round1_games:
-            row = g["row"]  # [128+i, 96+i, 64+i, 32+i, i]
+            row = g["row"]  # [161-i, 96+i, 97-i, 32+i, 33-i]
             team_a, team_b = g["home"], g["away"]
             for rnd in range(1, target_round):
                 w = _real_bracket_winner(conn, "PA", bracket, rnd, team_a, team_b)

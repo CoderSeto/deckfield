@@ -211,16 +211,25 @@ def build_rank_elo_history():
 
 def build_pa_cup():
     """(PA_REAL_RESULTS, PA_ROUND_PREVIEW) for the PA Cup tab. Preview
-    target round is one past whatever round has any real games so far
-    (0 if neither bracket has started) -- correct as long as Draw and
-    Process don't drift more than one round apart in completion, which
-    holds given they're always played on the same matchday's Tue/Thu."""
+    target round is one past whatever round has any real games so far --
+    correct as long as Draw and Process don't drift more than one round
+    apart in completion, which holds given they're always played on the
+    same matchday's Tue/Thu. No preview is generated until round 1 itself
+    is complete -- round 1's own structural pairing is already shown by
+    the tab's static "Round 1" section (PA_CUP_DATA), so projecting round 1
+    again as a "preview" before it's even played would just duplicate it
+    under a wrong label. PA_ROUND_PREVIEW carries its own "round" number
+    so the dashboard can label the section correctly instead of assuming
+    it's always round 2."""
     real_results = pa_cup_real_results(SEASON)
     played_rounds = [
         int(rnd) for bracket in real_results.values() for rnd in bracket
     ]
-    target_round = (max(played_rounds) if played_rounds else 0) + 1
+    if not played_rounds:
+        return real_results, {"round": None, "Draw": None, "Process": None}
+    target_round = max(played_rounds) + 1
     preview = pa_cup_round_preview(SEASON, target_round)
+    preview["round"] = target_round
     return real_results, preview
 
 
