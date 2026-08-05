@@ -434,23 +434,58 @@ team in the same half (e.g. with 16 remaining, seed #8 can never end up
 facing #7 or better; only #9–16 are valid swap targets).
 
 Implemented in `resolve_pa_cup_conflicts()`, built on a shared
-`_pa_swap_pass()` engine (one violation-predicate pass over one bracket)
-reused for all three steps. Previously Draw was never modified at all —
-only Process got conflict resolution, on the theory that Draw's seeding
-was "real, authoritative data" that shouldn't be touched. That was wrong:
-found when a same-region Draw round-1 pairing (Lacunosa Town vs Driftveil
-City, both Vertress) surfaced after the round-1 pairing formula fix above.
-Cross-checking confirmed it wasn't a coincidence — the *old* (also-wrong)
-pairing formula produced zero same-region Draw collisions across all 32
-rows, the corrected formula produced three, meaning Draw's seed-to-team
-assignment was never actually conflict-free by construction; it just
-happened not to collide under the old, incorrect pairing. Tested against
-a fully duplicate Process list (worst case) before trusting it on real
-data, and reverified end-to-end after this fix: 0 unresolved
-region/division violations in either bracket, 0 repeat matchups between
-final Draw and final Process, all 160 seeds still map to exactly one team
-in each bracket, and every swap made respects the top/bottom-half
-boundary.
+`_pa_swap_opponents()` engine (one violation-predicate pass over one
+bracket) reused for all three steps and for every round (1-4 alike).
+Previously Draw was never modified at all — only Process got conflict
+resolution, on the theory that Draw's seeding was "real, authoritative
+data" that shouldn't be touched. That was wrong: found when a same-region
+Draw round-1 pairing (Lacunosa Town vs Driftveil City, both Vertress)
+surfaced after the round-1 pairing formula fix above. Cross-checking
+confirmed it wasn't a coincidence — the *old* (also-wrong) pairing formula
+produced zero same-region Draw collisions across all 32 rows, the
+corrected formula produced three, meaning Draw's seed-to-team assignment
+was never actually conflict-free by construction; it just happened not to
+collide under the old, incorrect pairing. Tested against a fully
+duplicate Process list (worst case) before trusting it on real data, and
+reverified end-to-end after this fix: 0 unresolved region/division
+violations in either bracket, 0 repeat matchups between final Draw and
+final Process, all 160 seeds still map to exactly one team in each
+bracket, and every swap made respects the top/bottom-half boundary.
+
+**A swap reassigns who a row is PAIRED against, never who holds a seed —
+fixed 2026-08-06, same day.** The first version of this mutated
+`seed_to_team` directly: "swap seed #157 and #158" meant the two seeds'
+*occupants* traded places (whichever team was at 157 moved to 158 and
+vice versa). Per explicit instruction, this is wrong for two reasons: (1)
+a team's seed is supposed to be permanent, real data (`pa_cup_seeds.json`
+et al. assign each team a seed once, for the whole tournament — that's
+the whole reason Draw's seeding was ever treated as untouchable in the
+first place, before the bug above), and (2) it silently reassigns a
+team's *future bracket path* — if Lacunosa Town (seed 157, row 4) got
+moved to seed 158 by a swap, they'd inherit row 3's tier entrants
+(94/35/30) going forward instead of row 4's own (93/36/29), which the
+row's own seed (157) is permanently supposed to determine, regardless of
+who they end up playing in any given round. The fix: swap the *opponent
+assignment* between the two rows instead — "row 4 (seed 157, permanently
+Lacunosa) now plays seed 99 instead of seed 100; row 3 (seed 158,
+permanently whoever) now plays seed 100 instead of seed 99" — so
+`seed_to_team` is 100% immutable everywhere, for every round, and a
+team's own future path is always tied to their own permanent seed. Which
+two teams actually face each other can still shift due to a swap — that
+tournament-structure churn is the explicitly intended effect, not
+something to avoid. `pa_cup_round1_pairs()` now takes an explicit
+`opponent_of: {row_idx: seed}` mapping (defaulting to each row's own
+formula-derived opponent, mutable only via conflict resolution) instead
+of reading `row[1]` directly; the same pattern extends to rounds 2-4's
+tier entrants via `_pa_default_opponents(round_slot)`. Reverified:
+`draw_round1[0]` still reads `160 vs 97`, the swap log now names the two
+*opponent* seeds exchanged (e.g. `Swapped seed #100 ↔ #101`, both drawn
+from the row's own tier-D opponent range) instead of the row's own
+permanent seeds, `draw_seed_to_team[157]`/`[158]` are confirmed unchanged
+from the raw JSON after resolution, and a full synthetic round 1→2 walk
+confirmed a team who wins round 1 via a swapped-in opponent still climbs
+through their *own* row's round-2 tier-C entrant, not the row they were
+paired against.
 
 ## Regional Tournament (postseason)
 
