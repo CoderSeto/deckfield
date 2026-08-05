@@ -986,10 +986,11 @@ def _group_zscore(inputs, group_key, field_key):
     return {g: (avgs[g] - mean) / std for g in avgs}
 
 
-def _strength_formula(inputs, group_key, wins_field):
-    """Weighted sum of seven z-scored components (rank flipped so 'better'
-    is always positive), squashed through a tanh curve centered on 1.0
-    with (1-STRETCH, 1+STRETCH) as asymptotic limits, never hit exactly."""
+def _strength_formula_breakdown(inputs, group_key, wins_field):
+    """Full per-group breakdown of the seven z-scored components (rank
+    flipped so 'better' is always positive), the weighted sum, and the
+    tanh-squashed final multiplier centered on 1.0 with
+    (1-STRETCH, 1+STRETCH) as asymptotic limits, never hit exactly."""
     z_rank = _group_zscore(inputs, group_key, "rank")
     z_score = _group_zscore(inputs, group_key, "score")
     z_wins = _group_zscore(inputs, group_key, wins_field)
@@ -1008,9 +1009,30 @@ def _strength_formula(inputs, group_key, wins_field):
         )
 
     k = statistics.pstdev(weighted.values()) * STRENGTH_TANH_K_MULTIPLIER
-    if k == 0:
-        return {g: 1.0 for g in weighted}
-    return {g: 1.0 + STRENGTH_TANH_STRETCH * math.tanh(v / k) for g, v in weighted.items()}
+    breakdown = {}
+    for g in z_rank:
+        final = 1.0 if k == 0 else 1.0 + STRENGTH_TANH_STRETCH * math.tanh(weighted[g] / k)
+        breakdown[g] = {
+            "z_rank": -z_rank[g], "z_ovr": z_score[g], "z_wins": z_wins[g],
+            "z_dscr": z_dscr[g], "z_elo": z_elo[g], "z_tot": z_tot[g], "z_gi": z_gi[g],
+            "weighted": weighted[g], "final": final,
+        }
+    return breakdown
+
+
+def compute_strength_breakdown(season, round_num):
+    """Returns (regional_breakdown_by_region, league_breakdown_by_division),
+    each {group: {z_rank, z_ovr, z_wins, z_dscr, z_elo, z_tot, z_gi,
+    weighted, final}} -- the full per-group ingredients behind
+    compute_strength_scores()'s final-only output, for display (the
+    dashboard's RL Strength tab)."""
+    conn = get_connection()
+    inputs = _strength_raw_inputs(conn, season, round_num)
+    conn.close()
+
+    regional_breakdown = _strength_formula_breakdown(inputs, "region", "intl_w")
+    league_breakdown = _strength_formula_breakdown(inputs, "division", "dom_w")
+    return regional_breakdown, league_breakdown
 
 
 def compute_strength_scores(season, round_num):
@@ -1018,12 +1040,9 @@ def compute_strength_scores(season, round_num):
     No iteration required -- this formula has no circular dependency on
     RLStr itself (unlike the AD-based version explored and reverted
     earlier)."""
-    conn = get_connection()
-    inputs = _strength_raw_inputs(conn, season, round_num)
-    conn.close()
-
-    regional_strength = _strength_formula(inputs, "region", "intl_w")
-    league_strength = _strength_formula(inputs, "division", "dom_w")
+    regional_breakdown, league_breakdown = compute_strength_breakdown(season, round_num)
+    regional_strength = {g: v["final"] for g, v in regional_breakdown.items()}
+    league_strength = {g: v["final"] for g, v in league_breakdown.items()}
     return regional_strength, league_strength
 
 

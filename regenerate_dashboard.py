@@ -9,15 +9,14 @@ hand.
 
 Covers: DATA (Rankings tab, which Standings derives from client-side),
 TEAMS_EXPORT_TSV (Team Roster paste box), NEXT_MATCHDAY_DATA, CALENDAR_DATA,
-RANK_ELO_HISTORY, and PA_REAL_RESULTS/PA_ROUND_PREVIEW (PA Cup tab's real
-results + next-round projection). Each reconstruction was validated by
-recomputing at round 11 (the last state before this script existed) and
-confirming a byte-identical match against the dashboard's already-
-published DATA/CALENDAR_DATA at that round -- see the 2026-08-05 dashboard
-section of CLAUDE.md for that validation and for what this script still
-does NOT cover (STRENGTH_DATA -- the RL Strength tab's region/division
-z-score aggregates resisted reverse-engineering; left stale rather than
-guessed at, see CLAUDE.md for exactly which sub-formulas ARE confirmed).
+RANK_ELO_HISTORY, PA_REAL_RESULTS/PA_ROUND_PREVIEW (PA Cup tab's real
+results + next-round projection), and STRENGTH_DATA (RL Strength tab's
+region/division z-score breakdown -- reuses compute_strength_breakdown(),
+the same formula behind each team's stored rlstr_own). Each reconstruction
+was validated by recomputing at round 11 (the last state before this
+script existed) and confirming a byte-identical match against the
+dashboard's already-published DATA/CALENDAR_DATA at that round -- see the
+2026-08-05 dashboard section of CLAUDE.md for that validation.
 
 Usage: python3 regenerate_dashboard.py [dashboard_path]
 """
@@ -29,6 +28,7 @@ from deckfield_ratings import (
     get_connection, taper_n, export_teams_for_deckfield,
     export_matchday_batches, rank_elo_history,
     pa_cup_real_results, pa_cup_round_preview,
+    compute_strength_breakdown,
 )
 
 SEASON = 9
@@ -224,6 +224,33 @@ def build_pa_cup():
     return real_results, preview
 
 
+def build_strength_data():
+    """STRENGTH_DATA -- the RL Strength tab's region/division z-score
+    breakdown. Reuses compute_strength_breakdown(), the same formula that
+    already produces each team's stored rlstr_own (confirmed exact,
+    160/160, against team_round_ratings at the latest round) -- this just
+    exposes its per-group intermediate z-scores instead of only the final
+    blended multiplier."""
+    conn = get_connection()
+    latest_round = conn.execute(
+        "SELECT MAX(round) m FROM team_round_ratings WHERE season=?", (SEASON,)
+    ).fetchone()["m"]
+    conn.close()
+
+    regional_bd, league_bd = compute_strength_breakdown(SEASON, latest_round)
+
+    def _fmt(breakdown):
+        return {
+            g: {k: round(v, 4 if k in ("weighted", "final") else 2) for k, v in vals.items()}
+            for g, vals in breakdown.items()
+        }
+
+    return {
+        "regional": _fmt(regional_bd),
+        "league": {str(g): v for g, v in _fmt(league_bd).items()},
+    }
+
+
 def _js_string_literal(s):
     return '"' + s.replace('\\', '\\\\').replace('"', '\\"').replace('\t', '\\t').replace('\n', '\\n') + '"'
 
@@ -254,6 +281,8 @@ def main():
     content = _replace_const(content, "PA_REAL_RESULTS", pa_real_results)
     content = _replace_const(content, "PA_ROUND_PREVIEW", pa_preview)
 
+    content = _replace_const(content, "STRENGTH_DATA", build_strength_data())
+
     teams_out, tsv = export_teams_for_deckfield(SEASON)
     pattern = re.compile(r'const TEAMS_EXPORT_TSV = "(?:[^"\\]|\\.)*";\n')
     content, n = pattern.subn(lambda m: f'const TEAMS_EXPORT_TSV = {_js_string_literal(tsv)};\n', content, count=1)
@@ -263,8 +292,7 @@ def main():
     with open(DASHBOARD_PATH, "w") as f:
         f.write(content)
     print(f"Regenerated DATA, NEXT_MATCHDAY_DATA, CALENDAR_DATA, RANK_ELO_HISTORY, "
-          f"PA_REAL_RESULTS, PA_ROUND_PREVIEW, TEAMS_EXPORT_TSV in {DASHBOARD_PATH}")
-    print("NOTE: STRENGTH_DATA (RL Strength tab) is still NOT covered -- see CLAUDE.md.")
+          f"PA_REAL_RESULTS, PA_ROUND_PREVIEW, STRENGTH_DATA, TEAMS_EXPORT_TSV in {DASHBOARD_PATH}")
 
 
 if __name__ == "__main__":

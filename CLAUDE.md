@@ -425,8 +425,9 @@ whenever new results are added.** `regenerate_dashboard.py` (added
 2026-08-05) does this: `python3 regenerate_dashboard.py` after any
 `deckfield add-results`, rewrites `DATA` (Rankings tab; Standings derives
 from it client-side), `TEAMS_EXPORT_TSV`, `NEXT_MATCHDAY_DATA`,
-`CALENDAR_DATA`, `RANK_ELO_HISTORY`, and `PA_REAL_RESULTS`/
-`PA_ROUND_PREVIEW` (PA Cup tab) in place. Each reconstruction was
+`CALENDAR_DATA`, `RANK_ELO_HISTORY`, `PA_REAL_RESULTS`/
+`PA_ROUND_PREVIEW` (PA Cup tab), and `STRENGTH_DATA` (RL Strength tab) in
+place. Each reconstruction was
 validated by recomputing at round 11 (the last state before this script
 existed) and confirming a **byte-identical** match against the
 already-published `DATA`/`CALENDAR_DATA` at that round — including the
@@ -455,41 +456,49 @@ tab correctly still shows only the unplayed structural Round 1, no
 scores/highlighting — a live per-bracket regression check, not a
 special case).
 
-**`STRENGTH_DATA` (RL Strength tab) — investigated, not solved, left
-stale on purpose.** It's a 7-component z-scored formula per region/
-division (Rank ×2 flipped, OVR ×2, Wins ×1, DSCR ×2, Elo ×1, TOT ×1, GI
-×1, weighted-summed, then `1.0 + 0.75*tanh(weighted / (2*population
-stdev))`) computed at the **region-aggregate** level — not the single
-per-team `rlstr_own` value `team_round_ratings` already stores. Against
-real round-11 numbers (10-region and 10-division populations, population
-mean/stdev, `z = (region_avg - pop_mean) / pop_stdev`, Rank flipped
-negative):
-- **Confirmed exact, both regional and league**: `z_dscr` from the mean of
-  each region's/division's `dscr_comp` (normalized 0–100 component, not
-  `d_sqrt_raw`); `z_elo` from the mean of each team's raw current Elo;
-  `z_tot` from the mean of each team's `tot`. The weighted sum and the
-  tanh `final` transform both reproduce exactly from these three plus the
-  reported `z_rank`/`z_ovr`/`z_wins`/`z_gi` (e.g. Indigo's
-  `weighted: -10.43` sums exactly from its 7 published z-values), so the
-  combination formula itself is fully confirmed.
-- **Not cracked**: `z_rank` and `z_ovr` from a plain mean-of-team-rank/
-  mean-of-team-OVR per region come *close* (right sign, right rough
-  magnitude) but never land on the exact published value, under every
-  population/stdev variant tried (per-region population stdev, sample
-  stdev, a combined 20-group region+division population, per-team
-  z-scores averaged within region instead of region-average z-scored).
-  `z_wins` doesn't work at all from a naive average — regional-only (or
-  league-only) win counts average to a fixed constant per region under
-  round-robin play (16 teams ÷ 2 winners per game, always 2.5), so
-  whatever "Wins" means here isn't restricted-to-that-mode win count;
-  overall win count was tried too and didn't match either. `z_gi` was
-  never tested against a confirmed source (guessed as `games.interest_score`
-  averaged per region, unconfirmed either way).
-- Given 3 of 7 sub-formulas are exact and the other 4 resisted real
-  effort, this was left stale rather than shipped as a guess — the risk of
-  silently-wrong RLStr numbers looking authoritative was judged worse than
-  a known-stale tab. Revisit if the original generation logic turns up, or
-  if it's worth another dedicated pass.
+**`STRENGTH_DATA` (RL Strength tab), fixed 2026-08-05.** Originally
+approached as a from-scratch reverse-engineering problem against the
+*old workbook's* published region-aggregate numbers — z-scoring each
+region's/division's own **average** of a stat (rank/OVR/wins/etc.)
+against the population of 10 region (or division) averages. That
+approach exactly reproduced `z_dscr`/`z_elo`/`z_tot` and the overall
+weighted-sum + tanh combination formula, but never landed on `z_rank`,
+`z_ovr`, or `z_wins` under any population/stdev variant tried — because
+the old workbook's Rank/OVR/Wins values are frozen at a stale formula
+version (documented elsewhere in this file: the workbook's own current
+Rank/OVR columns only agree with this engine's live values on 10/160
+teams), so no z-score methodology built on *this engine's* numbers was
+ever going to reproduce numbers computed from *different underlying
+values*. Chasing the published numbers was the wrong goal.
+
+The actual fix: this exact 7-component z-scored formula (Rank ×2 flipped,
+OVR ×2, Wins ×1, DSCR ×2, Elo ×1, TOT ×1, GI ×1 → weighted sum → `1.0 +
+0.75*tanh(weighted / (2*population_stdev))`) was **already implemented**
+in the engine, computed at the region/division level, as an internal step
+of `compute_strength_scores()` / `_strength_formula()` — the function that
+produces each team's stored `rlstr_own` (`rlstr = (regional_strength[region]
++ league_strength[division]) / 2`, confirmed correct and already in
+production). It just discarded the per-component z-scores and returned
+only the final blended multiplier. The dashboard's RL Strength tab wants
+exactly those discarded intermediates, not a separate reconstruction.
+`_strength_formula` was split into `_strength_formula_breakdown()`
+(returns the full per-group dict: `z_rank`, `z_ovr`, `z_wins`, `z_dscr`,
+`z_elo`, `z_tot`, `z_gi`, `weighted`, `final`), with `compute_strength_scores()`
+now just extracting `"final"` from it for backward compatibility. New
+public `compute_strength_breakdown(season, round_num)` exposes the full
+breakdown for both regional and league grouping. Two details worth
+remembering: `"wins"` is deliberately *not* same-mode win count (regional
+wins average to a fixed 2.5/region under round-robin, which is why that
+path never worked) — Regional Strength uses `intl_w` (league + cup +
+playoff-finals wins) and League Strength uses `dom_w` (regional +
+playoff-finals wins), each varying enough across a group to be meaningful.
+And GI is the plain average of `games.interest_score` per team, matching
+what `_strength_raw_inputs()` already used for the per-team formula.
+Wired into `regenerate_dashboard.py` as `build_strength_data()`.
+**Validated exactly**: for every team at the latest round, `(regional_bd[team.region]["final"]
++ league_bd[team.division]["final"]) / 2` reproduces `team_round_ratings.rlstr_own`
+byte-for-byte, 160/160 — since it's the same computation, not a parallel
+reconstruction that happens to agree.
 
 Everything else (`SCHEDULE_DATA`, `CUP_BRACKET_DATA`/`CUP_REAL_RESULTS`/
 `RDS_ROUND2`/`RDS_ROUND3`, `PA_CUP_DATA`'s structural seeding, `RT_DATA`)
