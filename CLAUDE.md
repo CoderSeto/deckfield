@@ -44,7 +44,9 @@ cross-referenced between conversations).
   `league_pods.json` (Regional/League pod structures), `cup_seeds_full.json`
   (Ribbon/Dream/Star seeding), `pa_cup_seeds.json` (PA Cup Draw seeding),
   `pa_process_real_seeds_v2.json` (PA Cup Process seeding, real and
-  conflict-resolved).
+  conflict-resolved), `rank_history_verbatim.json` (the 8 historical Rank
+  History checkpoints, copied verbatim from `Rankings!CS:CL` -- see
+  "Rank/Elo History tab" below).
 - `CLAUDE.md` — this file.
 
 ## Adding new game results
@@ -429,42 +431,59 @@ granularities, matching the workbook's own two granularities:
   on). Elo value at each checkpoint = the team's `elo_a_after`/
   `elo_b_after` from their last game as of that abs_round, carried forward
   for rounds they didn't play in.
-- **Rank checkpoints** (Rankings pattern, historical portion only): within
-  the historical portion (abs_round &le; the last `_CONFIRMED_ABS_ROUND`
-  value, currently 11) a cup round's Draw and Process collapse into one
-  `SC` checkpoint (Rankings' SC1/SC2), using the later of the two
-  abs_rounds — matching how the S9 workbook actually tracked it. **Per
-  explicit instruction, this merging stops there**: every cup round from
-  abs_round 12 onward gets its own rank column instead, reusing the exact
-  same `S` label Elo assigns that abs_round, so Rank and Elo checkpoints
-  are identical from that point on (only the already-published SC1/SC2
-  differ between the two views). Rank = `ORDER BY ovr DESC` per round,
-  same method `current_rank_lookup()` already uses for "current" rank
-  everywhere else in the dashboard.
+- **Rank checkpoints** (Rankings pattern): within the historical portion
+  (abs_round &le; the last `_CONFIRMED_ABS_ROUND` value, currently 11) a
+  cup round's Draw and Process collapse into one `SC` checkpoint
+  (Rankings' SC1/SC2), using the later of the two abs_rounds — matching
+  how the S9 workbook actually tracked it. **Per explicit instruction,
+  this merging stops there**: every cup round from abs_round 12 onward
+  gets its own rank column instead, reusing the exact same `S` label Elo
+  assigns that abs_round, so Rank and Elo checkpoints are identical from
+  that point on (only the already-published SC1/SC2 differ between the
+  two views).
+
+  **Rank values for R1/R2/R3/SC1/R4/L1/L2/R5 are copied verbatim from
+  `Rankings!CS:CL`** (`rank_history_verbatim.json`, `{checkpoint_label:
+  {team_name: rank}}`), **not recomputed** — this engine's OVR-based rank
+  doesn't reproduce the workbook's own frozen rank column (see below), and
+  per explicit instruction those 8 historical checkpoints should read
+  exactly what's in the workbook, byte for byte. **SC2 is the deliberate
+  exception**: it's the last *historical-labeled* checkpoint but reflects
+  this engine's live computed rank (`ORDER BY ovr DESC`, same method
+  `current_rank_lookup()` uses for "current" rank everywhere else in the
+  dashboard) — per explicit instruction, that's where the new system takes
+  over. Every checkpoint from S5 onward is live-computed the same way.
 
 Both walk `full_schedule_abs_round_mapping()` (not `WEEKLY_SCHEDULE`'s
 week/day placement) to decide event order and merging, since the
 historical portion's actual play order doesn't necessarily match
 `WEEKLY_SCHEDULE`'s current day slots — only the confirmed abs_round
 numbering does. Grows automatically as `add-results` brings in new
-rounds; nothing here needs hand-updating.
+rounds; nothing here needs hand-updating for Elo or for any rank
+checkpoint from SC2 onward -- the verbatim file only ever needs the 8
+entries it already has.
 
-**Validated against the real workbook, with one real finding**: Elo
-checkpoints match `Calcs!ANV:AOF` **exactly**, byte-for-byte, for every
-team checked (confirmed against Canalave City's full row: 2506, 2507,
-2508, 2509, 2510, 2511, 2534, 2536, 2537, 2539, 2543). Rank checkpoints do
-**not** match `Rankings!CS:CK` — not even at the final/current checkpoint,
-where the *live* `Rankings!AN` "Rank" column (itself an exact match to the
-`CK`/SC2 snapshot, 160/160) still only agrees with this engine's current
-rank on 10/160 teams. This isn't a bug in the new history code: the
-workbook's own `AQ` "OVR" column for Canalave (103.23) doesn't match this
-engine's confirmed value (101.76, Grade SS — the exact number already
-cross-checked elsewhere in this file) either. The workbook's Rank/OVR
-columns are frozen at whatever formula version was live when they were
-last touched, predating several of the confirmed OVR fixes above (PDG
-denominator, per-team EX Bonus, TOT floor) — this engine is the corrected,
-going-forward source of truth, so no attempt was made to reproduce the
-workbook's stale rank numbers retroactively.
+**Validated against the real workbook**: Elo checkpoints match
+`Calcs!ANV:AOF` **exactly**, byte-for-byte, for every team checked
+(confirmed against Canalave City's full row: 2506, 2507, 2508, 2509,
+2510, 2511, 2534, 2536, 2537, 2539, 2543). The 8 verbatim rank checkpoints
+match `Rankings!CS:CL` **exactly** for all 160 teams (1,280/1,280 values).
+
+**Real finding, worth remembering**: this engine's OVR-based rank does
+**not** match the workbook's own rank column, not even at the
+current/latest state — the *live* `Rankings!AN` "Rank" column (itself an
+exact match to the `CK`/SC2 snapshot, 160/160) only agrees with this
+engine's current rank on 10/160 teams. Not a bug: the workbook's own `AQ`
+"OVR" column for Canalave (103.23) doesn't match this engine's confirmed
+value (101.76, Grade SS — the exact number already cross-checked
+elsewhere in this file) either. The workbook's Rank/OVR columns are
+frozen at whatever formula version was live when they were last touched,
+predating several of the confirmed OVR fixes above (PDG denominator,
+per-team EX Bonus, TOT floor). This is exactly *why* SC2 onward
+deliberately uses this engine's numbers instead of trying to reconcile
+with the workbook's stale formula — the two were never going to agree,
+and per explicit instruction the new system takes over at SC2 rather than
+the workbook's numbers being treated as authoritative going forward.
 
 **Before shipping any dashboard change**: extract the `<script>` block and
 actually execute it in Node with a mocked `document` object (not just

@@ -772,10 +772,11 @@
         in the DECKFIELD ratings engine's <code>add-results</code> CSV format (comma-separated,
         header row included) — set <strong>Round #</strong> (and, for Cup games, Cup Name/
         Bracket/Round #) on the Schedule tab before playing so it comes through filled in.
-        Copy the whole block below and save it as a .csv file, then run
-        <code>deckfield add-results &lt;file&gt;</code>.
+        Download it as a .csv file and run
+        <code>deckfield add-results &lt;file&gt;</code> on it directly.
       </p>
       <div class="roster-controls">
+        <button id="resultsDownloadBtn">Download CSV</button>
         <button id="resultsCopyBtn">Copy All to Clipboard</button>
         <button id="resultsClearBtn">Clear Log</button>
       </div>
@@ -2669,6 +2670,27 @@
     RESULTS_LOG.push(buildResultsRow(game));
     renderResultsTab();
   }
+
+  document.getElementById('resultsDownloadBtn').addEventListener('click', () => {
+    const statusEl = document.getElementById('resultsStatus');
+    if (!RESULTS_LOG.length){
+      statusEl.textContent = 'No completed games yet — play one out on the Field tab first.';
+      statusEl.className = 'roster-status warn';
+      return;
+    }
+    const csvText = document.getElementById('resultsTsvBox').value;
+    const blob = new Blob([csvText], {type: 'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'deckfield_results.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    statusEl.textContent = `Downloaded ${RESULTS_LOG.length} row${RESULTS_LOG.length === 1 ? '' : 's'} as deckfield_results.csv.`;
+    statusEl.className = 'roster-status ok';
+  });
 
   document.getElementById('resultsCopyBtn').addEventListener('click', () => {
     const statusEl = document.getElementById('resultsStatus');
