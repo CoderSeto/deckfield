@@ -1992,6 +1992,9 @@
     html += `<div class="drow dtotal"><span>Spread (Home perspective)</span><span>${b.spread < 0 ? '-' : ''}${homePerspTrunc.value.toFixed(homePerspTrunc.decimals)}</span></div>`;
     html += `<div class="drow dtotal"><span>Final Spread (${favoriteName}, truncated not rounded)</span><span>+${SPREAD_VALUE.toFixed(SPREAD_DECIMALS)}</span></div>`;
     document.getElementById('spreadRows').innerHTML = html;
+    // Unlike the DMAX/GI/Elo/EX panels, this one is never gated on game.gameOver, so it
+    // always gets the 'show' class -- .gi-panel is display:none by default otherwise.
+    document.getElementById('spreadPanel').classList.add('show');
   }
 
   function renderAll(){
