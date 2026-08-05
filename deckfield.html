@@ -1143,7 +1143,7 @@
     const hfa = HOME_FIELD_ADVANTAGE[GAME_TYPE] || 0;
     const rawSpread = skillTerm + hfa + CLIMATE_BONUS + EYE_TEST_BONUS + ELO_BONUS;
 
-    const fatigueMult = 1 + (TEAM_FATIGUE.home - TEAM_FATIGUE.away) * 0.005;
+    const fatigueMult = 1 + (TEAM_FATIGUE.away - TEAM_FATIGUE.home) * 0.005;
     let spread = rawSpread * fatigueMult;
     spread *= SPREAD_FACTOR_MULTIPLIER;
     spread += SPREAD_FACTOR_MODIFIER;
