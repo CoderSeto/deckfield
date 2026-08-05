@@ -505,6 +505,15 @@
         </div>
       </div>
 
+      <div class="gi-panel collapsible collapsed" id="spreadPanel">
+        <div class="panel-header" data-target="spreadPanel">
+          <span class="log-title">Game Spread Calculation</span>
+          <span class="toggle-icon">▶</span>
+        </div>
+        <div class="gi-big" id="spreadBig">+0.0000</div>
+        <div class="dmax-rows" id="spreadRows"></div>
+      </div>
+
       <div class="dmax-panel collapsible collapsed" id="dmaxPanel">
         <div class="panel-header" data-target="dmaxPanel">
           <span class="log-title">DMAX Report</span>
@@ -1143,7 +1152,10 @@
     const truncResult = truncateSpreadMagnitude(Math.abs(spread));
     return {
       team, value: truncResult.value, decimals: truncResult.decimals,
-      breakdown: {skillTerm, hfa, climate:CLIMATE_BONUS, eyeTest:EYE_TEST_BONUS, elo:ELO_BONUS, rawSpread, fatigueMult, spread}
+      breakdown: {
+        skillTerm, hfa, climate:CLIMATE_BONUS, eyeTest:EYE_TEST_BONUS, elo:ELO_BONUS, rawSpread,
+        fatigueMult, factorMultiplier:SPREAD_FACTOR_MULTIPLIER, factorModifier:SPREAD_FACTOR_MODIFIER, spread
+      }
     };
   }
 
@@ -1942,6 +1954,44 @@
     const finalEl = document.getElementById('exFinalBig');
     finalEl.textContent = `${TEAM_DISPLAY_NAME[r.winner].toUpperCase()} ${r.finalEX >= 0 ? '+' : ''}${r.finalEX}`;
     exPanel.classList.add('show');
+  }
+
+  // Unlike DMAX/GI/Elo/EX above, the Spread is known before the game starts (it drives
+  // matchup setup), so this isn't gated on game.gameOver -- it's refreshed by
+  // renderMatchSetup() any time the match context is recomputed.
+  const SPREAD_ROW_LABELS = [
+    ['skillTerm', 'Skill Term (Home−Away)/5'],
+    ['hfa', 'Home Field Advantage'],
+    ['climate', 'Climate Bonus'],
+    ['eyeTest', 'Eye Test Bonus'],
+    ['elo', 'ELO Bonus'],
+  ];
+  const SPREAD_ROW_LABELS_POST = [
+    ['fatigueMult', '× Fatigue Multiplier'],
+    ['factorMultiplier', '× Factor Multiplier'],
+    ['factorModifier', '+ Factor Modifier (Adv)'],
+  ];
+
+  function renderSpreadBreakdown(){
+    const b = SPREAD_RESULT.breakdown;
+    const favoriteName = TEAM_DISPLAY_NAME[SPREAD_TEAM];
+    document.getElementById('spreadBig').textContent =
+      `${favoriteName.toUpperCase()} +${SPREAD_VALUE.toFixed(SPREAD_DECIMALS)}`;
+
+    let html = '';
+    for (const [key, label] of SPREAD_ROW_LABELS){
+      html += `<div class="drow"><span>${label}</span><span>${fmt(b[key], 3)}</span></div>`;
+    }
+    html += `<div class="drow dtotal"><span>Raw Spread</span><span>${fmt(b.rawSpread, 3)}</span></div>`;
+    for (const [key, label] of SPREAD_ROW_LABELS_POST){
+      html += `<div class="drow"><span>${label}</span><span>${fmt(b[key], 3)}</span></div>`;
+    }
+    // Truncated (not rounded) the same way SPREAD_VALUE is, so this matches it exactly
+    // instead of differing by a rounding hair at the last displayed digit.
+    const homePerspTrunc = truncateSpreadMagnitude(Math.abs(b.spread));
+    html += `<div class="drow dtotal"><span>Spread (Home perspective)</span><span>${b.spread < 0 ? '-' : ''}${homePerspTrunc.value.toFixed(homePerspTrunc.decimals)}</span></div>`;
+    html += `<div class="drow dtotal"><span>Final Spread (${favoriteName}, truncated not rounded)</span><span>+${SPREAD_VALUE.toFixed(SPREAD_DECIMALS)}</span></div>`;
+    document.getElementById('spreadRows').innerHTML = html;
   }
 
   function renderAll(){
@@ -2751,6 +2801,7 @@
       `${WEATHER} Weather (${weatherDelta >= 0 ? '+' : ''}${weatherDelta})`;
     document.getElementById('spreadNoteTeam').textContent = TEAM_DISPLAY_NAME[SPREAD_TEAM].toUpperCase();
     document.getElementById('spreadNoteValue').textContent = `+${SPREAD_VALUE.toFixed(SPREAD_DECIMALS)}`;
+    renderSpreadBreakdown();
 
     renderMiniStats('awayMiniStats', 'away');
     renderMiniStats('homeMiniStats', 'home');
