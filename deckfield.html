@@ -1063,7 +1063,7 @@
   let TEAM_DSCR = {home:7, away:7}; // placeholder — average of each team's previous DMAX scores
   let TYPE_ADVANTAGE;
   // ---- Rating Grade ----
-  // Letter-grade scale from F (1) up to SS (14). Rating Grade = Home's value - Away's value.
+  // Letter-grade scale from F (1) up to SS (14). Rating Grade = (Home's value - Away's value) / 4.
   const RATING_SCALE = {F:1, 'F+':2, EF:3, E:4, DE:5, D:6, CD:7, C:8, BC:9, B:10, AB:11, A:12, S:13, SS:14};
   let TEAM_RATING = {home:'A', away:'A'}; // placeholder
   let RATING_GRADE;
@@ -1195,7 +1195,7 @@
     CLIMATE_BONUS = CLIMATE_RESULT.climateBonus;
 
     TYPE_ADVANTAGE = HOME_TYPE_RESULT.result - AWAY_TYPE_RESULT.result;
-    RATING_GRADE = RATING_SCALE[TEAM_RATING.home] - RATING_SCALE[TEAM_RATING.away];
+    RATING_GRADE = (RATING_SCALE[TEAM_RATING.home] - RATING_SCALE[TEAM_RATING.away]) / 4;
     EYE_TEST_RESULT = computeEyeTestBonus();
     EYE_TEST_BONUS = EYE_TEST_RESULT.eyeTestBonus;
 
