@@ -1630,9 +1630,10 @@ def _rds_round_games(conn, cup, bracket, target_round):
 
 
 def _pa_round1_games(conn):
-    """(draw_games, process_games) -- the real, conflict-resolved PA Cup
-    round-1 game dicts (from pa_cup_round1_pairs + resolve_pa_cup_conflicts),
-    with Process's seed_to_team already reflecting the resolution swaps."""
+    """(draw_games, process_games, draw_seed_to_team, process_seed_to_team,
+    swap_log) -- the real, conflict-resolved PA Cup round-1 game dicts (from
+    pa_cup_round1_pairs + resolve_pa_cup_conflicts), with Process's
+    seed_to_team already reflecting the resolution swaps."""
     with open("pa_cup_seeds.json") as f:
         draw_seed_to_team = {int(k): v for k, v in json.load(f).items()}
     with open("pa_process_real_seeds_v2.json") as f:
@@ -1645,9 +1646,9 @@ def _pa_round1_games(conn):
 
     draw_games = pa_cup_round1_pairs(draw_seed_to_team, home_is_lower_seed=True)
     process_games = pa_cup_round1_pairs(process_seed_to_team, home_is_lower_seed=False)
-    resolve_pa_cup_conflicts(draw_games, process_games, process_seed_to_team,
-                              team_region, team_division, home_is_lower_seed=False)
-    return draw_games, process_games, draw_seed_to_team, process_seed_to_team
+    swap_log = resolve_pa_cup_conflicts(draw_games, process_games, process_seed_to_team,
+                                         team_region, team_division, home_is_lower_seed=False)
+    return draw_games, process_games, draw_seed_to_team, process_seed_to_team, swap_log
 
 
 def _pa_round_games(conn, bracket, target_round):
@@ -1656,7 +1657,7 @@ def _pa_round_games(conn, bracket, target_round):
     winner vs the tier-C entrant; etc.). Rounds 5-7 are a standard bracket
     among the 32 row-champions. Returns None if a prior round isn't
     complete yet."""
-    draw_games, process_games, draw_seeds, process_seeds = _pa_round1_games(conn)
+    draw_games, process_games, draw_seeds, process_seeds, _ = _pa_round1_games(conn)
     round1_games = draw_games if bracket == "Draw" else process_games
     seed_to_team = draw_seeds if bracket == "Draw" else process_seeds
 
@@ -1972,6 +1973,32 @@ def region_display_name(region):
     return REGION_DISPLAY_NAME.get(region, region)
 
 
+def pa_cup_round1_seeding():
+    """{draw_round1, process_round1, swap_log, process_is_placeholder} in
+    the exact shape the dashboard's PA_CUP_DATA constant needs -- the
+    live, conflict-resolved round-1 structural seeding (source of truth:
+    pa_cup_ladder_rows() + resolve_pa_cup_conflicts()), with each game
+    dict carrying home_dex/away_dex for display. Regenerate this whenever
+    pa_cup_ladder_rows() or either seed JSON changes -- PA_CUP_DATA is a
+    static embedded constant, not derived from the database, so nothing
+    else will pick up a formula fix automatically."""
+    conn = get_connection()
+    name_to_dex = {r["name"]: r["team_id"] for r in conn.execute("SELECT team_id, name FROM teams").fetchall()}
+    draw_games, process_games, _, _, swap_log = _pa_round1_games(conn)
+    conn.close()
+
+    def _with_dex(games):
+        return [dict(g, home_dex=name_to_dex.get(g["home"]), away_dex=name_to_dex.get(g["away"]))
+                for g in games]
+
+    return {
+        "draw_round1": _with_dex(draw_games),
+        "process_round1": _with_dex(process_games),
+        "swap_log": swap_log,
+        "process_is_placeholder": False,
+    }
+
+
 def pa_cup_real_results(season):
     """
     {bracket: {cup_round_str: [{winner, loser, winner_dex, loser_dex,
@@ -2018,7 +2045,7 @@ def pa_cup_round_preview(season, target_round):
     stage -- see _pa_round_games's NotImplementedError)."""
     conn = get_connection()
     name_to_dex = {r["name"]: r["team_id"] for r in conn.execute("SELECT team_id, name FROM teams").fetchall()}
-    _, _, draw_seeds, process_seeds = _pa_round1_games(conn)
+    _, _, draw_seeds, process_seeds, _ = _pa_round1_games(conn)
     seed_lookup = {"Draw": draw_seeds, "Process": process_seeds}
 
     preview = {}
