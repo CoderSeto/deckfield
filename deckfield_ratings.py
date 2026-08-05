@@ -2037,6 +2037,7 @@ def rank_elo_history(season):
             i += 1
 
     team_names = {r["team_id"]: r["name"] for r in conn.execute("SELECT team_id, name FROM teams").fetchall()}
+    name_to_id = {name: team_id for team_id, name in team_names.items()}
 
     def ranks_at(abs_round):
         rows = conn.execute("""
@@ -2045,7 +2046,21 @@ def rank_elo_history(season):
         """, (season, abs_round)).fetchall()
         return {row["team_id"]: i + 1 for i, row in enumerate(rows)}
 
-    rank_by_round = {cp["abs_round"]: ranks_at(cp["abs_round"]) for cp in rank_checkpoints}
+    # The historical checkpoints (everything up through SC1) are the S9
+    # workbook's own hand-tracked Rankings!CG:CT values, copied verbatim --
+    # this engine's OVR-based rank doesn't reproduce them (the workbook's
+    # own rank column was frozen at an older formula version, see CLAUDE.md).
+    # SC2 (the last historical-labeled checkpoint) and everything after use
+    # this engine's live computed rank, per explicit instruction.
+    with open("rank_history_verbatim.json") as f:
+        verbatim_ranks = json.load(f)
+
+    rank_by_round = {}
+    for cp in rank_checkpoints:
+        if cp["label"] in verbatim_ranks:
+            rank_by_round[cp["abs_round"]] = {name_to_id[name]: rank for name, rank in verbatim_ranks[cp["label"]].items()}
+        else:
+            rank_by_round[cp["abs_round"]] = ranks_at(cp["abs_round"])
 
     games_by_round = {}
     for g in conn.execute("SELECT round, team_a, team_b, elo_a_after, elo_b_after FROM games WHERE season=?", (season,)).fetchall():
