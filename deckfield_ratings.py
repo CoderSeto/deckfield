@@ -2109,8 +2109,11 @@ def export_teams_for_deckfield(season):
     from anywhere -- the dashboard owns generating it, new every time this
     runs (i.e. new each matchday, since that's when the export is
     regenerated), not DECKFIELD itself.
-    PF/PA/DSCR/Skill Rating use the normalized 0-100 OVR components (same
+    PF/PA/Skill Rating use the normalized 0-100 OVR components (same
     numbers the dashboard's Rankings tab shows), not raw season totals.
+    DSCR is the exception -- DECKFIELD's own Eye Test Bonus formula
+    expects a raw 0-10 D-Sqrt value (its placeholder TEAM_DSCR is 7, not
+    70), so this uses d_sqrt_raw, not the normalized dscr_comp component.
     """
     conn = get_connection()
     latest_round = conn.execute(
@@ -2172,7 +2175,7 @@ def export_teams_for_deckfield(season):
             ),
             "fatigue": round(r["fatigue_after"], 1) if r["fatigue_after"] is not None else "",
             "climate": round(r["climate"], 2), "pf": round(r["pf_norm"], 2),
-            "pa": round(r["pa_norm"], 2), "dscr": round(r["dscr_comp"], 2),
+            "pa": round(r["pa_norm"], 2), "dscr": round(r["d_sqrt_raw"], 2),
             "skill_rating": round(r["ovr"], 2), "elo": round(raw_elo(r["dex"]) or 0),
             "grade": r["grade"], "region_record": regional, "league_record": league,
             "cup_record": cup, "overall_record": overall, "primary_type": r["primary_type"],
