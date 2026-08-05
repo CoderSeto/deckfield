@@ -461,16 +461,6 @@
       yourself), then paste that batch's Matchups.
     </div>
     <div id="nextmd-batches"></div>
-
-    <h3 class="rds-bracket-title" style="margin-top:28px">Region Climate &mdash; paste into DECKFIELD's Region Climate input</h3>
-    <div class="meta-note" style="margin-top:0">One fresh roll per region: sqrt(average of three random 0&ndash;1 draws). This is what DECKFIELD calls "Region Climate" (confirmed against its own code) &mdash; DECKFIELD derives the on-screen Weather (Perfect/Good/Fair/Bad/Terrible) from it via its own thresholds. Header row + tab-separated Region/Value, matching DECKFIELD's Region Climate importer exactly. Reroll any time before pasting; it's independent of the matchday data above.</div>
-    <div class="schedule-columns">
-      <div style="flex:1;min-width:280px">
-        <textarea id="weather-tsv" readonly style="width:100%;height:220px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:10px;font-family:'JetBrains Mono',monospace,monospace;font-size:13px;resize:vertical" onclick="this.select()"></textarea>
-        <button id="weather-reroll" style="margin-top:8px;background:var(--accent);color:var(--ink,#14161a);border:none;padding:8px 16px;border-radius:6px;font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.03em;text-transform:uppercase">Reroll Region Climate</button>
-        <button id="weather-copy" style="margin-top:8px;margin-left:8px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);padding:8px 16px;border-radius:6px;font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.03em;text-transform:uppercase">Copy to Clipboard</button>
-      </div>
-    </div>
   </section>
 
   <section id="panel-calendar" class="panel">
@@ -1150,7 +1140,7 @@ document.querySelectorAll('#history-mode-toggle button').forEach(btn => {
   });
 });
 
-function nextmdBatchHtml(batch, idx) {
+function nextmdBatchHtml(batch, idx, isLast) {
   const rows = batch.games.map(g => `
     <tr>
       <td class="sb-away"><span class="sb-rank">#${g.away_rank}</span> ${g.away_name}</td>
@@ -1160,6 +1150,15 @@ function nextmdBatchHtml(batch, idx) {
   `).join('');
   const boxStyle = "width:100%;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:10px;font-family:'JetBrains Mono',monospace,monospace;font-size:13px;resize:vertical";
   const btnStyle = "margin-top:8px;background:var(--accent);color:var(--ink,#14161a);border:none;padding:8px 16px;border-radius:6px;font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.03em;text-transform:uppercase";
+  // Region Climate is one shared roll per matchday (not per batch), so it's
+  // tucked under the last batch's Matchups field -- right there without
+  // scrolling past every batch, but not duplicated once per batch either.
+  const weatherBlock = !isLast ? '' : `
+        <h3 class="rds-bracket-title" style="margin-top:16px">Region Climate &mdash; paste into DECKFIELD's Region Climate input</h3>
+        <div class="meta-note" style="margin-top:0;font-size:12px">One fresh roll per region: sqrt(average of three random 0&ndash;1 draws). Reroll any time before pasting; it's independent of the matchday data above.</div>
+        <textarea readonly id="weather-tsv" style="${boxStyle};height:180px" onclick="this.select()"></textarea>
+        <button id="weather-reroll" style="${btnStyle}">Reroll Region Climate</button>
+        <button id="weather-copy" style="${btnStyle};margin-left:8px;background:var(--surface-2);color:var(--text);border:1px solid var(--border)">Copy to Clipboard</button>`;
   return `
     <h3 class="rds-bracket-title" style="margin-top:24px">${batch.label} (${batch.games.length} games)</h3>
     <div class="schedule-columns">
@@ -1175,7 +1174,7 @@ function nextmdBatchHtml(batch, idx) {
         <button data-nextmd-copy="settings" data-batch="${idx}" style="${btnStyle}">Copy Batch Settings</button>
         <h3 class="rds-bracket-title" style="margin-top:16px">Matchups &mdash; paste into Import Matchups</h3>
         <textarea readonly data-nextmd-box="matchups" data-batch="${idx}" style="${boxStyle};height:320px" onclick="this.select()"></textarea>
-        <button data-nextmd-copy="matchups" data-batch="${idx}" style="${btnStyle}">Copy Matchups</button>
+        <button data-nextmd-copy="matchups" data-batch="${idx}" style="${btnStyle}">Copy Matchups</button>${weatherBlock}
       </div>
     </div>
   `;
@@ -1192,14 +1191,22 @@ function renderNextMatchday() {
   }
   const totalGames = data.batches.reduce((n, b) => n + b.games.length, 0);
   header.innerHTML = `<strong style="color:var(--accent)">Week ${data.week}, ${data.day}</strong> &mdash; ${data.event_label} (${totalGames} games) &mdash; use <strong style="color:var(--accent)">round=${data.abs_round}</strong> when reporting results back`;
-  batchesEl.innerHTML = data.batches.map((b, idx) => nextmdBatchHtml(b, idx)).join('');
+  batchesEl.innerHTML = data.batches.map((b, idx) => nextmdBatchHtml(b, idx, idx === data.batches.length - 1)).join('');
   data.batches.forEach((b, idx) => {
     batchesEl.querySelector(`[data-nextmd-box="settings"][data-batch="${idx}"]`).value = b.settings_tsv;
     batchesEl.querySelector(`[data-nextmd-box="matchups"][data-batch="${idx}"]`).value = b.matchups_tsv;
   });
+  rollWeather();
 }
 
 document.getElementById('nextmd-batches').addEventListener('click', (e) => {
+  if (e.target.closest('#weather-reroll')) { rollWeather(); return; }
+  if (e.target.closest('#weather-copy')) {
+    const box = document.getElementById('weather-tsv');
+    box.select();
+    navigator.clipboard?.writeText(box.value);
+    return;
+  }
   const btn = e.target.closest('[data-nextmd-copy]');
   if (!btn) return;
   const kind = btn.getAttribute('data-nextmd-copy');
@@ -1215,20 +1222,15 @@ function rollWeather() {
   // This is DECKFIELD's "Region Climate" input specifically (confirmed against its own
   // parseClimatePaste) -- display region names ("Lily Valley", not "LilyValley") since
   // that's the exact spelling DECKFIELD's REGION_COLORS/TEAM_REGION matching expects.
+  const box = document.getElementById('weather-tsv');
+  if (!box) return;
   const lines = ['Region\tRegion Climate'];
   Object.keys(REGION_COLORS).forEach(region => {
     const v = Math.sqrt((Math.random() + Math.random() + Math.random()) / 3);
     lines.push(`${regionName(region)}\t${v.toFixed(4)}`);
   });
-  document.getElementById('weather-tsv').value = lines.join('\n');
+  box.value = lines.join('\n');
 }
-document.getElementById('weather-reroll').addEventListener('click', rollWeather);
-document.getElementById('weather-copy').addEventListener('click', () => {
-  const box = document.getElementById('weather-tsv');
-  box.select();
-  navigator.clipboard?.writeText(box.value);
-});
-rollWeather();
 
 renderRdsCup();
 renderPaCup();
