@@ -44,8 +44,8 @@ cross-referenced between conversations).
   `league_pods.json` (Regional/League pod structures), `cup_seeds_full.json`
   (Ribbon/Dream/Star seeding), `pa_cup_seeds.json` (PA Cup Draw seeding),
   `pa_process_real_seeds_v2.json` (PA Cup Process seeding, real and
-  conflict-resolved), `rank_history_verbatim.json` (the 8 historical Rank
-  History checkpoints, copied verbatim from `Rankings!CS:CL` -- see
+  conflict-resolved), `rank_history_verbatim.json` (the 9 historical Rank
+  History checkpoints, copied verbatim from `Rankings!CT:CL` -- see
   "Rank/Elo History tab" below).
 - `CLAUDE.md` — this file.
 
@@ -442,17 +442,20 @@ granularities, matching the workbook's own two granularities:
   that point on (only the already-published SC1/SC2 differ between the
   two views).
 
-  **Rank values for R1/R2/R3/SC1/R4/L1/L2/R5 are copied verbatim from
-  `Rankings!CS:CL`** (`rank_history_verbatim.json`, `{checkpoint_label:
+  **Rank values for S8 End/R1/R2/R3/SC1/R4/L1/L2/R5 are copied verbatim
+  from `Rankings!CT:CL`** (`rank_history_verbatim.json`, `{checkpoint_label:
   {team_name: rank}}`), **not recomputed** — this engine's OVR-based rank
   doesn't reproduce the workbook's own frozen rank column (see below), and
-  per explicit instruction those 8 historical checkpoints should read
-  exactly what's in the workbook, byte for byte. **SC2 is the deliberate
-  exception**: it's the last *historical-labeled* checkpoint but reflects
-  this engine's live computed rank (`ORDER BY ovr DESC`, same method
-  `current_rank_lookup()` uses for "current" rank everywhere else in the
-  dashboard) — per explicit instruction, that's where the new system takes
-  over. Every checkpoint from S5 onward is live-computed the same way.
+  per explicit instruction those 9 historical checkpoints should read
+  exactly what's in the workbook, byte for byte. `S8 End` (Rankings!CT, the
+  season-opening snapshot) leads the list and has no abs_round of its own —
+  it's keyed on a sentinel abs_round of 0 internally, never resolved
+  through `team_round_ratings`. **SC2 is the deliberate exception**: it's
+  the last *historical-labeled* checkpoint but reflects this engine's live
+  computed rank (`ORDER BY ovr DESC`, same method `current_rank_lookup()`
+  uses for "current" rank everywhere else in the dashboard) — per explicit
+  instruction, that's where the new system takes over. Every checkpoint
+  from S5 onward is live-computed the same way.
 
 Both walk `full_schedule_abs_round_mapping()` (not `WEEKLY_SCHEDULE`'s
 week/day placement) to decide event order and merging, since the
@@ -460,14 +463,14 @@ historical portion's actual play order doesn't necessarily match
 `WEEKLY_SCHEDULE`'s current day slots — only the confirmed abs_round
 numbering does. Grows automatically as `add-results` brings in new
 rounds; nothing here needs hand-updating for Elo or for any rank
-checkpoint from SC2 onward -- the verbatim file only ever needs the 8
+checkpoint from SC2 onward -- the verbatim file only ever needs the 9
 entries it already has.
 
 **Validated against the real workbook**: Elo checkpoints match
 `Calcs!ANV:AOF` **exactly**, byte-for-byte, for every team checked
 (confirmed against Canalave City's full row: 2506, 2507, 2508, 2509,
-2510, 2511, 2534, 2536, 2537, 2539, 2543). The 8 verbatim rank checkpoints
-match `Rankings!CS:CL` **exactly** for all 160 teams (1,280/1,280 values).
+2510, 2511, 2534, 2536, 2537, 2539, 2543). The 9 verbatim rank checkpoints
+match `Rankings!CT:CL` **exactly** for all 160 teams (1,440/1,440 values).
 
 **Real finding, worth remembering**: this engine's OVR-based rank does
 **not** match the workbook's own rank column, not even at the

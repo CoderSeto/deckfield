@@ -1956,15 +1956,17 @@ def rank_elo_history(season):
         Draw or Process round gets its own sequential 'S' label (Calcs'
         S1/S2/S3/S4 pattern: S1/S2 = RDS round 1 Draw/Process, S3/S4 =
         RDS round 2 Draw/Process, and so on as more cup rounds are played).
-      - Rank checkpoints: mostly the same, except within the historical
-        portion (abs_round <= the last `_CONFIRMED_ABS_ROUND` value) a cup
-        round's Draw and Process collapse into one 'SC' checkpoint using
-        the later of the two abs_rounds (Rankings' SC1/SC2 pattern) --
-        that's how the S9 workbook actually tracked it, and isn't worth
-        re-deriving differently now. Everything from there on (per
-        explicit instruction) gets its own column same as Elo, reusing
-        the exact same 'S' label Elo assigns that abs_round -- Regional/
-        League/RT events are never merged either way.
+      - Rank checkpoints: mostly the same, except it leads with an 'S8 End'
+        checkpoint (Rankings!CT, the season-opening snapshot, no abs_round
+        of its own) and within the historical portion (abs_round <= the
+        last `_CONFIRMED_ABS_ROUND` value) a cup round's Draw and Process
+        collapse into one 'SC' checkpoint using the later of the two
+        abs_rounds (Rankings' SC1/SC2 pattern) -- that's how the S9
+        workbook actually tracked it, and isn't worth re-deriving
+        differently now. Everything from there on (per explicit
+        instruction) gets its own column same as Elo, reusing the exact
+        same 'S' label Elo assigns that abs_round -- Regional/League/RT
+        events are never merged either way.
     Both are driven by `full_schedule_abs_round_mapping()` (the same
     abs_round assignment everything else in this engine uses) rather than
     WEEKLY_SCHEDULE's week/day placement directly, since the historical
@@ -2010,7 +2012,12 @@ def rank_elo_history(season):
     historical_cutoff = max(_CONFIRMED_ABS_ROUND.values())
     elo_label_by_round = {cp["abs_round"]: cp["label"] for cp in elo_checkpoints}
 
-    rank_checkpoints = []
+    # "S8 End" -- the season-opening snapshot from Rankings!CT, copied
+    # verbatim same as the other historical checkpoints below. No abs_round
+    # of its own (it predates round 1), so abs_round 0 is used as a sentinel
+    # -- safe since verbatim_ranks always has an entry for this label, and
+    # the lookup below never falls through to a real-round query for it.
+    rank_checkpoints = [{"label": "S8 End", "abs_round": 0}]
     sc_seq = 0
     i = 0
     while i < len(rounds):
