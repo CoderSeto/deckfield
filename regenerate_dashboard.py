@@ -9,14 +9,15 @@ hand.
 
 Covers: DATA (Rankings tab, which Standings derives from client-side),
 TEAMS_EXPORT_TSV (Team Roster paste box), NEXT_MATCHDAY_DATA, CALENDAR_DATA,
-and RANK_ELO_HISTORY. Each reconstruction was validated by recomputing at
-round 11 (the last state before this script existed) and confirming a
-byte-identical match against the dashboard's already-published DATA/
-CALENDAR_DATA at that round -- see the 2026-08-05 dashboard section of
-CLAUDE.md for that validation and for what this script does NOT cover yet
-(STRENGTH_DATA and PA Cup's real-results display -- both stale/absent,
-not silently wrong, until someone reverse-engineers those formulas with
-the same confidence).
+RANK_ELO_HISTORY, and PA_REAL_RESULTS/PA_ROUND_PREVIEW (PA Cup tab's real
+results + next-round projection). Each reconstruction was validated by
+recomputing at round 11 (the last state before this script existed) and
+confirming a byte-identical match against the dashboard's already-
+published DATA/CALENDAR_DATA at that round -- see the 2026-08-05 dashboard
+section of CLAUDE.md for that validation and for what this script still
+does NOT cover (STRENGTH_DATA -- the RL Strength tab's region/division
+z-score aggregates resisted reverse-engineering; left stale rather than
+guessed at, see CLAUDE.md for exactly which sub-formulas ARE confirmed).
 
 Usage: python3 regenerate_dashboard.py [dashboard_path]
 """
@@ -27,6 +28,7 @@ import sys
 from deckfield_ratings import (
     get_connection, taper_n, export_teams_for_deckfield,
     export_matchday_batches, rank_elo_history,
+    pa_cup_real_results, pa_cup_round_preview,
 )
 
 SEASON = 9
@@ -207,6 +209,21 @@ def build_rank_elo_history():
     }
 
 
+def build_pa_cup():
+    """(PA_REAL_RESULTS, PA_ROUND_PREVIEW) for the PA Cup tab. Preview
+    target round is one past whatever round has any real games so far
+    (0 if neither bracket has started) -- correct as long as Draw and
+    Process don't drift more than one round apart in completion, which
+    holds given they're always played on the same matchday's Tue/Thu."""
+    real_results = pa_cup_real_results(SEASON)
+    played_rounds = [
+        int(rnd) for bracket in real_results.values() for rnd in bracket
+    ]
+    target_round = (max(played_rounds) if played_rounds else 0) + 1
+    preview = pa_cup_round_preview(SEASON, target_round)
+    return real_results, preview
+
+
 def _js_string_literal(s):
     return '"' + s.replace('\\', '\\\\').replace('"', '\\"').replace('\t', '\\t').replace('\n', '\\n') + '"'
 
@@ -233,6 +250,10 @@ def main():
     content = _replace_const(content, "CALENDAR_DATA", build_calendar(), is_array=True)
     content = _replace_const(content, "RANK_ELO_HISTORY", build_rank_elo_history())
 
+    pa_real_results, pa_preview = build_pa_cup()
+    content = _replace_const(content, "PA_REAL_RESULTS", pa_real_results)
+    content = _replace_const(content, "PA_ROUND_PREVIEW", pa_preview)
+
     teams_out, tsv = export_teams_for_deckfield(SEASON)
     pattern = re.compile(r'const TEAMS_EXPORT_TSV = "(?:[^"\\]|\\.)*";\n')
     content, n = pattern.subn(lambda m: f'const TEAMS_EXPORT_TSV = {_js_string_literal(tsv)};\n', content, count=1)
@@ -241,8 +262,9 @@ def main():
 
     with open(DASHBOARD_PATH, "w") as f:
         f.write(content)
-    print(f"Regenerated DATA, NEXT_MATCHDAY_DATA, CALENDAR_DATA, RANK_ELO_HISTORY, TEAMS_EXPORT_TSV in {DASHBOARD_PATH}")
-    print("NOTE: STRENGTH_DATA (RL Strength tab) and PA Cup real-results are NOT covered -- see CLAUDE.md.")
+    print(f"Regenerated DATA, NEXT_MATCHDAY_DATA, CALENDAR_DATA, RANK_ELO_HISTORY, "
+          f"PA_REAL_RESULTS, PA_ROUND_PREVIEW, TEAMS_EXPORT_TSV in {DASHBOARD_PATH}")
+    print("NOTE: STRENGTH_DATA (RL Strength tab) is still NOT covered -- see CLAUDE.md.")
 
 
 if __name__ == "__main__":

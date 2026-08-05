@@ -425,7 +425,8 @@ whenever new results are added.** `regenerate_dashboard.py` (added
 2026-08-05) does this: `python3 regenerate_dashboard.py` after any
 `deckfield add-results`, rewrites `DATA` (Rankings tab; Standings derives
 from it client-side), `TEAMS_EXPORT_TSV`, `NEXT_MATCHDAY_DATA`,
-`CALENDAR_DATA`, and `RANK_ELO_HISTORY` in place. Each reconstruction was
+`CALENDAR_DATA`, `RANK_ELO_HISTORY`, and `PA_REAL_RESULTS`/
+`PA_ROUND_PREVIEW` (PA Cup tab) in place. Each reconstruction was
 validated by recomputing at round 11 (the last state before this script
 existed) and confirming a **byte-identical** match against the
 already-published `DATA`/`CALENDAR_DATA` at that round — including the
@@ -435,25 +436,60 @@ across a team's Regional-only/League-only games respectively, and the
 `log` field, confirmed to be each team's `[opponent_dex, game_type,
 result_a]` history in round order.
 
-**Not yet covered by this script** (stale/absent rather than silently
-wrong, until reverse-engineered with the same confidence):
-- `STRENGTH_DATA` (RL Strength tab): a 7-component z-scored formula per
-  region/division (Rank/OVR/Wins/DSCR/Elo/TOT/GI, weighted, tanh-mapped —
-  see the RLStr formula below) computed at the **region-aggregate**
-  level, not the single per-team `rlstr_own` value `team_round_ratings`
-  already stores. The weighting/summing logic was confirmed by hand
-  against real numbers (Indigo's `weighted: -10.43` reproduces exactly
-  from its 7 z-components), but the underlying region-level aggregates
-  themselves (average rank, wins, DSCR, TOT, and especially GI — Game
-  Interest, likely averaged from `games.interest_score` but unconfirmed)
-  weren't re-derived with confidence in the time available.
-- PA Cup real results: `PA_CUP_DATA` only ever held structural seeding
-  (`draw_round1`/`process_round1`/`swap_log`) — there's no
-  `PA_REAL_RESULTS` counterpart to RDS Cup's `CUP_REAL_RESULTS`, so the
-  PA Cup tab doesn't show real results at all yet, round 1 included. This
-  is a missing capability, not a staleness bug — building it would mean
-  adding a PA equivalent of the `rdsRound1RowHtml`/`winnerNameHtml`
-  seed-aware win/loss rendering already built for RDS Cup.
+**PA Cup real results, added 2026-08-05**: `PA_CUP_DATA` only ever held
+structural seeding (`draw_round1`/`process_round1`/`swap_log`) — there was
+no `PA_REAL_RESULTS` counterpart to RDS Cup's `CUP_REAL_RESULTS`, so the
+PA Cup tab never showed real results at all, round 1 included. Fixed the
+same way RDS Cup's Round 2 bug was fixed earlier: added
+`pa_cup_real_results()` (winner/loser/scores per bracket+round, straight
+from `games` where `cup_name='PA'`) and `pa_cup_round_preview()` (a
+"what's next" projection one round past whatever's been played, resolved
+through real winners via the existing `_pa_round_games()` — same idea as
+RDS Cup's `RDS_ROUND3`), and reused the `rdsRound1RowHtml`-style seed-aware
+win/loss rendering (`pacupRowHtml`) instead of the old placeholder that
+never showed a score. Verified against real data: Alfornada (seed 127,
+home) beat Boyleland (seed 159, away) 39–18 in Draw round 1, and the tab
+now shows that score with Alfornada's name colored as the winner, plus a
+projected Round 2 for Draw (Process round 1 hasn't been played yet, so its
+tab correctly still shows only the unplayed structural Round 1, no
+scores/highlighting — a live per-bracket regression check, not a
+special case).
+
+**`STRENGTH_DATA` (RL Strength tab) — investigated, not solved, left
+stale on purpose.** It's a 7-component z-scored formula per region/
+division (Rank ×2 flipped, OVR ×2, Wins ×1, DSCR ×2, Elo ×1, TOT ×1, GI
+×1, weighted-summed, then `1.0 + 0.75*tanh(weighted / (2*population
+stdev))`) computed at the **region-aggregate** level — not the single
+per-team `rlstr_own` value `team_round_ratings` already stores. Against
+real round-11 numbers (10-region and 10-division populations, population
+mean/stdev, `z = (region_avg - pop_mean) / pop_stdev`, Rank flipped
+negative):
+- **Confirmed exact, both regional and league**: `z_dscr` from the mean of
+  each region's/division's `dscr_comp` (normalized 0–100 component, not
+  `d_sqrt_raw`); `z_elo` from the mean of each team's raw current Elo;
+  `z_tot` from the mean of each team's `tot`. The weighted sum and the
+  tanh `final` transform both reproduce exactly from these three plus the
+  reported `z_rank`/`z_ovr`/`z_wins`/`z_gi` (e.g. Indigo's
+  `weighted: -10.43` sums exactly from its 7 published z-values), so the
+  combination formula itself is fully confirmed.
+- **Not cracked**: `z_rank` and `z_ovr` from a plain mean-of-team-rank/
+  mean-of-team-OVR per region come *close* (right sign, right rough
+  magnitude) but never land on the exact published value, under every
+  population/stdev variant tried (per-region population stdev, sample
+  stdev, a combined 20-group region+division population, per-team
+  z-scores averaged within region instead of region-average z-scored).
+  `z_wins` doesn't work at all from a naive average — regional-only (or
+  league-only) win counts average to a fixed constant per region under
+  round-robin play (16 teams ÷ 2 winners per game, always 2.5), so
+  whatever "Wins" means here isn't restricted-to-that-mode win count;
+  overall win count was tried too and didn't match either. `z_gi` was
+  never tested against a confirmed source (guessed as `games.interest_score`
+  averaged per region, unconfirmed either way).
+- Given 3 of 7 sub-formulas are exact and the other 4 resisted real
+  effort, this was left stale rather than shipped as a guess — the risk of
+  silently-wrong RLStr numbers looking authoritative was judged worse than
+  a known-stale tab. Revisit if the original generation logic turns up, or
+  if it's worth another dedicated pass.
 
 Everything else (`SCHEDULE_DATA`, `CUP_BRACKET_DATA`/`CUP_REAL_RESULTS`/
 `RDS_ROUND2`/`RDS_ROUND3`, `PA_CUP_DATA`'s structural seeding, `RT_DATA`)

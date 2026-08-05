@@ -1944,6 +1944,78 @@ def region_display_name(region):
     return REGION_DISPLAY_NAME.get(region, region)
 
 
+def pa_cup_real_results(season):
+    """
+    {bracket: {cup_round_str: [{winner, loser, winner_dex, loser_dex,
+    winner_score, loser_score}, ...]}} for every PA Cup round that has
+    real games so far -- source data for the dashboard PA Cup tab's
+    real-results display (mirrors the shape RDS Cup's CUP_REAL_RESULTS
+    already uses, minus the outer cup-name layer, since PA is a single
+    cup). Seed/home-away info isn't included here -- the dashboard
+    already has that structurally, from PA_CUP_DATA for round 1 and from
+    a generated round-2+ preview (see `_pa_round_games`) for later rounds.
+    """
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT g.cup_bracket, g.cup_round, ta.name a_name, tb.name b_name,
+               ta.team_id a_dex, tb.team_id b_dex, g.result_a, g.pf_a, g.pa_a
+        FROM games g
+        JOIN teams ta ON ta.team_id = g.team_a
+        JOIN teams tb ON tb.team_id = g.team_b
+        WHERE g.season = ? AND g.cup_name = 'PA' AND g.cup_bracket IS NOT NULL AND g.cup_round IS NOT NULL
+        ORDER BY g.cup_round
+    """, (season,)).fetchall()
+    conn.close()
+
+    results = {"Draw": {}, "Process": {}}
+    for r in rows:
+        a_won = r["result_a"] in (2, 3)
+        winner, loser = (r["a_name"], r["b_name"]) if a_won else (r["b_name"], r["a_name"])
+        winner_dex, loser_dex = (r["a_dex"], r["b_dex"]) if a_won else (r["b_dex"], r["a_dex"])
+        winner_score, loser_score = (r["pf_a"], r["pa_a"]) if a_won else (r["pa_a"], r["pf_a"])
+        results[r["cup_bracket"]].setdefault(str(r["cup_round"]), []).append({
+            "winner": winner, "loser": loser, "winner_dex": winner_dex, "loser_dex": loser_dex,
+            "winner_score": winner_score, "loser_score": loser_score,
+        })
+    return results
+
+
+def pa_cup_round_preview(season, target_round):
+    """{bracket: [{home,away,home_seed,away_seed,home_dex,away_dex}]} for a
+    PA Cup round that hasn't been fully played yet but whose prior
+    round(s) are complete -- the "what's coming up next" preview, same
+    idea as RDS Cup's RDS_ROUND3. A bracket's value is None if a prior
+    round isn't complete yet (mirrors _pa_round_games' own contract) or if
+    target_round is beyond what's modeled (8+, the mutual quarterfinal
+    stage -- see _pa_round_games's NotImplementedError)."""
+    conn = get_connection()
+    name_to_dex = {r["name"]: r["team_id"] for r in conn.execute("SELECT team_id, name FROM teams").fetchall()}
+    _, _, draw_seeds, process_seeds = _pa_round1_games(conn)
+    seed_lookup = {"Draw": draw_seeds, "Process": process_seeds}
+
+    preview = {}
+    for bracket in ("Draw", "Process"):
+        team_to_seed = {v: k for k, v in seed_lookup[bracket].items() if v not in (None, "bye")}
+        games = _pa_round_games(conn, bracket, target_round)
+        if games is None:
+            preview[bracket] = None
+            continue
+        home_is_lower = (bracket == "Draw")
+        entries = []
+        for team_a, team_b in games:
+            seed_a, seed_b = team_to_seed[team_a], team_to_seed[team_b]
+            better_first = (seed_a < seed_b) == home_is_lower
+            home, away = (team_a, team_b) if better_first else (team_b, team_a)
+            entries.append({
+                "home": home, "away": away,
+                "home_seed": team_to_seed[home], "away_seed": team_to_seed[away],
+                "home_dex": name_to_dex.get(home), "away_dex": name_to_dex.get(away),
+            })
+        preview[bracket] = entries
+    conn.close()
+    return preview
+
+
 def rank_elo_history(season):
     """
     Per-team rank and Elo history, one checkpoint per completed
