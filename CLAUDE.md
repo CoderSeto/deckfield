@@ -451,3 +451,25 @@ escapes in string replacements, which corrupts anything containing `\t`/`\n`.
 - `deckfield.html` is now the version of record in this project (see top of
   file) — don't let a separate conversation's copy drift back into being
   treated as authoritative.
+- **Schedule Batch Settings copy/paste, added 2026-08-05**: `deckfield.html`'s
+  Schedule tab can now fill in its Batch Settings (Game Type, Format, Day,
+  Round Label, Round #, Cup Name, Cup Bracket, Cup Round #) from a single
+  pasted row instead of setting each field by hand — only Starting Timeslot
+  and Games per Timeslot stay manual (they're display/pacing choices, not
+  derivable from the schedule). Source is `export_matchday_batches()` in
+  the engine, surfaced in the dashboard's Next Matchday tab as one "batch"
+  panel per DECKFIELD batch — each with its own Batch Settings paste box
+  and Matchups paste box. Almost every matchday is one batch; **RDS Cup
+  matchdays are always three**, because Ribbon/Dream/Star all play on the
+  same weekly-schedule slot but a single DECKFIELD batch can only carry one
+  Cup Name for every matchup pasted with it (`_games_for_event` already
+  combines all three cups into one list for game generation — this just
+  splits them back apart for the DECKFIELD-facing export). Format is AGG
+  for any two-legged/Bo3 slot (RDS SF/Final, PA QF/SF/Final, Regional
+  Tournament MD2 onward — MD1 is the only single-game RT matchday),
+  Single Game otherwise. Round-trip verified: rendered the dashboard's
+  actual output in a headless DOM, copied a batch's Batch Settings row,
+  pasted it into deckfield.html's importer, and confirmed the real
+  `<select>` elements land on the correct `<option>` (not just a
+  matching string) for both a plain batch (PA Draw R1) and all three
+  RDS batches (Ribbon/Dream/Star Draw R1).
