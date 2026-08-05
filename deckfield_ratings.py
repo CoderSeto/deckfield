@@ -1956,10 +1956,15 @@ def rank_elo_history(season):
         Draw or Process round gets its own sequential 'S' label (Calcs'
         S1/S2/S3/S4 pattern: S1/S2 = RDS round 1 Draw/Process, S3/S4 =
         RDS round 2 Draw/Process, and so on as more cup rounds are played).
-      - Rank checkpoints: the same, except a cup round's Draw and Process
-        collapse into one 'SC' checkpoint using the later of the two
-        abs_rounds (Rankings' SC1/SC2 pattern) -- Regional/League/RT
-        events are never merged.
+      - Rank checkpoints: mostly the same, except within the historical
+        portion (abs_round <= the last `_CONFIRMED_ABS_ROUND` value) a cup
+        round's Draw and Process collapse into one 'SC' checkpoint using
+        the later of the two abs_rounds (Rankings' SC1/SC2 pattern) --
+        that's how the S9 workbook actually tracked it, and isn't worth
+        re-deriving differently now. Everything from there on (per
+        explicit instruction) gets its own column same as Elo, reusing
+        the exact same 'S' label Elo assigns that abs_round -- Regional/
+        League/RT events are never merged either way.
     Both are driven by `full_schedule_abs_round_mapping()` (the same
     abs_round assignment everything else in this engine uses) rather than
     WEEKLY_SCHEDULE's week/day placement directly, since the historical
@@ -1999,6 +2004,12 @@ def rank_elo_history(season):
             lbl = f"S{s_seq}"
         elo_checkpoints.append({"label": lbl, "abs_round": r})
 
+    # Draw/Process only merge into one rank checkpoint within the historical
+    # portion (matching the S9 workbook's own SC1/SC2 columns) -- every cup
+    # round from here on gets its own column, same granularity as Elo.
+    historical_cutoff = max(_CONFIRMED_ABS_ROUND.values())
+    elo_label_by_round = {cp["abs_round"]: cp["label"] for cp in elo_checkpoints}
+
     rank_checkpoints = []
     sc_seq = 0
     i = 0
@@ -2012,17 +2023,17 @@ def rank_elo_history(season):
             continue
         kind, bracket, cup_round = event
         merged = False
-        if i + 1 < len(rounds):
-            next_event = events_by_round[rounds[i + 1]]
-            if (next_event[0] == kind and next_event[2] == cup_round
+        if r <= historical_cutoff and i + 1 < len(rounds):
+            next_r = rounds[i + 1]
+            next_event = events_by_round[next_r]
+            if (next_r <= historical_cutoff and next_event[0] == kind and next_event[2] == cup_round
                     and {bracket, next_event[1]} == {"Draw", "Process"}):
                 sc_seq += 1
-                rank_checkpoints.append({"label": f"SC{sc_seq}", "abs_round": rounds[i + 1]})
+                rank_checkpoints.append({"label": f"SC{sc_seq}", "abs_round": next_r})
                 i += 2
                 merged = True
         if not merged:
-            sc_seq += 1
-            rank_checkpoints.append({"label": f"SC{sc_seq}", "abs_round": r})
+            rank_checkpoints.append({"label": elo_label_by_round[r], "abs_round": r})
             i += 1
 
     team_names = {r["team_id"]: r["name"] for r in conn.execute("SELECT team_id, name FROM teams").fetchall()}

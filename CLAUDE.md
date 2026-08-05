@@ -429,11 +429,18 @@ granularities, matching the workbook's own two granularities:
   on). Elo value at each checkpoint = the team's `elo_a_after`/
   `elo_b_after` from their last game as of that abs_round, carried forward
   for rounds they didn't play in.
-- **Rank checkpoints** (Rankings pattern): the same, except a cup round's
-  Draw and Process collapse into one `SC` checkpoint (Rankings' SC1/SC2),
-  using the later of the two abs_rounds. Rank = `ORDER BY ovr DESC` per
-  round, same method `current_rank_lookup()` already uses for "current"
-  rank everywhere else in the dashboard.
+- **Rank checkpoints** (Rankings pattern, historical portion only): within
+  the historical portion (abs_round &le; the last `_CONFIRMED_ABS_ROUND`
+  value, currently 11) a cup round's Draw and Process collapse into one
+  `SC` checkpoint (Rankings' SC1/SC2), using the later of the two
+  abs_rounds — matching how the S9 workbook actually tracked it. **Per
+  explicit instruction, this merging stops there**: every cup round from
+  abs_round 12 onward gets its own rank column instead, reusing the exact
+  same `S` label Elo assigns that abs_round, so Rank and Elo checkpoints
+  are identical from that point on (only the already-published SC1/SC2
+  differ between the two views). Rank = `ORDER BY ovr DESC` per round,
+  same method `current_rank_lookup()` already uses for "current" rank
+  everywhere else in the dashboard.
 
 Both walk `full_schedule_abs_round_mapping()` (not `WEEKLY_SCHEDULE`'s
 week/day placement) to decide event order and merging, since the
