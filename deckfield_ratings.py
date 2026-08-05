@@ -1778,6 +1778,10 @@ def export_matchday_for_deckfield(season, event=None):
 
     games = _games_for_event(season, event)
     ranks = current_rank_lookup(season)
+    # Play order is worst-ranked team first, not the source bracket/pod
+    # order (e.g. PA Cup's ladder-row order) -- sort each game by its
+    # lowest-ranked (highest rank number) team, descending.
+    games = sorted(games, key=lambda hg: max(ranks[hg[0]], ranks[hg[1]]), reverse=True)
     lines = ["Away Team Rank\tHome Team Rank\tAdv"]
     lines += [f"{ranks[away]}\t{ranks[home]}\t" for home, away in games]
     return info, "\n".join(lines)

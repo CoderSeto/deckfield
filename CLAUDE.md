@@ -139,6 +139,14 @@ not a fixed pointer, so it advances correctly as real results come in.
 **`export_matchday_for_deckfield()`** returns the matchday's games in
 DECKFIELD's Schedule paste format, plus `abs_round` — the exact value to
 use when logging that matchday's results back via the CSV format above.
+Games are sorted by each game's **worst-ranked (highest rank number)
+team, descending** — rank #160 plays first, then #159, and so on — since
+that's the actual play order, not `_games_for_event()`'s native
+bracket/pod order (e.g. PA Cup's ladder-row order, which is the right
+order for the PA Cup tab itself but not for this export). Real bug, fixed
+2026-08-04: the dashboard's Next Matchday tab was pasting `_games_for_event()`'s
+raw order straight through, so PA Cup matchdays came out looking like a
+copy of the PA Cup tab instead of play order.
 
 **What's actually reachable** via `_games_for_event()`: Regional/League any
 round (via the pod schedule), RDS Cup rounds 1-5 (resolving through real
