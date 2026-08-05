@@ -632,6 +632,22 @@
         These apply to every matchup pasted below as one batch — paste a new list each
         time any of these change (e.g. a new round, or switching from Regional to Cup play).
       </p>
+      <p class="roster-help">
+        Paste the Batch Settings row from deckfield_dashboard.html's Next Matchday tab to fill
+        in everything below except Starting Timeslot and Games per Timeslot — those two you
+        still set yourself. RDS Cup matchdays give you three separate rows (Ribbon/Dream/Star);
+        apply and import each one as its own batch.
+      </p>
+      <label class="roster-checkbox">
+        <input type="checkbox" id="schedSettingsHasHeader" checked>
+        First pasted row is a header row (skip it)
+      </label>
+      <textarea id="schedSettingsPasteBox" class="paste-box" rows="2" placeholder="Paste the Batch Settings row here..."></textarea>
+      <div class="roster-controls">
+        <button id="schedSettingsApplyBtn">Apply Settings</button>
+        <button id="schedSettingsClearBtn">Clear</button>
+      </div>
+      <div class="roster-status" id="schedSettingsStatus"></div>
       <div class="sched-settings-grid">
         <label>Game Type
           <select id="schedGameType">
@@ -2305,6 +2321,58 @@
     document.getElementById('schedStatus').textContent = '';
     SCHEDULE = [];
     nextMatchIndex = 0;
+  });
+
+  // ---------- Schedule Batch Settings importer ----------
+  // One pasted row (Game Type, Format, Day, Round Label, Round #, Cup Name,
+  // Cup Bracket, Cup Round #) fills in every Batch Settings field except
+  // Starting Timeslot and Games per Timeslot, which stay manual -- matches
+  // deckfield_dashboard.html's Next Matchday "Batch Settings" box exactly.
+  const BATCH_SETTINGS_COLUMNS = ['Game Type', 'Format', 'Day', 'Round Label', 'Round #', 'Cup Name', 'Cup Bracket', 'Cup Round #'];
+
+  function parseBatchSettingsPaste(text, hasHeader){
+    const rows = parseDelimitedText(text, '\t')
+      .filter(row => !(row.length === 1 && row[0].trim() === ''));
+    if (hasHeader && rows.length) rows.shift();
+    return rows;
+  }
+
+  document.getElementById('schedSettingsApplyBtn').addEventListener('click', () => {
+    const text = document.getElementById('schedSettingsPasteBox').value;
+    const hasHeader = document.getElementById('schedSettingsHasHeader').checked;
+    const rows = parseBatchSettingsPaste(text, hasHeader);
+    const statusEl = document.getElementById('schedSettingsStatus');
+
+    if (rows.length === 0){
+      statusEl.textContent = 'No row found — paste the Batch Settings row first.';
+      statusEl.className = 'roster-status warn';
+      return;
+    }
+    const row = rows[0];
+    if (row.length !== BATCH_SETTINGS_COLUMNS.length){
+      statusEl.textContent = `Expected ${BATCH_SETTINGS_COLUMNS.length} columns, got ${row.length}.`;
+      statusEl.className = 'roster-status warn';
+      return;
+    }
+    const [gameType, format, day, roundLabel, roundNum, cupName, cupBracket, cupRound] = row.map(v => v.trim());
+
+    document.getElementById('schedGameType').value = gameType;
+    document.getElementById('schedAgg').value = format === 'AGG (2-leg / Bo3)' ? 'true' : 'false';
+    document.getElementById('schedWeekend').value = day === 'Weekend' ? 'true' : 'false';
+    document.getElementById('schedRound').value = roundLabel;
+    document.getElementById('schedRoundNum').value = roundNum;
+    document.getElementById('schedCupName').value = cupName;
+    document.getElementById('schedCupBracket').value = cupBracket;
+    document.getElementById('schedCupRound').value = cupRound;
+
+    statusEl.textContent = `Applied settings for ${roundLabel} (${gameType}${format === 'AGG (2-leg / Bo3)' ? ', AGG' : ''}, ${day}). `
+      + 'Starting Timeslot and Games per Timeslot are unchanged — set those yourself.';
+    statusEl.className = 'roster-status ok';
+  });
+
+  document.getElementById('schedSettingsClearBtn').addEventListener('click', () => {
+    document.getElementById('schedSettingsPasteBox').value = '';
+    document.getElementById('schedSettingsStatus').textContent = '';
   });
 
   // ---------- Region Climate importer ----------

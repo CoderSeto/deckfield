@@ -1787,6 +1787,127 @@ def export_matchday_for_deckfield(season, event=None):
     return info, "\n".join(lines)
 
 
+_BATCH_SETTINGS_HEADER = "Game Type\tFormat\tDay\tRound Label\tRound #\tCup Name\tCup Bracket\tCup Round #"
+
+
+def _week_day_for_event(event):
+    """(week, day) of an event's first occurrence in WEEKLY_SCHEDULE, for
+    events not reached via next_matchday() (which already knows its own
+    day). Good enough for SF/Final/QF slots too -- those repeat the same
+    event tuple across multiple days, but they're not exportable anyway
+    (_games_for_event raises NotImplementedError for them)."""
+    for week in WEEKLY_SCHEDULE:
+        for day in ("Tue", "Thu", "Weekend"):
+            if week[day] == event:
+                return week["week"], day
+    return None, None
+
+
+def _batch_settings_row(game_type, agg, weekend, round_label, abs_round,
+                         cup_name="", cup_bracket="", cup_round=""):
+    fmt = "AGG (2-leg / Bo3)" if agg else "Single Game"
+    day = "Weekend" if weekend else "Midweek"
+    return "\t".join(str(v) for v in
+                      (game_type, fmt, day, round_label, abs_round, cup_name, cup_bracket, cup_round))
+
+
+def export_matchday_batches(season, event=None):
+    """
+    Like `export_matchday_for_deckfield`, but split into one or more
+    per-cup "batches" -- everything DECKFIELD's Schedule Batch Settings
+    panel needs to be filled in by pasting a single row (Game Type,
+    Format, Day, Round Label, Round #, Cup Name, Cup Bracket, Cup Round #),
+    alongside that batch's own matchups in the existing Away/Home rank
+    format. RDS Cup matchdays play Ribbon, Dream, and Star simultaneously,
+    but a DECKFIELD batch can only carry one Cup Name for every matchup
+    pasted with it -- so RDS matchdays always split into three batches,
+    one per cup, each with only that cup's games. Every other event kind
+    (R/L/PA/RT) is just one batch.
+
+    Returns (info, batches). info is the same as from
+    `export_matchday_for_deckfield` (includes 'abs_round'). Each batch is
+    {'label', 'settings_tsv' (header + one row, paste into Batch
+    Settings), 'games' (list of {'away_rank','away_name','home_rank',
+    'home_name'}, worst-ranked team first), 'matchups_tsv' (header + rows,
+    paste into Import Matchups, same format/order as
+    export_matchday_for_deckfield)}.
+    """
+    if event is None:
+        info = next_matchday(season)
+        if info is None:
+            return None, []
+        event = info["event"]
+    else:
+        info = {"event": event}
+        info["week"], info["day"] = _week_day_for_event(event)
+    info["abs_round"] = abs_round_for_event(event)
+    weekend = info.get("day") == "Weekend"
+
+    conn = get_connection()
+    name_to_dex = {r["name"]: r["team_id"] for r in conn.execute("SELECT team_id, name FROM teams").fetchall()}
+    dex_to_name = {v: k for k, v in name_to_dex.items()}
+    ranks = current_rank_lookup(season)
+
+    def build_batch(label, game_type, agg, cup_name, cup_bracket, cup_round, games):
+        games = sorted(games, key=lambda hg: max(ranks[hg[0]], ranks[hg[1]]), reverse=True)
+        settings_row = _batch_settings_row(game_type, agg, weekend, label, info["abs_round"],
+                                            cup_name, cup_bracket, cup_round)
+        matchup_lines = ["Away Team Rank\tHome Team Rank\tAdv"]
+        matchup_lines += [f"{ranks[away]}\t{ranks[home]}\t" for home, away in games]
+        return {
+            "label": label,
+            "settings_tsv": _BATCH_SETTINGS_HEADER + "\n" + settings_row,
+            "matchups_tsv": "\n".join(matchup_lines),
+            "games": [{
+                "away_rank": ranks[away], "away_name": dex_to_name[away],
+                "home_rank": ranks[home], "home_name": dex_to_name[home],
+            } for home, away in games],
+        }
+
+    kind = event[0]
+    if kind == "RDS":
+        _, bracket, cup_round = event
+        batches = []
+        for cup in ("Ribbon", "Dream", "Star"):
+            cup_games = _rds_round_games(conn, cup, bracket, cup_round)
+            if cup_games is None:
+                conn.close()
+                raise ValueError(f"RDS {cup} {bracket} round {cup_round}: a prior round isn't complete yet.")
+            games = [(name_to_dex[h], name_to_dex[a]) for h, a in cup_games]
+            agg = bracket in ("SF", "Final")
+            label = f"{cup} {bracket} R{cup_round}" if cup_round is not None else f"{cup} {bracket}"
+            batches.append(build_batch(label, "Cup", agg, cup, bracket, cup_round if cup_round is not None else "", games))
+        conn.close()
+        return info, batches
+
+    if kind == "PA":
+        _, bracket, cup_round = event
+        label = f"PA {bracket} R{cup_round}" if cup_round is not None else f"PA {bracket}"
+        agg = bracket in ("QF", "SF", "Final") or cup_round is None
+        games = _games_for_event(season, event)
+        batch = build_batch(label, "Cup", agg, "PA", bracket, cup_round if cup_round is not None else "", games)
+        conn.close()
+        return info, [batch]
+
+    if kind == "RT":
+        _, matchday = event
+        label = f"RT{matchday}"
+        agg = matchday != 1
+        games = _games_for_event(season, event)
+        batch = build_batch(label, "Playoffs", agg, "", "", "", games)
+        conn.close()
+        return info, [batch]
+
+    # R / L
+    _, rnd = event
+    label = f"{kind}{rnd}"
+    game_type = "Regional" if kind == "R" else "League"
+    games = _games_for_event(season, event)
+    batch = build_batch(label, game_type, False, "", "", "", games)
+    conn.close()
+    return info, [batch]
+
+
 def latest_played_schedule_round(season):
     """{'regional': N, 'league': N} -- the highest Regional/League round
     number (in their own 1-15 sequence) that actually has real game data,
@@ -1821,6 +1942,137 @@ def region_display_name(region):
     region field is the space-free 'LilyValley'. Every other region name
     is already identical either way."""
     return REGION_DISPLAY_NAME.get(region, region)
+
+
+def rank_elo_history(season):
+    """
+    Per-team rank and Elo history, one checkpoint per completed
+    weekly-schedule event -- source data for the dashboard's Rank/Elo
+    History tab. Mirrors how the S9 workbook tracked this by hand
+    (Rankings!CG:CT for rank, Calcs!ANU:AOF for Elo), at two checkpoint
+    granularities:
+      - Elo checkpoints: one per individual event -- R/L keep their own
+        1-15 numbering, RT its own matchday numbering, and every RDS/PA
+        Draw or Process round gets its own sequential 'S' label (Calcs'
+        S1/S2/S3/S4 pattern: S1/S2 = RDS round 1 Draw/Process, S3/S4 =
+        RDS round 2 Draw/Process, and so on as more cup rounds are played).
+      - Rank checkpoints: mostly the same, except within the historical
+        portion (abs_round <= the last `_CONFIRMED_ABS_ROUND` value) a cup
+        round's Draw and Process collapse into one 'SC' checkpoint using
+        the later of the two abs_rounds (Rankings' SC1/SC2 pattern) --
+        that's how the S9 workbook actually tracked it, and isn't worth
+        re-deriving differently now. Everything from there on (per
+        explicit instruction) gets its own column same as Elo, reusing
+        the exact same 'S' label Elo assigns that abs_round -- Regional/
+        League/RT events are never merged either way.
+    Both are driven by `full_schedule_abs_round_mapping()` (the same
+    abs_round assignment everything else in this engine uses) rather than
+    WEEKLY_SCHEDULE's week/day placement directly, since the historical
+    portion's actual play order doesn't necessarily match WEEKLY_SCHEDULE's
+    day slots -- only the confirmed abs_round numbering does.
+
+    Only includes abs_rounds that actually have computed ratings
+    (team_round_ratings), so this grows automatically as more matchdays
+    are played -- nothing here needs updating by hand when new results
+    come in via `add-results`.
+    """
+    conn = get_connection()
+    latest_round = conn.execute(
+        "SELECT MAX(round) m FROM team_round_ratings WHERE season=?", (season,)
+    ).fetchone()["m"]
+    if latest_round is None:
+        conn.close()
+        return {"rank_checkpoints": [], "elo_checkpoints": [], "teams": []}
+
+    events_by_round = {abs_r: event for event, abs_r in full_schedule_abs_round_mapping().items()}
+    rounds = sorted(r for r in events_by_round if r <= latest_round)
+
+    def plain_label(event):
+        kind = event[0]
+        if kind in ("R", "L"):
+            return f"{kind}{event[1]}"
+        if kind == "RT":
+            return f"RT{event[1]}"
+        return None  # RDS/PA cup events get sequential 'S'/'SC' labels below
+
+    elo_checkpoints = []
+    s_seq = 0
+    for r in rounds:
+        lbl = plain_label(events_by_round[r])
+        if lbl is None:
+            s_seq += 1
+            lbl = f"S{s_seq}"
+        elo_checkpoints.append({"label": lbl, "abs_round": r})
+
+    # Draw/Process only merge into one rank checkpoint within the historical
+    # portion (matching the S9 workbook's own SC1/SC2 columns) -- every cup
+    # round from here on gets its own column, same granularity as Elo.
+    historical_cutoff = max(_CONFIRMED_ABS_ROUND.values())
+    elo_label_by_round = {cp["abs_round"]: cp["label"] for cp in elo_checkpoints}
+
+    rank_checkpoints = []
+    sc_seq = 0
+    i = 0
+    while i < len(rounds):
+        r = rounds[i]
+        event = events_by_round[r]
+        lbl = plain_label(event)
+        if lbl is not None:
+            rank_checkpoints.append({"label": lbl, "abs_round": r})
+            i += 1
+            continue
+        kind, bracket, cup_round = event
+        merged = False
+        if r <= historical_cutoff and i + 1 < len(rounds):
+            next_r = rounds[i + 1]
+            next_event = events_by_round[next_r]
+            if (next_r <= historical_cutoff and next_event[0] == kind and next_event[2] == cup_round
+                    and {bracket, next_event[1]} == {"Draw", "Process"}):
+                sc_seq += 1
+                rank_checkpoints.append({"label": f"SC{sc_seq}", "abs_round": next_r})
+                i += 2
+                merged = True
+        if not merged:
+            rank_checkpoints.append({"label": elo_label_by_round[r], "abs_round": r})
+            i += 1
+
+    team_names = {r["team_id"]: r["name"] for r in conn.execute("SELECT team_id, name FROM teams").fetchall()}
+
+    def ranks_at(abs_round):
+        rows = conn.execute("""
+            SELECT team_id FROM team_round_ratings
+            WHERE season=? AND round=? ORDER BY ovr DESC
+        """, (season, abs_round)).fetchall()
+        return {row["team_id"]: i + 1 for i, row in enumerate(rows)}
+
+    rank_by_round = {cp["abs_round"]: ranks_at(cp["abs_round"]) for cp in rank_checkpoints}
+
+    games_by_round = {}
+    for g in conn.execute("SELECT round, team_a, team_b, elo_a_after, elo_b_after FROM games WHERE season=?", (season,)).fetchall():
+        games_by_round.setdefault(g["round"], []).append(g)
+
+    elo_by_round = {}
+    current_elo = {}
+    for r in rounds:
+        for g in games_by_round.get(r, []):
+            current_elo[g["team_a"]] = g["elo_a_after"]
+            current_elo[g["team_b"]] = g["elo_b_after"]
+        elo_by_round[r] = dict(current_elo)
+
+    teams = []
+    for team_id, name in team_names.items():
+        teams.append({
+            "team_id": team_id, "name": name,
+            "rank_history": [rank_by_round[cp["abs_round"]].get(team_id) for cp in rank_checkpoints],
+            "elo_history": [elo_by_round[cp["abs_round"]].get(team_id) for cp in elo_checkpoints],
+        })
+
+    conn.close()
+    return {
+        "rank_checkpoints": rank_checkpoints,
+        "elo_checkpoints": elo_checkpoints,
+        "teams": teams,
+    }
 
 
 def export_teams_for_deckfield(season):
