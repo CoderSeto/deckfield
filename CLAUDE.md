@@ -412,7 +412,52 @@ should become a CLI command). Tabs: Rankings, Standings, RL Strength,
 Schedule, RDS Cup, PA Cup, Next Matchday (matchup table + copy-paste boxes
 for DECKFIELD's Schedule/Teams/Region Climate inputs), Calendar (full
 26-week schedule, played/next/pending status), Regional Playoffs (all 10
-regions shown at once in a grid, no dropdown).
+regions shown at once in a grid, no dropdown), Rank/Elo History (below).
+
+### Rank/Elo History tab
+
+Added 2026-08-05, mirroring the S9 workbook's own hand-tracked history
+(`Rankings!CG:CT` for rank, `Calcs!ANU:AOF` for Elo) instead of copying
+those exact columns. `rank_elo_history(season)` in the engine builds both
+from `team_round_ratings`/`games` directly, at two checkpoint
+granularities, matching the workbook's own two granularities:
+
+- **Elo checkpoints** (Calcs pattern): one per individual event, R/L keep
+  their own 1-15 numbering, RT its own matchday numbering, and every
+  RDS/PA Draw or Process round gets its own sequential `S` label (`S1`/`S2`
+  = RDS round 1 Draw/Process, `S3`/`S4` = RDS round 2 Draw/Process, and so
+  on). Elo value at each checkpoint = the team's `elo_a_after`/
+  `elo_b_after` from their last game as of that abs_round, carried forward
+  for rounds they didn't play in.
+- **Rank checkpoints** (Rankings pattern): the same, except a cup round's
+  Draw and Process collapse into one `SC` checkpoint (Rankings' SC1/SC2),
+  using the later of the two abs_rounds. Rank = `ORDER BY ovr DESC` per
+  round, same method `current_rank_lookup()` already uses for "current"
+  rank everywhere else in the dashboard.
+
+Both walk `full_schedule_abs_round_mapping()` (not `WEEKLY_SCHEDULE`'s
+week/day placement) to decide event order and merging, since the
+historical portion's actual play order doesn't necessarily match
+`WEEKLY_SCHEDULE`'s current day slots — only the confirmed abs_round
+numbering does. Grows automatically as `add-results` brings in new
+rounds; nothing here needs hand-updating.
+
+**Validated against the real workbook, with one real finding**: Elo
+checkpoints match `Calcs!ANV:AOF` **exactly**, byte-for-byte, for every
+team checked (confirmed against Canalave City's full row: 2506, 2507,
+2508, 2509, 2510, 2511, 2534, 2536, 2537, 2539, 2543). Rank checkpoints do
+**not** match `Rankings!CS:CK` — not even at the final/current checkpoint,
+where the *live* `Rankings!AN` "Rank" column (itself an exact match to the
+`CK`/SC2 snapshot, 160/160) still only agrees with this engine's current
+rank on 10/160 teams. This isn't a bug in the new history code: the
+workbook's own `AQ` "OVR" column for Canalave (103.23) doesn't match this
+engine's confirmed value (101.76, Grade SS — the exact number already
+cross-checked elsewhere in this file) either. The workbook's Rank/OVR
+columns are frozen at whatever formula version was live when they were
+last touched, predating several of the confirmed OVR fixes above (PDG
+denominator, per-team EX Bonus, TOT floor) — this engine is the corrected,
+going-forward source of truth, so no attempt was made to reproduce the
+workbook's stale rank numbers retroactively.
 
 **Before shipping any dashboard change**: extract the `<script>` block and
 actually execute it in Node with a mocked `document` object (not just

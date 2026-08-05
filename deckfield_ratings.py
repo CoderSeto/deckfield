@@ -1944,6 +1944,126 @@ def region_display_name(region):
     return REGION_DISPLAY_NAME.get(region, region)
 
 
+def rank_elo_history(season):
+    """
+    Per-team rank and Elo history, one checkpoint per completed
+    weekly-schedule event -- source data for the dashboard's Rank/Elo
+    History tab. Mirrors how the S9 workbook tracked this by hand
+    (Rankings!CG:CT for rank, Calcs!ANU:AOF for Elo), at two checkpoint
+    granularities:
+      - Elo checkpoints: one per individual event -- R/L keep their own
+        1-15 numbering, RT its own matchday numbering, and every RDS/PA
+        Draw or Process round gets its own sequential 'S' label (Calcs'
+        S1/S2/S3/S4 pattern: S1/S2 = RDS round 1 Draw/Process, S3/S4 =
+        RDS round 2 Draw/Process, and so on as more cup rounds are played).
+      - Rank checkpoints: the same, except a cup round's Draw and Process
+        collapse into one 'SC' checkpoint using the later of the two
+        abs_rounds (Rankings' SC1/SC2 pattern) -- Regional/League/RT
+        events are never merged.
+    Both are driven by `full_schedule_abs_round_mapping()` (the same
+    abs_round assignment everything else in this engine uses) rather than
+    WEEKLY_SCHEDULE's week/day placement directly, since the historical
+    portion's actual play order doesn't necessarily match WEEKLY_SCHEDULE's
+    day slots -- only the confirmed abs_round numbering does.
+
+    Only includes abs_rounds that actually have computed ratings
+    (team_round_ratings), so this grows automatically as more matchdays
+    are played -- nothing here needs updating by hand when new results
+    come in via `add-results`.
+    """
+    conn = get_connection()
+    latest_round = conn.execute(
+        "SELECT MAX(round) m FROM team_round_ratings WHERE season=?", (season,)
+    ).fetchone()["m"]
+    if latest_round is None:
+        conn.close()
+        return {"rank_checkpoints": [], "elo_checkpoints": [], "teams": []}
+
+    events_by_round = {abs_r: event for event, abs_r in full_schedule_abs_round_mapping().items()}
+    rounds = sorted(r for r in events_by_round if r <= latest_round)
+
+    def plain_label(event):
+        kind = event[0]
+        if kind in ("R", "L"):
+            return f"{kind}{event[1]}"
+        if kind == "RT":
+            return f"RT{event[1]}"
+        return None  # RDS/PA cup events get sequential 'S'/'SC' labels below
+
+    elo_checkpoints = []
+    s_seq = 0
+    for r in rounds:
+        lbl = plain_label(events_by_round[r])
+        if lbl is None:
+            s_seq += 1
+            lbl = f"S{s_seq}"
+        elo_checkpoints.append({"label": lbl, "abs_round": r})
+
+    rank_checkpoints = []
+    sc_seq = 0
+    i = 0
+    while i < len(rounds):
+        r = rounds[i]
+        event = events_by_round[r]
+        lbl = plain_label(event)
+        if lbl is not None:
+            rank_checkpoints.append({"label": lbl, "abs_round": r})
+            i += 1
+            continue
+        kind, bracket, cup_round = event
+        merged = False
+        if i + 1 < len(rounds):
+            next_event = events_by_round[rounds[i + 1]]
+            if (next_event[0] == kind and next_event[2] == cup_round
+                    and {bracket, next_event[1]} == {"Draw", "Process"}):
+                sc_seq += 1
+                rank_checkpoints.append({"label": f"SC{sc_seq}", "abs_round": rounds[i + 1]})
+                i += 2
+                merged = True
+        if not merged:
+            sc_seq += 1
+            rank_checkpoints.append({"label": f"SC{sc_seq}", "abs_round": r})
+            i += 1
+
+    team_names = {r["team_id"]: r["name"] for r in conn.execute("SELECT team_id, name FROM teams").fetchall()}
+
+    def ranks_at(abs_round):
+        rows = conn.execute("""
+            SELECT team_id FROM team_round_ratings
+            WHERE season=? AND round=? ORDER BY ovr DESC
+        """, (season, abs_round)).fetchall()
+        return {row["team_id"]: i + 1 for i, row in enumerate(rows)}
+
+    rank_by_round = {cp["abs_round"]: ranks_at(cp["abs_round"]) for cp in rank_checkpoints}
+
+    games_by_round = {}
+    for g in conn.execute("SELECT round, team_a, team_b, elo_a_after, elo_b_after FROM games WHERE season=?", (season,)).fetchall():
+        games_by_round.setdefault(g["round"], []).append(g)
+
+    elo_by_round = {}
+    current_elo = {}
+    for r in rounds:
+        for g in games_by_round.get(r, []):
+            current_elo[g["team_a"]] = g["elo_a_after"]
+            current_elo[g["team_b"]] = g["elo_b_after"]
+        elo_by_round[r] = dict(current_elo)
+
+    teams = []
+    for team_id, name in team_names.items():
+        teams.append({
+            "team_id": team_id, "name": name,
+            "rank_history": [rank_by_round[cp["abs_round"]].get(team_id) for cp in rank_checkpoints],
+            "elo_history": [elo_by_round[cp["abs_round"]].get(team_id) for cp in elo_checkpoints],
+        })
+
+    conn.close()
+    return {
+        "rank_checkpoints": rank_checkpoints,
+        "elo_checkpoints": elo_checkpoints,
+        "teams": teams,
+    }
+
+
 def export_teams_for_deckfield(season):
     """
     Full team roster in DECKFIELD's expected paste format (tab-separated,
