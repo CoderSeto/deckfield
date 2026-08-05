@@ -274,20 +274,69 @@ Lanakila, Star = Kalosite/Dynamax/Terastal (48 real teams each, seeds
 
 A **ladder** structure, not a shared nested bracket — this took several
 wrong turns to land on, worth preserving the final model precisely. 32
-independent ladder rows, row *i* = seeds `(128+i, 96+i, 64+i, 32+i, i)`:
+independent ladder rows, row *i* = seeds `(161-i, 96+i, 97-i, 32+i, 33-i)`
+for *i* = 1..32:
 
-- Round 1: `(128+i) vs (96+i)` — both always tier D (seeds 97–160, no bye).
-- Round 2 winner faces `64+i` (tier C, seeds 65–96, bye to round 2).
-- Round 3 winner faces `32+i` (tier B, seeds 33–64, bye to round 3).
-- Round 4 winner faces `i` (tier A, seeds 1–32, bye to round 4).
-- Rounds 5–7: standard bracket among the 32 row-champions (row *k* vs row
-  *33-k* in round 5, standard progression after).
+- Round 1: `(161-i) vs (96+i)` — both always tier D (seeds 97–160, no
+  bye). This is proper seed-vs-mirror-seed pairing within the full 64-seed
+  tier-D range (e.g. row 1 is 160 vs 97, row 32 is 129 vs 128) — the same
+  kind of recursive pairing RDS Cup's Draw round 1 already uses, just
+  applied to this bracket's own 64-seed sub-range.
+- Round 2 winner faces `97-i` (tier C, seeds 65–96, bye to round 2 —
+  mirrored within tier C's own range, same idea as round 1).
+- Round 3 winner faces `32+i` (tier B, seeds 33–64, bye to round 3 —
+  **not** mirrored, unlike rounds 1/2/4).
+- Round 4 winner faces `33-i` (tier A, seeds 1–32, bye to round 4 —
+  mirrored within tier A).
+- Rounds 5–7: standard bracket among the 32 row-champions, keyed on each
+  row's *final* seed identity (`33-i`, the same value used for round 4,
+  not `i`) — row-seed *k* vs row-seed *33-k* in round 5, standard
+  progression after. This rule itself never changed; it just inherits the
+  corrected row identity.
 - After round 7: 4 teams remain per bracket → mutual **quarterfinal**
   (Draw pairs vs Draw pairs, Process pairs vs Process pairs), then the
   same duplicate-handling rules as RDS Cup for the semifinal/final.
 - **Rounds 2-7 are fully generated** via `_pa_round_games()`, same
   real-winner resolution pattern as RDS. **Not yet built**: the mutual
   quarterfinal+ stage (raises `NotImplementedError`).
+
+**Round-1 pairing bug, found and fixed 2026-08-06.** The formula above
+replaces an earlier, wrong version that paired row *i* as `(128+i) vs
+(96+i)` for round 1, `64+i` for round 2, and `i` (unmirrored) for round
+4 — a naive first-half/second-half split rather than genuine seed-vs-
+mirror-seed bracket seeding. It looked plausible (it does produce 32
+valid, non-overlapping tier-D pairs) but paired the wrong opponents
+entirely — e.g. it paired seed 129 with seed 97 in round 1, when the
+correct opponent for seed 97 is seed 160. This was caught only after real
+PA Cup Draw Round 1 results were entered against it; those 32 games (round
+12) were deleted from the database along with their `team_round_ratings`
+and `fatigue_deltas` rows, `results/2026-w6-tue-pa-draw-1.csv` was
+removed, and the dashboard was regenerated back to its round-11 state
+before the formula fix went in. The corrected version was derived and
+verified directly against a user-supplied worked example (`160 vs 97,
+winner vs 96, winner vs 33, winner vs 32, winner vs 1` for row 1; `159 vs
+98, winner vs 95, winner vs 34, winner vs 31, winner vs 2` for row 2),
+including the round-5 continuation, which falls out correctly from the
+existing unchanged `k vs 33-k` rule once round 4's identity is fixed to
+`33-i`. `pa_cup_ladder_rows()` is the only function that needed to change
+— every downstream consumer (`pa_cup_round1_pairs`, `_pa_round_games`,
+`resolve_pa_cup_conflicts`) is written generically against `row[0..4]`
+and needed no changes. Confirmed all 160 seeds still appear exactly once
+across the 32 rows, and Draw/Process home-seed rules still hold.
+
+A **second bug was exposed by the revert**, unrelated to the pairing
+formula itself: `regenerate_dashboard.py`'s `build_pa_cup()` always
+projected a "next round" preview one past whatever's been played, with no
+floor — once round 1's results were deleted, "next round" became round 1
+again, which duplicated the tab's own static "Round 1" section under a
+hardcoded, wrong "Round 2 (projected)" label (the dashboard JS never
+computed that number from the actual preview, it was a literal string).
+Fixed by (1) not generating any preview at all until round 1 itself is
+actually complete — round 1's own structural pairing is already shown by
+the static section, so "previewing" it before it's played is redundant —
+and (2) embedding the real target round number as `PA_ROUND_PREVIEW.round`
+so the dashboard's label (`` `Round ${PA_ROUND_PREVIEW.round} (projected)` ``)
+is correct at every future round, not just round 2.
 
 **Draw seeding**: real, from the PA Cup tab (`pa_cup_seeds.json`).
 **Process seeding**: a real, separately-provided seed list
