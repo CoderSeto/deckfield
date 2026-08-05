@@ -509,6 +509,56 @@ top/bottom-half boundary, and a full synthetic round 1-7 walk (including
 an engineered round-1 upset) still produces the exact expected game count
 every round with correct seed-based hosting throughout.
 
+**Wrong side was being swapped, fixed 2026-08-06, same day (again).**
+Both versions above still swapped the WRONG side. Round 1's two seeds per
+row are `row[0]` (the worse seed, 129-160) and `row[1]` (the better seed,
+97-128) — every previous version treated `row[0]` as the row's permanent,
+future-owning anchor and swapped `row[1]` (the opponent) between rows.
+Per explicit instruction, this is backwards: **the better seed (row[1])
+must be the one that "stays in order" — its own future path (round 2-4
+tier entrants) is permanently tied to its own row, unaffected by any
+swap. It's the worse seed (row[0]) that moves between rows when a
+conflict needs resolving** — for row 4's conflict, that means swapping
+seed #157 with seed #158 directly (row 4's worse seed for row 3's), not
+swapping their opponents (#100/#99). The result happens to produce the
+same final PAIRING either way (157 vs 99, 158 vs 100) — but the two
+models disagree on what happens to a worse seed's own future path if it
+wins: under the wrong (row[1]-swapped) model, if Pewter City (seed 99)
+had been swapped into a different row and won, they'd have inherited
+that row's tier entrants instead of their own. Under the corrected
+model, the *worse* seed inherits whichever row it currently occupies if
+it wins (not protected — "until they become lower seeds in future
+matches," per explicit instruction), while the *better* seed's own path
+never changes regardless of who it's made to play. Fixed by swapping
+`pa_cup_round1_pairs()`'s anchor from `row[0]` to `row[1]`,
+`_pa_default_opponents(0)` (not `1`) as round 1's swappable default, and
+`resolve_pa_cup_conflicts()`'s `draw_rows`/`process_rows` anchor lookup
+from `row[0]` to `row[1]` — with the search-direction fix from the
+previous entry reverted back to worse-first-then-better, since the
+swappable pool is now the *worse* half (129-160) and "next-lowest
+seeded" (next worse) means ascending toward higher numbers within it.
+Verified: the swap log now reads `Swapped seed #157 ↔ #158` directly
+(matching the exact original instruction), Lacunosa Town (157) and
+Driftveil City (100) are both still permanently at their own seeds, and
+a synthetic test confirmed a swapped-in worse seed (e.g. seed 158) that
+wins round 1 correctly advances via *its current row's* own tier-C
+entrant (row 4's, since that's where it was placed) rather than the row
+it was swapped out of — while the anchor side never needs this check,
+since its own row identity is never reassigned in the first place.
+Reverified end-to-end after this fix too: 0 unresolved violations, 0
+duplicate matchups, all 160 seeds still map to exactly one team per
+bracket, boundary respected, and a full synthetic round 1-7 walk still
+produces the correct game count every round. **Open question, not yet
+extended to rounds 2-4**: the same "better/fresher seed's future path is
+protected, worse seed's isn't" principle plausibly generalizes to
+rounds 2-4's tier entrants too (the entrant is the "fresher" seed
+entering that round, analogous to round 1's row[1]) — but this hasn't
+been confirmed against real data or explicit instruction, so rounds 2-4
+still track the entrant's future via whichever row_idx it's currently
+placed in if it wins, matching the ALREADY-covered round-1 worse-seed
+behavior, not yet the round-1 better-seed protection. Revisit if/when
+rounds 2-4 conflicts become real and testable.
+
 ## Regional Tournament (postseason)
 
 One per region (10 total), 16 teams seeded by final **Regional Standings**

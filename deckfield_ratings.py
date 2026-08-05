@@ -1317,7 +1317,8 @@ def pa_cup_ladder_rows():
 
 def _pa_default_opponents(round_slot):
     """{row_idx: seed} -- each row's DEFAULT opponent seed for a given
-    round slot (1=round1's row[1], 2/3/4=round2/3/4's tier entrant),
+    round slot (0=round1's worse seed/row[0], the swappable side, since
+    row[1] is the permanent anchor; 2/3/4=round2/3/4's tier entrant),
     straight from pa_cup_ladder_rows(). Conflict resolution mutates a
     COPY of this, never pa_cup_ladder_rows() itself."""
     return {i: row[round_slot] for i, row in enumerate(pa_cup_ladder_rows())}
@@ -1329,10 +1330,12 @@ def pa_cup_round1_pairs(seed_to_team, opponent_of, home_is_lower_seed):
     is permanent for the whole tournament, never reassigned by conflict
     resolution.
     opponent_of: {row_idx(0-31): opponent_seed} -- each row's CURRENT
-    round-1 opponent (row[1] by default; resolve_pa_cup_conflicts can
+    round-1 opponent (row[0] by default; resolve_pa_cup_conflicts can
     reassign which opponent seed a row is paired against). The row's own
-    seed (row[0]) is never touched -- it's who's PAIRED that changes, not
-    who holds which seed.
+    BETTER seed (row[1], 97-128) is permanent and never touched -- it's
+    the anchor whose own future path (round 2-4 tier entrants) a swap can
+    never reassign; only which WORSE seed (129-160) it's paired against
+    for round 1 changes.
     home_is_lower_seed: True for Draw (better/lower seed hosts), False
     for Process (worse/higher seed hosts).
     Returns a list of 32 dicts, one per ladder row, each with the row's
@@ -1340,7 +1343,7 @@ def pa_cup_round1_pairs(seed_to_team, opponent_of, home_is_lower_seed):
     """
     games = []
     for row_idx, row in enumerate(pa_cup_ladder_rows()):
-        seed_a, seed_b = row[0], opponent_of[row_idx]
+        seed_a, seed_b = row[1], opponent_of[row_idx]
         if home_is_lower_seed:
             home_seed, away_seed = min(seed_a, seed_b), max(seed_a, seed_b)
         else:
@@ -1401,12 +1404,12 @@ def _pa_swap_opponents(rows, opponent_of, seed_to_team, violates_fn, pool_lo, po
             continue
 
         same_half = upper_half if opp_seed in upper_half else lower_half
-        # Try the next-better (numerically lower) opponent seed first, then
-        # the next after that, etc; only fall back to worse (higher) seeds
-        # if nothing better in the same half works. Never crosses into the
+        # Try the next-worse (numerically higher) opponent seed first, then
+        # the next after that, etc; only fall back to better (lower) seeds
+        # if nothing worse in the same half works. Never crosses into the
         # other half.
-        search_order = [s for s in reversed(same_half) if s < opp_seed] + \
-                       [s for s in same_half if s > opp_seed]
+        search_order = [s for s in same_half if s > opp_seed] + \
+                       [s for s in reversed(same_half) if s < opp_seed]
 
         swapped = False
         for candidate_seed in search_order:
@@ -1470,8 +1473,8 @@ def resolve_pa_cup_conflicts(draw_seed_to_team, draw_opponent_of, process_seed_t
         return None
 
     ladder_rows = pa_cup_ladder_rows()
-    draw_rows = [(i, draw_seed_to_team[ladder_rows[i][0]]) for i in range(32)]
-    process_rows = [(i, process_seed_to_team[ladder_rows[i][0]]) for i in range(32)]
+    draw_rows = [(i, draw_seed_to_team[ladder_rows[i][1]]) for i in range(32)]
+    process_rows = [(i, process_seed_to_team[ladder_rows[i][1]]) for i in range(32)]
 
     # 1. Draw's own region/division conflicts.
     draw_log = _pa_swap_opponents(draw_rows, draw_opponent_of, draw_seed_to_team, region_division_violation, 97, 160)
@@ -1900,8 +1903,8 @@ def _pa_round1_games(conn):
         JOIN team_seasons ts ON ts.team_id = t.team_id AND ts.season = 9
     """).fetchall()}
 
-    draw_opponent_of = _pa_default_opponents(1)
-    process_opponent_of = _pa_default_opponents(1)
+    draw_opponent_of = _pa_default_opponents(0)
+    process_opponent_of = _pa_default_opponents(0)
     swap_log = resolve_pa_cup_conflicts(draw_seed_to_team, draw_opponent_of, process_seed_to_team, process_opponent_of,
                                          team_region, team_division)
     draw_games = pa_cup_round1_pairs(draw_seed_to_team, draw_opponent_of, home_is_lower_seed=True)
