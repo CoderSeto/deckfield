@@ -9,8 +9,11 @@ hand.
 
 Covers: DATA (Rankings tab, which Standings derives from client-side),
 TEAMS_EXPORT_TSV (Team Roster paste box), NEXT_MATCHDAY_DATA, CALENDAR_DATA,
-RANK_ELO_HISTORY, PA_REAL_RESULTS/PA_ROUND_PREVIEW (PA Cup tab's real
-results + next-round projection), and STRENGTH_DATA (RL Strength tab's
+RANK_ELO_HISTORY, PA_CUP_DATA (PA Cup tab's round-1 structural seeding +
+conflict-resolution log -- regenerated fresh every run, NOT a static
+snapshot, so a formula fix to pa_cup_ladder_rows() actually reaches the
+dashboard), PA_REAL_RESULTS/PA_ROUND_PREVIEW (PA Cup tab's real results +
+next-round projection), and STRENGTH_DATA (RL Strength tab's
 region/division z-score breakdown -- reuses compute_strength_breakdown(),
 the same formula behind each team's stored rlstr_own). Each reconstruction
 was validated by recomputing at round 11 (the last state before this
@@ -27,7 +30,7 @@ import sys
 from deckfield_ratings import (
     get_connection, taper_n, export_teams_for_deckfield,
     export_matchday_batches, rank_elo_history,
-    pa_cup_real_results, pa_cup_round_preview,
+    pa_cup_real_results, pa_cup_round_preview, pa_cup_round1_seeding,
     compute_strength_breakdown,
 )
 
@@ -286,6 +289,8 @@ def main():
     content = _replace_const(content, "CALENDAR_DATA", build_calendar(), is_array=True)
     content = _replace_const(content, "RANK_ELO_HISTORY", build_rank_elo_history())
 
+    content = _replace_const(content, "PA_CUP_DATA", pa_cup_round1_seeding())
+
     pa_real_results, pa_preview = build_pa_cup()
     content = _replace_const(content, "PA_REAL_RESULTS", pa_real_results)
     content = _replace_const(content, "PA_ROUND_PREVIEW", pa_preview)
@@ -301,7 +306,8 @@ def main():
     with open(DASHBOARD_PATH, "w") as f:
         f.write(content)
     print(f"Regenerated DATA, NEXT_MATCHDAY_DATA, CALENDAR_DATA, RANK_ELO_HISTORY, "
-          f"PA_REAL_RESULTS, PA_ROUND_PREVIEW, STRENGTH_DATA, TEAMS_EXPORT_TSV in {DASHBOARD_PATH}")
+          f"PA_CUP_DATA, PA_REAL_RESULTS, PA_ROUND_PREVIEW, STRENGTH_DATA, TEAMS_EXPORT_TSV "
+          f"in {DASHBOARD_PATH}")
 
 
 if __name__ == "__main__":

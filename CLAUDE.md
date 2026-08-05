@@ -550,11 +550,35 @@ byte-for-byte, 160/160 — since it's the same computation, not a parallel
 reconstruction that happens to agree.
 
 Everything else (`SCHEDULE_DATA`, `CUP_BRACKET_DATA`/`CUP_REAL_RESULTS`/
-`RDS_ROUND2`/`RDS_ROUND3`, `PA_CUP_DATA`'s structural seeding, `RT_DATA`)
-is untouched by `regenerate_dashboard.py` because it's genuinely
-unaffected by Regional/League/PA results specifically — not a gap, just
-out of that script's scope until something that actually changes those
-(an RDS round, a Regional Tournament matchday) comes in.
+`RDS_ROUND2`/`RDS_ROUND3`, `RT_DATA`) is untouched by
+`regenerate_dashboard.py` because it's genuinely unaffected by
+Regional/League/PA results specifically — not a gap, just out of that
+script's scope until something that actually changes those (an RDS round,
+a Regional Tournament matchday) comes in.
+
+**`PA_CUP_DATA` was a silent exception to that, found 2026-08-06.** It
+looked like the same kind of "out of scope" static data as
+`CUP_BRACKET_DATA` etc., but it isn't — it's the *output* of
+`pa_cup_ladder_rows()` + `resolve_pa_cup_conflicts()`, baked into the
+dashboard once by an early one-time script and never touched again. When
+the round-1 pairing formula bug was fixed (see PA Cup section above),
+`regenerate_dashboard.py` updated `PA_ROUND_PREVIEW` correctly (it's
+genuinely derived fresh from the engine every run) but never touched
+`PA_CUP_DATA` — so the tab's own primary "Round 1" section, and its
+conflict-resolution log, kept showing the pre-fix pairings even after the
+formula was corrected. Caught when asked directly whether conflict
+resolution had actually run against the corrected data — it had run, just
+against the wrong input, months earlier. Fixed two ways: (1)
+`_pa_round1_games()` now returns the swap log it already computed instead
+of discarding it, and (2) new `pa_cup_round1_seeding()` wraps it into
+`PA_CUP_DATA`'s exact shape (with `home_dex`/`away_dex` added), wired into
+`regenerate_dashboard.py` as a genuine per-run rebuild, not a static
+constant. Verified: `draw_round1[0]` now reads `160 vs 97` (matching the
+corrected formula) and the swap log is a different, freshly-computed list
+(rows 9/10/22) from the stale one (rows 12/16) it replaced. The lesson:
+"looks like static seed data" and "is actually static" are not the same
+thing — worth checking what a dashboard constant is *derived from* before
+assuming a formula fix upstream already reached it.
 
 ### Rank/Elo History tab
 
