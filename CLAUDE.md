@@ -548,16 +548,59 @@ since its own row identity is never reassigned in the first place.
 Reverified end-to-end after this fix too: 0 unresolved violations, 0
 duplicate matchups, all 160 seeds still map to exactly one team per
 bracket, boundary respected, and a full synthetic round 1-7 walk still
-produces the correct game count every round. **Open question, not yet
-extended to rounds 2-4**: the same "better/fresher seed's future path is
-protected, worse seed's isn't" principle plausibly generalizes to
-rounds 2-4's tier entrants too (the entrant is the "fresher" seed
-entering that round, analogous to round 1's row[1]) — but this hasn't
-been confirmed against real data or explicit instruction, so rounds 2-4
-still track the entrant's future via whichever row_idx it's currently
-placed in if it wins, matching the ALREADY-covered round-1 worse-seed
-behavior, not yet the round-1 better-seed protection. Revisit if/when
-rounds 2-4 conflicts become real and testable.
+produces the correct game count every round.
+
+**Entrant-protection generalized to rounds 2-4, fixed 2026-08-06, same
+day (again).** The "open question" above was resolved by explicit
+instruction: "In R1, 97-128 are protected. In R2, 65-96 are protected. In
+R3, 33-64 are protected. In R4, 1-32 are protected. From that point
+forward, the higher seed should always be protected in its pathway." So
+each round's own **tier entrant** (the fresh seed entering that round —
+65-96 for round 2, 33-64 for round 3, 1-32 for round 4) is now the
+permanent anchor, mirroring round 1's row[1]: it never leaves its own
+row's displayed game, and a swap only ever reassigns which OTHER row's
+historical **survivor** is currently sent to visit and play it
+(`_pa_swap_survivors`, replacing the old `_pa_swap_opponents`-based
+tier-entrant swapping, which had this backwards — it treated the
+survivor as fixed and the entrant as the swappable side).
+
+This is deliberately asymmetric with round 1, not just a copy-paste: round
+1's two seeds (row[0], row[1]) are both fresh, never-yet-played seeds, so
+either one can in principle be the swappable side. Rounds 2-4 are
+different — the "other" side isn't a fresh seed, it's a **survivor**, a
+real, already-decided result from a prior round. Letting the *entrant*
+be the swappable side (mirroring round 1's original, wrong model) opens a
+structural trap that round 1 doesn't have: if the entrant could leave its
+own row's game, a row could end up with **zero winners** — its own
+survivor loses to a visiting entrant, while its own (now-relocated)
+entrant separately loses a different game elsewhere — stranding that row
+with nobody to carry its future into the next round. Keeping the entrant
+permanently anchored to its own row's game avoids this by construction:
+every row always produces exactly one winner each round, no exceptions.
+Confirmed via a synthetic round-2 scenario (forced same-region conflict,
+entrant vs its assigned visitor): the visiting survivor, once swapped in
+to face a different row's entrant and winning, correctly inherits *that
+row's* own round-3 tier-B entrant going forward — not the row it
+originated from.
+
+**Separate, previously-undocumented bug found and fixed the same day:
+round 4 → round 5 handoff used entrants, not winners.** While wiring up
+the rounds 2-4 rewrite, `_pa_round_games()`'s rounds 5-7 branch was found
+calling `_pa_ladder_walk(conn, 4, ...)` and treating its returned
+survivors as "round 4's winners" — but `_pa_ladder_walk(conn, 4, ...)`
+actually returns who's alive **entering** round 4 (i.e. about to play
+round 4), not who won it. This is a real semantic mismatch that
+game-count-only tests never caught, since it doesn't change *how many*
+teams reach round 5, only *which* teams. Fixed by adding a
+`resolve_final_round=True` parameter to `_pa_ladder_walk`: when set, it
+additionally advances `draw_survivors`/`process_survivors` through
+`up_to_round`'s own real results (requiring `up_to_round` itself, not
+just `up_to_round - 1`, to be complete), returning who's alive heading
+into `up_to_round + 1`. `_pa_round_games()`'s rounds 5-7 branch now calls
+`_pa_ladder_walk(conn, 4, team_region, team_division,
+resolve_final_round=True)` instead. Verified synthetically: all 32
+round-4 survivors obtained this way actually appear in round 5's field,
+32/32.
 
 ## Regional Tournament (postseason)
 
