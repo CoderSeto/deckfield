@@ -1116,3 +1116,23 @@ escapes in string replacements, which corrupts anything containing `\t`/`\n`.
   `<select>` elements land on the correct `<option>` (not just a
   matching string) for both a plain batch (PA Draw R1) and all three
   RDS batches (Ribbon/Dream/Star Draw R1).
+
+  **Combined listing added 2026-08-07**, per explicit instruction: the
+  three-batch split above is real and necessary (DECKFIELD's paste format
+  genuinely can't take more than one Cup Name per batch), but it means an
+  RDS matchday never showed on the dashboard as the single event it
+  actually is — a human glancing at the Next Matchday tab saw three
+  separate tables and had to mentally merge them to see the real play
+  order. Fixed by having `regenerate_dashboard.py`'s `build_next_matchday()`
+  merge all batches' already-computed `games` lists (each tagged with its
+  cup, taken from the batch's own label) and re-sort by the same
+  worst-ranked-team-first key `export_matchday_batches()` already sorts
+  each batch by — no engine changes needed, this is pure
+  `regenerate_dashboard.py`/dashboard-JS wiring, reusing data that already
+  existed. Rendered as a new "All Cups Combined" table above the per-cup
+  batch panels (only when there's more than one batch — every other event
+  kind stays exactly as before). Verified: 24 games for a Ribbon+Dream+Star
+  Draw R3 matchday, correctly interleaved by rank across all three cups
+  (e.g. Ribbon/Star/Ribbon/Dream/Ribbon/Dream/Dream/Dream/Ribbon/Star/...
+  in the first ten rows, not grouped by cup), each row tagged with which
+  cup it belongs to.
