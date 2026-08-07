@@ -1434,7 +1434,7 @@ def _pa_swap_opponents(rows, opponent_of, seed_to_team, violates_fn, pool_lo, po
     return log
 
 
-def _pa_swap_survivors(rows, visiting_of, entrant_seed_of, survivor_team_of, violates_fn, tier_lo, tier_hi):
+def _pa_swap_survivors(rows, visiting_of, entrant_seed_of, survivor_team_of, survivor_seed_of, violates_fn, tier_lo, tier_hi):
     """
     Swap-search engine for PA Cup rounds 2-4, where the entrant (not the
     survivor) is the permanently protected side -- per explicit
@@ -1461,9 +1461,18 @@ def _pa_swap_survivors(rows, visiting_of, entrant_seed_of, survivor_team_of, vio
     row's own entrant. Defaults to row_idx itself (own survivor faces own
     entrant); this is the only thing a swap ever changes.
     entrant_seed_of: {row_idx: seed} -- each row's own fixed entrant
-    seed, used only to determine same-half swap eligibility.
+    seed, used only to determine same-half swap eligibility. Never
+    logged as swapped -- it's the protected side and never moves.
     survivor_team_of: {row_idx: team} -- each row_idx's own historical
     survivor (a real, already-determined prior-round result).
+    survivor_seed_of: {row_idx: seed} -- each row_idx's own historical
+    survivor's ORIGINAL seed (the one that got them into the tournament,
+    never their entrant seed) -- used only for the log message, since
+    survivor_seed_of[visiting_of[row_idx]] before/after a swap is what
+    actually changed, not entrant_seed_of. Logging entrant_seed_of here
+    was a real bug: it made the log read as if the protected entrant
+    seeds had been swapped with each other, when the entrant never
+    leaves its own row -- only which survivor visits it does.
     Swap candidates are restricted to OTHER row_idxs whose own entrant
     seed falls in the same half of [tier_lo, tier_hi]. Returns a log (row
     is 1-indexed).
@@ -1496,9 +1505,11 @@ def _pa_swap_survivors(rows, visiting_of, entrant_seed_of, survivor_team_of, vio
             if violates_fn(candidate_entrant_team, visiting_team) is not None:
                 continue
 
+            my_survivor_seed = survivor_seed_of[visiting_of[row_idx]]
+            candidate_survivor_seed = survivor_seed_of[visiting_of[candidate_row_idx]]
             visiting_of[row_idx], visiting_of[candidate_row_idx] = \
                 visiting_of[candidate_row_idx], visiting_of[row_idx]
-            log.append({'row': row_idx + 1, 'swapped_seed': my_seed, 'with_seed': candidate_seed, 'reason': reason})
+            log.append({'row': row_idx + 1, 'swapped_seed': my_survivor_seed, 'with_seed': candidate_survivor_seed, 'reason': reason})
             swapped = True
             break
 
@@ -1918,13 +1929,15 @@ def _pa_ladder_walk(conn, up_to_round, team_region, team_division, resolve_final
         process_visiting_of = {i: i for i in range(32)}
         draw_survivor_team_of = {i: team for i, (team, _seed) in enumerate(draw_survivors)}
         process_survivor_team_of = {i: team for i, (team, _seed) in enumerate(process_survivors)}
+        draw_survivor_seed_of = {i: seed for i, (_team, seed) in enumerate(draw_survivors)}
+        process_survivor_seed_of = {i: seed for i, (_team, seed) in enumerate(process_survivors)}
 
         draw_rows = [(i, draw_entrant_team_of[i]) for i in range(32)]
         process_rows = [(i, process_entrant_team_of[i]) for i in range(32)]
 
         # 1. Draw's own conflicts: this row's entrant vs whoever's currently visiting.
         draw_log = _pa_swap_survivors(draw_rows, draw_visiting_of, draw_entrant_seed_of, draw_survivor_team_of,
-                                       region_division_violation, tier_lo, tier_hi)
+                                       draw_survivor_seed_of, region_division_violation, tier_lo, tier_hi)
 
         # Draw's full pairing history through this round (real games from
         # earlier rounds + this round's now-resolved pairing), for the
@@ -1948,11 +1961,11 @@ def _pa_ladder_walk(conn, up_to_round, team_region, team_division, resolve_final
 
         # 2. Process pairings that repeat a Draw pairing.
         dup_log = _pa_swap_survivors(process_rows, process_visiting_of, process_entrant_seed_of, process_survivor_team_of,
-                                      duplicate_violation, tier_lo, tier_hi)
+                                      process_survivor_seed_of, duplicate_violation, tier_lo, tier_hi)
 
         # 3. Process's own conflicts.
         region_log = _pa_swap_survivors(process_rows, process_visiting_of, process_entrant_seed_of, process_survivor_team_of,
-                                         region_division_violation, tier_lo, tier_hi)
+                                         process_survivor_seed_of, region_division_violation, tier_lo, tier_hi)
 
         swap_log.extend(
             [dict(bracket='Draw', round=rnd, **e) for e in draw_log]
