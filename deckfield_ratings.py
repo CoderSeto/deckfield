@@ -668,7 +668,6 @@ def compute_round_ratings(season, round_num):
         pf = sum(g["pf"] for g in games)
         pa = sum(g["pa"] for g in games)
         games_played = len(games)
-        pd = pf - pa
         avg_pf = pf / games_played if games_played else 0.0
         avg_pa = pa / games_played if games_played else 0.0
         avg_pd = avg_pf - avg_pa
@@ -700,7 +699,7 @@ def compute_round_ratings(season, round_num):
         raw[tid] = {
             "games": games, "buckets": buckets, "rw": rw, "lw": lw,
             "pf": pf, "pa": pa, "avg_pf": avg_pf, "avg_pa": avg_pa, "avg_pd": avg_pd,
-            "games_played": games_played, "pd": pd, "avg_raw_goal_score": avg_raw_goal_score,
+            "games_played": games_played, "avg_raw_goal_score": avg_raw_goal_score,
             "vic_avg": vic_avg, "d_sqrt": d_sqrt, "avg_gi": avg_gi, "elo": elo,
             "str_mod": str_mod, "ex": team_seasons[tid]["ex"], "rlstr": rlstr,
         }
@@ -708,8 +707,6 @@ def compute_round_ratings(season, round_num):
     # ---- league-wide passes ----
     avg_pf_vals = [v["avg_pf"] for v in raw.values()]
     avg_pa_vals = [v["avg_pa"] for v in raw.values()]
-    pd_vals = [v["pd"] for v in raw.values()]
-    min_pd = min(pd_vals)
     avg_pd_vals = [v["avg_pd"] for v in raw.values()]
     min_avg_pd = min(avg_pd_vals)
 
@@ -726,10 +723,14 @@ def compute_round_ratings(season, round_num):
     ex_vals = [v["ex"] for v in raw.values()]
     tot_vals = [v["buckets"]["tot"] for v in raw.values()]
 
-    # EYE's X depends on min_league(pd) too; recompute properly now that we have it
+    # EYE's X uses avg_pd (per-game average PD), not raw season-total PD --
+    # per explicit correction, matching how PF_norm/PA_norm/PDG/SOV already
+    # treat PD-flavored quantities as per-game averages. Raw PD would give a
+    # team that's played more real games (vs. a cup bye) a mechanically
+    # larger PD at identical per-game performance, skewing X/Y/AD/Z/EYE.
     ad_vals_pre = {}
     for tid, v in raw.items():
-        x = (v["pd"] - min_pd) * (v["avg_gi"] / 100)
+        x = (v["avg_pd"] - min_avg_pd) * (v["avg_gi"] / 100)
         y = sqrt(max(x, 0) / 100) * 100
         ad = ((x + y) / 2) * v["rlstr"]
         ad_vals_pre[tid] = (x, y, ad)

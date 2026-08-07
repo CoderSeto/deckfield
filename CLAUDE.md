@@ -211,6 +211,35 @@ deliberately — not modeled yet, see "Known open items."
   fix above, not a bug fix chasing the original spreadsheet's byte-exact
   output — the multiplier form's 160/160 historical match no longer holds
   by design.
+- **EYE's `X` term uses `avg_pd`, not raw season-total `PD`, fixed
+  2026-08-07, same day, per explicit correction.** Found during a cursory
+  correctness pass prompted by the two fixes above: the spec's EYE formula
+  explicitly labels its `PD` term "raw, season total" (unlike PF_norm,
+  PA_norm, PDG, and SOV's `vic_avg`, which all already use per-game
+  averages — `avg_pf`/`avg_pa`/`avg_pd` — for their PD-flavored inputs),
+  and the engine matched that literally: `x = (v["pd"] - min_pd) *
+  (v["avg_gi"] / 100)`. That's an inconsistency worth taking seriously:
+  raw `PD` grows with games played, so a team that's played more real
+  games (vs. one that's had a cup bye) gets a mechanically larger `PD` at
+  *identical* per-game performance, inflating `X` → `Y` → `AD` → `Z` →
+  `EYE` for no real reason. Confirmed this isn't a hypothetical — at round
+  14, `games_played` genuinely ranges 10–14 across the 160 teams (cup
+  byes: Dream/Star's 16 bye seeds in each of RDS Draw/Process rounds 1-2),
+  so this was a real, live skew, not a no-op. Corrected `x = (v["avg_pd"] -
+  min_avg_pd) * (v["avg_gi"] / 100)`, reusing the same `avg_pd`/
+  `min_avg_pd` PDG already computes — the now-unused raw `pd`/`pd_vals`/
+  `min_pd` were removed entirely (nothing else referenced them). `Y`,
+  `AD`, `Z`, and `EYE` all derive from `X`, so they inherit the fix
+  automatically; `avg_GI` and `RLStr` don't need any change (`avg_GI` is
+  already a per-game average by definition, `RLStr` isn't a per-team
+  accumulation at all). Recomputed all of season 9. Zapapico at round 14
+  (a mid-pack team used as the running example): EYE 44.67 → 51.76,
+  `games_played` 12 (right in the middle of the 10-14 range, so a
+  representative, not extreme, case). Round-14 EYE range is 0–100 (avg
+  49.2, both ends still reachable), OVR range 9.78–105.76 (avg 55.1) —
+  barely moved from the Block A/LW fixes' 9.77–105.72, since EYE is only
+  one of several Block D inputs and the skew only bites for teams whose
+  games_played differs from the round's mode.
 - **OVR's EX taper** (`taper_n`, `N/14` in Block E and the overall
   denominator) — changed from an original `N/12` scheme. Full weight (14)
   through week 6, decreasing 1/week starting week 7, reaching 1 at week 19,
