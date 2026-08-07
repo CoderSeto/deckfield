@@ -144,7 +144,15 @@ def build_next_matchday():
     info, batches = export_matchday_batches(SEASON)
     if info is None:
         return None
-    event_label = batches[0]["label"] if len(batches) == 1 else "RDS/PA combined"
+    # A multi-batch matchday is always RDS Cup (Ribbon/Dream/Star at once --
+    # PA Cup is always a single batch), so label it the same way a
+    # single-cup batch would be ("PA Draw R1"), not the generic
+    # "RDS/PA combined" that never actually involved PA.
+    if len(batches) == 1:
+        event_label = batches[0]["label"]
+    else:
+        _, bracket, cup_round = info["event"]
+        event_label = f"RDS Cup {bracket} R{cup_round}" if cup_round is not None else f"RDS Cup {bracket}"
 
     # RDS Cup matchdays split into three per-cup batches below because
     # DECKFIELD's paste format can only carry one Cup Name per batch -- but

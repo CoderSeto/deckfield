@@ -1135,4 +1135,10 @@ escapes in string replacements, which corrupts anything containing `\t`/`\n`.
   Draw R3 matchday, correctly interleaved by rank across all three cups
   (e.g. Ribbon/Star/Ribbon/Dream/Ribbon/Dream/Dream/Dream/Ribbon/Star/...
   in the first ten rows, not grouped by cup), each row tagged with which
-  cup it belongs to.
+  cup it belongs to. The header label was also cleaned up the same day,
+  per explicit instruction: `event_label` used to hardcode `"RDS/PA
+  combined"` for any multi-batch matchday, but a multi-batch matchday is
+  always RDS Cup (PA Cup is always exactly one batch, so PA was never
+  actually involved) — now derived from `info["event"]`'s bracket/round the
+  same way a single-cup batch already labels itself (`"PA Draw R1"`-style),
+  giving `"RDS Cup Draw R3"` instead.
