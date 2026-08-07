@@ -68,8 +68,8 @@
     text-align:center;
   }
   .team-score-header .label{
-    font-family:'Anton',sans-serif;font-size:22px;letter-spacing:0.5px;
-    color:var(--chalk);text-transform:uppercase;line-height:1.1;overflow-wrap:break-word;
+    font-family:'Inter',sans-serif;font-weight:700;font-size:20px;letter-spacing:0.2px;
+    color:var(--chalk);text-transform:uppercase;line-height:1.2;overflow-wrap:break-word;
   }
   .team-score-header .team-rank{
     font-size:20px;color:var(--chalk-dim);letter-spacing:0.5px;
@@ -240,6 +240,10 @@
   #resetBtn:hover{color:var(--chalk);border-color:var(--chalk-dim);}
   #nextMatchBtn{background:transparent;color:var(--gold);border:1px solid var(--gold);}
   #nextMatchBtn:hover:not(:disabled){background:rgba(233,196,106,0.1);}
+  #autoPlayWeekBtn{background:var(--gold);color:var(--ink);}
+  #autoPlayWeekBtn:hover:not(:disabled){filter:brightness(1.08);}
+  #autoPlayWeekBtn.running{background:var(--turf-lighter);color:var(--chalk);border:1px solid var(--gold);}
+  .week-run-status{font-size:11px;color:var(--chalk-dim);margin-top:2px;font-family:'JetBrains Mono',monospace;text-align:center;min-height:14px;}
 
   .result-banner{
     display:none;text-align:center;font-family:'Anton',sans-serif;letter-spacing:1px;
@@ -610,6 +614,8 @@
         <button id="autoBtn">Auto-Play</button>
         <button id="resetBtn">Reset Match</button>
         <button id="nextMatchBtn">Load Next Match →</button>
+        <button id="autoPlayWeekBtn">Auto-Play Week</button>
+        <div class="week-run-status" id="weekRunStatus"></div>
       </div>
       <div class="roster-status" id="nextMatchStatus"></div>
       <div class="result-banner" id="resultBanner"></div>
@@ -2094,6 +2100,174 @@
     renderCard(cardClockEl, null, 'Clock');
     renderAll();
   });
+
+  // ---- Auto-Play Week ----
+  // Walks the currently-loaded SCHEDULE from nextMatchIndex to the end, one
+  // matchup at a time. Every game is fully simulated exactly once, silently and
+  // instantly (simulateFullyWithHistory) -- the engine isn't seeded, so a second
+  // run of the "same" game would draw different cards and could disagree with
+  // whatever gets shown/recorded. Whether that single, already-decided result
+  // then gets flushed instantly ("sim") or replayed turn-by-turn at the normal
+  // Auto-Play pace ("play out") is decided AFTER the fact (decidePlayOut), from:
+  //   - both teams rank in the top 48
+  //   - the pre-game spread is under 3
+  //   - the favorite was favored by 8+ but wins by 4 or less (or loses)
+  //   - the game went to overtime
+  // "Playing out" therefore replays the exact turns the hidden simulation already
+  // decided (via structuredClone snapshots captured after every turn), not a
+  // second independently-random live simulation.
+  const autoPlayWeekBtn = document.getElementById('autoPlayWeekBtn');
+  const weekRunStatusEl = document.getElementById('weekRunStatus');
+  let weekRunActive = false;
+  let weekRunAbort = false;
+
+  function sleep(ms){
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function simulateFullyWithHistory(){
+    const history = [];
+    let guard = 0;
+    while (!game.gameOver && guard < 20000){
+      const result = game.processTurn();
+      guard++;
+      if (!result) break;
+      history.push({result, snap: structuredClone(game)});
+    }
+    return history;
+  }
+
+  function decidePlayOut(){
+    const bothTop48 = RANK_HOME <= 48 && RANK_AWAY <= 48;
+    const closeSpread = Math.abs(SPREAD_VALUE) < 3;
+    const favoriteMargin = (SPREAD_TEAM === 'home')
+      ? (game.score.home - game.score.away)
+      : (game.score.away - game.score.home);
+    const bigFavoriteFizzle = Math.abs(SPREAD_VALUE) >= 8 && favoriteMargin <= 4;
+    const wentToOT = game.periodIndex >= 3;
+    return bothTop48 || closeSpread || bigFavoriteFizzle || wentToOT;
+  }
+
+  // Flushes an already-decided game (from simulateFullyWithHistory) to the
+  // screen all at once -- the same behavior as the manual "Sim Game" button.
+  function flushFinalStateInstantly(history){
+    const last = history[history.length - 1];
+    logBody.innerHTML = '';
+    for (const entry of game.log) appendLog(entry);
+    if (last){
+      renderCard(cardMoveEl, last.result.c1, 'Move');
+      renderCard(cardClockEl, last.result.c2, 'Clock');
+    }
+    renderAll();
+  }
+
+  // Replays an already-decided game's history turn-by-turn at the same pace as
+  // manual Auto-Play, by restoring each turn's snapshot onto the live `game`
+  // object and reusing the exact same render pipeline as a live game. Each
+  // snapshot's own gameOver flag is already correct for that point in time
+  // (false until the real final turn), so the result banner, the DMAX/GI/Elo/EX
+  // panels, and recordResultIfNeeded() all naturally only fire on the last step
+  // -- no special-casing needed. Always runs to completion (not abortable
+  // mid-replay) so a game that starts revealing always finishes and gets
+  // recorded; Auto-Play Week's Stop only takes effect between games.
+  function replayHistory(history){
+    return new Promise(resolve => {
+      logBody.innerHTML = '';
+      renderCard(cardMoveEl, null, 'Move');
+      renderCard(cardClockEl, null, 'Clock');
+      let i = 0;
+      let prevLogLen = 0;
+      function step(){
+        const entry = history[i];
+        Object.assign(game, entry.snap);
+        renderCard(cardMoveEl, entry.result.c1, 'Move');
+        renderCard(cardClockEl, entry.result.c2, 'Clock');
+        for (let j = prevLogLen; j < game.log.length; j++) appendLog(game.log[j]);
+        prevLogLen = game.log.length;
+        renderAll();
+        i++;
+        if (i < history.length){
+          setTimeout(step, 550);
+        } else {
+          resolve();
+        }
+      }
+      step();
+    });
+  }
+
+  function toggleWeekRunControls(disabled){
+    dealBtn.disabled = disabled;
+    document.getElementById('simGameBtn').disabled = disabled;
+    autoBtn.disabled = disabled;
+    resetBtn.disabled = disabled;
+    document.getElementById('nextMatchBtn').disabled = disabled;
+    document.getElementById('loadMatchBtn').disabled = disabled;
+    document.querySelectorAll('.load-match-row-btn').forEach(b => { b.disabled = disabled; });
+  }
+
+  async function autoPlayWeek(){
+    if (weekRunActive){
+      weekRunAbort = true;
+      weekRunStatusEl.textContent = 'Stopping after the current matchup...';
+      return;
+    }
+    if (SCHEDULE.length === 0 || nextMatchIndex >= SCHEDULE.length){
+      weekRunStatusEl.textContent = 'No remaining matchups in the current schedule to auto-play.';
+      return;
+    }
+
+    weekRunActive = true;
+    weekRunAbort = false;
+    stopAuto();
+    autoPlayWeekBtn.textContent = 'Stop Auto-Play Week';
+    autoPlayWeekBtn.classList.add('running');
+    toggleWeekRunControls(true);
+
+    let simmed = 0, playedOut = 0;
+    while (nextMatchIndex < SCHEDULE.length && !weekRunAbort){
+      const idx = nextMatchIndex;
+      loadScheduledMatch(idx);
+      if (nextMatchIndex === idx){
+        // loadScheduledMatch couldn't find one of the teams in the roster and
+        // bailed out without advancing -- stop rather than loop forever.
+        weekRunStatusEl.textContent = `Stopped at matchup #${idx + 1} — couldn't load it (see status above).`;
+        break;
+      }
+
+      weekRunStatusEl.textContent = `Auto-Play Week: resolving matchup #${idx + 1} of ${SCHEDULE.length}...`;
+      const history = simulateFullyWithHistory();
+      if (!history.length || !game.gameOver){
+        weekRunStatusEl.textContent = `Stopped at matchup #${idx + 1} — simulation didn't finish cleanly.`;
+        break;
+      }
+
+      if (decidePlayOut()){
+        playedOut++;
+        weekRunStatusEl.textContent = `Auto-Play Week: playing out matchup #${idx + 1} of ${SCHEDULE.length}...`;
+        await replayHistory(history);
+        if (weekRunAbort) break;
+        await sleep(5000);
+      } else {
+        simmed++;
+        flushFinalStateInstantly(history);
+        if (weekRunAbort) break;
+        await sleep(3000);
+      }
+    }
+
+    weekRunActive = false;
+    autoPlayWeekBtn.textContent = 'Auto-Play Week';
+    autoPlayWeekBtn.classList.remove('running');
+    toggleWeekRunControls(false);
+    if (weekRunAbort){
+      weekRunStatusEl.textContent = `Auto-Play Week stopped — ${simmed} simulated, ${playedOut} played out.`;
+    } else if (nextMatchIndex >= SCHEDULE.length){
+      weekRunStatusEl.textContent = `Auto-Play Week complete — ${simmed} simulated, ${playedOut} played out.`;
+    }
+  }
+
+  autoPlayWeekBtn.addEventListener('click', autoPlayWeek);
 
   document.querySelectorAll('.panel-header').forEach(header => {
     header.addEventListener('click', () => {
