@@ -2106,16 +2106,20 @@
   // matchup at a time. Every game is fully simulated exactly once, silently and
   // instantly (simulateFullyWithHistory) -- the engine isn't seeded, so a second
   // run of the "same" game would draw different cards and could disagree with
-  // whatever gets shown/recorded. Whether that single, already-decided result
-  // then gets flushed instantly ("sim") or replayed turn-by-turn at the normal
-  // Auto-Play pace ("play out") is decided AFTER the fact (decidePlayOut), from:
-  //   - both teams rank in the top 48
-  //   - the pre-game spread is under 3
-  //   - the favorite was favored by 8+ but wins by 4 or less (or loses)
-  //   - the game went to overtime
-  // "Playing out" therefore replays the exact turns the hidden simulation already
-  // decided (via structuredClone snapshots captured after every turn), not a
-  // second independently-random live simulation.
+  // whatever gets shown/recorded. What happens with that single, already-decided
+  // result is then decided AFTER the fact (decideAutoPlayTier), in three tiers:
+  //   1. Full play-out (from kickoff) if either team is top 32, or either team
+  //      is shut out (scores 0).
+  //   2. Second-half play-out (first half flushed instantly, then replayed
+  //      turn-by-turn from the second-half kickoff onward) if not tier 1, and:
+  //      both teams top 48; a top-48 team loses; it goes to overtime; the
+  //      pre-game spread is under 2; or the favorite was favored by more than
+  //      8 but wins by less than 5 (or loses).
+  //   3. Otherwise, simulate -- flush the final result instantly, no replay.
+  // "Playing out" (fully or from the second half) replays the exact turns the
+  // hidden simulation already decided (via structuredClone snapshots captured
+  // after every turn, restored with Object.assign), not a second,
+  // independently-random live simulation.
   const autoPlayWeekBtn = document.getElementById('autoPlayWeekBtn');
   const weekRunStatusEl = document.getElementById('weekRunStatus');
   let weekRunActive = false;
@@ -2137,46 +2141,77 @@
     return history;
   }
 
-  function decidePlayOut(){
+  // 'full' | 'second-half' | 'sim' -- see the Auto-Play Week comment above for
+  // the exact conditions. Reads the already-decided final game state (score,
+  // periodIndex) plus the pre-game RANK_HOME/AWAY and SPREAD_TEAM/VALUE.
+  function decideAutoPlayTier(){
+    const bothTop32 = RANK_HOME <= 32 && RANK_AWAY <= 32;
+    const shutout = game.score.home === 0 || game.score.away === 0;
+    if (bothTop32 || shutout) return 'full';
+
     const bothTop48 = RANK_HOME <= 48 && RANK_AWAY <= 48;
-    const closeSpread = Math.abs(SPREAD_VALUE) < 3;
+    const top48TeamLoses = (RANK_HOME <= 48 && game.score.home < game.score.away)
+      || (RANK_AWAY <= 48 && game.score.away < game.score.home);
+    const wentToOT = game.periodIndex >= 3;
+    const closeSpread = Math.abs(SPREAD_VALUE) < 2;
     const favoriteMargin = (SPREAD_TEAM === 'home')
       ? (game.score.home - game.score.away)
       : (game.score.away - game.score.home);
-    const bigFavoriteFizzle = Math.abs(SPREAD_VALUE) >= 8 && favoriteMargin <= 4;
-    const wentToOT = game.periodIndex >= 3;
-    return bothTop48 || closeSpread || bigFavoriteFizzle || wentToOT;
+    const bigFavoriteFizzle = Math.abs(SPREAD_VALUE) > 8 && favoriteMargin < 5;
+    if (bothTop48 || top48TeamLoses || wentToOT || closeSpread || bigFavoriteFizzle) return 'second-half';
+
+    return 'sim';
   }
 
-  // Flushes an already-decided game (from simulateFullyWithHistory) to the
-  // screen all at once -- the same behavior as the manual "Sim Game" button.
-  function flushFinalStateInstantly(history){
-    const last = history[history.length - 1];
+  // The first history index at which the second half has begun (periodIndex
+  // reaches 2) -- endPeriod() flips periodIndex and resets the ball/clock/deck
+  // for the new period synchronously within the same processTurn() call that
+  // ended period 1, so this index's snapshot already reflects kickoff-pending
+  // state for the second half. Falls back to 0 (defensive; regulation always
+  // reaches period 2 in practice) if somehow not found.
+  function findSecondHalfStartIndex(history){
+    const idx = history.findIndex(h => h.snap.periodIndex >= 2);
+    return idx === -1 ? 0 : idx;
+  }
+
+  // Instantly (no pacing) restores game state to history[uptoIndex] and
+  // flushes the log/cards/scoreboard to match -- used both for the final "sim"
+  // flush (uptoIndex = last) and to jump straight to second-half kickoff
+  // before an animated replay begins.
+  function flushHistoryTo(history, uptoIndex){
+    const entry = history[uptoIndex];
+    Object.assign(game, entry.snap);
     logBody.innerHTML = '';
-    for (const entry of game.log) appendLog(entry);
-    if (last){
-      renderCard(cardMoveEl, last.result.c1, 'Move');
-      renderCard(cardClockEl, last.result.c2, 'Clock');
-    }
+    for (const logEntry of game.log) appendLog(logEntry);
+    renderCard(cardMoveEl, entry.result.c1, 'Move');
+    renderCard(cardClockEl, entry.result.c2, 'Clock');
     renderAll();
   }
 
   // Replays an already-decided game's history turn-by-turn at the same pace as
-  // manual Auto-Play, by restoring each turn's snapshot onto the live `game`
-  // object and reusing the exact same render pipeline as a live game. Each
-  // snapshot's own gameOver flag is already correct for that point in time
-  // (false until the real final turn), so the result banner, the DMAX/GI/Elo/EX
-  // panels, and recordResultIfNeeded() all naturally only fire on the last step
-  // -- no special-casing needed. Always runs to completion (not abortable
+  // manual Auto-Play, starting at startIndex (0 for a full play-out, or a
+  // second-half start index) -- by restoring each turn's snapshot onto the
+  // live `game` object and reusing the exact same render pipeline as a live
+  // game. If startIndex > 0, everything through startIndex-1 is flushed
+  // instantly first (flushHistoryTo) so the display jumps straight to
+  // halftime instead of replaying the whole first half. Each snapshot's own
+  // gameOver flag is already correct for that point in time (false until the
+  // real final turn), so the result banner, the DMAX/GI/Elo/EX panels, and
+  // recordResultIfNeeded() all naturally only fire on the last step -- no
+  // special-casing needed. Always runs to completion (not abortable
   // mid-replay) so a game that starts revealing always finishes and gets
   // recorded; Auto-Play Week's Stop only takes effect between games.
-  function replayHistory(history){
+  function replayHistory(history, startIndex){
     return new Promise(resolve => {
-      logBody.innerHTML = '';
-      renderCard(cardMoveEl, null, 'Move');
-      renderCard(cardClockEl, null, 'Clock');
-      let i = 0;
-      let prevLogLen = 0;
+      if (startIndex > 0){
+        flushHistoryTo(history, startIndex - 1);
+      } else {
+        logBody.innerHTML = '';
+        renderCard(cardMoveEl, null, 'Move');
+        renderCard(cardClockEl, null, 'Clock');
+      }
+      let i = startIndex;
+      let prevLogLen = (startIndex > 0) ? history[startIndex - 1].snap.log.length : 0;
       function step(){
         const entry = history[i];
         Object.assign(game, entry.snap);
@@ -2212,6 +2247,17 @@
       weekRunStatusEl.textContent = 'Stopping after the current matchup...';
       return;
     }
+
+    // If a match is currently loaded but hasn't been played yet, pick it up
+    // as the first game instead of skipping straight to nextMatchIndex --
+    // loading a match (manually, or via any "Load ->" button) always
+    // advances nextMatchIndex past it immediately, regardless of whether it's
+    // actually been played, so nextMatchIndex alone isn't a reliable
+    // "where to start" pointer.
+    if (!game.gameOver && currentMatchIndex !== null && currentMatchIndex < SCHEDULE.length){
+      nextMatchIndex = currentMatchIndex;
+    }
+
     if (SCHEDULE.length === 0 || nextMatchIndex >= SCHEDULE.length){
       weekRunStatusEl.textContent = 'No remaining matchups in the current schedule to auto-play.';
       return;
@@ -2224,7 +2270,7 @@
     autoPlayWeekBtn.classList.add('running');
     toggleWeekRunControls(true);
 
-    let simmed = 0, playedOut = 0;
+    let fullPlayedOut = 0, halfPlayedOut = 0, simmed = 0;
     while (nextMatchIndex < SCHEDULE.length && !weekRunAbort){
       const idx = nextMatchIndex;
       loadScheduledMatch(idx);
@@ -2242,15 +2288,22 @@
         break;
       }
 
-      if (decidePlayOut()){
-        playedOut++;
+      const tier = decideAutoPlayTier();
+      if (tier === 'full'){
+        fullPlayedOut++;
         weekRunStatusEl.textContent = `Auto-Play Week: playing out matchup #${idx + 1} of ${SCHEDULE.length}...`;
-        await replayHistory(history);
+        await replayHistory(history, 0);
+        if (weekRunAbort) break;
+        await sleep(5000);
+      } else if (tier === 'second-half'){
+        halfPlayedOut++;
+        weekRunStatusEl.textContent = `Auto-Play Week: playing out 2nd half of matchup #${idx + 1} of ${SCHEDULE.length}...`;
+        await replayHistory(history, findSecondHalfStartIndex(history));
         if (weekRunAbort) break;
         await sleep(5000);
       } else {
         simmed++;
-        flushFinalStateInstantly(history);
+        flushHistoryTo(history, history.length - 1);
         if (weekRunAbort) break;
         await sleep(3000);
       }
@@ -2260,10 +2313,11 @@
     autoPlayWeekBtn.textContent = 'Auto-Play Week';
     autoPlayWeekBtn.classList.remove('running');
     toggleWeekRunControls(false);
+    const summary = `${fullPlayedOut} played out, ${halfPlayedOut} 2nd-half only, ${simmed} simulated.`;
     if (weekRunAbort){
-      weekRunStatusEl.textContent = `Auto-Play Week stopped — ${simmed} simulated, ${playedOut} played out.`;
+      weekRunStatusEl.textContent = `Auto-Play Week stopped — ${summary}`;
     } else if (nextMatchIndex >= SCHEDULE.length){
-      weekRunStatusEl.textContent = `Auto-Play Week complete — ${simmed} simulated, ${playedOut} played out.`;
+      weekRunStatusEl.textContent = `Auto-Play Week complete — ${summary}`;
     }
   }
 
@@ -2457,6 +2511,7 @@
   const SCHEDULE_COLUMNS = ['Away Team Rank', 'Home Team Rank', 'Adv'];
   let SCHEDULE = [];
   let nextMatchIndex = 0; // which SCHEDULE entry "Load Next Match" will load
+  let currentMatchIndex = null; // which SCHEDULE entry is currently loaded into `game`
 
   function findTeamByRank(rank){
     const num = parseInt(rank, 10);
@@ -2808,6 +2863,7 @@
     renderCard(cardClockEl, null, 'Clock');
     renderAll();
 
+    currentMatchIndex = matchIndex;
     nextMatchIndex = matchIndex + 1;
 
     let msg = `Loaded match #${matchIndex + 1}: ${awayLabel} (rank ${RANK_AWAY}) @ ${homeLabel} (rank ${RANK_HOME}) — `

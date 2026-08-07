@@ -1755,6 +1755,43 @@ def _real_bracket_winner(conn, cup_name, bracket, cup_round, team_a, team_b):
     return row["a_name"] if won_by_a else row["b_name"]
 
 
+def _rds_real_winner_with_fallback(conn, cup, bracket, cup_round, team_a, team_b):
+    """Like _real_bracket_winner, but falls back to whichever real game
+    EITHER team_a or team_b actually played that round if the exact
+    predicted pairing isn't found. The bracket formula derives team_a/
+    team_b from real, already-confirmed prior-round winners -- those two
+    teams' identities are trustworthy -- but who the formula predicts
+    they play NEXT isn't always who they actually played, per a known,
+    already-documented historical sheet error (Hau'oli City: recorded as
+    losing round 1, but recorded playing round 2 anyway -- "accepted as a
+    known sheet error, not modeled around" when rounds 1-2 were first
+    validated, since round 3+ was never generated at the time). Once
+    round 3+ generation was attempted for real, this surfaced as a hard
+    block: Dream Draw round 2's Exeggutor Island slot predicted "vs
+    Mistralton City" (never played), when the real recorded game was
+    "vs Hau'oli City" (Exeggutor Island won outright). Falling back to
+    the real game either predicted participant actually played resolves
+    this without guessing who "should" have played -- it just uses
+    whatever real result exists. Deliberately NOT applied to
+    _real_bracket_winner itself, which PA Cup's conflict-resolution
+    system also calls -- that system already generates and looks up
+    exact real pairings by construction, so a fallback there would only
+    ever mask a genuine bug rather than a historical data quirk."""
+    w = _real_bracket_winner(conn, cup, bracket, cup_round, team_a, team_b)
+    if w is not None:
+        return w
+    row = conn.execute("""
+        SELECT g.result_a, ta.name a_name, tb.name b_name FROM games g
+        JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
+        WHERE g.cup_name=? AND g.cup_bracket=? AND g.cup_round=?
+        AND (ta.name=? OR tb.name=? OR ta.name=? OR tb.name=?)
+    """, (cup, bracket, cup_round, team_a, team_a, team_b, team_b)).fetchone()
+    if row is None:
+        return None
+    won_by_a = row["result_a"] in (2, 3)
+    return row["a_name"] if won_by_a else row["b_name"]
+
+
 def _rds_round_games(conn, cup, bracket, target_round):
     """[(home,away)] (team names) for a given RDS Cup round, resolved
     through real winners for every prior round. Returns None if a prior
@@ -1770,7 +1807,7 @@ def _rds_round_games(conn, cup, bracket, target_round):
         if e["bye"]:
             survivors.append(e["home"])
         else:
-            w = _real_bracket_winner(conn, cup, bracket, 1, e["home"], e["away"])
+            w = _rds_real_winner_with_fallback(conn, cup, bracket, 1, e["home"], e["away"])
             if w is None:
                 return None
             survivors.append(w)
@@ -1778,7 +1815,7 @@ def _rds_round_games(conn, cup, bracket, target_round):
     for rnd in range(2, target_round):
         next_survivors = []
         for i in range(0, len(survivors), 2):
-            w = _real_bracket_winner(conn, cup, bracket, rnd, survivors[i], survivors[i + 1])
+            w = _rds_real_winner_with_fallback(conn, cup, bracket, rnd, survivors[i], survivors[i + 1])
             if w is None:
                 return None
             next_survivors.append(w)
