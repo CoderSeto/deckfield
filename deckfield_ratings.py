@@ -1317,7 +1317,8 @@ def pa_cup_ladder_rows():
 
 def _pa_default_opponents(round_slot):
     """{row_idx: seed} -- each row's DEFAULT opponent seed for a given
-    round slot (1=round1's row[1], 2/3/4=round2/3/4's tier entrant),
+    round slot (0=round1's worse seed/row[0], the swappable side, since
+    row[1] is the permanent anchor; 2/3/4=round2/3/4's tier entrant),
     straight from pa_cup_ladder_rows(). Conflict resolution mutates a
     COPY of this, never pa_cup_ladder_rows() itself."""
     return {i: row[round_slot] for i, row in enumerate(pa_cup_ladder_rows())}
@@ -1329,10 +1330,12 @@ def pa_cup_round1_pairs(seed_to_team, opponent_of, home_is_lower_seed):
     is permanent for the whole tournament, never reassigned by conflict
     resolution.
     opponent_of: {row_idx(0-31): opponent_seed} -- each row's CURRENT
-    round-1 opponent (row[1] by default; resolve_pa_cup_conflicts can
+    round-1 opponent (row[0] by default; resolve_pa_cup_conflicts can
     reassign which opponent seed a row is paired against). The row's own
-    seed (row[0]) is never touched -- it's who's PAIRED that changes, not
-    who holds which seed.
+    BETTER seed (row[1], 97-128) is permanent and never touched -- it's
+    the anchor whose own future path (round 2-4 tier entrants) a swap can
+    never reassign; only which WORSE seed (129-160) it's paired against
+    for round 1 changes.
     home_is_lower_seed: True for Draw (better/lower seed hosts), False
     for Process (worse/higher seed hosts).
     Returns a list of 32 dicts, one per ladder row, each with the row's
@@ -1340,7 +1343,7 @@ def pa_cup_round1_pairs(seed_to_team, opponent_of, home_is_lower_seed):
     """
     games = []
     for row_idx, row in enumerate(pa_cup_ladder_rows()):
-        seed_a, seed_b = row[0], opponent_of[row_idx]
+        seed_a, seed_b = row[1], opponent_of[row_idx]
         if home_is_lower_seed:
             home_seed, away_seed = min(seed_a, seed_b), max(seed_a, seed_b)
         else:
@@ -1401,12 +1404,12 @@ def _pa_swap_opponents(rows, opponent_of, seed_to_team, violates_fn, pool_lo, po
             continue
 
         same_half = upper_half if opp_seed in upper_half else lower_half
-        # Try the next-better (numerically lower) opponent seed first, then
-        # the next after that, etc; only fall back to worse (higher) seeds
-        # if nothing better in the same half works. Never crosses into the
+        # Try the next-worse (numerically higher) opponent seed first, then
+        # the next after that, etc; only fall back to better (lower) seeds
+        # if nothing worse in the same half works. Never crosses into the
         # other half.
-        search_order = [s for s in reversed(same_half) if s < opp_seed] + \
-                       [s for s in same_half if s > opp_seed]
+        search_order = [s for s in same_half if s > opp_seed] + \
+                       [s for s in reversed(same_half) if s < opp_seed]
 
         swapped = False
         for candidate_seed in search_order:
@@ -1421,6 +1424,81 @@ def _pa_swap_opponents(rows, opponent_of, seed_to_team, violates_fn, pool_lo, po
 
             opponent_of[row_idx], opponent_of[candidate_row_idx] = candidate_seed, opp_seed
             log.append({'row': row_idx + 1, 'swapped_seed': opp_seed, 'with_seed': candidate_seed, 'reason': reason})
+            swapped = True
+            break
+
+        if not swapped:
+            log.append({'row': row_idx + 1, 'swapped_seed': None, 'with_seed': None,
+                        'reason': f'{reason} -- no valid same-half swap found, original pairing stands'})
+
+    return log
+
+
+def _pa_swap_survivors(rows, visiting_of, entrant_seed_of, survivor_team_of, violates_fn, tier_lo, tier_hi):
+    """
+    Swap-search engine for PA Cup rounds 2-4, where the entrant (not the
+    survivor) is the permanently protected side -- per explicit
+    instruction, "the higher [entrant] seed should always be protected in
+    its pathway." A row's own entrant seed (round 2: 65-96, etc.) is
+    fixed and NEVER reassigned; what's swappable is which OTHER row's
+    historical survivor is currently assigned to visit and play THIS
+    row's own entrant. This mirrors round 1's structure exactly (the
+    protected side never leaves its own row's displayed game, so that
+    row's own future is always claimed by whoever wins that specific
+    game) -- critically, it avoids a real structural trap the opposite
+    design has: if the swappable side (the entrant) were allowed to leave
+    its own row's game, a row could end up with NO winner at all (its own
+    survivor loses to a visiting entrant, AND its own entrant separately
+    loses a different game elsewhere), stranding that row with nobody to
+    carry its future forward. Keeping the entrant permanently in its own
+    row's game guarantees every row always produces exactly one survivor
+    each round, by construction.
+
+    rows: [(row_idx, entrant_team), ...] -- entrant_team is this row's
+    own permanent tier entrant; never reassigned.
+    visiting_of: {row_idx: source_row_idx} -- MUTATED in place. Which
+    OTHER row_idx's historical survivor currently visits and plays this
+    row's own entrant. Defaults to row_idx itself (own survivor faces own
+    entrant); this is the only thing a swap ever changes.
+    entrant_seed_of: {row_idx: seed} -- each row's own fixed entrant
+    seed, used only to determine same-half swap eligibility.
+    survivor_team_of: {row_idx: team} -- each row_idx's own historical
+    survivor (a real, already-determined prior-round result).
+    Swap candidates are restricted to OTHER row_idxs whose own entrant
+    seed falls in the same half of [tier_lo, tier_hi]. Returns a log (row
+    is 1-indexed).
+    """
+    log = []
+    entrant_team_of = dict(rows)
+    half = (tier_hi - tier_lo + 1) // 2
+    lower_half = range(tier_lo, tier_lo + half)
+    upper_half = range(tier_lo + half, tier_hi + 1)
+
+    for row_idx, entrant_team in rows:
+        visiting_team = survivor_team_of[visiting_of[row_idx]]
+        reason = violates_fn(entrant_team, visiting_team)
+        if reason is None:
+            continue
+
+        my_seed = entrant_seed_of[row_idx]
+        same_half = upper_half if my_seed in upper_half else lower_half
+        search_order = [s for s in same_half if s > my_seed] + \
+                       [s for s in reversed(same_half) if s < my_seed]
+
+        swapped = False
+        for candidate_seed in search_order:
+            candidate_row_idx = next(r for r, s in entrant_seed_of.items() if s == candidate_seed)
+            candidate_entrant_team = entrant_team_of[candidate_row_idx]
+            candidate_visiting_team = survivor_team_of[visiting_of[candidate_row_idx]]
+
+            if violates_fn(entrant_team, candidate_visiting_team) is not None:
+                continue
+            if violates_fn(candidate_entrant_team, visiting_team) is not None:
+                continue
+
+            visiting_of[row_idx], visiting_of[candidate_row_idx] = \
+                visiting_of[candidate_row_idx], visiting_of[row_idx]
+            log.append({'row': row_idx + 1, 'swapped_seed': my_seed, 'with_seed': candidate_seed, 'reason': reason})
             swapped = True
             break
 
@@ -1470,8 +1548,8 @@ def resolve_pa_cup_conflicts(draw_seed_to_team, draw_opponent_of, process_seed_t
         return None
 
     ladder_rows = pa_cup_ladder_rows()
-    draw_rows = [(i, draw_seed_to_team[ladder_rows[i][0]]) for i in range(32)]
-    process_rows = [(i, process_seed_to_team[ladder_rows[i][0]]) for i in range(32)]
+    draw_rows = [(i, draw_seed_to_team[ladder_rows[i][1]]) for i in range(32)]
+    process_rows = [(i, process_seed_to_team[ladder_rows[i][1]]) for i in range(32)]
 
     # 1. Draw's own region/division conflicts.
     draw_log = _pa_swap_opponents(draw_rows, draw_opponent_of, draw_seed_to_team, region_division_violation, 97, 160)
@@ -1734,37 +1812,63 @@ def _pa_bracket_round_complete(conn, bracket, round_num):
 
 
 
-def _pa_ladder_walk(conn, up_to_round, team_region, team_division):
+def _pa_ladder_walk(conn, up_to_round, team_region, team_division, resolve_final_round=False):
     """(draw_pairs, process_pairs, draw_survivors, process_survivors,
     swap_log) -- walks PA Cup ladder rounds 1..up_to_round (up_to_round in
-    1..4) forward ONE ROUND AT A TIME, resolving each round's tier-entrant
-    conflicts before using that round's own (possibly swapped) pairing to
-    look up real results for the NEXT round. This matters: a naive
-    reconstruction that predicts round N's opponent from a static,
-    never-updated seed mapping breaks the moment any round's conflict
-    resolution actually swapped an entrant, since the real game that was
-    played doesn't match the guess -- exactly the class of bug already
-    found and fixed once for RDS Cup's Round 2 (winner-rendered-as-home
-    instead of seed-based). Walking forward one round at a time and using
-    each round's own just-computed pairing to find its real winner avoids
-    guessing entirely.
+    1..4) forward ONE ROUND AT A TIME, resolving each round's conflicts
+    before using that round's own (possibly swapped) pairing to look up
+    real results for the NEXT round. This matters: a naive reconstruction
+    that predicts round N's opponent from a static, never-updated
+    mapping breaks the moment any round's conflict resolution actually
+    swapped something, since the real game that was played doesn't match
+    the guess -- exactly the class of bug already found and fixed once
+    for RDS Cup's Round 2 (winner-rendered-as-home instead of seed-based).
+    Walking forward one round at a time and using each round's own
+    just-computed pairing to find its real winner avoids guessing
+    entirely.
+
+    Per explicit instruction, "the higher seed should always stay put in
+    its own pathway": round 1's protected seed is 97-128 (row[1]), round
+    2's is 65-96, round 3's is 33-64, round 4's is 1-32 -- in every case
+    the tier entrant native to that round. Rounds 2-4's entrant is
+    therefore the anchor (never leaves its own row's displayed game;
+    _pa_swap_survivors reassigns which OTHER row's historical survivor
+    visits it, never the entrant itself) -- deliberately NOT symmetric
+    with round 1's swap, which reassigns the OPPONENT (round 1's two
+    seeds are both fresh/unplayed, so either side could in principle be
+    swapped; rounds 2-4's survivor is a real, already-decided prior-round
+    result and can't be "moved" the way a fresh seed can). Keeping the
+    entrant permanently in its own row's game guarantees every row always
+    produces exactly one winner each round, avoiding a real structural
+    trap: if the entrant were instead allowed to leave (mirroring round
+    1's swappable side), a row could end up with NO claimant at all --
+    its own survivor loses to a visiting entrant, AND its own entrant
+    separately loses a different game elsewhere -- stranding that row
+    with nobody to carry its future forward.
 
     draw_survivors/process_survivors: [(team, seed), ...] per row, as of
     up_to_round -- team is whoever's still alive in that row, seed is
     whichever seed originally got them into the tournament (their round-1
     seed, or the tier seed they entered on later as an entrant); it never
-    changes just because they keep winning. Needed by the round 5-7
-    champions-bracket walk, which must not re-derive it via stale seed
-    guesses either.
+    changes just because they keep winning.
 
     Home/away for rounds 2+ is seed-based like round 1 (Draw: lower/
     better seed hosts; Process: higher/worse seed hosts) -- NOT "survivor
     always hosts".
 
+    resolve_final_round: if True, ALSO advances draw_survivors/
+    process_survivors through up_to_round's own real results (requires
+    up_to_round itself to be complete, not just up_to_round-1), returning
+    who's alive heading into up_to_round+1 rather than who's about to
+    play up_to_round. Needed by the round 5-7 champions-bracket walk,
+    which needs round 4's actual winners, not round 4's entrants.
+
     Returns all-None/empty if either bracket hasn't finished the round
     before up_to_round yet (this cascades: round 3 needs round 2 done for
-    BOTH brackets, which itself needed round 1 done for both)."""
+    BOTH brackets, which itself needed round 1 done for both) -- or, if
+    resolve_final_round, if up_to_round itself isn't complete yet either."""
     draw_r1, process_r1, draw_seed_to_team, process_seed_to_team, _ = _pa_round1_games(conn)
+    ladder_rows = pa_cup_ladder_rows()
     draw_pairs = [(g['home'], g['away']) for g in draw_r1]
     process_pairs = [(g['home'], g['away']) for g in process_r1]
 
@@ -1777,7 +1881,7 @@ def _pa_ladder_walk(conn, up_to_round, team_region, team_division):
             return 'same region'
         return None
 
-    if up_to_round == 1:
+    if up_to_round == 1 and not resolve_final_round:
         # Round 1's own pairing needs no prior results -- return it
         # directly without requiring round 1 to already be played.
         return draw_pairs, process_pairs, None, None, []
@@ -1796,6 +1900,8 @@ def _pa_ladder_walk(conn, up_to_round, team_region, team_division):
     process_survivors = round1_winners('Process', process_pairs)
     if draw_survivors is None or process_survivors is None:
         return None, None, None, None, []
+    if up_to_round == 1:
+        return draw_pairs, process_pairs, draw_survivors, process_survivors, []
 
     swap_log = []
     for rnd in range(2, up_to_round + 1):
@@ -1804,13 +1910,21 @@ def _pa_ladder_walk(conn, up_to_round, team_region, team_division):
             return None, None, None, None, []
 
         tier_lo, tier_hi = _PA_TIER_RANGE[rnd]
-        draw_opponent_of = _pa_default_opponents(rnd)
-        process_opponent_of = _pa_default_opponents(rnd)
-        draw_rows = [(idx, team) for idx, (team, _seed) in enumerate(draw_survivors)]
-        process_rows = [(idx, team) for idx, (team, _seed) in enumerate(process_survivors)]
+        draw_entrant_seed_of = {i: ladder_rows[i][rnd] for i in range(32)}
+        process_entrant_seed_of = {i: ladder_rows[i][rnd] for i in range(32)}
+        draw_entrant_team_of = {i: draw_seed_to_team[s] for i, s in draw_entrant_seed_of.items()}
+        process_entrant_team_of = {i: process_seed_to_team[s] for i, s in process_entrant_seed_of.items()}
+        draw_visiting_of = {i: i for i in range(32)}
+        process_visiting_of = {i: i for i in range(32)}
+        draw_survivor_team_of = {i: team for i, (team, _seed) in enumerate(draw_survivors)}
+        process_survivor_team_of = {i: team for i, (team, _seed) in enumerate(process_survivors)}
 
-        # 1. Draw's own conflicts among this round's tier entrants.
-        draw_log = _pa_swap_opponents(draw_rows, draw_opponent_of, draw_seed_to_team, region_division_violation, tier_lo, tier_hi)
+        draw_rows = [(i, draw_entrant_team_of[i]) for i in range(32)]
+        process_rows = [(i, process_entrant_team_of[i]) for i in range(32)]
+
+        # 1. Draw's own conflicts: this row's entrant vs whoever's currently visiting.
+        draw_log = _pa_swap_survivors(draw_rows, draw_visiting_of, draw_entrant_seed_of, draw_survivor_team_of,
+                                       region_division_violation, tier_lo, tier_hi)
 
         # Draw's full pairing history through this round (real games from
         # earlier rounds + this round's now-resolved pairing), for the
@@ -1824,8 +1938,8 @@ def _pa_ladder_walk(conn, up_to_round, team_region, team_division):
             """, (prior_rnd,)).fetchall()
             for r in rows:
                 draw_pairs_so_far.add(frozenset([r['a'], r['b']]))
-        for idx, team in draw_rows:
-            draw_pairs_so_far.add(frozenset([team, draw_seed_to_team[draw_opponent_of[idx]]]))
+        for i in range(32):
+            draw_pairs_so_far.add(frozenset([draw_entrant_team_of[i], draw_survivor_team_of[draw_visiting_of[i]]]))
 
         def duplicate_violation(a, b, _pairs=draw_pairs_so_far):
             if a is None or b is None:
@@ -1833,10 +1947,12 @@ def _pa_ladder_walk(conn, up_to_round, team_region, team_division):
             return 'repeat matchup (Draw)' if frozenset([a, b]) in _pairs else None
 
         # 2. Process pairings that repeat a Draw pairing.
-        dup_log = _pa_swap_opponents(process_rows, process_opponent_of, process_seed_to_team, duplicate_violation, tier_lo, tier_hi)
+        dup_log = _pa_swap_survivors(process_rows, process_visiting_of, process_entrant_seed_of, process_survivor_team_of,
+                                      duplicate_violation, tier_lo, tier_hi)
 
-        # 3. Process's own conflicts among this round's tier entrants.
-        region_log = _pa_swap_opponents(process_rows, process_opponent_of, process_seed_to_team, region_division_violation, tier_lo, tier_hi)
+        # 3. Process's own conflicts.
+        region_log = _pa_swap_survivors(process_rows, process_visiting_of, process_entrant_seed_of, process_survivor_team_of,
+                                         region_division_violation, tier_lo, tier_hi)
 
         swap_log.extend(
             [dict(bracket='Draw', round=rnd, **e) for e in draw_log]
@@ -1844,40 +1960,45 @@ def _pa_ladder_walk(conn, up_to_round, team_region, team_division):
             + [dict(bracket='Process', round=rnd, **e) for e in region_log]
         )
 
-        def final_pairs(survivors, opponent_of, seed_to_team, home_is_lower_seed):
+        def final_pairs(entrant_seed_of, entrant_team_of, visiting_of, survivors, home_is_lower_seed):
             pairs = []
-            for idx, (survivor_team, survivor_seed) in enumerate(survivors):
-                entrant_seed = opponent_of[idx]
-                entrant_team = seed_to_team[entrant_seed]
-                better_first = (survivor_seed < entrant_seed) == home_is_lower_seed
-                pairs.append((survivor_team, entrant_team) if better_first else (entrant_team, survivor_team))
+            for i in range(32):
+                e_seed, e_team = entrant_seed_of[i], entrant_team_of[i]
+                v_team, v_seed = survivors[visiting_of[i]]
+                better_first = (e_seed < v_seed) == home_is_lower_seed
+                pairs.append((e_team, v_team) if better_first else (v_team, e_team))
             return pairs
 
-        draw_pairs = final_pairs(draw_survivors, draw_opponent_of, draw_seed_to_team, home_is_lower_seed=True)
-        process_pairs = final_pairs(process_survivors, process_opponent_of, process_seed_to_team, home_is_lower_seed=False)
+        draw_pairs = final_pairs(draw_entrant_seed_of, draw_entrant_team_of, draw_visiting_of, draw_survivors, home_is_lower_seed=True)
+        process_pairs = final_pairs(process_entrant_seed_of, process_entrant_team_of, process_visiting_of, process_survivors, home_is_lower_seed=False)
 
-        if rnd == up_to_round:
+        if rnd == up_to_round and not resolve_final_round:
             return draw_pairs, process_pairs, draw_survivors, process_survivors, swap_log
 
         # Need THIS round's real winners (using the pairing just resolved
-        # above, not a guess) to continue to the next round.
-        def next_survivors(bracket, pairs, survivors, opponent_of):
+        # above, not a guess) to continue on -- whoever wins row i's OWN
+        # displayed game becomes row i's new identity, unconditionally
+        # (never orphaned: the entrant is always present in its own row's
+        # game, so someone tied to row i always wins row i's game).
+        def next_survivors(bracket, pairs, entrant_seed_of, entrant_team_of, visiting_of, survivors):
             out = []
             for idx, (home, away) in enumerate(pairs):
                 w = _real_bracket_winner(conn, "PA", bracket, rnd, home, away)
                 if w is None:
                     return None
-                survivor_team, survivor_seed = survivors[idx]
-                if w == survivor_team:
-                    out.append((survivor_team, survivor_seed))
+                if w == entrant_team_of[idx]:
+                    out.append((w, entrant_seed_of[idx]))
                 else:
-                    out.append((w, opponent_of[idx]))
+                    out.append(survivors[visiting_of[idx]])
             return out
 
-        draw_survivors = next_survivors('Draw', draw_pairs, draw_survivors, draw_opponent_of)
-        process_survivors = next_survivors('Process', process_pairs, process_survivors, process_opponent_of)
+        draw_survivors = next_survivors('Draw', draw_pairs, draw_entrant_seed_of, draw_entrant_team_of, draw_visiting_of, draw_survivors)
+        process_survivors = next_survivors('Process', process_pairs, process_entrant_seed_of, process_entrant_team_of, process_visiting_of, process_survivors)
         if draw_survivors is None or process_survivors is None:
             return None, None, None, None, []
+
+        if rnd == up_to_round:
+            return draw_pairs, process_pairs, draw_survivors, process_survivors, swap_log
 
     return draw_pairs, process_pairs, draw_survivors, process_survivors, swap_log
 
@@ -1900,8 +2021,8 @@ def _pa_round1_games(conn):
         JOIN team_seasons ts ON ts.team_id = t.team_id AND ts.season = 9
     """).fetchall()}
 
-    draw_opponent_of = _pa_default_opponents(1)
-    process_opponent_of = _pa_default_opponents(1)
+    draw_opponent_of = _pa_default_opponents(0)
+    process_opponent_of = _pa_default_opponents(0)
     swap_log = resolve_pa_cup_conflicts(draw_seed_to_team, draw_opponent_of, process_seed_to_team, process_opponent_of,
                                          team_region, team_division)
     draw_games = pa_cup_round1_pairs(draw_seed_to_team, draw_opponent_of, home_is_lower_seed=True)
@@ -1933,9 +2054,12 @@ def _pa_round_games(conn, bracket, target_round):
 
     # Rounds 5-7: every row must have finished round 4 first. Reuse the
     # same walk (not a fresh stale-mapping reconstruction) to get each
-    # row's actual round-4 champion.
+    # row's actual round-4 champion -- resolve_final_round=True advances
+    # THROUGH round 4's own real results (requires round 4 itself
+    # complete), not just up to round 4's pairing.
     draw_r1, process_r1, _, _, _ = _pa_round1_games(conn)
-    _, _, draw_survivors4, process_survivors4, _ = _pa_ladder_walk(conn, 4, team_region, team_division)
+    _, _, draw_survivors4, process_survivors4, _ = _pa_ladder_walk(
+        conn, 4, team_region, team_division, resolve_final_round=True)
     if draw_survivors4 is None:
         return None
     round1_games = draw_r1 if bracket == "Draw" else process_r1
