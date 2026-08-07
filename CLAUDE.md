@@ -821,6 +821,38 @@ corrected formula) and the swap log is a different, freshly-computed list
 thing — worth checking what a dashboard constant is *derived from* before
 assuming a formula fix upstream already reached it.
 
+**Conflict Resolution Log only ever showed round 1, found and fixed
+2026-08-07.** Same underlying class of bug as the `PA_CUP_DATA` finding
+above, at a different layer: `_pa_round_games()`'s rounds 2-4 branch calls
+`_pa_ladder_walk()`, which genuinely computes and returns a swap log for
+that round (rounds 2-4 do get real conflict resolution, per the
+entrant-protection model above) — but `pa_cup_round_preview()` (the
+"what's coming up next" preview powering `PA_ROUND_PREVIEW`) only ever
+unpacked the *pairings* out of that call and silently dropped the swap
+log, so the dashboard's Conflict Resolution Log table only ever rendered
+`PA_CUP_DATA.swap_log` (round 1's). Once round 1 finished for both
+brackets and a round 2 preview started rendering, this made the log look
+like round 2 had zero conflicts, when in reality **14 swaps** were needed
+and successfully resolved (7 Draw, 7 Process) — caught only by directly
+querying `_pa_ladder_walk(conn, 2, ...)`'s own returned swap log and
+finding it non-empty, contradicting what the rendered report showed.
+Fixed by having `pa_cup_round_preview()` re-run `_pa_ladder_walk()` for
+`target_round` (rounds 2-4 only; rounds 5-7 have no conflict resolution,
+so their swap_log is always `[]`) and attach the result as
+`preview["swap_log"]`, which `build_pa_cup()` already passes straight
+through into `PA_ROUND_PREVIEW`. The dashboard's log table now merges
+`PA_CUP_DATA.swap_log` (tagged round 1) with `PA_ROUND_PREVIEW.swap_log`
+(already tagged with its own round per entry) and gained a **Round**
+column so entries from different rounds don't get confused once round 3+
+previews start appearing here too. Also dropped the round-2+ preview
+section's `(projected)` suffix in its label — round 2's pairing isn't
+speculative once both brackets have finished round 1 (the "wait for both
+brackets" gate above already guarantees this), it's the same kind of
+fully-resolved, real-winners-pending-play pairing RDS Cup's round 3+ has
+always shown without a "projected" qualifier; the label was left over
+from language written when only one bracket's round 1 was done and round
+2 genuinely could still shift.
+
 ### Rank/Elo History tab
 
 Added 2026-08-05, mirroring the S9 workbook's own hand-tracked history
