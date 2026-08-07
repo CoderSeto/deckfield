@@ -159,13 +159,87 @@ deliberately — not modeled yet, see "Known open items."
 
 ## Ratings formulas (validated against real S9 data)
 
-- **RW/LW**: exact match, 160/160 teams. Full formula in
-  `deckfield_ranking_spec.md`-equivalent docstrings in the engine.
-- **OVR** = weighted blend of 12 components (RW, LW, PF, PA, PDG, SOS, SOV,
-  DSCR, EYE, Elo, Cups, EX), each normalized 0–100 (except RW/LW, which can
-  exceed 100). PDG's denominator is `avg_raw_goal_score` (the `^X.XX` field
-  in the packed string), **not** PF/games_played — this was a real early
-  bug.
+- **RW**: exact match, 160/160 teams, against real S9 data. **LW's 3+ games
+  branch has since been deliberately corrected away from that historical
+  match** (see below) — RW's formula is untouched and still exact. Full
+  formula in `deckfield_ranking_spec.md`-equivalent docstrings in the
+  engine.
+- **OVR** = weighted blend of 10 components (PF, PA, PDG, SOS, SOV, DSCR,
+  EYE, Elo, Cups, EX), each normalized 0–100. PDG's denominator is
+  `avg_raw_goal_score` (the `^X.XX` field in the packed string), **not**
+  PF/games_played — this was a real early bug.
+- **Block A uses RW/LW, not PF/PA, fixed 2026-08-07 (per explicit
+  instruction).** `compute_round_ratings()`'s OVR assembly previously had
+  Block A = `(PF_norm×.5 + PA_norm×.5) × 3` — matching
+  `deckfield_ranking_spec.md`'s §6 exactly, but the person flagged this as
+  wrong: **Block A should be `(RW×.5 + LW×.5) × 3`**, using RW/LW *raw* (not
+  population-normalized — they're used everywhere else in the system in
+  their raw, uncapped form; there's no "RW_norm"/"LW_norm" concept anywhere
+  in the spec or engine). Block B is unaffected — it still uses
+  `PF_norm`/`PA_norm` alongside PDG, so PF/PA didn't disappear from OVR
+  entirely, they just moved out of Block A. This is a real formula
+  correction, not a bug fix to match some other source of truth — the old
+  Block A (PF/PA) was byte-identical to the original spec, but the spec
+  itself is being corrected here. Recomputed all of season 9 (`recompute_from_round(9,
+  1)`, rounds 1–14) since OVR feeds SOS round-to-round.
+- **LW's 3+ games branch: additive division bonus, not a multiplier on the
+  whole base — fixed 2026-08-07, same day, per explicit correction.** The
+  original spec's `LW = LW_base × (1 + 0.05×(11−league_division))` (§4,
+  previously validated exact against real S9 data, 160/160 teams) badly
+  overweighted low-numbered divisions even at a small early-season sample
+  — division 1 gets a full ×1.5 multiplier on the *entire* base, not just
+  the division-strength component of it. Corrected to
+  `LW = LW_base + 0.05×(11−league_division)×league_wins` — the division
+  bonus is now a small additive nudge scaled by how many league wins
+  actually back it up, not a blanket multiplier on everything (including
+  the SP/playoff terms already folded into `LW_base`). Canalave City at
+  round 14 (division 1, `LW_base` 102.4, 3 league wins):
+  ```
+  LW_base = (LP/(league_games×3+regional_games) + SP/1000 + pW×0.005) × 100
+          = (14/(3×3+5) + 24/1000 + 0) × 100 = (14/14 + 0.024) × 100 = 102.4
+  LW      = LW_base + 0.05×(11−league_division)×league_wins
+          = 102.4 + 0.05×(11−1)×3 = 102.4 + 1.5 = 103.9
+  ```
+  (Previously: `LW_base × 1.5 = 153.6` — the old multiplier form, now
+  removed.) With this and the Block A fix together, recomputing all of
+  season 9 brought Canalave City's round-14 OVR to 105.72 (RW 102.4, LW
+  103.9 now much closer together, as expected for a team unbeaten in both
+  tracks) and the round-14 LW range to 0–103.9 (avg 51.7, comparable
+  scale to RW), down from the intermediate 0–153.6 the multiplier form
+  produced. OVR range 9.77–105.72 (avg 54.7), still sane, no NaN/negative
+  blowups. This is the same kind of deliberate correction as the Block A
+  fix above, not a bug fix chasing the original spreadsheet's byte-exact
+  output — the multiplier form's 160/160 historical match no longer holds
+  by design.
+- **EYE's `X` term uses `avg_pd`, not raw season-total `PD`, fixed
+  2026-08-07, same day, per explicit correction.** Found during a cursory
+  correctness pass prompted by the two fixes above: the spec's EYE formula
+  explicitly labels its `PD` term "raw, season total" (unlike PF_norm,
+  PA_norm, PDG, and SOV's `vic_avg`, which all already use per-game
+  averages — `avg_pf`/`avg_pa`/`avg_pd` — for their PD-flavored inputs),
+  and the engine matched that literally: `x = (v["pd"] - min_pd) *
+  (v["avg_gi"] / 100)`. That's an inconsistency worth taking seriously:
+  raw `PD` grows with games played, so a team that's played more real
+  games (vs. one that's had a cup bye) gets a mechanically larger `PD` at
+  *identical* per-game performance, inflating `X` → `Y` → `AD` → `Z` →
+  `EYE` for no real reason. Confirmed this isn't a hypothetical — at round
+  14, `games_played` genuinely ranges 10–14 across the 160 teams (cup
+  byes: Dream/Star's 16 bye seeds in each of RDS Draw/Process rounds 1-2),
+  so this was a real, live skew, not a no-op. Corrected `x = (v["avg_pd"] -
+  min_avg_pd) * (v["avg_gi"] / 100)`, reusing the same `avg_pd`/
+  `min_avg_pd` PDG already computes — the now-unused raw `pd`/`pd_vals`/
+  `min_pd` were removed entirely (nothing else referenced them). `Y`,
+  `AD`, `Z`, and `EYE` all derive from `X`, so they inherit the fix
+  automatically; `avg_GI` and `RLStr` don't need any change (`avg_GI` is
+  already a per-game average by definition, `RLStr` isn't a per-team
+  accumulation at all). Recomputed all of season 9. Zapapico at round 14
+  (a mid-pack team used as the running example): EYE 44.67 → 51.76,
+  `games_played` 12 (right in the middle of the 10-14 range, so a
+  representative, not extreme, case). Round-14 EYE range is 0–100 (avg
+  49.2, both ends still reachable), OVR range 9.78–105.76 (avg 55.1) —
+  barely moved from the Block A/LW fixes' 9.77–105.72, since EYE is only
+  one of several Block D inputs and the skew only bites for teams whose
+  games_played differs from the round's mode.
 - **OVR's EX taper** (`taper_n`, `N/14` in Block E and the overall
   denominator) — changed from an original `N/12` scheme. Full weight (14)
   through week 6, decreasing 1/week starting week 7, reaching 1 at week 19,

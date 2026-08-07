@@ -630,7 +630,11 @@ def compute_lw(games, buckets, rw, league_division):
     denom = n * 3 + buckets["regional_games"]  # regional GAMES played, not wins
     lw_base = (buckets["lp"] / denom + buckets["sp"] / 1000
                + buckets["playoff_finals_wins"] * 0.005) * 100
-    return lw_base * (1 + 0.05 * (11 - league_division))
+    # Additive division bonus, not a multiplier on the whole base -- per
+    # explicit correction (see CLAUDE.md), the earlier LW_base * (1 + 0.05 *
+    # (11 - league_division)) badly overweighted low-numbered divisions
+    # (up to 1.5x for division 1) even at a small early-season sample size.
+    return lw_base + 0.05 * (11 - league_division) * buckets["league_wins"]
 
 
 # ------------------------------------------------------- full OVR pipeline --
@@ -664,7 +668,6 @@ def compute_round_ratings(season, round_num):
         pf = sum(g["pf"] for g in games)
         pa = sum(g["pa"] for g in games)
         games_played = len(games)
-        pd = pf - pa
         avg_pf = pf / games_played if games_played else 0.0
         avg_pa = pa / games_played if games_played else 0.0
         avg_pd = avg_pf - avg_pa
@@ -696,7 +699,7 @@ def compute_round_ratings(season, round_num):
         raw[tid] = {
             "games": games, "buckets": buckets, "rw": rw, "lw": lw,
             "pf": pf, "pa": pa, "avg_pf": avg_pf, "avg_pa": avg_pa, "avg_pd": avg_pd,
-            "games_played": games_played, "pd": pd, "avg_raw_goal_score": avg_raw_goal_score,
+            "games_played": games_played, "avg_raw_goal_score": avg_raw_goal_score,
             "vic_avg": vic_avg, "d_sqrt": d_sqrt, "avg_gi": avg_gi, "elo": elo,
             "str_mod": str_mod, "ex": team_seasons[tid]["ex"], "rlstr": rlstr,
         }
@@ -704,8 +707,6 @@ def compute_round_ratings(season, round_num):
     # ---- league-wide passes ----
     avg_pf_vals = [v["avg_pf"] for v in raw.values()]
     avg_pa_vals = [v["avg_pa"] for v in raw.values()]
-    pd_vals = [v["pd"] for v in raw.values()]
-    min_pd = min(pd_vals)
     avg_pd_vals = [v["avg_pd"] for v in raw.values()]
     min_avg_pd = min(avg_pd_vals)
 
@@ -722,10 +723,14 @@ def compute_round_ratings(season, round_num):
     ex_vals = [v["ex"] for v in raw.values()]
     tot_vals = [v["buckets"]["tot"] for v in raw.values()]
 
-    # EYE's X depends on min_league(pd) too; recompute properly now that we have it
+    # EYE's X uses avg_pd (per-game average PD), not raw season-total PD --
+    # per explicit correction, matching how PF_norm/PA_norm/PDG/SOV already
+    # treat PD-flavored quantities as per-game averages. Raw PD would give a
+    # team that's played more real games (vs. a cup bye) a mechanically
+    # larger PD at identical per-game performance, skewing X/Y/AD/Z/EYE.
     ad_vals_pre = {}
     for tid, v in raw.items():
-        x = (v["pd"] - min_pd) * (v["avg_gi"] / 100)
+        x = (v["avg_pd"] - min_avg_pd) * (v["avg_gi"] / 100)
         y = sqrt(max(x, 0) / 100) * 100
         ad = ((x + y) / 2) * v["rlstr"]
         ad_vals_pre[tid] = (x, y, ad)
@@ -759,7 +764,7 @@ def compute_round_ratings(season, round_num):
         cups = normalize(v["buckets"]["tot"], tot_vals)
         ex_norm = normalize(v["ex"], ex_vals)
 
-        block_a = (pf_norm * .5 + pa_norm * .5) * 3
+        block_a = (v["rw"] * .5 + v["lw"] * .5) * 3
         block_b = (pf_norm * .35 + pa_norm * .35 + pdg * .3) * 2
         block_c = (sos * .4 + sov * .3 + dscr_comp * .3) * 3
         block_d = (eye * .35 + elo_comp * .3 + cups * .35) * 2
