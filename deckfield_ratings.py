@@ -630,7 +630,11 @@ def compute_lw(games, buckets, rw, league_division):
     denom = n * 3 + buckets["regional_games"]  # regional GAMES played, not wins
     lw_base = (buckets["lp"] / denom + buckets["sp"] / 1000
                + buckets["playoff_finals_wins"] * 0.005) * 100
-    return lw_base * (1 + 0.05 * (11 - league_division))
+    # Additive division bonus, not a multiplier on the whole base -- per
+    # explicit correction (see CLAUDE.md), the earlier LW_base * (1 + 0.05 *
+    # (11 - league_division)) badly overweighted low-numbered divisions
+    # (up to 1.5x for division 1) even at a small early-season sample size.
+    return lw_base + 0.05 * (11 - league_division) * buckets["league_wins"]
 
 
 # ------------------------------------------------------- full OVR pipeline --

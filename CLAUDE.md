@@ -159,8 +159,11 @@ deliberately — not modeled yet, see "Known open items."
 
 ## Ratings formulas (validated against real S9 data)
 
-- **RW/LW**: exact match, 160/160 teams. Full formula in
-  `deckfield_ranking_spec.md`-equivalent docstrings in the engine.
+- **RW**: exact match, 160/160 teams, against real S9 data. **LW's 3+ games
+  branch has since been deliberately corrected away from that historical
+  match** (see below) — RW's formula is untouched and still exact. Full
+  formula in `deckfield_ranking_spec.md`-equivalent docstrings in the
+  engine.
 - **OVR** = weighted blend of 10 components (PF, PA, PDG, SOS, SOV, DSCR,
   EYE, Elo, Cups, EX), each normalized 0–100. PDG's denominator is
   `avg_raw_goal_score` (the `^X.XX` field in the packed string), **not**
@@ -178,36 +181,36 @@ deliberately — not modeled yet, see "Known open items."
   correction, not a bug fix to match some other source of truth — the old
   Block A (PF/PA) was byte-identical to the original spec, but the spec
   itself is being corrected here. Recomputed all of season 9 (`recompute_from_round(9,
-  1)`, rounds 1–14) since OVR feeds SOS round-to-round. Real effect, not a
-  no-op: Canalave City's round-14 OVR went from ~102 to 113.23 (RW 102.4,
-  LW 153.6 vs. the old inputs PF_norm 93.48/PA_norm 94.79 — Block A's raw
-  inputs got meaningfully larger). Season-wide round-14 OVR range shifted
-  to 9.77–113.23 (avg 56.9), still a sane distribution, no NaN/negative
-  blowups.
-- **LW runs structurally higher than RW, especially in low-numbered
-  divisions — not a bug, an artifact of LW's division multiplier having no
-  RW counterpart.** Flagged with Canalave City at round 14 (LW 153.6 vs. RW
-  102.4) as the concrete example. Both start from the same saturation
-  point for an unbeaten record — RW's raw formula and LW's `LW_base` are
-  literally both `102.4` here (RP/RP-denominator = LP/LP-denominator =
-  1.0 in each, since undefeated in both tracks):
+  1)`, rounds 1–14) since OVR feeds SOS round-to-round.
+- **LW's 3+ games branch: additive division bonus, not a multiplier on the
+  whole base — fixed 2026-08-07, same day, per explicit correction.** The
+  original spec's `LW = LW_base × (1 + 0.05×(11−league_division))` (§4,
+  previously validated exact against real S9 data, 160/160 teams) badly
+  overweighted low-numbered divisions even at a small early-season sample
+  — division 1 gets a full ×1.5 multiplier on the *entire* base, not just
+  the division-strength component of it. Corrected to
+  `LW = LW_base + 0.05×(11−league_division)×league_wins` — the division
+  bonus is now a small additive nudge scaled by how many league wins
+  actually back it up, not a blanket multiplier on everything (including
+  the SP/playoff terms already folded into `LW_base`). Canalave City at
+  round 14 (division 1, `LW_base` 102.4, 3 league wins):
   ```
-  RW      = (RP/(regional_games×3+league_games) + SP/1000 + pW×0.005) × 100
-          = (18/(5×3+3) + 24/1000 + 0) × 100 = (18/18 + 0.024) × 100 = 102.4
   LW_base = (LP/(league_games×3+regional_games) + SP/1000 + pW×0.005) × 100
           = (14/(3×3+5) + 24/1000 + 0) × 100 = (14/14 + 0.024) × 100 = 102.4
-  LW      = LW_base × (1 + 0.05×(11−league_division))
-          = 102.4 × (1 + 0.05×(11−1)) = 102.4 × 1.5 = 153.6
+  LW      = LW_base + 0.05×(11−league_division)×league_wins
+          = 102.4 + 0.05×(11−1)×3 = 102.4 + 1.5 = 103.9
   ```
-  RW has no equivalent post-multiplier — LW's `×(1 + 0.05×(11−division))`
-  term is applied to LW only, per spec §4, and was already validated exact
-  against real S9 data (160/160 teams) before this session, so it's a
-  faithful port, not a mistake. For division 1 it's a full ×1.5; it shrinks
-  toward ×1.05 for division 10. This asymmetry is exactly why LW numbers
-  read as "too high" this early in the season (round 14, only 3 league
-  games played) — nothing wrong with the computation itself, just an
-  emergent property of the division multiplier at small sample sizes, now
-  more visible since Block A routes LW straight into OVR.
+  (Previously: `LW_base × 1.5 = 153.6` — the old multiplier form, now
+  removed.) With this and the Block A fix together, recomputing all of
+  season 9 brought Canalave City's round-14 OVR to 105.72 (RW 102.4, LW
+  103.9 now much closer together, as expected for a team unbeaten in both
+  tracks) and the round-14 LW range to 0–103.9 (avg 51.7, comparable
+  scale to RW), down from the intermediate 0–153.6 the multiplier form
+  produced. OVR range 9.77–105.72 (avg 54.7), still sane, no NaN/negative
+  blowups. This is the same kind of deliberate correction as the Block A
+  fix above, not a bug fix chasing the original spreadsheet's byte-exact
+  output — the multiplier form's 160/160 historical match no longer holds
+  by design.
 - **OVR's EX taper** (`taper_n`, `N/14` in Block E and the overall
   denominator) — changed from an original `N/12` scheme. Full weight (14)
   through week 6, decreasing 1/week starting week 7, reaching 1 at week 19,
