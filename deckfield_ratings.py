@@ -2278,24 +2278,33 @@ def _batch_settings_row(game_type, agg, weekend, round_label, abs_round,
 
 def export_matchday_batches(season, event=None):
     """
-    Like `export_matchday_for_deckfield`, but split into one or more
-    per-cup "batches" -- everything DECKFIELD's Schedule Batch Settings
-    panel needs to be filled in by pasting a single row (Game Type,
-    Format, Day, Round Label, Round #, Cup Name, Cup Bracket, Cup Round #),
-    alongside that batch's own matchups in the existing Away/Home rank
-    format. RDS Cup matchdays play Ribbon, Dream, and Star simultaneously,
-    but a DECKFIELD batch can only carry one Cup Name for every matchup
-    pasted with it -- so RDS matchdays always split into three batches,
-    one per cup, each with only that cup's games. Every other event kind
-    (R/L/PA/RT) is just one batch.
+    Like `export_matchday_for_deckfield`, but returns everything DECKFIELD's
+    Schedule Batch Settings panel needs to be filled in by pasting a single
+    row (Game Type, Format, Day, Round Label, Round #, Cup Name, Cup
+    Bracket, Cup Round #), alongside the matchups in the existing Away/Home
+    rank format -- as ONE combined batch, always, per explicit instruction.
 
-    Returns (info, batches). info is the same as from
-    `export_matchday_for_deckfield` (includes 'abs_round'). Each batch is
-    {'label', 'settings_tsv' (header + one row, paste into Batch
-    Settings), 'games' (list of {'away_rank','away_name','home_rank',
-    'home_name'}, worst-ranked team first), 'matchups_tsv' (header + rows,
-    paste into Import Matchups, same format/order as
-    export_matchday_for_deckfield)}.
+    RDS Cup matchdays play Ribbon, Dream, and Star simultaneously, and a
+    single Cup Name setting can't identify all three at once -- so a
+    combined RDS batch leaves settings_tsv's Cup Name blank (Cup Bracket
+    stays set; Draw/Process is the same for all three cups this matchday,
+    only Cup Name varies) and instead carries each game's own cup as two
+    extra trailing columns on its matchup row (Cup Name, Cup Bracket) --
+    DECKFIELD's importer uses a row's own Cup Name/Bracket when present,
+    falling back to the batch-level setting otherwise. Every other event
+    kind (R/L/PA/RT) only ever has one cup (or none), so its batch is
+    unchanged: batch-level Cup Name covers every row, no per-row columns
+    needed.
+
+    Returns (info, batches) -- batches is always a single-element list
+    (kept as a list for backward compatibility with existing callers).
+    info is the same as from `export_matchday_for_deckfield` (includes
+    'abs_round'). The batch is {'label', 'settings_tsv' (header + one row,
+    paste into Batch Settings), 'games' (list of {'away_rank','away_name',
+    'home_rank','home_name'}, plus 'cup' when combined, worst-ranked team
+    first), 'matchups_tsv' (header + rows, paste into Import Matchups,
+    same order as export_matchday_for_deckfield, plus Cup Name/Cup Bracket
+    trailing columns when combined)}.
     """
     if event is None:
         info = next_matchday(season)
@@ -2313,12 +2322,17 @@ def export_matchday_batches(season, event=None):
     dex_to_name = {v: k for k, v in name_to_dex.items()}
     ranks = current_rank_lookup(season)
 
-    def build_batch(label, game_type, agg, cup_name, cup_bracket, cup_round, games):
+    def build_batch(label, game_type, agg, cup_name, cup_bracket, cup_round, games, cup_per_game=None):
         games = sorted(games, key=lambda hg: max(ranks[hg[0]], ranks[hg[1]]), reverse=True)
         settings_row = _batch_settings_row(game_type, agg, weekend, label, info["abs_round"],
-                                            cup_name, cup_bracket, cup_round)
-        matchup_lines = ["Away Team Rank\tHome Team Rank\tAdv"]
-        matchup_lines += [f"{ranks[away]}\t{ranks[home]}\t" for home, away in games]
+                                            "" if cup_per_game else cup_name, cup_bracket, cup_round)
+        if cup_per_game:
+            matchup_lines = ["Away Team Rank\tHome Team Rank\tAdv\tCup Name\tCup Bracket"]
+            matchup_lines += [f"{ranks[away]}\t{ranks[home]}\t\t{cup_per_game[(home, away)]}\t{cup_bracket}"
+                               for home, away in games]
+        else:
+            matchup_lines = ["Away Team Rank\tHome Team Rank\tAdv"]
+            matchup_lines += [f"{ranks[away]}\t{ranks[home]}\t" for home, away in games]
         return {
             "label": label,
             "settings_tsv": _BATCH_SETTINGS_HEADER + "\n" + settings_row,
@@ -2326,24 +2340,30 @@ def export_matchday_batches(season, event=None):
             "games": [{
                 "away_rank": ranks[away], "away_name": dex_to_name[away],
                 "home_rank": ranks[home], "home_name": dex_to_name[home],
+                **({"cup": cup_per_game[(home, away)]} if cup_per_game else {}),
             } for home, away in games],
         }
 
     kind = event[0]
     if kind == "RDS":
         _, bracket, cup_round = event
-        batches = []
+        all_games = []
+        cup_per_game = {}
         for cup in ("Ribbon", "Dream", "Star"):
             cup_games = _rds_round_games(conn, cup, bracket, cup_round)
             if cup_games is None:
                 conn.close()
                 raise ValueError(f"RDS {cup} {bracket} round {cup_round}: a prior round isn't complete yet.")
-            games = [(name_to_dex[h], name_to_dex[a]) for h, a in cup_games]
-            agg = bracket in ("SF", "Final")
-            label = f"{cup} {bracket} R{cup_round}" if cup_round is not None else f"{cup} {bracket}"
-            batches.append(build_batch(label, "Cup", agg, cup, bracket, cup_round if cup_round is not None else "", games))
+            for h, a in cup_games:
+                home_dex, away_dex = name_to_dex[h], name_to_dex[a]
+                all_games.append((home_dex, away_dex))
+                cup_per_game[(home_dex, away_dex)] = cup
+        agg = bracket in ("SF", "Final")
+        label = f"RDS Cup {bracket} R{cup_round}" if cup_round is not None else f"RDS Cup {bracket}"
+        batch = build_batch(label, "Cup", agg, "", bracket, cup_round if cup_round is not None else "",
+                             all_games, cup_per_game=cup_per_game)
         conn.close()
-        return info, batches
+        return info, [batch]
 
     if kind == "PA":
         _, bracket, cup_round = event
