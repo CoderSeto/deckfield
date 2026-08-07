@@ -2417,17 +2417,34 @@ def pa_cup_real_results(season):
 
 
 def pa_cup_round_preview(season, target_round):
-    """{bracket: [{home,away,home_seed,away_seed,home_dex,away_dex}]} for a
-    PA Cup round that hasn't been fully played yet but whose prior
-    round(s) are complete -- the "what's coming up next" preview, same
-    idea as RDS Cup's RDS_ROUND3. A bracket's value is None if a prior
-    round isn't complete yet (mirrors _pa_round_games' own contract) or if
-    target_round is beyond what's modeled (8+, the mutual quarterfinal
-    stage -- see _pa_round_games's NotImplementedError)."""
+    """{bracket: [{home,away,home_seed,away_seed,home_dex,away_dex}],
+    swap_log} for a PA Cup round that hasn't been fully played yet but
+    whose prior round(s) are complete -- the "what's coming up next"
+    preview, same idea as RDS Cup's RDS_ROUND3. A bracket's value is None
+    if a prior round isn't complete yet (mirrors _pa_round_games' own
+    contract) or if target_round is beyond what's modeled (8+, the mutual
+    quarterfinal stage -- see _pa_round_games's NotImplementedError).
+
+    swap_log carries this round's own conflict-resolution swaps (rounds
+    2-4 only -- rounds 5-7 don't get conflict resolution, see
+    _pa_ladder_walk's docstring) -- previously computed by the same
+    _pa_ladder_walk() call underlying _pa_round_games() but silently
+    discarded, so the dashboard's swap-log report only ever showed round
+    1's conflicts even though later rounds can and do have their own."""
     conn = get_connection()
     name_to_dex = {r["name"]: r["team_id"] for r in conn.execute("SELECT team_id, name FROM teams").fetchall()}
     _, _, draw_seeds, process_seeds, _ = _pa_round1_games(conn)
     seed_lookup = {"Draw": draw_seeds, "Process": process_seeds}
+
+    swap_log = []
+    if 2 <= target_round <= 4:
+        team_region = {r["name"]: r["region"] for r in conn.execute("SELECT name, region FROM teams").fetchall()}
+        team_division = {r["name"]: r["league_division"] for r in conn.execute("""
+            SELECT t.name, ts.league_division FROM teams t
+            JOIN team_seasons ts ON ts.team_id = t.team_id AND ts.season = 9
+        """).fetchall()}
+        _, _, _, _, swap_log = _pa_ladder_walk(conn, target_round, team_region, team_division)
+        swap_log = swap_log or []
 
     preview = {}
     for bracket in ("Draw", "Process"):
@@ -2448,6 +2465,7 @@ def pa_cup_round_preview(season, target_round):
                 "home_dex": name_to_dex.get(home), "away_dex": name_to_dex.get(away),
             })
         preview[bracket] = entries
+    preview["swap_log"] = swap_log
     conn.close()
     return preview
 
