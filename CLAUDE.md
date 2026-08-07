@@ -240,6 +240,34 @@ Lanakila, Star = Kalosite/Dynamax/Terastal (48 real teams each, seeds
 - **Rounds 3-5 are fully generated**, not placeholders — `_rds_round_games()`
   resolves through real prior-round winners for any target round, raising a
   clear error (not a guess) if a prior round isn't complete yet.
+  **The Hau'oli City anomaly above became a real blocker once round 3
+  generation was actually attempted for the first time, fixed 2026-08-07**:
+  when rounds 1-2 were originally validated, "not modeled around" just meant
+  the discrepancy was noted and left alone, since nothing downstream
+  actually depended on round 2's exact opponent identity yet. The first
+  real attempt at Dream Draw round 3 (round 14's `add-results` advancing
+  `next_matchday()` past PA/RDS round 2) hit a hard `ValueError` — Dream
+  Draw's Exeggutor Island slot predicted round 2 as "vs Mistralton City"
+  (derived from real round-1 winners), but the real recorded round-2 game
+  was "vs Hau'oli City" (Exeggutor Island won outright, no ambiguity about
+  who advances). `_real_bracket_winner()`'s exact-name-match lookup simply
+  couldn't find "Exeggutor Island vs Mistralton City" and returned `None`,
+  which `_rds_round_games()` correctly treated as "not complete yet" —
+  correct behavior for a genuinely unplayed game, wrong conclusion for a
+  played game under a different opponent. Fixed with a new
+  `_rds_real_winner_with_fallback()`, used only by `_rds_round_games()`:
+  tries the exact predicted pairing first, and only if that's not found,
+  falls back to whichever real game either predicted participant actually
+  played that round. Deliberately **not** folded into `_real_bracket_winner()`
+  itself, which PA Cup's conflict-resolution system also calls — that
+  system already generates and looks up exact real pairings by
+  construction (see PA Cup section below), so a fallback there would only
+  ever mask a genuine bug, not a historical data quirk. Verified: all 6
+  RDS brackets (Ribbon/Dream/Star × Draw/Process) now resolve round 3
+  cleanly, Dream Draw's round 3 correctly includes Exeggutor Island
+  (paired against Pyrite Town), and every other bracket's round-3 output
+  is byte-identical to before this fix (only the one known-anomalous slot
+  ever takes the fallback path).
 - After **5 rounds** each, Draw and Process reach 2 remaining teams, which
   combine into a shared final stage:
   - 4 distinct finalists: Draw pair plays a semifinal, Process pair plays
