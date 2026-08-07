@@ -161,11 +161,53 @@ deliberately — not modeled yet, see "Known open items."
 
 - **RW/LW**: exact match, 160/160 teams. Full formula in
   `deckfield_ranking_spec.md`-equivalent docstrings in the engine.
-- **OVR** = weighted blend of 12 components (RW, LW, PF, PA, PDG, SOS, SOV,
-  DSCR, EYE, Elo, Cups, EX), each normalized 0–100 (except RW/LW, which can
-  exceed 100). PDG's denominator is `avg_raw_goal_score` (the `^X.XX` field
-  in the packed string), **not** PF/games_played — this was a real early
-  bug.
+- **OVR** = weighted blend of 10 components (PF, PA, PDG, SOS, SOV, DSCR,
+  EYE, Elo, Cups, EX), each normalized 0–100. PDG's denominator is
+  `avg_raw_goal_score` (the `^X.XX` field in the packed string), **not**
+  PF/games_played — this was a real early bug.
+- **Block A uses RW/LW, not PF/PA, fixed 2026-08-07 (per explicit
+  instruction).** `compute_round_ratings()`'s OVR assembly previously had
+  Block A = `(PF_norm×.5 + PA_norm×.5) × 3` — matching
+  `deckfield_ranking_spec.md`'s §6 exactly, but the person flagged this as
+  wrong: **Block A should be `(RW×.5 + LW×.5) × 3`**, using RW/LW *raw* (not
+  population-normalized — they're used everywhere else in the system in
+  their raw, uncapped form; there's no "RW_norm"/"LW_norm" concept anywhere
+  in the spec or engine). Block B is unaffected — it still uses
+  `PF_norm`/`PA_norm` alongside PDG, so PF/PA didn't disappear from OVR
+  entirely, they just moved out of Block A. This is a real formula
+  correction, not a bug fix to match some other source of truth — the old
+  Block A (PF/PA) was byte-identical to the original spec, but the spec
+  itself is being corrected here. Recomputed all of season 9 (`recompute_from_round(9,
+  1)`, rounds 1–14) since OVR feeds SOS round-to-round. Real effect, not a
+  no-op: Canalave City's round-14 OVR went from ~102 to 113.23 (RW 102.4,
+  LW 153.6 vs. the old inputs PF_norm 93.48/PA_norm 94.79 — Block A's raw
+  inputs got meaningfully larger). Season-wide round-14 OVR range shifted
+  to 9.77–113.23 (avg 56.9), still a sane distribution, no NaN/negative
+  blowups.
+- **LW runs structurally higher than RW, especially in low-numbered
+  divisions — not a bug, an artifact of LW's division multiplier having no
+  RW counterpart.** Flagged with Canalave City at round 14 (LW 153.6 vs. RW
+  102.4) as the concrete example. Both start from the same saturation
+  point for an unbeaten record — RW's raw formula and LW's `LW_base` are
+  literally both `102.4` here (RP/RP-denominator = LP/LP-denominator =
+  1.0 in each, since undefeated in both tracks):
+  ```
+  RW      = (RP/(regional_games×3+league_games) + SP/1000 + pW×0.005) × 100
+          = (18/(5×3+3) + 24/1000 + 0) × 100 = (18/18 + 0.024) × 100 = 102.4
+  LW_base = (LP/(league_games×3+regional_games) + SP/1000 + pW×0.005) × 100
+          = (14/(3×3+5) + 24/1000 + 0) × 100 = (14/14 + 0.024) × 100 = 102.4
+  LW      = LW_base × (1 + 0.05×(11−league_division))
+          = 102.4 × (1 + 0.05×(11−1)) = 102.4 × 1.5 = 153.6
+  ```
+  RW has no equivalent post-multiplier — LW's `×(1 + 0.05×(11−division))`
+  term is applied to LW only, per spec §4, and was already validated exact
+  against real S9 data (160/160 teams) before this session, so it's a
+  faithful port, not a mistake. For division 1 it's a full ×1.5; it shrinks
+  toward ×1.05 for division 10. This asymmetry is exactly why LW numbers
+  read as "too high" this early in the season (round 14, only 3 league
+  games played) — nothing wrong with the computation itself, just an
+  emergent property of the division multiplier at small sample sizes, now
+  more visible since Block A routes LW straight into OVR.
 - **OVR's EX taper** (`taper_n`, `N/14` in Block E and the overall
   denominator) — changed from an original `N/12` scheme. Full weight (14)
   through week 6, decreasing 1/week starting week 7, reaching 1 at week 19,

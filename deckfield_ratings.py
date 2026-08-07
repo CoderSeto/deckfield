@@ -759,7 +759,7 @@ def compute_round_ratings(season, round_num):
         cups = normalize(v["buckets"]["tot"], tot_vals)
         ex_norm = normalize(v["ex"], ex_vals)
 
-        block_a = (pf_norm * .5 + pa_norm * .5) * 3
+        block_a = (v["rw"] * .5 + v["lw"] * .5) * 3
         block_b = (pf_norm * .35 + pa_norm * .35 + pdg * .3) * 2
         block_c = (sos * .4 + sov * .3 + dscr_comp * .3) * 3
         block_d = (eye * .35 + elo_comp * .3 + cups * .35) * 2
