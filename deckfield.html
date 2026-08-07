@@ -739,7 +739,11 @@
       <div class="roster-panel">
         <div class="log-title">Import Matchups</div>
         <p class="roster-help">
-          Paste rows in this order: <code>Away Team Rank, Home Team Rank, Adv</code>.
+          Paste rows in this order: <code>Away Team Rank, Home Team Rank, Adv</code>, optionally
+          followed by <code>Cup Name, Cup Bracket</code> on every row (needed when a single pasted
+          batch mixes cups, e.g. an RDS Cup matchday's Ribbon/Dream/Star games all at once) — a
+          row's own Cup Name/Cup Bracket overrides the Batch Settings above for that game;
+          leave them off (3 columns) when the whole batch is one cup, or none.
           Adv is the modifier from the tail end of the Spread calculation — leave it blank
           for a normal game; it defaults to 0.
         </p>
@@ -2505,10 +2509,17 @@
   });
 
   // ---------- Schedule importer ----------
-  // Rows are just [Away Rank, Home Rank, Adv]; everything else (game type, AGG,
-  // weekend/midweek, round label, timeslot assignment) comes from the batch settings
-  // above and applies to the whole pasted list at once.
+  // Rows are [Away Rank, Home Rank, Adv], optionally followed by [Cup Name,
+  // Cup Bracket] -- everything else (game type, AGG, weekend/midweek, round
+  // label, timeslot assignment) comes from the batch settings above and
+  // applies to the whole pasted list at once. The two trailing columns let
+  // a single pasted batch mix cups row by row (e.g. an RDS Cup matchday,
+  // where Ribbon/Dream/Star all play at once and no single Batch Settings
+  // Cup Name could cover the whole list) -- a row's own Cup Name/Cup
+  // Bracket wins when present, otherwise the batch-level setting applies,
+  // so ordinary single-cup (or non-cup) pastes need no change at all.
   const SCHEDULE_COLUMNS = ['Away Team Rank', 'Home Team Rank', 'Adv'];
+  const SCHEDULE_COLUMNS_WITH_CUP = SCHEDULE_COLUMNS.concat(['Cup Name', 'Cup Bracket']);
   let SCHEDULE = [];
   let nextMatchIndex = 0; // which SCHEDULE entry "Load Next Match" will load
   let currentMatchIndex = null; // which SCHEDULE entry is currently loaded into `game`
@@ -2528,9 +2539,10 @@
 
   function renderScheduleTable(entries){
     const table = document.getElementById('schedTable');
-    const headers = ['', '#', 'Round', 'Away', 'Home', 'Adv', 'Type', 'Format', 'Day', 'Timeslot'];
+    const headers = ['', '#', 'Round', 'Away', 'Home', 'Adv', 'Type', 'Cup', 'Format', 'Day', 'Timeslot'];
     let html = '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead><tbody>';
     entries.forEach((e, idx) => {
+      const cupLabel = [e.cupName, e.cupBracket].filter(Boolean).join(' ');
       html += '<tr>'
         + `<td><button class="load-match-row-btn" data-index="${idx}">Load →</button></td>`
         + `<td>${idx + 1}</td>`
@@ -2539,6 +2551,7 @@
         + `<td>${e.homeRank}${e.homeName ? ' — ' + e.homeName : ''}</td>`
         + `<td>${e.adv}</td>`
         + `<td>${e.gameType}</td>`
+        + `<td>${cupLabel}</td>`
         + `<td>${e.agg ? 'AGG' : 'Single'}</td>`
         + `<td>${e.weekend ? 'Weekend' : 'Midweek'}</td>`
         + `<td>${e.timeslot}</td>`
@@ -2575,7 +2588,7 @@
     const cupRoundRaw = document.getElementById('schedCupRound').value.trim();
     const cupRoundNum = cupRoundRaw === '' ? '' : parseInt(cupRoundRaw, 10);
 
-    const badRows = rows.filter(r => r.length !== SCHEDULE_COLUMNS.length);
+    const badRows = rows.filter(r => r.length !== SCHEDULE_COLUMNS.length && r.length !== SCHEDULE_COLUMNS_WITH_CUP.length);
     let overflowCount = 0;
 
     SCHEDULE = rows.map((r, idx) => {
@@ -2583,6 +2596,8 @@
       const homeRank = (r[1] || '').trim();
       const advRaw = (r[2] || '').trim();
       const advParsed = advRaw === '' ? 0 : parseFloat(advRaw);
+      const rowCupName = (r[3] || '').trim();
+      const rowCupBracket = (r[4] || '').trim();
       const timeslot = startSlot + Math.floor(idx / gamesPerSlot);
       if (timeslot > 10) overflowCount++;
       const awayTeam = findTeamByRank(awayRank);
@@ -2592,7 +2607,7 @@
         awayRank, homeRank, adv: isNaN(advParsed) ? 0 : advParsed,
         awayName: awayTeam ? awayTeam['Team Name'] : '',
         homeName: homeTeam ? homeTeam['Team Name'] : '',
-        cupName, cupBracket, cupRoundNum
+        cupName: rowCupName || cupName, cupBracket: rowCupBracket || cupBracket, cupRoundNum
       };
     });
     nextMatchIndex = 0;
@@ -2602,7 +2617,7 @@
     let msg = `Parsed ${rows.length} matchup${rows.length === 1 ? '' : 's'} for ${round} `
       + `(${gameType}${agg ? ', AGG' : ''}, ${weekend ? 'Weekend' : 'Midweek'}).`;
     if (badRows.length){
-      msg += ` ⚠ ${badRows.length} row(s) didn't have exactly ${SCHEDULE_COLUMNS.length} columns.`;
+      msg += ` ⚠ ${badRows.length} row(s) didn't have exactly ${SCHEDULE_COLUMNS.length} or ${SCHEDULE_COLUMNS_WITH_CUP.length} columns.`;
     }
     if (overflowCount){
       msg += ` ⚠ ${overflowCount} matchup(s) would land past timeslot 10 — lower the starting timeslot or raise games-per-timeslot.`;

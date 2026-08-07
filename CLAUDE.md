@@ -1100,45 +1100,59 @@ escapes in string replacements, which corrupts anything containing `\t`/`\n`.
   pasted row instead of setting each field by hand — only Starting Timeslot
   and Games per Timeslot stay manual (they're display/pacing choices, not
   derivable from the schedule). Source is `export_matchday_batches()` in
-  the engine, surfaced in the dashboard's Next Matchday tab as one "batch"
-  panel per DECKFIELD batch — each with its own Batch Settings paste box
-  and Matchups paste box. Almost every matchday is one batch; **RDS Cup
-  matchdays are always three**, because Ribbon/Dream/Star all play on the
-  same weekly-schedule slot but a single DECKFIELD batch can only carry one
-  Cup Name for every matchup pasted with it (`_games_for_event` already
-  combines all three cups into one list for game generation — this just
-  splits them back apart for the DECKFIELD-facing export). Format is AGG
+  the engine, surfaced in the dashboard's Next Matchday tab. Format is AGG
   for any two-legged/Bo3 slot (RDS SF/Final, PA QF/SF/Final, Regional
   Tournament MD2 onward — MD1 is the only single-game RT matchday),
-  Single Game otherwise. Round-trip verified: rendered the dashboard's
-  actual output in a headless DOM, copied a batch's Batch Settings row,
-  pasted it into deckfield.html's importer, and confirmed the real
-  `<select>` elements land on the correct `<option>` (not just a
-  matching string) for both a plain batch (PA Draw R1) and all three
-  RDS batches (Ribbon/Dream/Star Draw R1).
+  Single Game otherwise.
 
-  **Combined listing added 2026-08-07**, per explicit instruction: the
-  three-batch split above is real and necessary (DECKFIELD's paste format
-  genuinely can't take more than one Cup Name per batch), but it means an
-  RDS matchday never showed on the dashboard as the single event it
-  actually is — a human glancing at the Next Matchday tab saw three
-  separate tables and had to mentally merge them to see the real play
-  order. Fixed by having `regenerate_dashboard.py`'s `build_next_matchday()`
-  merge all batches' already-computed `games` lists (each tagged with its
-  cup, taken from the batch's own label) and re-sort by the same
-  worst-ranked-team-first key `export_matchday_batches()` already sorts
-  each batch by — no engine changes needed, this is pure
-  `regenerate_dashboard.py`/dashboard-JS wiring, reusing data that already
-  existed. Rendered as a new "All Cups Combined" table above the per-cup
-  batch panels (only when there's more than one batch — every other event
-  kind stays exactly as before). Verified: 24 games for a Ribbon+Dream+Star
-  Draw R3 matchday, correctly interleaved by rank across all three cups
-  (e.g. Ribbon/Star/Ribbon/Dream/Ribbon/Dream/Dream/Dream/Ribbon/Star/...
-  in the first ten rows, not grouped by cup), each row tagged with which
-  cup it belongs to. The header label was also cleaned up the same day,
-  per explicit instruction: `event_label` used to hardcode `"RDS/PA
-  combined"` for any multi-batch matchday, but a multi-batch matchday is
-  always RDS Cup (PA Cup is always exactly one batch, so PA was never
-  actually involved) — now derived from `info["event"]`'s bracket/round the
-  same way a single-cup batch already labels itself (`"PA Draw R1"`-style),
-  giving `"RDS Cup Draw R3"` instead.
+  **Always exactly one combined batch now, fixed 2026-08-07 (per explicit
+  instruction — twice, same day: first added a same-page "combined
+  listing" alongside three separate per-cup batches, then corrected to a
+  single real batch after "This will not do — I need one combined input
+  and one combined output").** RDS Cup matchdays play Ribbon, Dream, and
+  Star simultaneously; the original design split them into three separate
+  DECKFIELD batches because a single batch's Cup Name setting can only
+  hold one value for the whole pasted list. That's real, but it made the
+  workflow genuinely painful: three rounds of paste-settings → paste-
+  matchups → play 8 games → repeat, instead of one round covering all 24.
+
+  Fixed by moving Cup Name off the batch level for a combined RDS batch and
+  onto each matchup row instead: `export_matchday_batches()`'s Matchups
+  format grows two optional trailing columns, `Cup Name` and `Cup Bracket`
+  (`SCHEDULE_COLUMNS_WITH_CUP` in `deckfield.html`) — present only when a
+  batch mixes cups. `deckfield.html`'s Schedule importer accepts either
+  3-column (unchanged, single cup or none) or 5-column rows; a row's own
+  Cup Name/Bracket wins when present, falling back to the batch-level
+  Batch Settings otherwise — so `loadScheduledMatch()` needed **no changes
+  at all**, since it already read `match.cupName`/`match.cupBracket` off
+  whatever `SCHEDULE` construction resolved. Cup Bracket (Draw/Process)
+  stays at the batch level even for a combined RDS batch, since all three
+  cups always share the same bracket that matchday — only Cup Name
+  actually varies per row. `export_matchday_batches()` now always returns
+  a single-element `batches` list (kept as a list for the existing call
+  signature) — an RDS batch's `settings_tsv` leaves Cup Name blank (the
+  UI's existing `<option value="">—</option>` already handles that
+  correctly) and its `games`/`matchups_tsv` carry a `cup` field/columns
+  per row; every other event kind (R/L/PA/RT) is completely unchanged,
+  still 3-column, still one cup (or none) for the whole batch.
+
+  This made the short-lived "combined listing" feature (a separate
+  read-only preview table merging the three batches) redundant — removed
+  it entirely, since the single real batch's own Matchups table already
+  shows every game in play order with a Cup column when relevant.
+  `regenerate_dashboard.py`'s `build_next_matchday()` simplified from
+  `"batches": [...]` (a list, sized 1-3) to a single `"batch": {...}`, and
+  the dashboard JS no longer needs per-batch-index DOM lookups
+  (`data-batch="${idx}"`) since there's only ever one Batch Settings box,
+  one Matchups box, and one Region Climate box now.
+
+  Verified end to end: parsed a real 160-team roster, pasted the engine's
+  actual generated Batch Settings (Cup Name blank, Cup Bracket "Draw") and
+  24-row combined Matchups (Ribbon/Star/Ribbon/Dream/... interleaved by
+  rank, not grouped by cup) into `deckfield.html`'s real importer;
+  confirmed the Schedule table's per-row Cup column shows the correct cup
+  for each of the first 6 rows; loaded row 2 (a Star game) and simulated
+  it; confirmed the Results CSV correctly recorded `cup_name=Star,
+  cup_bracket=Draw, cup_round=3` for that specific game. Also confirmed a
+  PA Cup matchday (always single-cup) is completely unaffected: 3-column
+  matchups, batch-level Cup Name still populated, no per-row `cup` key.

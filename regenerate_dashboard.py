@@ -141,41 +141,18 @@ def build_data():
 
 
 def build_next_matchday():
+    # export_matchday_batches always returns exactly one batch now -- RDS
+    # Cup matchdays (Ribbon/Dream/Star at once) are combined into it with a
+    # per-game 'cup' tag on each row, instead of three separate batches.
     info, batches = export_matchday_batches(SEASON)
     if info is None:
         return None
-    # A multi-batch matchday is always RDS Cup (Ribbon/Dream/Star at once --
-    # PA Cup is always a single batch), so label it the same way a
-    # single-cup batch would be ("PA Draw R1"), not the generic
-    # "RDS/PA combined" that never actually involved PA.
-    if len(batches) == 1:
-        event_label = batches[0]["label"]
-    else:
-        _, bracket, cup_round = info["event"]
-        event_label = f"RDS Cup {bracket} R{cup_round}" if cup_round is not None else f"RDS Cup {bracket}"
-
-    # RDS Cup matchdays split into three per-cup batches below because
-    # DECKFIELD's paste format can only carry one Cup Name per batch -- but
-    # Ribbon/Dream/Star are still one real matchday, so also expose a single
-    # combined, play-order-sorted listing (each game tagged with its own
-    # cup) for an at-a-glance view. Only meaningful when there's more than
-    # one batch; every other event kind is already just one batch.
-    combined_games = None
-    if len(batches) > 1:
-        combined_games = [
-            {**g, "cup": b["label"].split()[0]}
-            for b in batches for g in b["games"]
-        ]
-        combined_games.sort(key=lambda g: max(g["away_rank"], g["home_rank"]), reverse=True)
-
+    b = batches[0]
     return {
-        "week": info["week"], "day": info["day"], "event_label": event_label,
-        "abs_round": info["abs_round"], "combined_games": combined_games,
-        "batches": [
-            {"label": b["label"], "settings_tsv": b["settings_tsv"],
-             "matchups_tsv": b["matchups_tsv"], "games": b["games"]}
-            for b in batches
-        ],
+        "week": info["week"], "day": info["day"], "event_label": b["label"],
+        "abs_round": info["abs_round"],
+        "batch": {"label": b["label"], "settings_tsv": b["settings_tsv"],
+                  "matchups_tsv": b["matchups_tsv"], "games": b["games"]},
     }
 
 
