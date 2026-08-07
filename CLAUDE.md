@@ -853,6 +853,36 @@ always shown without a "projected" qualifier; the label was left over
 from language written when only one bracket's round 1 was done and round
 2 genuinely could still shift.
 
+**Conflict log named the wrong seeds as swapped, found and fixed
+2026-08-07, same day.** Once the round 2-4 conflict log above was
+actually visible, real round-2 entries read e.g. "Swapped seed #96 &harr;
+#95" — but 96 and 95 are **entrant** seeds, the permanently protected
+side per the entrant-protection model (see above: "the higher [entrant]
+seed should always be protected in its pathway," never reassigned to a
+different row). Reporting them as swapped directly contradicted that
+rule. The actual swap (verified against real row 1/row 2 data: row 1's
+entrant is seed 96/Wild Area, row 2's is seed 95/Alfornada, neither ever
+moves) exchanges which SURVIVOR visits each entrant — row 1's original
+survivor (seed 97/Stow-on-Side) and row 2's (seed 98/Oreburgh City)
+traded which entrant they play, confirmed directly against the resolved
+pairing (`Wild Area vs Oreburgh City`, `Alfornada vs Stow-on-Side`). The
+swap mechanics in `_pa_swap_survivors` were always correct — only
+`visiting_of` (survivor assignment) is ever mutated, `entrant_seed_of`
+never is — but the log entry itself was built from `entrant_seed_of`
+(`my_seed`/`candidate_seed`) instead of the survivor's own seed, so the
+report described the opposite of what happened: it looked like the
+protected side moved when actually the swappable side did. Fixed by
+threading a new `survivor_seed_of: {row_idx: seed}` parameter into
+`_pa_swap_survivors` (each row's survivor's own original seed, separate
+from `survivor_team_of`) and logging
+`survivor_seed_of[visiting_of[row_idx]]` /
+`survivor_seed_of[visiting_of[candidate_row_idx]]` (the seeds that
+actually trade places) instead of the entrant seeds. No behavior change
+— pairings, swap decisions, and game counts are all identical before and
+after; only the seed values written into the log entry changed. Row 1's
+entry now reads "Swapped seed #97 &harr; #98," matching the real
+Stow-on-Side/Oreburgh City exchange.
+
 ### Rank/Elo History tab
 
 Added 2026-08-05, mirroring the S9 workbook's own hand-tracked history
