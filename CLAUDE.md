@@ -1117,6 +1117,57 @@ divider in Indigo's own bright red (`#E4574A`) after seeds 4 and 8 only,
 all other rows unstyled, and League (division) standings render with no
 divider styling at all.
 
+**`CUP_REAL_RESULTS`/`RDS_ROUND2`/`RDS_ROUND3` (RDS Cup tab) were the same
+kind of silent gap as `PA_CUP_DATA`/`SCHEDULE_DATA`, found and fixed
+2026-08-08.** Reported directly: RDS Cup round 3 (Draw = abs_round 15,
+Process = abs_round 16) was complete in the database, but the RDS Cup tab
+still showed round 3 as an unscored structural preview and had no round 4
+at all. Cause: `CUP_REAL_RESULTS` only ever covered rounds 1-2, and
+`RDS_ROUND2`/`RDS_ROUND3` were each a one-shot hand-baked snapshot for one
+specific round — none of the three were ever wired into
+`regenerate_dashboard.py`, so nothing advanced them as later rounds got
+played. This diagnosis in the earlier `SCHEDULE_DATA` entry above turned
+out to be wrong about these three specifically: they were listed as
+"genuinely unaffected by Regional/League/PA results" and fine to leave
+alone until an RDS round actually came in — but no fix ever landed once
+one did.
+
+Fixed with two new functions and a JS renderer generalization, not just a
+one-off patch for round 3→4:
+- `rds_cup_real_results(season)` — generalizes the old rounds-1-2-only
+  `CUP_REAL_RESULTS` to every round that has real games so far, across
+  all three cups, mirroring `pa_cup_real_results()`.
+- `rds_cup_round_pairings(season)` / `_rds_cup_round_pairings()` —
+  replaces the one-shot `RDS_ROUND2`/`RDS_ROUND3` snapshots with a single
+  `RDS_ROUND_PAIRINGS` constant covering every round 2-5 whose pairing is
+  resolvable (every prior round complete), recomputed fresh every run via
+  `_rds_round_games()`. This naturally covers every round already played
+  *and* exactly one round ahead (the "what's next" preview) — a round
+  stops appearing in the output the moment the round before it isn't
+  complete yet, so the accumulation is self-limiting without any special
+  round-number bookkeeping. Round 1 stays out of this (real, fixed seed
+  data in the already-static `CUP_BRACKET_DATA`, never changes). Never
+  resolves round 6 (the mutual semifinal/final stage) — that's a
+  different resolution mechanism entirely (`resolve_mutual_stage`), not
+  naive further bracketing, and isn't wired into a playable event yet.
+- `renderRdsCup()` (dashboard JS) rewritten from two hardcoded
+  round-2/round-3 blocks into a `for (rnd = 2; rnd <= 5; rnd++)` loop over
+  `RDS_ROUND_PAIRINGS`: a round with real results renders via
+  `rdsRound1RowHtml` (winner-colored, scored, same as Round 1); a round
+  with pairing but no results yet renders via `rdsRound3RowHtml` (dash
+  score, structural only) and the loop breaks, since only one round is
+  ever shown ahead of what's been played. This is why the round-2/round-3
+  special-casing had to go, not just get a round-4 case bolted on: a
+  hardcoded per-round block would need a new special case forever, one
+  RDS round at a time, exactly the maintenance trap the earlier
+  `PA_ROUND_PREVIEW` design was already built to avoid.
+
+Verified via Playwright across all six brackets (Ribbon/Dream/Star ×
+Draw/Process): each now shows Round 1-4 sections (newest first), Round 3
+rendering with real winner-colored scores (e.g. Ribbon Draw's Cherrygrove
+City 43-26 over Vermilion City), and Round 4 rendering as an unscored
+preview pairing (Cherrygrove City vs Mount Silver, the round-3 winners).
+
 ## Known open items
 
 - Dashboard regeneration isn't in the CLI yet — still manual script runs.
