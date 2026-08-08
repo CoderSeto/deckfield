@@ -9,6 +9,10 @@ hand.
 
 Covers: DATA (Rankings tab, which Standings derives from client-side),
 TEAMS_EXPORT_TSV (Team Roster paste box), NEXT_MATCHDAY_DATA, CALENDAR_DATA,
+SCHEDULE_DATA (Schedule tab's Regional/League pod schedule, structural
+pairings for every region/division x round 1-15 with real scores merged in
+wherever played -- regenerated fresh every run, not a static one-time
+snapshot, so newly-added Regional/League results actually reach this tab),
 RANK_ELO_HISTORY, PA_CUP_DATA (PA Cup tab's round-1 structural seeding +
 conflict-resolution log -- regenerated fresh every run, NOT a static
 snapshot, so a formula fix to pa_cup_ladder_rows() actually reaches the
@@ -31,7 +35,7 @@ from deckfield_ratings import (
     get_connection, taper_n, export_teams_for_deckfield,
     export_matchday_batches, rank_elo_history,
     pa_cup_real_results, pa_cup_round_preview, pa_cup_round1_seeding,
-    compute_strength_breakdown,
+    compute_strength_breakdown, generate_pod_schedule,
 )
 
 SEASON = 9
@@ -199,6 +203,65 @@ def build_calendar():
     return calendar
 
 
+def build_schedule_data():
+    """SCHEDULE_DATA -- the Schedule tab's full Regional/League pod schedule:
+    structural pairings for every region/division x local round 1-15, with
+    real scores merged in wherever that pairing has actually been played.
+
+    This constant predated regenerate_dashboard.py and was never wired into
+    it -- a real gap, not just out of scope, confirmed once L3 (League local
+    round 3, abs_round 14) results came in and never appeared on the
+    Schedule tab even though the game_type='L' rows were sitting in the
+    database the whole time. Regional/League are true single round-robins
+    within their group (16 teams, 15 rounds -- each pair meets exactly
+    once), so a played game is found by its team pair alone, then oriented
+    onto the pod schedule's own home/away call (already validated against
+    real Archive host data, see the Regional/League pod schedule section of
+    CLAUDE.md) regardless of which side `games` happened to store as
+    team_a/team_b."""
+    conn = get_connection()
+    name_to_dex = {r["name"]: r["team_id"] for r in conn.execute("SELECT team_id, name FROM teams").fetchall()}
+
+    def pair_scores(game_type):
+        rows = conn.execute(
+            "SELECT team_a, team_b, pf_a, pa_a FROM games WHERE season=? AND game_type=?",
+            (SEASON, game_type),
+        ).fetchall()
+        return {frozenset((r["team_a"], r["team_b"])): (r["team_a"], r["pf_a"], r["pa_a"]) for r in rows}
+
+    def build_mode(pods_path, game_type):
+        with open(pods_path) as f:
+            pod_blocks = json.load(f)
+        scores = pair_scores(game_type)
+        out = {}
+        for group_name, pod_block in pod_blocks.items():
+            pods = {label: info["teams"] for label, info in pod_block.items()}
+            sched = generate_pod_schedule(pods)
+            out[group_name] = {}
+            for rnd in range(1, 16):
+                games = []
+                for home, away in sched[rnd]:
+                    home_dex, away_dex = name_to_dex[home], name_to_dex[away]
+                    game = {"home": home, "away": away, "home_dex": home_dex, "away_dex": away_dex}
+                    entry = scores.get(frozenset((home_dex, away_dex)))
+                    if entry is not None:
+                        team_a, pf_a, pa_a = entry
+                        if team_a == home_dex:
+                            game["home_score"], game["away_score"] = pf_a, pa_a
+                        else:
+                            game["home_score"], game["away_score"] = pa_a, pf_a
+                    games.append(game)
+                out[group_name][str(rnd)] = games
+        return out
+
+    data = {
+        "regional": build_mode("conf_pods.json", "R"),
+        "league": build_mode("league_pods.json", "L"),
+    }
+    conn.close()
+    return data
+
+
 def build_rank_elo_history():
     h = rank_elo_history(SEASON)
     return {
@@ -287,6 +350,7 @@ def main():
         content = _replace_const(content, "NEXT_MATCHDAY_DATA", next_md)
 
     content = _replace_const(content, "CALENDAR_DATA", build_calendar(), is_array=True)
+    content = _replace_const(content, "SCHEDULE_DATA", build_schedule_data())
     content = _replace_const(content, "RANK_ELO_HISTORY", build_rank_elo_history())
 
     content = _replace_const(content, "PA_CUP_DATA", pa_cup_round1_seeding())
@@ -305,7 +369,7 @@ def main():
 
     with open(DASHBOARD_PATH, "w") as f:
         f.write(content)
-    print(f"Regenerated DATA, NEXT_MATCHDAY_DATA, CALENDAR_DATA, RANK_ELO_HISTORY, "
+    print(f"Regenerated DATA, NEXT_MATCHDAY_DATA, CALENDAR_DATA, SCHEDULE_DATA, RANK_ELO_HISTORY, "
           f"PA_CUP_DATA, PA_REAL_RESULTS, PA_ROUND_PREVIEW, STRENGTH_DATA, TEAMS_EXPORT_TSV "
           f"in {DASHBOARD_PATH}")
 
