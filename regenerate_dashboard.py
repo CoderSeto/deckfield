@@ -13,7 +13,13 @@ SCHEDULE_DATA (Schedule tab's Regional/League pod schedule, structural
 pairings for every region/division x round 1-15 with real scores merged in
 wherever played -- regenerated fresh every run, not a static one-time
 snapshot, so newly-added Regional/League results actually reach this tab),
-RANK_ELO_HISTORY, PA_CUP_DATA (PA Cup tab's round-1 structural seeding +
+RANK_ELO_HISTORY, CUP_REAL_RESULTS/RDS_ROUND_PAIRINGS (RDS Cup tab's real
+results for every round played so far, plus each round's structural
+pairing -- regenerated fresh every run instead of a one-shot snapshot
+frozen at whichever round existed when the dashboard was first built, so
+a completed RDS round's results and the next round's pairing both
+actually reach this tab), PA_CUP_DATA (PA Cup tab's round-1 structural
+seeding +
 conflict-resolution log -- regenerated fresh every run, NOT a static
 snapshot, so a formula fix to pa_cup_ladder_rows() actually reaches the
 dashboard), PA_REAL_RESULTS/PA_ROUND_PREVIEW (PA Cup tab's real results +
@@ -36,6 +42,7 @@ from deckfield_ratings import (
     export_matchday_batches, rank_elo_history,
     pa_cup_real_results, pa_cup_round_preview, pa_cup_round1_seeding,
     compute_strength_breakdown, generate_pod_schedule,
+    rds_cup_real_results, rds_cup_round_pairings,
 )
 
 SEASON = 9
@@ -353,6 +360,9 @@ def main():
     content = _replace_const(content, "SCHEDULE_DATA", build_schedule_data())
     content = _replace_const(content, "RANK_ELO_HISTORY", build_rank_elo_history())
 
+    content = _replace_const(content, "CUP_REAL_RESULTS", rds_cup_real_results(SEASON))
+    content = _replace_const(content, "RDS_ROUND_PAIRINGS", rds_cup_round_pairings(SEASON))
+
     content = _replace_const(content, "PA_CUP_DATA", pa_cup_round1_seeding())
 
     pa_real_results, pa_preview = build_pa_cup()
@@ -370,8 +380,8 @@ def main():
     with open(DASHBOARD_PATH, "w") as f:
         f.write(content)
     print(f"Regenerated DATA, NEXT_MATCHDAY_DATA, CALENDAR_DATA, SCHEDULE_DATA, RANK_ELO_HISTORY, "
-          f"PA_CUP_DATA, PA_REAL_RESULTS, PA_ROUND_PREVIEW, STRENGTH_DATA, TEAMS_EXPORT_TSV "
-          f"in {DASHBOARD_PATH}")
+          f"CUP_REAL_RESULTS, RDS_ROUND_PAIRINGS, PA_CUP_DATA, PA_REAL_RESULTS, PA_ROUND_PREVIEW, "
+          f"STRENGTH_DATA, TEAMS_EXPORT_TSV in {DASHBOARD_PATH}")
 
 
 if __name__ == "__main__":

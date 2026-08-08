@@ -1839,6 +1839,87 @@ def _rds_round_games(conn, cup, bracket, target_round):
     return games
 
 
+def rds_cup_real_results(season):
+    """{cup: {"Draw": {round_str: [{winner, loser, winner_dex, loser_dex,
+    winner_score, loser_score}, ...]}, "Process": {...}}} for every RDS
+    Cup round that has real games so far, across all three cups
+    (Ribbon/Dream/Star) -- generalizes the dashboard's old CUP_REAL_RESULTS,
+    which was hand-baked once and only ever covered rounds 1-2, to every
+    round as the tournament progresses (mirrors pa_cup_real_results)."""
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT g.cup_name, g.cup_bracket, g.cup_round, ta.name a_name, tb.name b_name,
+               ta.team_id a_dex, tb.team_id b_dex, g.result_a, g.pf_a, g.pa_a
+        FROM games g
+        JOIN teams ta ON ta.team_id = g.team_a
+        JOIN teams tb ON tb.team_id = g.team_b
+        WHERE g.season = ? AND g.cup_name IN ('Ribbon', 'Dream', 'Star')
+              AND g.cup_bracket IS NOT NULL AND g.cup_round IS NOT NULL
+        ORDER BY g.cup_round
+    """, (season,)).fetchall()
+    conn.close()
+
+    results = {cup: {"Draw": {}, "Process": {}} for cup in ("Ribbon", "Dream", "Star")}
+    for r in rows:
+        a_won = r["result_a"] in (2, 3)
+        winner, loser = (r["a_name"], r["b_name"]) if a_won else (r["b_name"], r["a_name"])
+        winner_dex, loser_dex = (r["a_dex"], r["b_dex"]) if a_won else (r["b_dex"], r["a_dex"])
+        winner_score, loser_score = (r["pf_a"], r["pa_a"]) if a_won else (r["pa_a"], r["pf_a"])
+        results[r["cup_name"]][r["cup_bracket"]].setdefault(str(r["cup_round"]), []).append({
+            "winner": winner, "loser": loser, "winner_dex": winner_dex, "loser_dex": loser_dex,
+            "winner_score": winner_score, "loser_score": loser_score,
+        })
+    return results
+
+
+def _rds_cup_round_pairings(conn, cup, bracket):
+    """{round_str(2-5): [{home,away,home_seed,away_seed,home_dex,away_dex}]}
+    for every RDS Cup round 2-5 whose pairing is resolvable (i.e. every
+    prior round is complete) -- this naturally covers every round already
+    played AND exactly one round ahead (the "what's next" preview), since
+    a round's pairing only becomes resolvable once the round before it is
+    done. Generalizes the dashboard's old RDS_ROUND2/RDS_ROUND3, each a
+    one-shot hand-baked snapshot for a single specific round, into a
+    permanently-accurate accumulation that's recomputed fresh every run.
+    Stops at the first round that can't resolve yet, since a later round
+    can never resolve before an earlier one (mirrors _rds_round_games'
+    own None-if-incomplete contract). Round 1 isn't included here -- it's
+    real, fixed seed data that never changes, already covered by the
+    static CUP_BRACKET_DATA. Never resolves round 6 (the mutual
+    semifinal/final stage) -- that's a different resolution mechanism
+    entirely (resolve_mutual_stage), not naive further bracketing, and
+    isn't wired into a playable event yet (see _games_for_event)."""
+    with open("cup_seeds_full.json") as f:
+        seeds = json.load(f)
+    seed_to_team = {int(k): v for k, v in seeds[cup].items()}
+    team_to_seed = {v: k for k, v in seed_to_team.items() if v not in (None, "bye")}
+    name_to_dex = {r["name"]: r["team_id"] for r in conn.execute("SELECT team_id, name FROM teams").fetchall()}
+
+    out = {}
+    for rnd in range(2, 6):
+        games = _rds_round_games(conn, cup, bracket, rnd)
+        if games is None:
+            break
+        out[str(rnd)] = [{
+            "home": h, "away": a,
+            "home_seed": team_to_seed[h], "away_seed": team_to_seed[a],
+            "home_dex": name_to_dex[h], "away_dex": name_to_dex[a],
+        } for h, a in games]
+    return out
+
+
+def rds_cup_round_pairings(season):
+    """{cup: {"Draw": {round_str: [...]}, "Process": {...}}} for all three
+    RDS Cups -- see _rds_cup_round_pairings for the per-bracket shape."""
+    conn = get_connection()
+    data = {
+        cup: {bracket: _rds_cup_round_pairings(conn, cup, bracket) for bracket in ("Draw", "Process")}
+        for cup in ("Ribbon", "Dream", "Star")
+    }
+    conn.close()
+    return data
+
+
 _PA_ROUND_GAME_COUNTS = {1: 32, 2: 32, 3: 32, 4: 32, 5: 16, 6: 8, 7: 4}
 # Swap-pool bounds per round, passed straight to _pa_swap_opponents.
 # Round 1 uses the full tier-D range (97-160) -- the opponent seed always
