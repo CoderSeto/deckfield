@@ -1067,6 +1067,56 @@ alone. When re-embedding large JSON blocks via regex, use a **lambda**
 replacement function, not a raw string — `re.sub()` processes backslash
 escapes in string replacements, which corrupts anything containing `\t`/`\n`.
 
+**`SCHEDULE_DATA` (Schedule tab) was a silent gap the same way `PA_CUP_DATA`
+once was, found and fixed 2026-08-08.** Reported directly: League round 3
+(L3, abs_round 14) results were in the database but never showed up on the
+Schedule tab. Cause: `SCHEDULE_DATA` was never wired into
+`regenerate_dashboard.py` at all — `grep`-ing the whole repo for the
+constant's name turned up only `deckfield_dashboard.html` itself, meaning
+it had been hand-baked once by an early one-time script and left static
+ever since, exactly the same class of bug as the `PA_CUP_DATA` finding
+above ("looks like static seed data" vs. "is actually derived and needs
+regenerating"). Fixed with a new `build_schedule_data()`: for each
+region/division (from `conf_pods.json`/`league_pods.json`) and each local
+Regional/League round 1-15, walks `generate_pod_schedule()` for the
+structural home/away pairing (already validated against real Archive host
+data — see the Regional/League pod schedule section above), then looks up
+that pair's real game (if played) by team-pair alone, since Regional/League
+are true single round-robins within their group and each pair meets
+exactly once per season. Orientation matters here: `games` doesn't store
+which of `team_a`/`team_b` hosted directly (only `host_region`, which can't
+disambiguate a Regional game since both teams already share a region), so
+the pod schedule's own home/away call is treated as ground truth and the
+score is oriented onto it by checking which team_id the game's `team_a`
+actually was, not by trusting a stored "home" flag. Wired into `main()`
+right after `CALENDAR_DATA`. Verified: League division 1 round 3 (`Castelia
+City` 19 vs `Canalave City` 56, etc.) now carries real scores where it
+previously had none; Regional round 12 (genuinely unplayed) still correctly
+carries only the structural pairing, no score keys — confirming the fix
+adds real data without inventing any.
+
+**Winner/team-name coloring extended to the Rankings tab, and Regional
+Standings gained region-colored Top-4/Top-8 divider lines, 2026-08-08 (both
+per explicit request).** Rankings' team-name cell now reuses the same
+`winnerNameHtml()` helper the Rank/Elo History tab already used (colors a
+team's name by their own region, falling back to a plain highlight color if
+the team can't be resolved) — previously plain text, `${t.name}` with no
+color at all. Regional Standings (16 teams/region) gets a 3px
+region-colored `border-bottom` after seed 4 and after seed 8, no text
+label — the natural breakpoints toward the Regional Tournament (see that
+section above): seeds 1-4 bye all the way to MD4/5, seeds 5-8 bye to MD2/3,
+seeds 9-16 start at MD1. New `standingsDividerStyle(mode, groupVal, i)`
+gates on `mode === 'region'` so League (division) standings — which have
+no equivalent tournament-bye structure, only the existing promotion/
+relegation markers — never get a divider. Applied as an inline style on
+every `<td>` in the row rather than the `<tr>` itself, since the
+`table { border-collapse: separate }` rule already in use means a
+`border-bottom` set on `<tr>` doesn't reliably render — it has to go on
+the cells. Verified via Playwright: Indigo's Regional Standings shows the
+divider in Indigo's own bright red (`#E4574A`) after seeds 4 and 8 only,
+all other rows unstyled, and League (division) standings render with no
+divider styling at all.
+
 ## Known open items
 
 - Dashboard regeneration isn't in the CLI yet — still manual script runs.
