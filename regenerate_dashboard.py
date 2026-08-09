@@ -283,27 +283,52 @@ def build_rank_elo_history():
 
 
 def build_pa_cup():
-    """(PA_REAL_RESULTS, PA_ROUND_PREVIEW) for the PA Cup tab. Preview
-    target round is one past whatever round has any real games so far --
-    correct as long as Draw and Process don't drift more than one round
-    apart in completion, which holds given they're always played on the
-    same matchday's Tue/Thu. No preview is generated until round 1 itself
-    is complete -- round 1's own structural pairing is already shown by
-    the tab's static "Round 1" section (PA_CUP_DATA), so projecting round 1
-    again as a "preview" before it's even played would just duplicate it
-    under a wrong label. PA_ROUND_PREVIEW carries its own "round" number
-    so the dashboard can label the section correctly instead of assuming
-    it's always round 2."""
+    """(PA_REAL_RESULTS, PA_ROUND_PAIRINGS, PA_SWAP_LOG) for the PA Cup
+    tab.
+
+    Real bug, fixed 2026-08-08: the old design kept only ONE "next round"
+    snapshot (PA_ROUND_PREVIEW), with its target round computed as one
+    past whatever round had ANY real results in EITHER bracket. That
+    assumed Draw and Process stay in lockstep, which they don't -- Draw
+    always plays before Process each PA matchday (Tue vs Thu). The moment
+    Draw round 2 was played, target jumped to round 3 -- which can't
+    resolve yet, since round 3's pairing needs BOTH brackets to finish
+    round 2 first (the cross-bracket duplicate check needs both) -- so
+    the dashboard's PA_ROUND_PREVIEW went from "round 2, fully populated"
+    straight to "round 3, both null", losing round 2's pairing entirely
+    even though Draw's round 2 had real results that needed exactly that
+    pairing data to render (seed/home-away aren't in PA_REAL_RESULTS,
+    only in the round's own generated pairing) and Process's round 2 was
+    still a perfectly valid upcoming preview.
+
+    Fixed the same way as RDS Cup's equivalent bug: accumulate every
+    round 2-7 whose pairing is actually resolvable (both brackets
+    finished the round before it) into PA_ROUND_PAIRINGS, recomputed
+    fresh every run, instead of keeping only the newest one. This
+    naturally covers every round already played by either bracket plus
+    exactly one round ahead -- a round stops appearing the moment the
+    round before it isn't complete for both brackets, so per-bracket
+    "has this round been played yet" is decided independently by
+    PA_REAL_RESULTS at render time, not by this accumulation.
+
+    PA_SWAP_LOG is the fullest available conflict-resolution history
+    (rounds 2-4 only -- rounds 5-7 never get conflict resolution): each
+    pa_cup_round_preview() call for target round N in 2-4 already
+    self-accumulates every round from 2 up to N (via _pa_ladder_walk), so
+    using the swap_log from whichever round resolved highest (capped at
+    4) is complete on its own -- concatenating swap_logs across multiple
+    stored rounds here would double-count rounds 2..N-1 every time N
+    increases."""
     real_results = pa_cup_real_results(SEASON)
-    played_rounds = [
-        int(rnd) for bracket in real_results.values() for rnd in bracket
-    ]
-    if not played_rounds:
-        return real_results, {"round": None, "Draw": None, "Process": None}
-    target_round = max(played_rounds) + 1
-    preview = pa_cup_round_preview(SEASON, target_round)
-    preview["round"] = target_round
-    return real_results, preview
+    pairings = {}
+    swap_log = []
+    for rnd in range(2, 8):
+        preview = pa_cup_round_preview(SEASON, rnd)
+        if preview["Draw"] is None or preview["Process"] is None:
+            break
+        pairings[str(rnd)] = {"Draw": preview["Draw"], "Process": preview["Process"]}
+        swap_log = preview["swap_log"]
+    return real_results, pairings, swap_log
 
 
 def build_strength_data():
@@ -365,9 +390,10 @@ def main():
 
     content = _replace_const(content, "PA_CUP_DATA", pa_cup_round1_seeding())
 
-    pa_real_results, pa_preview = build_pa_cup()
+    pa_real_results, pa_pairings, pa_swap_log = build_pa_cup()
     content = _replace_const(content, "PA_REAL_RESULTS", pa_real_results)
-    content = _replace_const(content, "PA_ROUND_PREVIEW", pa_preview)
+    content = _replace_const(content, "PA_ROUND_PAIRINGS", pa_pairings)
+    content = _replace_const(content, "PA_SWAP_LOG", pa_swap_log, is_array=True)
 
     content = _replace_const(content, "STRENGTH_DATA", build_strength_data())
 
@@ -380,8 +406,8 @@ def main():
     with open(DASHBOARD_PATH, "w") as f:
         f.write(content)
     print(f"Regenerated DATA, NEXT_MATCHDAY_DATA, CALENDAR_DATA, SCHEDULE_DATA, RANK_ELO_HISTORY, "
-          f"CUP_REAL_RESULTS, RDS_ROUND_PAIRINGS, PA_CUP_DATA, PA_REAL_RESULTS, PA_ROUND_PREVIEW, "
-          f"STRENGTH_DATA, TEAMS_EXPORT_TSV in {DASHBOARD_PATH}")
+          f"CUP_REAL_RESULTS, RDS_ROUND_PAIRINGS, PA_CUP_DATA, PA_REAL_RESULTS, PA_ROUND_PAIRINGS, "
+          f"PA_SWAP_LOG, STRENGTH_DATA, TEAMS_EXPORT_TSV in {DASHBOARD_PATH}")
 
 
 if __name__ == "__main__":
