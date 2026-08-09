@@ -1168,6 +1168,53 @@ rendering with real winner-colored scores (e.g. Ribbon Draw's Cherrygrove
 City 43-26 over Vermilion City), and Round 4 rendering as an unscored
 preview pairing (Cherrygrove City vs Mount Silver, the round-3 winners).
 
+**`PA_ROUND_PREVIEW` turned out to have a related but distinct bug of its
+own, found and fixed 2026-08-08, same day.** The RDS Cup fix above
+specifically called out `PA_ROUND_PREVIEW`'s single-round-preview design
+as the thing "already built to avoid" the maintenance trap of hardcoded
+per-round blocks — that part held up, but a second, separate flaw in the
+same design surfaced for real the same day: PA Draw round 2 was played
+(no Process round 2 yet), and the PA Cup tab's pairings **disappeared
+entirely for both brackets**, not just failed to advance. Cause:
+`build_pa_cup()`'s preview target was `(max round with ANY real results
+in EITHER bracket) + 1` — a single shared target assuming Draw and
+Process stay in lockstep. They don't: Draw always plays before Process
+each PA matchday (Tue vs Thu). The moment Draw round 2 had real results,
+target jumped straight to round 3 — but round 3's pairing needs BOTH
+brackets to finish round 2 first (the cross-bracket duplicate check
+needs both), so `pa_cup_round_preview(season, 3)` returned `None` for
+both brackets, and the previously-populated round-2 preview (seed/
+home-away info, which `PA_REAL_RESULTS` never carries — see
+`pa_cup_real_results`'s own docstring) was gone, taking down Draw's
+now-real round-2 results display along with Process's still-valid
+round-2 upcoming preview.
+
+Fixed the same way as the RDS Cup fix immediately above it: replaced the
+single `PA_ROUND_PREVIEW` snapshot with an accumulating
+`PA_ROUND_PAIRINGS` (`{round_str: {"Draw": [...], "Process": [...]}}`
+for every round 2-7 whose pairing is actually resolvable — both brackets
+complete on the round before it), computed fresh every run in
+`build_pa_cup()` by walking `pa_cup_round_preview()` round by round and
+stopping at the first one that returns `None`. Each bracket's renderer
+then decides independently, via `PA_REAL_RESULTS`, whether a given
+round counts as "played" for *that* bracket — so Draw round 2 renders
+scored/colored while Process round 2 renders as the correct unscored
+preview, from the exact same shared pairing data. Conflict-resolution
+log extracted into its own `PA_SWAP_LOG` constant (whichever round
+resolved highest, capped at round 4 — rounds 5-7 never get conflict
+resolution): `pa_cup_round_preview()`'s swap_log for a given target
+round already self-accumulates every round from 2 up to that target via
+`_pa_ladder_walk`, so concatenating swap_logs across multiple stored
+`PA_ROUND_PAIRINGS` rounds would double-count — using only the single
+highest-resolved round's own swap_log is both correct and complete.
+
+Verified via Playwright: PA Draw's tab shows Round 1 + Round 2 with
+Round 2 real, scored, and winner-colored (Wild Area 42-25 over Oreburgh
+City); PA Process's tab shows Round 1 + Round 2 with Round 2 correctly
+unscored (still upcoming); the Conflict Resolution Log shows all 24
+entries (10 from round 1, 14 from round 2 — matching the count already
+confirmed in the 2026-08-07 conflict-log entry above).
+
 ## Known open items
 
 - Dashboard regeneration isn't in the CLI yet — still manual script runs.
