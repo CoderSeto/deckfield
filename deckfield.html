@@ -1169,7 +1169,18 @@
     const hfa = HOME_FIELD_ADVANTAGE[GAME_TYPE] || 0;
     const rawSpread = skillTerm + hfa + CLIMATE_BONUS + EYE_TEST_BONUS + ELO_BONUS;
 
-    const fatigueMult = 1 + (TEAM_FATIGUE.away - TEAM_FATIGUE.home) * 0.005;
+    // Multiplier must always shrink the FAVORITE's margin when the favorite
+    // is the more-fatigued team, and grow it when the UNDERDOG is more
+    // fatigued -- regardless of which side (home/away) happens to be
+    // favored. (TEAM_FATIGUE.away - TEAM_FATIGUE.home) alone only gets this
+    // right when home is favored (rawSpread > 0); when away is favored
+    // (rawSpread < 0), that same sign multiplying a negative rawSpread
+    // flips the effect -- a more-fatigued away favorite would incorrectly
+    // get ITS margin increased instead of shrunk. Folding in rawSpread's
+    // own sign keeps the effect tied to favorite/underdog instead of
+    // home/away.
+    const rawSpreadSign = rawSpread < 0 ? -1 : 1;
+    const fatigueMult = 1 + rawSpreadSign * (TEAM_FATIGUE.away - TEAM_FATIGUE.home) * 0.005;
     let spread = rawSpread * fatigueMult;
     spread *= SPREAD_FACTOR_MULTIPLIER;
     spread += SPREAD_FACTOR_MODIFIER;

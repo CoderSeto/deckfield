@@ -1215,6 +1215,48 @@ unscored (still upcoming); the Conflict Resolution Log shows all 24
 entries (10 from round 1, 14 from round 2 — matching the count already
 confirmed in the 2026-08-07 conflict-log entry above).
 
+## deckfield.html Spread calculation
+
+**Fatigue Multiplier applied in reverse for an away-favored spread, fixed
+2026-08-09 (per explicit correction).** `computeSpread()`'s
+`fatigueMult = 1 + (TEAM_FATIGUE.away - TEAM_FATIGUE.home) * 0.005` was
+already fixed once before (commit `aa6bb0a`, "Fix Fatigue Multiplier
+applying in reverse") to get the home-favored case right: a more-fatigued
+home team correctly yields a multiplier below 1, shrinking `rawSpread` in
+the tired favorite's disfavor. But that formula's sign only actually
+tracks home-vs-away, not favorite-vs-underdog — it silently assumed
+`rawSpread` is always positive (home favored). When `rawSpread` is
+negative (away favored) and the away side — the favorite — is also the
+more-fatigued team, the same formula still produces a multiplier above 1
+(since away fatigue exceeds home fatigue), and multiplying a *negative*
+number by something above 1 makes it more negative, i.e. **grows** the
+tired favorite's margin instead of shrinking it — backwards, and the
+mirror image of the bug `aa6bb0a` already fixed once for the home side.
+
+Fixed by folding `rawSpread`'s own sign into the fatigue term:
+`fatigueMult = 1 + sign(rawSpread) * (TEAM_FATIGUE.away - TEAM_FATIGUE.home) * 0.005`.
+This ties the multiplier's effect to favorite/underdog instead of
+home/away: it shrinks whichever side's margin is favored when that
+favorite is the more-tired team, and grows it when the *underdog* is the
+more-tired team — symmetric in both directions. When `rawSpread > 0`
+(home favored), `sign` is `+1` and the formula is byte-identical to the
+already-verified `aa6bb0a` fix, so that case is unchanged.
+
+Verified via Playwright with two controlled two-team rosters (skill
+rating driving who's favored, fatigue set directly per team) loaded
+through the real roster/schedule import + Load Next Match flow, reading
+the actual Game Spread Calculation panel:
+- Home favored (raw spread +8.292), home fatigue 90 vs away fatigue 10
+  (favorite is the tired team): Fatigue Multiplier **0.600**, spread
+  shrinks from 8.292 to 4.9751 — matches `aa6bb0a`'s original verified
+  case exactly, confirming no regression.
+- Away favored (raw spread −3.708), away fatigue 90 vs home fatigue 10
+  (favorite is the tired team, mirrored to the away side): Fatigue
+  Multiplier **0.600** (previously would have been 1.400, growing the
+  away favorite's margin instead of shrinking it), final spread AWAY
+  Team +2.2248 instead of the pre-fix +5.19 that the reversed multiplier
+  would have produced.
+
 ## Known open items
 
 - Dashboard regeneration isn't in the CLI yet — still manual script runs.
