@@ -2206,6 +2206,16 @@
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
+  // Snapshots every turn so the result can be replayed later. `game.log` is
+  // deliberately left OUT of each snapshot and replaced by a `logLength`
+  // marker: the log is append-only, so cloning it per turn re-copies an
+  // ever-growing array and makes the whole simulation quadratic (measured at
+  // ~320 turns: 82ms and ~103k log-entry copies per game, vs 15ms once the
+  // log is excluded -- roughly 6.6s -> 1.2s across an 80-game matchday).
+  // The full log is kept once on the returned history as `fullLog`, and
+  // restoreSnapshot() slices the right prefix back onto `game` -- so every
+  // consumer still sees exactly the log that existed at that turn. `deck` is
+  // still cloned: it's a bounded 52 entries, not the quadratic term.
   function simulateFullyWithHistory(){
     const history = [];
     let guard = 0;
@@ -2213,9 +2223,25 @@
       const result = game.processTurn();
       guard++;
       if (!result) break;
-      history.push({result, snap: structuredClone(game)});
+      const log = game.log;
+      game.log = [];
+      const snap = structuredClone(game);
+      game.log = log;
+      snap.logLength = log.length;
+      history.push({result, snap});
     }
+    history.fullLog = game.log.slice();
     return history;
+  }
+
+  // Restores history[index] onto the live `game`, log included. Object.assign
+  // alone would leave `game.log` at whatever it currently holds (the snapshots
+  // don't carry one), so the prefix has to be sliced back on explicitly.
+  function restoreSnapshot(history, index){
+    const entry = history[index];
+    Object.assign(game, entry.snap);
+    game.log = history.fullLog.slice(0, entry.snap.logLength);
+    return entry;
   }
 
   // 'full' | 'second-half' | 'sim' -- see the Auto-Play Week comment above for
@@ -2256,8 +2282,7 @@
   // flush (uptoIndex = last) and to jump straight to second-half kickoff
   // before an animated replay begins.
   function flushHistoryTo(history, uptoIndex){
-    const entry = history[uptoIndex];
-    Object.assign(game, entry.snap);
+    const entry = restoreSnapshot(history, uptoIndex);
     logBody.innerHTML = '';
     for (const logEntry of game.log) appendLog(logEntry);
     renderCard(cardMoveEl, entry.result.c1, 'Move');
@@ -2288,10 +2313,9 @@
         renderCard(cardClockEl, null, 'Clock');
       }
       let i = startIndex;
-      let prevLogLen = (startIndex > 0) ? history[startIndex - 1].snap.log.length : 0;
+      let prevLogLen = (startIndex > 0) ? history[startIndex - 1].snap.logLength : 0;
       function step(){
-        const entry = history[i];
-        Object.assign(game, entry.snap);
+        const entry = restoreSnapshot(history, i);
         renderCard(cardMoveEl, entry.result.c1, 'Move');
         renderCard(cardClockEl, entry.result.c2, 'Clock');
         for (let j = prevLogLen; j < game.log.length; j++) appendLog(game.log[j]);
@@ -2958,7 +2982,7 @@
     currentMatchIndex = matchIndex;
     nextMatchIndex = matchIndex + 1;
     renderFinals();
-    scrollFinalsTo(matchIndex);
+    scrollFinalsToTop();
 
     let msg = `Loaded match #${matchIndex + 1}: ${awayLabel} (rank ${RANK_AWAY}) @ ${homeLabel} (rank ${RANK_HOME}) — `
       + `${GAME_TYPE}${IS_AGG ? ' AGG' : ''}, ${IS_WEEKEND ? 'Weekend' : 'Midweek'}, timeslot ${TIMESLOT}.`;
@@ -2975,14 +2999,22 @@
   // ---------- Final scores column ----------
   // Mirrors the currently-loaded SCHEDULE one card per matchup, filling each
   // one in as its game finishes -- so an Auto-Play Week reads as a live
-  // matchday scoreboard instead of only landing in the Results CSV. Keyed on
-  // the SCHEDULE index, so a card is always in schedule order regardless of
-  // the order games actually get played; games played with no SCHEDULE entry
-  // loaded (the built-in placeholder match) collect in UNSCHEDULED_FINALS and
-  // render after the scheduled ones. Winners are colored by their OWN region,
+  // matchday scoreboard instead of only landing in the Results CSV. Games
+  // played with no SCHEDULE entry loaded (the built-in placeholder match)
+  // collect in UNSCHEDULED_FINALS. Winners are colored by their OWN region,
   // the same convention the dashboard's winner-name highlighting already uses.
+  //
+  // Ordering matches the play-by-play log: newest at the TOP, scrolled back to
+  // the top whenever something lands there. Top to bottom that means the match
+  // currently in progress (it's about to become the newest final, and holding
+  // the top slot means finishing it doesn't make the list jump), then every
+  // final newest-first by completion order, then the matchups still to come in
+  // schedule order. Completion order is its own counter -- MATCH_FINALS is
+  // keyed on SCHEDULE index so a replayed match overwrites its own card, which
+  // says nothing about when it was played.
   let MATCH_FINALS = {};       // {scheduleIndex: finalRecord}
   let UNSCHEDULED_FINALS = []; // finalRecord[] for games played off-schedule
+  let finalsSeq = 0;           // completion counter; each record carries its own
 
   function escHtml(v){
     return String(v == null ? '' : v)
@@ -3061,56 +3093,57 @@
     const countEl = document.getElementById('finalsCount');
     if (!body) return;
 
-    const cards = [];
-    let played = 0;
+    const live = [];     // the match on the Field right now, if it's unplayed
+    const finals = [];   // {seq, html} -- sorted newest-first below
+    const upcoming = []; // still to play, in schedule order
+
     for (let i = 0; i < SCHEDULE.length; i++){
       const rec = MATCH_FINALS[i];
       if (rec){
-        played++;
-        cards.push(finalCardHtml(rec, i));
+        finals.push({seq: rec.seq, html: finalCardHtml(rec, i)});
+      } else if (i === currentMatchIndex && !game.gameOver){
+        live.push(pendingCardHtml(SCHEDULE[i], i, true));
       } else {
-        const isLive = (i === currentMatchIndex && !game.gameOver);
-        cards.push(pendingCardHtml(SCHEDULE[i], i, isLive));
+        upcoming.push(pendingCardHtml(SCHEDULE[i], i, false));
       }
     }
     for (const rec of UNSCHEDULED_FINALS){
-      played++;
-      cards.push(finalCardHtml(rec, null));
+      finals.push({seq: rec.seq, html: finalCardHtml(rec, null)});
     }
+    finals.sort((a, b) => b.seq - a.seq);
 
-    countEl.textContent = SCHEDULE.length ? `${played} / ${SCHEDULE.length}`
-      : (played ? String(played) : '—');
+    const cards = live.concat(finals.map(f => f.html), upcoming);
+    countEl.textContent = SCHEDULE.length ? `${finals.length} / ${SCHEDULE.length}`
+      : (finals.length ? String(finals.length) : '—');
     body.innerHTML = cards.length ? cards.join('')
       : '<div class="finals-empty">No matchups loaded yet. Import a schedule on the '
         + 'Schedule tab and every final lands here as it happens.</div>';
   }
 
-  // Keeps the newest result (or the match now in progress) visible without
-  // yanking the column away from wherever the user scrolled it by hand --
-  // scrollIntoView with block:'nearest' is a no-op when the card is already
-  // on screen.
-  function scrollFinalsTo(index){
-    if (index === null || index === undefined) return;
+  // Whatever just happened is rendered at the top, so snapping back to the top
+  // is what keeps it visible -- exactly what appendLog() does to the
+  // play-by-play after prepending a line.
+  function scrollFinalsToTop(){
     const body = document.getElementById('finalsBody');
-    if (!body) return;
-    const card = body.querySelector(`[data-final-index="${index}"]`);
-    if (card) card.scrollIntoView({block: 'nearest'});
+    if (body) body.scrollTop = 0;
   }
 
   function recordFinalScore(g){
     const rec = buildFinalRecord(g);
+    rec.seq = ++finalsSeq;
     if (currentMatchIndex !== null && SCHEDULE[currentMatchIndex]){
       MATCH_FINALS[currentMatchIndex] = rec;
     } else {
       UNSCHEDULED_FINALS.push(rec);
     }
     renderFinals();
-    scrollFinalsTo(currentMatchIndex);
+    scrollFinalsToTop();
   }
 
   function clearFinals(){
     MATCH_FINALS = {};
     UNSCHEDULED_FINALS = [];
+    finalsSeq = 0;
     renderFinals();
   }
 
