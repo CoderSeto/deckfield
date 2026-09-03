@@ -318,6 +318,152 @@ CSV_GAME_FIELDS = [
 # Optional trailing fields -- most games get these added later, not at entry time
 CSV_GAME_OPTIONAL_FIELDS = ["ex_a", "ex_b"]
 
+# The cup tags add_game_from_dict() reads off a row when present. Not in
+# CSV_GAME_FIELDS because they're optional per-row (only cup games carry
+# them), but they ARE part of the on-disk format -- see the header on any
+# file in results/.
+CSV_GAME_CUP_FIELDS = ["cup_name", "cup_bracket", "cup_round"]
+CSV_GAME_ALL_FIELDS = CSV_GAME_FIELDS + CSV_GAME_OPTIONAL_FIELDS + CSV_GAME_CUP_FIELDS
+
+
+def _round_file_stems(year=2026):
+    """{abs_round: filename stem} for every event in WEEKLY_SCHEDULE,
+    matching the naming already used in results/ (e.g.
+    `2026-w6-tue-pa-draw-1`). Built once and shared, since resolving it
+    per round would rebuild the whole schedule mapping each time."""
+    mapping = full_schedule_abs_round_mapping()
+    stems = {}
+    for week in WEEKLY_SCHEDULE:
+        for day in ("Tue", "Thu", "Weekend"):
+            slot = week[day]
+            if slot is None:
+                continue
+            abs_round = mapping.get(_schedule_event_key(week["week"], day, slot))
+            if abs_round is None or abs_round in stems:
+                continue
+            wk = str(week["week"]).split()[0]          # "6 (special)" -> "6"
+            kind = slot[0]
+            if kind in ("R", "L"):
+                event = f"{kind.lower()}{slot[1]}"
+            elif kind in ("RDS", "PA"):
+                event = f"{kind.lower()}-{slot[1].lower()}-{slot[2]}"
+            elif kind == "RT":
+                event = f"rt-{slot[1]}"
+            else:
+                event = str(kind).lower()
+            stems[abs_round] = f"{year}-w{wk}-{day.lower()}-{event}"
+    return stems
+
+
+def historical_last_round():
+    """Last round the Excel migration itself produces (currently 11). Rounds
+    at or below this come from the workbook via migrate_s9; everything above
+    is entered through `add-results`, so only rounds ABOVE this belong in
+    results/. Exporting a historical round into results/ would double-insert
+    it on the next rebuild -- migrate puts it in, then the CSV adds it
+    again."""
+    return max(_CONFIRMED_ABS_ROUND.values())
+
+
+def export_results_csv(season, from_round=None, to_round=None):
+    """[(abs_round, file_stem, csv_text)] -- every game in the round range,
+    re-serialised into the exact `deckfield add-results` CSV format it was
+    (or could have been) ingested from. One entry per round.
+
+    This exists because the database is meant to be a build artifact,
+    regenerable from the workbook plus results/*.csv -- and it stopped
+    being one. Rounds entered without their CSV being kept live ONLY in
+    deckfield.db, which is gitignored, so losing that file loses them.
+    Exporting them back out restores the invariant.
+
+    The round trip is lossless: `games` stores every CSV column verbatim
+    (raw_goal_score_a/b, spread_a, interest_score, dscr_a/b, ex_bonus_a/b,
+    elo_a_after/b_after, the cup tags), and none of them are derived on
+    ingest -- add_game_from_dict() writes what it is handed. The one field
+    not stored directly is `home`, recovered from host_region: "A" when it
+    is team_a's region, else "B". That is exact for every real game (a
+    cross-region game matches exactly one side; a Regional game's two
+    teams share a region, so either answer resolves to the same
+    host_region on re-ingest, which is all `home` is used for)."""
+    conn = get_connection()
+    where, params = "g.season = ?", [season]
+    if from_round is not None:
+        where += " AND g.round >= ?"
+        params.append(from_round)
+    if to_round is not None:
+        where += " AND g.round <= ?"
+        params.append(to_round)
+    rows = conn.execute(f"""
+        SELECT g.*, ta.region AS a_region, tb.region AS b_region
+        FROM games g
+        JOIN teams ta ON ta.team_id = g.team_a
+        JOIN teams tb ON tb.team_id = g.team_b
+        WHERE {where}
+        ORDER BY g.round, g.game_id
+    """, params).fetchall()
+    conn.close()
+
+    # Fixed decimal places per column, matching exactly what deckfield.html's
+    # Results tab writes (raw_goal .toFixed(2), spread .toFixed(4), interest
+    # and dscr via fmt(x, 2/1), elo Math.round, ex integer). Without this the
+    # export is numerically right but textually different -- "3.5" for "3.50"
+    # -- which would make every re-export of results/ churn in git for no
+    # reason. With it, re-exporting an already-committed round reproduces the
+    # file byte for byte.
+    DECIMALS = {
+        "raw_goal_score_a": 2, "raw_goal_score_b": 2,
+        "spread_a": 4, "interest_score": 2,
+        "dscr_a": 1, "dscr_b": 1,
+    }
+    INTEGERS = {"elo_a_after", "elo_b_after", "ex_bonus_a", "ex_bonus_b",
+                "pf_a", "pa_a", "result_a", "round", "cup_round"}
+
+    def fmt(col, v):
+        if v is None:
+            return ""
+        if col in DECIMALS:
+            return f"{float(v):.{DECIMALS[col]}f}"
+        if col in INTEGERS:
+            return str(int(round(float(v))))
+        return str(v)
+
+    by_round = {}
+    for r in rows:
+        by_round.setdefault(r["round"], []).append(r)
+
+    stems = _round_file_stems()
+    out = []
+    for rnd in sorted(by_round):
+        lines = [",".join(CSV_GAME_ALL_FIELDS)]
+        for r in by_round[rnd]:
+            home = "A" if r["host_region"] == r["a_region"] else "B"
+            if r["host_region"] not in (r["a_region"], r["b_region"]):
+                raise ValueError(
+                    f"game {r['game_id']} (round {r['round']}): host_region "
+                    f"{r['host_region']!r} matches neither team's region -- "
+                    f"cannot recover the `home` column"
+                )
+            lines.append(",".join(fmt(col, val) for col, val in [
+                ("round", r["round"]), ("game_type", r["game_type"]),
+                ("team_a", r["team_a"]), ("team_b", r["team_b"]),
+                ("result_a", r["result_a"]), ("pf_a", r["pf_a"]), ("pa_a", r["pa_a"]),
+                ("raw_goal_score_a", r["raw_goal_score_a"]),
+                ("raw_goal_score_b", r["raw_goal_score_b"]),
+                ("spread_a", r["spread_a"]), ("interest_score", r["interest_score"]),
+                ("dscr_a", r["dscr_a"]), ("dscr_b", r["dscr_b"]),
+                ("elo_a_after", r["elo_a_after"]), ("elo_b_after", r["elo_b_after"]),
+                ("home", home),
+                ("ex_bonus_a", r["ex_bonus_a"]), ("ex_bonus_b", r["ex_bonus_b"]),
+                ("cup_name", r["cup_name"]), ("cup_bracket", r["cup_bracket"]),
+                ("cup_round", r["cup_round"]),
+            ]))
+        stem = stems.get(rnd, f"2026-round-{rnd:02d}")
+        # No trailing newline: matches what deckfield.html's "Download CSV"
+        # writes (csvLines.join("\n")), so the two producers agree byte for
+        # byte and re-exporting an already-committed round is a true no-op.
+        out.append((rnd, stem, "\n".join(lines)))
+    return out
+
 
 def recompute_all_fatigue_deltas(season):
     """

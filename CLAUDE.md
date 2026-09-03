@@ -49,6 +49,51 @@ cross-referenced between conversations).
   "Rank/Elo History tab" below).
 - `CLAUDE.md` — this file.
 
+## Recovering rounds that only exist in the database
+
+`deckfield export-results` is the exact inverse of `add-results`: it writes
+games back out in the same CSV format, so a round that was ingested without
+its CSV being kept can be recovered into `results/` and the database goes
+back to being a rebuildable artifact instead of the only copy of the data.
+
+```
+python3 deckfield_cli.py export-results                 # everything results/ owns
+python3 deckfield_cli.py export-results --from 15 --to 25
+```
+
+- **Default scope is the first post-workbook round onward** (round 12
+  today, from `historical_last_round()` = `max(_CONFIRMED_ABS_ROUND)`).
+  This matters: rounds 1-11 come from the workbook via `migrate`, so
+  putting them in `results/` too would double-insert every one of those
+  games on the next rebuild. Asking for them explicitly still works but
+  prints a warning.
+- **Filenames match the existing convention** (`2026-w6-tue-pa-draw-1.csv`),
+  derived from `full_schedule_abs_round_mapping()` + `WEEKLY_SCHEDULE`, so
+  recovered rounds sit alongside hand-kept ones with no naming drift.
+- **Output is byte-identical to what `deckfield.html`'s Download CSV
+  produces** — same per-column decimal places (raw_goal 2dp, spread 4dp,
+  interest 2dp, dscr 1dp, elo/ex integer) and no trailing newline. So
+  re-running it over an up-to-date `results/` is a true no-op rather than a
+  wall of formatting churn, and an existing file that *differs* from the
+  database is refused unless `--force` is passed.
+- **The round trip is lossless.** `games` stores every CSV column verbatim
+  and nothing is derived on ingest. The one field not stored directly is
+  `home`, recovered from `host_region`: "A" when it matches team_a's
+  region, else "B" — exact for all 928 real games (a cross-region game
+  matches exactly one side; a Regional game's two teams share a region, so
+  either answer resolves to the same `host_region`, which is all `home` is
+  used for).
+
+Verified end to end: exporting rounds 12-14 reproduced the three
+already-committed CSVs **byte for byte**, and a full wipe-and-rebuild from
+the workbook plus the *exported* CSVs produced a database identical to one
+built from the *committed* CSVs — all 480 rating rows across 28 columns,
+all 928 games across 21 fields, and all 1,856 fatigue deltas.
+
+**Standing rule: keep the CSV for every matchday you ingest.** The
+database is gitignored precisely because it's supposed to be reproducible;
+that only holds if `results/` is complete.
+
 ## Adding new game results
 
 **Always use the CSV format**, not the old packed-string format
@@ -1390,17 +1435,16 @@ page errors on either path.
 
 ## Known open items
 
-- **`results/` can no longer rebuild the current database — rounds 15-25
-  exist only in the local `deckfield.db`** (found 2026-09-03). `.gitignore`
-  states the database is "always regenerable from `migrate_s9.py` (the
-  workbook) + `results/*.csv`", and that is currently false: a full
-  migration plus every CSV in `results/` reaches **round 14**, while the
-  committed `deckfield_dashboard.html`'s own `DATA.round` is **25**. The
-  eleven rounds in between (RDS rounds 3+, PA Draw round 2, and everything
-  after) were added without their `add-results` CSVs being kept, so losing
-  the local database would lose them. Going forward, keep the CSV for every
-  matchday ingested; recovering the existing gap would mean re-exporting
-  those rounds from the live database.
+- **`results/` is missing rounds 15-25 — recover them with `deckfield
+  export-results` from the live database** (found 2026-09-03, tool added
+  the same day). A full migration plus every CSV in `results/` reaches
+  **round 14**, while the committed `deckfield_dashboard.html`'s own
+  `DATA.round` is **25**; those eleven rounds were ingested without their
+  CSVs being kept, so they currently exist only in the gitignored
+  `deckfield.db`. This is recoverable, not lost — see "Recovering rounds
+  that only exist in the database" below — but it needs running once
+  against the machine that holds the round-25 database, and until then the
+  repo cannot rebuild past round 14.
 - Dashboard regeneration isn't in the CLI yet — still manual script runs.
 - Round numbering: the *historical* R1-R5/L1-L2 mapping is confirmed
   against real Archive data; everything from PA Draw round 1 onward uses
