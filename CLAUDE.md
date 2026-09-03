@@ -77,8 +77,9 @@ a clean wipe-and-rebuild (workbook + all 14 CSVs):
   Secondary Type column is a fresh `random.randint(1, 18)` every export by
   design).
 
-Round 26 (L7) is absent because it has not been played, not because it was
-lost.
+Round 26 (L7) was absent at the time of the recovery because it had not
+been played; it was ingested on 2026-09-03 and `results/` now runs 12-26
+(15 files). A clean rebuild reports 1544 games through round 26.
 
 ## Recovering rounds that only exist in the database
 
@@ -1428,6 +1429,19 @@ numbers went 10px → 12px (and slightly less transparent, 0.6 → 0.72) to
 stay readable in the narrower cells. No overflow risk at any ATK modifier:
 `ATK_TABLE` values are always 1-9, so a cell's label is at most three
 characters (`6/6`) — about 22px of text in a 42px cell.
+
+**The column's own type was scaled too, 2026-09-03 (per explicit
+correction).** Widening the column alone just turned the extra 100px into
+whitespace — the finals text was still at the sizes picked for the old
+narrow column. Bumped alongside it: `.finals-body` 11 → 12.5px (team
+names), `.fr-score` 16 → 19px, `.fr-rank` 10 → 11px, `.fc-top` 9 → 10px,
+`.finals-count` 11 → 12px, with card padding 6/8 → 7/9px to match. Checked
+for truncation with the longest real team names (`City of Circhester`,
+`Glaseado Mountain`, `Vast Poni Canyon`) at 1241px — the narrowest the
+three-column layout ever gets before the panel reflows full-width — plus
+1400 and 1920px: zero names ellipsised and zero rows overflowing at any of
+them. The lesson generalises: "make it bigger for readability" means the
+type, not only the box.
 
 **The ball marker is a direction arrow, not a ball (2026-09-03, per
 explicit request).** `.ball` is now a clip-path arrow that points the way
