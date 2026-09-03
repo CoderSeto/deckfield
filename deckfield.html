@@ -35,7 +35,7 @@
     min-height:100vh;
     padding:20px 14px 60px;
   }
-  .wrap{max-width:1040px;margin:0 auto;}
+  .wrap{max-width:1560px;margin:0 auto;}
 
   /* ---- Header / Scoreboard ---- */
   header{
@@ -51,6 +51,14 @@
     line-height:1;
   }
   .brand span{color:var(--gold);}
+
+  /* Brand and tab bar share one line; the tab bar's own active-tab underline
+     sits directly on the topbar's rule, so the two read as a single strip. */
+  .topbar{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    gap:20px;flex-wrap:wrap;
+    border-bottom:1px solid var(--panel-line);
+  }
 
   .scoreboard-row{display:flex;justify-content:center;flex-wrap:wrap;}
   .scoreboard{
@@ -125,14 +133,20 @@
   /* ---- Layout ---- */
   .layout{
     display:grid;
-    grid-template-columns: 1.5fr 1fr;
+    grid-template-columns: minmax(0,0.62fr) minmax(0,1.9fr) minmax(0,1fr);
     grid-template-areas:
-      "pitch cards"
-      "pitch log";
+      "finals pitch cards"
+      "finals pitch log";
     gap:16px;
   }
+  @media(max-width:1240px){
+    .layout{
+      grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);
+      grid-template-areas:"pitch cards" "pitch log" "finals finals";
+    }
+  }
   @media(max-width:800px){
-    .layout{grid-template-columns:1fr;grid-template-areas:"pitch" "cards" "log";}
+    .layout{grid-template-columns:1fr;grid-template-areas:"pitch" "cards" "log" "finals";}
   }
 
   /* ---- Pitch ---- */
@@ -266,6 +280,45 @@
   .log-line.goal{color:var(--gold);font-weight:700;}
   .log-line.final{color:var(--gold);font-weight:700;text-align:center;}
 
+  /* ---- Final scores column ---- */
+  .finals-panel{
+    grid-area:finals;background:var(--panel);border:1px solid var(--panel-line);border-radius:8px;
+    padding:12px;display:flex;flex-direction:column;min-height:220px;max-height:calc(100vh - 220px);
+  }
+  .finals-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px;}
+  .finals-head .log-title{margin-bottom:0;}
+  .finals-count{
+    font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--gold);
+    white-space:nowrap;
+  }
+  .finals-body{overflow-y:auto;flex:1;font-family:'JetBrains Mono',monospace;font-size:11px;}
+  .finals-body::-webkit-scrollbar{width:6px;}
+  .finals-body::-webkit-scrollbar-thumb{background:var(--panel-line);border-radius:3px;}
+  .finals-empty{color:var(--chalk-dim);font-size:11px;line-height:1.6;}
+  .final-card{
+    border:1px solid var(--panel-line);border-radius:6px;padding:6px 8px;margin-bottom:6px;
+    background:rgba(255,255,255,0.025);
+  }
+  .final-card.pending{opacity:0.42;}
+  .final-card.live{border-color:var(--gold);background:rgba(233,196,106,0.06);}
+  .final-card.pending.live{opacity:0.85;}
+  .final-card .fc-top{
+    display:flex;justify-content:space-between;gap:6px;margin-bottom:3px;
+    font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--chalk-dim);
+  }
+  .final-card .fc-ctx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .final-card .fc-tag{white-space:nowrap;}
+  .final-card.live .fc-tag,.final-card .fc-tag.done{color:var(--gold);}
+  .final-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;line-height:1.55;}
+  .final-row .fr-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .final-row .fr-rank{color:var(--chalk-dim);font-size:10px;}
+  .final-row .fr-score{
+    font-family:'Anton',sans-serif;font-size:16px;line-height:1;color:var(--chalk-dim);
+    white-space:nowrap;
+  }
+  .final-row.win .fr-score{color:var(--gold);}
+  .final-row.loss .fr-name{color:var(--chalk-dim);}
+
   footer{text-align:center;color:var(--chalk-dim);font-size:11px;margin-top:22px;font-family:'JetBrains Mono',monospace;}
 
   /* ---- Stats ---- */
@@ -341,7 +394,7 @@
   .elo-change{font-family:'Anton',sans-serif;font-size:20px;color:var(--gold);line-height:1.2;}
 
   /* ---- Tabs ---- */
-  .tab-bar{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--panel-line);}
+  .tab-bar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:-1px;}
   .tab-btn{
     background:none;border:none;color:var(--chalk-dim);
     font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;
@@ -427,7 +480,15 @@
 <div class="wrap">
 
   <header>
-    <div class="brand">DECK<span>FIELD</span></div>
+    <div class="topbar">
+      <div class="brand">DECK<span>FIELD</span></div>
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="fieldTab">Field</button>
+        <button class="tab-btn" data-tab="teamsTab">Teams</button>
+        <button class="tab-btn" data-tab="scheduleTab">Schedule</button>
+        <button class="tab-btn" data-tab="resultsTab">Results</button>
+      </div>
+    </div>
     <div class="scoreboard-row">
     <div class="scoreboard">
       <div class="team-score away">
@@ -472,15 +533,16 @@
     </div>
   </header>
 
-  <div class="tab-bar">
-    <button class="tab-btn active" data-tab="fieldTab">Field</button>
-    <button class="tab-btn" data-tab="teamsTab">Teams</button>
-    <button class="tab-btn" data-tab="scheduleTab">Schedule</button>
-    <button class="tab-btn" data-tab="resultsTab">Results</button>
-  </div>
-
   <div class="tab-content active" id="fieldTab">
   <div class="layout">
+    <div class="finals-panel">
+      <div class="finals-head">
+        <span class="log-title">Final Scores</span>
+        <span class="finals-count" id="finalsCount">&mdash;</span>
+      </div>
+      <div class="finals-body" id="finalsBody"></div>
+    </div>
+
     <div class="pitch-panel">
       <div class="legend">
         <span><span class="dot home"></span><span id="legendHomeText">Home attacks ← (left end)</span></span>
@@ -2144,6 +2206,16 @@
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
+  // Snapshots every turn so the result can be replayed later. `game.log` is
+  // deliberately left OUT of each snapshot and replaced by a `logLength`
+  // marker: the log is append-only, so cloning it per turn re-copies an
+  // ever-growing array and makes the whole simulation quadratic (measured at
+  // ~320 turns: 82ms and ~103k log-entry copies per game, vs 15ms once the
+  // log is excluded -- roughly 6.6s -> 1.2s across an 80-game matchday).
+  // The full log is kept once on the returned history as `fullLog`, and
+  // restoreSnapshot() slices the right prefix back onto `game` -- so every
+  // consumer still sees exactly the log that existed at that turn. `deck` is
+  // still cloned: it's a bounded 52 entries, not the quadratic term.
   function simulateFullyWithHistory(){
     const history = [];
     let guard = 0;
@@ -2151,9 +2223,25 @@
       const result = game.processTurn();
       guard++;
       if (!result) break;
-      history.push({result, snap: structuredClone(game)});
+      const log = game.log;
+      game.log = [];
+      const snap = structuredClone(game);
+      game.log = log;
+      snap.logLength = log.length;
+      history.push({result, snap});
     }
+    history.fullLog = game.log.slice();
     return history;
+  }
+
+  // Restores history[index] onto the live `game`, log included. Object.assign
+  // alone would leave `game.log` at whatever it currently holds (the snapshots
+  // don't carry one), so the prefix has to be sliced back on explicitly.
+  function restoreSnapshot(history, index){
+    const entry = history[index];
+    Object.assign(game, entry.snap);
+    game.log = history.fullLog.slice(0, entry.snap.logLength);
+    return entry;
   }
 
   // 'full' | 'second-half' | 'sim' -- see the Auto-Play Week comment above for
@@ -2194,8 +2282,7 @@
   // flush (uptoIndex = last) and to jump straight to second-half kickoff
   // before an animated replay begins.
   function flushHistoryTo(history, uptoIndex){
-    const entry = history[uptoIndex];
-    Object.assign(game, entry.snap);
+    const entry = restoreSnapshot(history, uptoIndex);
     logBody.innerHTML = '';
     for (const logEntry of game.log) appendLog(logEntry);
     renderCard(cardMoveEl, entry.result.c1, 'Move');
@@ -2226,10 +2313,9 @@
         renderCard(cardClockEl, null, 'Clock');
       }
       let i = startIndex;
-      let prevLogLen = (startIndex > 0) ? history[startIndex - 1].snap.log.length : 0;
+      let prevLogLen = (startIndex > 0) ? history[startIndex - 1].snap.logLength : 0;
       function step(){
-        const entry = history[i];
-        Object.assign(game, entry.snap);
+        const entry = restoreSnapshot(history, i);
         renderCard(cardMoveEl, entry.result.c1, 'Move');
         renderCard(cardClockEl, entry.result.c2, 'Clock');
         for (let j = prevLogLen; j < game.log.length; j++) appendLog(game.log[j]);
@@ -2622,6 +2708,8 @@
       };
     });
     nextMatchIndex = 0;
+    currentMatchIndex = null;
+    clearFinals();
 
     renderScheduleTable(SCHEDULE);
 
@@ -2646,6 +2734,8 @@
     document.getElementById('schedStatus').textContent = '';
     SCHEDULE = [];
     nextMatchIndex = 0;
+    currentMatchIndex = null;
+    clearFinals();
   });
 
   // ---------- Schedule Batch Settings importer ----------
@@ -2891,6 +2981,8 @@
 
     currentMatchIndex = matchIndex;
     nextMatchIndex = matchIndex + 1;
+    renderFinals();
+    scrollFinalsToTop();
 
     let msg = `Loaded match #${matchIndex + 1}: ${awayLabel} (rank ${RANK_AWAY}) @ ${homeLabel} (rank ${RANK_HOME}) — `
       + `${GAME_TYPE}${IS_AGG ? ' AGG' : ''}, ${IS_WEEKEND ? 'Weekend' : 'Midweek'}, timeslot ${TIMESLOT}.`;
@@ -2901,6 +2993,158 @@
 
     const fieldTabBtn = document.querySelector('.tab-btn[data-tab="fieldTab"]');
     if (fieldTabBtn) fieldTabBtn.click();
+  }
+
+
+  // ---------- Final scores column ----------
+  // Mirrors the currently-loaded SCHEDULE one card per matchup, filling each
+  // one in as its game finishes -- so an Auto-Play Week reads as a live
+  // matchday scoreboard instead of only landing in the Results CSV. Games
+  // played with no SCHEDULE entry loaded (the built-in placeholder match)
+  // collect in UNSCHEDULED_FINALS. Winners are colored by their OWN region,
+  // the same convention the dashboard's winner-name highlighting already uses.
+  //
+  // Ordering matches the play-by-play log: newest at the TOP, scrolled back to
+  // the top whenever something lands there. Top to bottom that means the match
+  // currently in progress (it's about to become the newest final, and holding
+  // the top slot means finishing it doesn't make the list jump), then every
+  // final newest-first by completion order, then the matchups still to come in
+  // schedule order. Completion order is its own counter -- MATCH_FINALS is
+  // keyed on SCHEDULE index so a replayed match overwrites its own card, which
+  // says nothing about when it was played.
+  let MATCH_FINALS = {};       // {scheduleIndex: finalRecord}
+  let UNSCHEDULED_FINALS = []; // finalRecord[] for games played off-schedule
+  let finalsSeq = 0;           // completion counter; each record carries its own
+
+  function escHtml(v){
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function regionBright(region){
+    const c = REGION_COLORS[region];
+    return c ? c.bright : '#EDEDE2';
+  }
+
+  // Snapshot of everything the column needs, taken at the moment the game ends
+  // -- the globals it reads (TEAM_DISPLAY_NAME, TEAM_REGION, RANK_*, CUP_NAME)
+  // all get overwritten by the next loadScheduledMatch(), so a card can't be
+  // rebuilt from live state after the fact.
+  function buildFinalRecord(g){
+    return {
+      awayName: TEAM_DISPLAY_NAME.away, homeName: TEAM_DISPLAY_NAME.home,
+      awayRank: RANK_AWAY, homeRank: RANK_HOME,
+      awayRegion: TEAM_REGION.away, homeRegion: TEAM_REGION.home,
+      awayScore: g.score.away, homeScore: g.score.home,
+      ot: Math.max(0, g.periodIndex - 2) > 0,
+      round: CURRENT_ROUND, gameType: GAME_TYPE, cupName: CUP_NAME
+    };
+  }
+
+  // "R4 - Regional" / "PA Cup R2" style context line for a card's top row.
+  function finalContextLabel(round, gameType, cupName){
+    const parts = [];
+    if (round) parts.push(round);
+    parts.push(cupName ? `${cupName} Cup` : (gameType || ''));
+    return parts.filter(Boolean).join(' · ');
+  }
+
+  function finalTeamRowHtml(name, rank, region, score, state){
+    const color = (state === 'win') ? `color:${regionBright(region)};` : '';
+    return `<div class="final-row ${state}">`
+      + `<span class="fr-name" style="${color}" title="${escHtml(name)}">`
+      + `<span class="fr-rank">#${escHtml(rank)}</span> ${escHtml(name)}</span>`
+      + `<span class="fr-score">${escHtml(score)}</span></div>`;
+  }
+
+  function finalCardHtml(rec, index){
+    const state = (rec.awayScore === rec.homeScore) ? ['tie', 'tie']
+      : (rec.awayScore > rec.homeScore ? ['win', 'loss'] : ['loss', 'win']);
+    const idAttr = (index === null) ? '' : ` data-final-index="${index}"`;
+    return `<div class="final-card"${idAttr}>`
+      + `<div class="fc-top"><span class="fc-ctx">`
+      + `${escHtml(finalContextLabel(rec.round, rec.gameType, rec.cupName))}</span>`
+      + `<span class="fc-tag done">${rec.ot ? 'Final / OT' : 'Final'}</span></div>`
+      + finalTeamRowHtml(rec.awayName, rec.awayRank, rec.awayRegion, rec.awayScore, state[0])
+      + finalTeamRowHtml(rec.homeName, rec.homeRank, rec.homeRegion, rec.homeScore, state[1])
+      + `</div>`;
+  }
+
+  // An unplayed matchup: same card shape, dimmed, with an em-dash where the
+  // score goes. Team names come off the SCHEDULE entry when the roster was
+  // imported, falling back to the bare rank when it wasn't.
+  function pendingCardHtml(match, index, isLive){
+    const awayTeam = findTeamByRank(match.awayRank);
+    const homeTeam = findTeamByRank(match.homeRank);
+    const awayName = match.awayName || `Rank ${match.awayRank}`;
+    const homeName = match.homeName || `Rank ${match.homeRank}`;
+    return `<div class="final-card pending${isLive ? ' live' : ''}" data-final-index="${index}">`
+      + `<div class="fc-top"><span class="fc-ctx">`
+      + `${escHtml(finalContextLabel(match.round, match.gameType, match.cupName))}</span>`
+      + `<span class="fc-tag">${isLive ? 'In progress' : 'Upcoming'}</span></div>`
+      + finalTeamRowHtml(awayName, match.awayRank, awayTeam && awayTeam['Region'], '—', 'tie')
+      + finalTeamRowHtml(homeName, match.homeRank, homeTeam && homeTeam['Region'], '—', 'tie')
+      + `</div>`;
+  }
+
+  function renderFinals(){
+    const body = document.getElementById('finalsBody');
+    const countEl = document.getElementById('finalsCount');
+    if (!body) return;
+
+    const live = [];     // the match on the Field right now, if it's unplayed
+    const finals = [];   // {seq, html} -- sorted newest-first below
+    const upcoming = []; // still to play, in schedule order
+
+    for (let i = 0; i < SCHEDULE.length; i++){
+      const rec = MATCH_FINALS[i];
+      if (rec){
+        finals.push({seq: rec.seq, html: finalCardHtml(rec, i)});
+      } else if (i === currentMatchIndex && !game.gameOver){
+        live.push(pendingCardHtml(SCHEDULE[i], i, true));
+      } else {
+        upcoming.push(pendingCardHtml(SCHEDULE[i], i, false));
+      }
+    }
+    for (const rec of UNSCHEDULED_FINALS){
+      finals.push({seq: rec.seq, html: finalCardHtml(rec, null)});
+    }
+    finals.sort((a, b) => b.seq - a.seq);
+
+    const cards = live.concat(finals.map(f => f.html), upcoming);
+    countEl.textContent = SCHEDULE.length ? `${finals.length} / ${SCHEDULE.length}`
+      : (finals.length ? String(finals.length) : '—');
+    body.innerHTML = cards.length ? cards.join('')
+      : '<div class="finals-empty">No matchups loaded yet. Import a schedule on the '
+        + 'Schedule tab and every final lands here as it happens.</div>';
+  }
+
+  // Whatever just happened is rendered at the top, so snapping back to the top
+  // is what keeps it visible -- exactly what appendLog() does to the
+  // play-by-play after prepending a line.
+  function scrollFinalsToTop(){
+    const body = document.getElementById('finalsBody');
+    if (body) body.scrollTop = 0;
+  }
+
+  function recordFinalScore(g){
+    const rec = buildFinalRecord(g);
+    rec.seq = ++finalsSeq;
+    if (currentMatchIndex !== null && SCHEDULE[currentMatchIndex]){
+      MATCH_FINALS[currentMatchIndex] = rec;
+    } else {
+      UNSCHEDULED_FINALS.push(rec);
+    }
+    renderFinals();
+    scrollFinalsToTop();
+  }
+
+  function clearFinals(){
+    MATCH_FINALS = {};
+    UNSCHEDULED_FINALS = [];
+    finalsSeq = 0;
+    renderFinals();
   }
 
   // ---------- Results log ----------
@@ -2994,6 +3238,7 @@
     game.resultsRecorded = true;
     RESULTS_LOG.push(buildResultsRow(game));
     renderResultsTab();
+    recordFinalScore(game);
   }
 
   document.getElementById('resultsDownloadBtn').addEventListener('click', () => {
@@ -3124,6 +3369,7 @@
   renderMatchSetup();
   for (const entry of game.log) appendLog(entry);
   renderAll();
+  renderFinals();
 })();
 </script>
 </body>

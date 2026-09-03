@@ -43,6 +43,7 @@ from deckfield_ratings import (
     pa_cup_real_results, pa_cup_round_preview, pa_cup_round1_seeding,
     compute_strength_breakdown, generate_pod_schedule,
     rds_cup_real_results, rds_cup_round_pairings,
+    regional_standings_seeds, regional_tournament_games, REGION_COLORS,
 )
 
 SEASON = 9
@@ -331,6 +332,54 @@ def build_pa_cup():
     return real_results, pairings, swap_log
 
 
+def build_rt_data():
+    """RT_DATA -- the Regional Playoffs tab's per-region Regional Tournament
+    matchups: {region: {matchday_str: [{home, away, home_seed, away_seed,
+    home_dex, away_dex}]}}.
+
+    Real staleness bug, fixed 2026-09-03. RT_DATA had been baked into the
+    dashboard once by an early one-time script and never regenerated -- the
+    sixth instance of the exact bug class already documented for
+    PA_CUP_DATA, SCHEDULE_DATA, CUP_REAL_RESULTS/RDS_ROUND2/RDS_ROUND3 and
+    PA_ROUND_PREVIEW ("looks like static seed data" vs. "is actually
+    derived"). It isn't static at all: every matchup here comes from
+    regional_standings_seeds(), which re-sorts on the CURRENT standings, so
+    the whole tab drifts a little further out of date with every result
+    added. Confirmed stale on discovery -- the baked file had Indigo's seed
+    9 as Pewter City while the live standings had Viridian City.
+
+    Accumulates matchday 1 upward and stops at the first one that isn't
+    resolvable yet (regional_tournament_games returns None when a prior
+    matchday is incomplete), the same self-limiting pattern
+    rds_cup_round_pairings() and build_pa_cup() already use: every matchday
+    played so far, plus exactly one ahead, and never a guess past that.
+    Region keys are the database's internal names (LilyValley, no space) to
+    match the dashboard's own REGION_ORDER -- region_display_name() is for
+    DECKFIELD exports, not for these keys."""
+    conn = get_connection()
+    dex_by_name = {r["name"]: r["team_id"] for r in conn.execute("SELECT team_id, name FROM teams")}
+    conn.close()
+
+    rt = {}
+    for region in REGION_COLORS:
+        seed_of = {name: seed for seed, name in regional_standings_seeds(SEASON, region).items()}
+        rounds = {}
+        for md in range(1, 10):
+            games = regional_tournament_games(SEASON, region, md)
+            if games is None:
+                break
+            rounds[str(md)] = [
+                {
+                    "home": home, "away": away,
+                    "home_seed": seed_of[home], "away_seed": seed_of[away],
+                    "home_dex": dex_by_name[home], "away_dex": dex_by_name[away],
+                }
+                for home, away in games
+            ]
+        rt[region] = rounds
+    return rt
+
+
 def build_strength_data():
     """STRENGTH_DATA -- the RL Strength tab's region/division z-score
     breakdown. Reuses compute_strength_breakdown(), the same formula that
@@ -358,6 +407,67 @@ def build_strength_data():
     }
 
 
+# Every top-level `const X = ...` data block in the dashboard must be
+# accounted for here. This exists because the same bug has now been found
+# six separate times -- PA_CUP_DATA, SCHEDULE_DATA, CUP_REAL_RESULTS,
+# RDS_ROUND2/RDS_ROUND3, PA_ROUND_PREVIEW and RT_DATA were each baked in
+# once by an early one-time script, LOOKED like static seed data, and went
+# on silently serving stale numbers for weeks after the thing they derive
+# from had moved on. Nothing about a constant's appearance distinguishes
+# "static" from "derived and forgotten", so the distinction is written
+# down instead, and _check_const_manifest() fails the run on any constant
+# that is in neither list. A new dashboard constant therefore cannot be
+# added without someone deciding, once, which kind it is.
+#
+# DERIVED: rebuilt from deckfield.db on every run, below in main().
+DERIVED_CONSTS = {
+    "DATA", "NEXT_MATCHDAY_DATA", "CALENDAR_DATA", "SCHEDULE_DATA",
+    "RANK_ELO_HISTORY", "CUP_REAL_RESULTS", "RDS_ROUND_PAIRINGS",
+    "PA_CUP_DATA", "PA_REAL_RESULTS", "PA_ROUND_PAIRINGS", "PA_SWAP_LOG",
+    "STRENGTH_DATA", "RT_DATA", "TEAMS_EXPORT_TSV",
+}
+
+# STATIC: genuinely fixed, with the reason it can never go stale. Anything
+# that depends on standings, ratings, results or a generator function
+# belongs in DERIVED, not here.
+STATIC_CONSTS = {
+    "CUP_BRACKET_DATA": "real RDS Cup round-1 seed data, fixed for the season",
+    "PROMO_RELEGATION": "league promotion/relegation rules, not results",
+    "RANK_BY_DEX": "computed client-side from DATA, so it follows it automatically",
+    "REGION_BY_NAME": "region name lookup table",
+    "REGION_COLORS": "fixed palette, mirrored from deckfield.html",
+    "REGION_DISPLAY": "internal -> display region names",
+    "REGION_ORDER": "fixed display order of the 10 regions",
+    "ROUND_LABELS": "static label strings",
+    "RT_MD_LABELS": "static label strings",
+    "SCHEDULE_DEFAULTS": "static form defaults for the Schedule paste boxes",
+}
+
+
+def _check_const_manifest(content):
+    """Raise if the dashboard declares a top-level data constant that is in
+    neither DERIVED_CONSTS nor STATIC_CONSTS, or if a constant this script
+    claims to regenerate has gone missing from the file."""
+    found = set(re.findall(r'^const ([A-Z][A-Z0-9_]*) = ', content, re.M))
+    unaccounted = found - DERIVED_CONSTS - set(STATIC_CONSTS)
+    if unaccounted:
+        raise RuntimeError(
+            "dashboard constant(s) in neither DERIVED_CONSTS nor STATIC_CONSTS: "
+            + ", ".join(sorted(unaccounted))
+            + ". Decide which it is: if anything about it comes from deckfield.db "
+              "(standings, ratings, results, a generator function), add a builder "
+              "and put it in DERIVED_CONSTS -- baking it in once is how RT_DATA, "
+              "SCHEDULE_DATA and PA_CUP_DATA each went stale. Only add it to "
+              "STATIC_CONSTS, with a reason, if it genuinely cannot change."
+        )
+    missing = DERIVED_CONSTS - found
+    if missing:
+        raise RuntimeError(
+            "expected to regenerate constant(s) that aren't in the dashboard: "
+            + ", ".join(sorted(missing))
+        )
+
+
 def _js_string_literal(s):
     return '"' + s.replace('\\', '\\\\').replace('"', '\\"').replace('\t', '\\t').replace('\n', '\\n') + '"'
 
@@ -374,6 +484,10 @@ def _replace_const(content, var_name, value, is_array=False):
 def main():
     with open(DASHBOARD_PATH) as f:
         content = f.read()
+
+    # Before touching anything: every data constant in the file must be
+    # declared either derived (rebuilt below) or static (with a reason).
+    _check_const_manifest(content)
 
     content = _replace_const(content, "DATA", build_data())
 
@@ -396,6 +510,7 @@ def main():
     content = _replace_const(content, "PA_SWAP_LOG", pa_swap_log, is_array=True)
 
     content = _replace_const(content, "STRENGTH_DATA", build_strength_data())
+    content = _replace_const(content, "RT_DATA", build_rt_data())
 
     teams_out, tsv = export_teams_for_deckfield(SEASON)
     pattern = re.compile(r'const TEAMS_EXPORT_TSV = "(?:[^"\\]|\\.)*";\n')
@@ -407,7 +522,7 @@ def main():
         f.write(content)
     print(f"Regenerated DATA, NEXT_MATCHDAY_DATA, CALENDAR_DATA, SCHEDULE_DATA, RANK_ELO_HISTORY, "
           f"CUP_REAL_RESULTS, RDS_ROUND_PAIRINGS, PA_CUP_DATA, PA_REAL_RESULTS, PA_ROUND_PAIRINGS, "
-          f"PA_SWAP_LOG, STRENGTH_DATA, TEAMS_EXPORT_TSV in {DASHBOARD_PATH}")
+          f"PA_SWAP_LOG, STRENGTH_DATA, RT_DATA, TEAMS_EXPORT_TSV in {DASHBOARD_PATH}")
 
 
 if __name__ == "__main__":

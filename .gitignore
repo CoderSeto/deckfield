@@ -1,6 +1,14 @@
 # The database is a build artifact, not a source file -- always
-# regenerable from migrate_s9.py (the workbook) + results/*.csv
-# (deckfield add-results, replayed in order). Never commit it.
+# regenerable from migrate_s9.py (the workbook, rounds 1-11) +
+# results/*.csv (deckfield add-results, round 12 onward, replayed in
+# order). Never commit it.
+#
+# That invariant only holds if every ingested matchday's CSV is actually
+# kept here. If a round ever exists ONLY in the database, recover it with
+#   python3 deckfield_cli.py export-results
+# which writes every post-workbook round back out in the exact add-results
+# format -- byte-identical to what deckfield.html's Download CSV produces,
+# so re-running it over an up-to-date results/ is a no-op.
 deckfield.db
 deckfield_test*.db
 deckfield_*_backup*.db

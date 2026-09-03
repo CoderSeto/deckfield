@@ -6,6 +6,7 @@ routing every game result through a chat conversation.
 Commands:
   deckfield migrate [workbook.xlsm]      Run the full initial migration
   deckfield add-results results.csv      Ingest new game results, recompute ratings
+  deckfield export-results [--from N]    Write games back out as add-results CSVs
   deckfield recompute [--from N]         Recompute ratings from a given round onward
   deckfield status                       Quick summary of the current database state
 
@@ -70,6 +71,20 @@ def cmd_add_results(args):
             print(f"  line {line_no}: {msg}")
 
     if min_round is not None:
+        # Fatigue deltas are a pure function of a team's host_region history,
+        # so they are rederived from that history rather than left as the
+        # running values add_game_from_dict() writes per game. That
+        # incremental path asks "what was this team's most recent game before
+        # round N" -- correct only if every earlier round is already in the
+        # database. Replaying results/ with a shell glob does NOT guarantee
+        # that: "thu" sorts before "tue", so round 25 lands before 24, 13
+        # before 12, 16 before 15, and so on. Each such inversion makes
+        # `skipped` too large and halves that round's delta. Rederiving here
+        # makes ingest order irrelevant, and matches how fatigue is defined
+        # everywhere else (see CLAUDE.md: recomputed from real host_region
+        # history, never trusted as stored).
+        n_deltas = db.recompute_all_fatigue_deltas(args.season)
+        print(f"Recomputed {n_deltas} fatigue deltas from host_region history.")
         print(f"Recomputing ratings from round {min_round}...")
         touched = db.recompute_from_round(args.season, min_round)
         print(f"Recomputed rounds: {touched}")
@@ -139,6 +154,55 @@ def cmd_region_climate(args):
         print(f"\nWritten to {args.output}")
 
 
+def cmd_export_results(args):
+    """Write every game in a round range back out as `add-results` CSVs --
+    the inverse of add-results, so a round that only exists in the database
+    can be recovered into results/ and the database goes back to being a
+    rebuildable artifact rather than the only copy of the data."""
+    # results/ is only ever replayed ON TOP of the workbook migration, so it
+    # must contain exactly the rounds migrate does NOT produce. Defaulting to
+    # the first post-workbook round keeps a bare `export-results` safe;
+    # asking for an earlier one is allowed but called out, since replaying it
+    # would double-insert games migrate already inserted.
+    historical_last = db.historical_last_round()
+    from_round = args.from_round if args.from_round is not None else historical_last + 1
+    if from_round <= historical_last:
+        print(f"Warning: rounds 1-{historical_last} come from the Excel workbook via "
+              f"`deckfield migrate`. Replaying them from results/ as well would "
+              f"double-insert those games. Only do this if you are rebuilding "
+              f"without the workbook.", file=sys.stderr)
+    rounds = db.export_results_csv(args.season, from_round, args.to_round)
+    if not rounds:
+        print("No games found in that round range.")
+        return
+
+    out_dir = Path(args.outdir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    written, unchanged = [], []
+    for abs_round, stem, csv_text in rounds:
+        path = out_dir / f"{stem}.csv"
+        n_games = len(csv_text.splitlines()) - 1
+        # Re-exporting a round that's already on disk is a no-op by design:
+        # the format matches deckfield.html's own CSV download byte for byte,
+        # so an unchanged round shouldn't show up as a git diff.
+        if path.exists() and path.read_text() == csv_text:
+            unchanged.append((abs_round, path, n_games))
+            continue
+        if path.exists() and not args.force:
+            print(f"Refusing to overwrite {path} (differs from the database). "
+                  f"Re-run with --force if the database is the source of truth.",
+                  file=sys.stderr)
+            sys.exit(1)
+        path.write_text(csv_text)
+        written.append((abs_round, path, n_games))
+
+    for abs_round, path, n_games in written:
+        print(f"round {abs_round:>3}: wrote {path} ({n_games} games)")
+    for abs_round, path, n_games in unchanged:
+        print(f"round {abs_round:>3}: {path} already matches ({n_games} games)")
+    print(f"\n{len(written)} file(s) written, {len(unchanged)} already up to date.")
+
+
 def main():
     parser = argparse.ArgumentParser(prog="deckfield", description="DECKFIELD database CLI")
     parser.add_argument("--season", type=int, default=9, help="Season number (default: 9)")
@@ -172,6 +236,19 @@ def main():
     p_climate = sub.add_parser("region-climate", help="Roll and export fresh Region Climate values in DECKFIELD's paste format")
     p_climate.add_argument("--output", "-o", help="Write the TSV to this file instead of just printing it")
     p_climate.set_defaults(func=cmd_region_climate)
+
+    p_export = sub.add_parser("export-results",
+                              help="Write games back out as add-results CSVs (the inverse of add-results)")
+    p_export.add_argument("--from", dest="from_round", type=int, default=None,
+                          help="First round to export (default: the first round after the "
+                               "workbook migration, i.e. everything results/ is responsible for)")
+    p_export.add_argument("--to", dest="to_round", type=int, default=None,
+                          help="Last round to export (default: the latest with games)")
+    p_export.add_argument("--outdir", "-o", default="results",
+                          help="Directory to write the CSVs into (default: results)")
+    p_export.add_argument("--force", action="store_true",
+                          help="Overwrite an existing file whose contents differ from the database")
+    p_export.set_defaults(func=cmd_export_results)
 
     args = parser.parse_args()
     args.func(args)

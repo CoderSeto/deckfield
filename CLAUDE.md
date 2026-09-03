@@ -49,6 +49,111 @@ cross-referenced between conversations).
   "Rank/Elo History tab" below).
 - `CLAUDE.md` — this file.
 
+## The rounds 15-25 recovery (2026-09-03) — resolved
+
+For a while `results/` held only rounds 12-14 while the dashboard was at
+round 25. Rounds 15-25 had each been ingested through a PR (#34-#48) that
+committed **only** the regenerated `deckfield_dashboard.html` — the source
+CSVs were never saved, so those eleven matchdays existed solely in one
+session's container database. Confirmed by searching every blob in every
+commit across all branches plus dangling objects: zero CSV rows for those
+rounds were ever in git.
+
+They were recovered from that session and are now committed. Verified from
+a clean wipe-and-rebuild (workbook + all 14 CSVs):
+
+- **1464 games through round 25**, matching the count PR #48's own test
+  plan recorded weeks earlier — an independent check written before the
+  recovery existed.
+- Rebuilding `DATA` reproduces the previously-committed dashboard
+  **exactly**: 160 teams identical across all 36 fields (`ovr`, `rank`,
+  `elo_raw`, `tot`, `dscr`, `eye`, `rlstr`, `sos`, `sov`, and each team's
+  full per-game `log`).
+- Regenerating the whole dashboard afterwards left **12 of 14** derived
+  constants byte-identical (`DATA`, `SCHEDULE_DATA`, `RANK_ELO_HISTORY`,
+  `CUP_REAL_RESULTS`, `RDS_ROUND_PAIRINGS`, `PA_*`, `STRENGTH_DATA`,
+  `CALENDAR_DATA`, `NEXT_MATCHDAY_DATA`). Only `RT_DATA` changed (the
+  staleness fix, 39/40 MD1 slots corrected) and `TEAMS_EXPORT_TSV` (whose
+  Secondary Type column is a fresh `random.randint(1, 18)` every export by
+  design).
+
+Round 26 (L7) is absent because it has not been played, not because it was
+lost.
+
+## Recovering rounds that only exist in the database
+
+`deckfield export-results` is the exact inverse of `add-results`: it writes
+games back out in the same CSV format, so a round that was ingested without
+its CSV being kept can be recovered into `results/` and the database goes
+back to being a rebuildable artifact instead of the only copy of the data.
+
+```
+python3 deckfield_cli.py export-results                 # everything results/ owns
+python3 deckfield_cli.py export-results --from 15 --to 25
+```
+
+- **Default scope is the first post-workbook round onward** (round 12
+  today, from `historical_last_round()` = `max(_CONFIRMED_ABS_ROUND)`).
+  This matters: rounds 1-11 come from the workbook via `migrate`, so
+  putting them in `results/` too would double-insert every one of those
+  games on the next rebuild. Asking for them explicitly still works but
+  prints a warning.
+- **Filenames match the existing convention** (`2026-w6-tue-pa-draw-1.csv`),
+  derived from `full_schedule_abs_round_mapping()` + `WEEKLY_SCHEDULE`, so
+  recovered rounds sit alongside hand-kept ones with no naming drift.
+- **Output is byte-identical to what `deckfield.html`'s Download CSV
+  produces** — same per-column decimal places (raw_goal 2dp, spread 4dp,
+  interest 2dp, dscr 1dp, elo/ex integer) and no trailing newline. So
+  re-running it over an up-to-date `results/` is a true no-op rather than a
+  wall of formatting churn, and an existing file that *differs* from the
+  database is refused unless `--force` is passed.
+- **The round trip is lossless.** `games` stores every CSV column verbatim
+  and nothing is derived on ingest. The one field not stored directly is
+  `home`, recovered from `host_region`: "A" when it matches team_a's
+  region, else "B" — exact for all 928 real games (a cross-region game
+  matches exactly one side; a Regional game's two teams share a region, so
+  either answer resolves to the same `host_region`, which is all `home` is
+  used for).
+
+Verified end to end: exporting rounds 12-14 reproduced the three
+already-committed CSVs **byte for byte**, and a full wipe-and-rebuild from
+the workbook plus the *exported* CSVs produced a database identical to one
+built from the *committed* CSVs — all 480 rating rows across 28 columns,
+all 928 games across 21 fields, and all 1,856 fatigue deltas.
+
+**Standing rule: keep the CSV for every matchday you ingest.** The
+database is gitignored precisely because it's supposed to be reproducible;
+that only holds if `results/` is complete. Every round from 12 on now has
+its CSV here, and a rebuild reproduces the dashboard exactly — keep it that
+way.
+
+### Fatigue deltas are rederived on every ingest (fixed 2026-09-03)
+
+`add-results` now calls `recompute_all_fatigue_deltas()` after ingesting a
+file, before recomputing ratings. Without it, **replaying `results/` in the
+wrong order silently corrupts fatigue** — and the natural way to replay it
+is wrong: a shell glob sorts `thu` before `tue`, so `for f in
+results/*.csv` feeds round 25 before 24, 13 before 12, 16 before 15, 19
+before 18, and 22 before 21.
+
+The mechanism: `_record_fatigue_for_team()` asks "what was this team's most
+recent game *before* round N", which is only correct if every earlier round
+is already in the database. When round N-1 is still missing it finds an
+older game instead, computes too large a `skipped`, and halves that round's
+delta (`fatigue = distance / 2^skipped`). Caught during the rounds 15-25
+recovery: 307 delta rows differed, concentrated in exactly those six
+out-of-order rounds, and fatigue was wrong for 159/160 teams while all 35
+other rating fields matched perfectly.
+
+Rederiving from `host_region` history makes ingest order irrelevant, and
+matches how fatigue is defined everywhere else in this file (recomputed
+from real host history, never trusted as stored). Verified: ingesting all
+14 files in glob order, strict round order, and full reverse round order
+now produces byte-identical fatigue deltas *and* ratings, and the reverse
+-order build still reproduces the dashboard exactly. This mattered beyond
+bookkeeping — fatigue feeds `export_teams_for_deckfield()`, which feeds
+`deckfield.html`'s Spread calculation.
+
 ## Adding new game results
 
 **Always use the CSV format**, not the old packed-string format
@@ -955,6 +1060,40 @@ always shown without a "projected" qualifier; the label was left over
 from language written when only one bracket's round 1 was done and round
 2 genuinely could still shift.
 
+**`RT_DATA` was the sixth instance of the same silent-staleness bug, found
+and fixed 2026-09-03 — and this time the class of bug got a guard.**
+`RT_DATA` (Regional Playoffs tab) had been baked in once by an early
+one-time script and was never wired into `regenerate_dashboard.py`, exactly
+like `PA_CUP_DATA`, `SCHEDULE_DATA`, `CUP_REAL_RESULTS`/`RDS_ROUND2`/
+`RDS_ROUND3` and `PA_ROUND_PREVIEW` before it. It is emphatically not
+static: every matchup in it comes from `regional_standings_seeds()`, which
+re-sorts on the *current* standings, so it drifts further out of date with
+every result added. Confirmed stale rather than assumed — regenerating it
+moved **27 of the 40** MD1 slots (e.g. Indigo's seed-16 visitor to Pewter
+City read Cycling Road when the live standings said Cerulean City).
+
+Fixed with `build_rt_data()` in `regenerate_dashboard.py`, which
+accumulates matchday 1 upward and stops at the first one
+`regional_tournament_games()` can't resolve yet — the same self-limiting
+pattern `rds_cup_round_pairings()` and `build_pa_cup()` already use, so it
+covers every matchday played plus exactly one ahead and never guesses past
+that. Region keys stay the database's internal names (`LilyValley`, no
+space) to match the dashboard's own `REGION_ORDER`; `region_display_name()`
+is for DECKFIELD exports, not these keys.
+
+**The real fix is the guard, not the sixth patch.** `DERIVED_CONSTS` /
+`STATIC_CONSTS` in `regenerate_dashboard.py` now enumerate every top-level
+`const X = ...` block in the dashboard, and `_check_const_manifest()` runs
+before anything is rewritten, raising on (a) any constant in neither list
+and (b) any constant this script claims to regenerate that has gone missing
+from the file. Nothing about a constant's *appearance* distinguishes
+"static" from "derived and forgotten" — that's precisely why this bug
+recurred six times — so the distinction is written down, with a reason
+recorded next to each static entry, and a new dashboard constant can't be
+added without someone deciding once which kind it is. Both failure modes
+were tested by deliberately introducing them (an unaccounted new constant,
+and a renamed derived one) and confirming the run fails.
+
 **Conflict log named the wrong seeds as swapped, found and fixed
 2026-08-07, same day.** Once the round 2-4 conflict log above was
 actually visible, real round-2 entries read e.g. "Swapped seed #96 &harr;
@@ -1256,6 +1395,103 @@ the actual Game Spread Calculation panel:
   away favorite's margin instead of shrinking it), final spread AWAY
   Team +2.2248 instead of the pre-fix +5.19 that the reversed multiplier
   would have produced.
+
+## deckfield.html layout (three columns + inline tabs)
+
+**Reformed 2026-09-03 (per explicit request).** The page used to stack
+brand → scoreboard → tab bar → a two-column Field layout (pitch | cards
+over log). It's now:
+
+1. `.topbar` — the DECKFIELD wordmark and the tab bar share one line, with
+   the tab bar right-aligned. The tab bar lost its own `margin-bottom`/
+   `border-bottom` and gained `margin-bottom:-1px`, so the active tab's gold
+   underline sits directly *on* `.topbar`'s rule instead of drawing a second
+   one a few pixels below it.
+2. The score banner (`.scoreboard-row`) sits under that, still inside
+   `<header>` — deliberately outside the tab contents, so it stays put when
+   switching tabs, exactly as before.
+3. `.layout` is now **three** columns — `finals | pitch | cards/log` — with
+   `.finals-panel` spanning both grid rows down the left edge. `.wrap`'s
+   `max-width` went 1040px → 1560px to pay for the extra column.
+
+Reflow: at ≤1240px it drops back to the original two columns with the
+finals panel moving full-width *below* them (it's the least
+attention-critical of the four panels); at ≤800px everything is one column,
+finals last.
+
+**The Final Scores column** (`renderFinals()` and friends, next to the
+Results-log section) mirrors the currently-loaded `SCHEDULE` one card per
+matchup, filling each in as its game ends — so an Auto-Play Week reads as a
+live matchday scoreboard instead of only landing in the Results CSV.
+Details worth remembering:
+
+- Keyed on the **SCHEDULE index** (`MATCH_FINALS`), so replaying a match
+  overwrites its own card rather than adding a second one. A game played
+  with no schedule entry loaded (the built-in placeholder match) goes to
+  `UNSCHEDULED_FINALS`.
+- **Ordered newest-first, like the play-by-play log** (2026-09-03, per
+  explicit request). Top to bottom: the match currently in progress, then
+  every final in *completion* order newest-first, then the matchups still
+  to come in schedule order. `scrollFinalsToTop()` snaps the column back to
+  the top whenever something lands there, exactly as `appendLog()` does
+  after prepending a play-by-play line. Completion order needs its own
+  `finalsSeq` counter — `MATCH_FINALS` is keyed on schedule index, which
+  says nothing about *when* a game was played, so a replayed match has to
+  be able to jump back to the top. The in-progress card deliberately sits
+  *above* the newest final: it's about to become the newest final, so
+  holding the top slot means finishing it fills the card in place instead
+  of making the list jump.
+- `buildFinalRecord()` **snapshots** the team names/ranks/regions/round at
+  the moment the game ends. It can't read them back later:
+  `loadScheduledMatch()` overwrites `TEAM_DISPLAY_NAME`/`TEAM_REGION`/
+  `RANK_*`/`CUP_NAME` wholesale for the next match.
+- Hooked into `recordResultIfNeeded()`, the single funnel every play path
+  already goes through (manual Deal, Sim Game, Auto-Play, Auto-Play Week's
+  replay) because it's called from `renderAll()`. Nothing per-path needed
+  wiring, and Auto-Play Week was verified end to end regardless.
+- Winners are colored by **their own region** via `regionBright()` —
+  the same convention the dashboard's `winnerNameHtml()` already uses, not
+  a fixed home/away color.
+- Re-parsing a schedule (or clearing it) calls `clearFinals()` and resets
+  `currentMatchIndex`: a new matchday means the old indices no longer point
+  at the same games, so keeping the cards would silently mislabel them.
+- `escHtml()` was added here (there was no escaping helper in the file) —
+  team names come from pasted spreadsheet data.
+
+Verified via Playwright at 1600/900/700px: brand and tabs share a line,
+scoreboard sits below them, finals is leftmost and spans both rows, cards
+and log share column 3, pending → in-progress → final card states all
+render, the winner's name carries their region's bright hex, the Results
+CSV is unaffected, re-parsing clears the column, and Auto-Play Week fills
+it 2/2 with no page errors.
+
+## Auto-Play Week snapshots (deckfield.html)
+
+**`simulateFullyWithHistory()` no longer clones the log per turn, fixed
+2026-09-03.** Every turn's snapshot was `structuredClone(game)`, and
+`game.log` is append-only — so each snapshot re-copied an ever-growing
+array and the whole hidden simulation was quadratic in turn count. Measured
+in a faithful reproduction of the loop at ~320 turns (a typical full game):
+**82ms and ~103k log-entry copies per game**, versus **15ms** with the log
+excluded — roughly 6.6s → 1.2s across an 80-game matchday.
+
+The fix keeps `log` out of each snapshot, stores a `logLength` marker
+instead, and hangs the one complete log off the returned history as
+`fullLog`. New `restoreSnapshot(history, index)` is the only way a snapshot
+goes back onto `game`: `Object.assign` alone would leave `game.log` at
+whatever it currently holds (the snapshots carry none), so the right prefix
+has to be sliced back on explicitly — `flushHistoryTo()` and
+`replayHistory()` both route through it, and `replayHistory`'s `prevLogLen`
+now reads `snap.logLength` rather than `snap.log.length`. **`deck` is still
+cloned** — it's a bounded 52 entries, not the quadratic term, and leaving it
+in keeps the snapshot a faithful game state.
+
+Verified in the real page, not just in the benchmark: the `flushHistoryTo`
+path (tier-3 "sim") renders the full 159-line log of a completed game, and
+the `replayHistory` path grows the log turn by turn (6 → 8 → 10 → 14 → 16
+lines across five samples) instead of dumping the whole game on the first
+step — which is exactly what a wrong prefix slice would have produced. No
+page errors on either path.
 
 ## Known open items
 
