@@ -1419,6 +1419,48 @@ finals panel moving full-width *below* them (it's the least
 attention-critical of the four panels); at ≤800px everything is one column,
 finals last.
 
+**Column balance and pitch legibility, adjusted 2026-09-03 (per explicit
+request).** Grid columns went `0.62fr / 1.9fr / 1fr` →
+`0.85fr / 1.65fr / 1fr`: the finals column gains the width back from the
+pitch (at 1600px, 269px → 371px for finals, 825px → 720px for the pitch),
+since long team names were the thing being cramped. The pitch's zone
+numbers went 10px → 12px (and slightly less transparent, 0.6 → 0.72) to
+stay readable in the narrower cells. No overflow risk at any ATK modifier:
+`ATK_TABLE` values are always 1-9, so a cell's label is at most three
+characters (`6/6`) — about 22px of text in a 42px cell.
+
+**The ball marker is a direction arrow, not a ball (2026-09-03, per
+explicit request).** `.ball` is now a clip-path arrow that points the way
+the ball is about to travel, mirrored via `.point-left`, set in
+`renderBallAndTrail()` from `game.turnTeam`.
+
+- **Only the horizontal component is shown, deliberately.**
+  `Game.processTurn` uses `dir = team === 'home' ? -1 : 1` — home always
+  drives left, away always drives right — and `turnTeam` is settled before
+  the move card is drawn, so that direction is genuinely known in advance.
+  The vertical step is `lateralDelta(c1.suit)`, which isn't known until the
+  card is dealt; an arrow claiming a diagonal would be inventing it.
+- **`turnTeam` really is the *next* mover**, including the two cases that
+  aren't simple alternation: `if (!scored) this.turnTeam = otherTeam(team)`
+  leaves possession with the scorer (who kicks off next), and
+  `startPeriod()` reassigns it at every period change.
+- **`filter: drop-shadow`, not `box-shadow`** — `clip-path` clips a
+  box-shadow away entirely, while a filter follows the clipped silhouette.
+- **`transform` is excluded from the transition** on purpose: animating the
+  mirror would squash the arrow through zero width on every change of
+  possession.
+- The three trail markers stay small circles — they're where the ball has
+  been, which has no direction to show.
+
+Verified over 40 consecutive turns that the arrow's predicted direction
+matches the team that actually moved next, 40/40, post-goal kickoffs
+included. Worth recording how that check first went wrong: the test read
+the newest play-by-play line matching `[TEAM]`, but a goal logs as
+`★ GOAL <TEAM>!` — so on scoring turns it silently compared against the
+*previous* turn's mover and reported three phantom mismatches. The fix was
+to scan only the lines that turn added and to recognise all three log
+shapes (move, kickoff, goal).
+
 **The Final Scores column** (`renderFinals()` and friends, next to the
 Results-log section) mirrors the currently-loaded `SCHEDULE` one card per
 matchup, filling each in as its game ends — so an Auto-Play Week reads as a
