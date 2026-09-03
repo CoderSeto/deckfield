@@ -1257,6 +1257,63 @@ the actual Game Spread Calculation panel:
   Team +2.2248 instead of the pre-fix +5.19 that the reversed multiplier
   would have produced.
 
+## deckfield.html layout (three columns + inline tabs)
+
+**Reformed 2026-09-03 (per explicit request).** The page used to stack
+brand → scoreboard → tab bar → a two-column Field layout (pitch | cards
+over log). It's now:
+
+1. `.topbar` — the DECKFIELD wordmark and the tab bar share one line, with
+   the tab bar right-aligned. The tab bar lost its own `margin-bottom`/
+   `border-bottom` and gained `margin-bottom:-1px`, so the active tab's gold
+   underline sits directly *on* `.topbar`'s rule instead of drawing a second
+   one a few pixels below it.
+2. The score banner (`.scoreboard-row`) sits under that, still inside
+   `<header>` — deliberately outside the tab contents, so it stays put when
+   switching tabs, exactly as before.
+3. `.layout` is now **three** columns — `finals | pitch | cards/log` — with
+   `.finals-panel` spanning both grid rows down the left edge. `.wrap`'s
+   `max-width` went 1040px → 1560px to pay for the extra column.
+
+Reflow: at ≤1240px it drops back to the original two columns with the
+finals panel moving full-width *below* them (it's the least
+attention-critical of the four panels); at ≤800px everything is one column,
+finals last.
+
+**The Final Scores column** (`renderFinals()` and friends, next to the
+Results-log section) mirrors the currently-loaded `SCHEDULE` one card per
+matchup, filling each in as its game ends — so an Auto-Play Week reads as a
+live matchday scoreboard instead of only landing in the Results CSV.
+Details worth remembering:
+
+- Keyed on the **SCHEDULE index** (`MATCH_FINALS`), so cards stay in
+  schedule order however the games actually get played. A game played with
+  no schedule entry loaded (the built-in placeholder match) goes to
+  `UNSCHEDULED_FINALS` and renders after the scheduled cards.
+- `buildFinalRecord()` **snapshots** the team names/ranks/regions/round at
+  the moment the game ends. It can't read them back later:
+  `loadScheduledMatch()` overwrites `TEAM_DISPLAY_NAME`/`TEAM_REGION`/
+  `RANK_*`/`CUP_NAME` wholesale for the next match.
+- Hooked into `recordResultIfNeeded()`, the single funnel every play path
+  already goes through (manual Deal, Sim Game, Auto-Play, Auto-Play Week's
+  replay) because it's called from `renderAll()`. Nothing per-path needed
+  wiring, and Auto-Play Week was verified end to end regardless.
+- Winners are colored by **their own region** via `regionBright()` —
+  the same convention the dashboard's `winnerNameHtml()` already uses, not
+  a fixed home/away color.
+- Re-parsing a schedule (or clearing it) calls `clearFinals()` and resets
+  `currentMatchIndex`: a new matchday means the old indices no longer point
+  at the same games, so keeping the cards would silently mislabel them.
+- `escHtml()` was added here (there was no escaping helper in the file) —
+  team names come from pasted spreadsheet data.
+
+Verified via Playwright at 1600/900/700px: brand and tabs share a line,
+scoreboard sits below them, finals is leftmost and spans both rows, cards
+and log share column 3, pending → in-progress → final card states all
+render, the winner's name carries their region's bright hex, the Results
+CSV is unaffected, re-parsing clears the column, and Auto-Play Week fills
+it 2/2 with no page errors.
+
 ## Known open items
 
 - Dashboard regeneration isn't in the CLI yet — still manual script runs.
