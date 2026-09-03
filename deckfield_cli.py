@@ -71,6 +71,20 @@ def cmd_add_results(args):
             print(f"  line {line_no}: {msg}")
 
     if min_round is not None:
+        # Fatigue deltas are a pure function of a team's host_region history,
+        # so they are rederived from that history rather than left as the
+        # running values add_game_from_dict() writes per game. That
+        # incremental path asks "what was this team's most recent game before
+        # round N" -- correct only if every earlier round is already in the
+        # database. Replaying results/ with a shell glob does NOT guarantee
+        # that: "thu" sorts before "tue", so round 25 lands before 24, 13
+        # before 12, 16 before 15, and so on. Each such inversion makes
+        # `skipped` too large and halves that round's delta. Rederiving here
+        # makes ingest order irrelevant, and matches how fatigue is defined
+        # everywhere else (see CLAUDE.md: recomputed from real host_region
+        # history, never trusted as stored).
+        n_deltas = db.recompute_all_fatigue_deltas(args.season)
+        print(f"Recomputed {n_deltas} fatigue deltas from host_region history.")
         print(f"Recomputing ratings from round {min_round}...")
         touched = db.recompute_from_round(args.season, min_round)
         print(f"Recomputed rounds: {touched}")

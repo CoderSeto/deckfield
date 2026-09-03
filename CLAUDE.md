@@ -49,6 +49,37 @@ cross-referenced between conversations).
   "Rank/Elo History tab" below).
 - `CLAUDE.md` — this file.
 
+## The rounds 15-25 recovery (2026-09-03) — resolved
+
+For a while `results/` held only rounds 12-14 while the dashboard was at
+round 25. Rounds 15-25 had each been ingested through a PR (#34-#48) that
+committed **only** the regenerated `deckfield_dashboard.html` — the source
+CSVs were never saved, so those eleven matchdays existed solely in one
+session's container database. Confirmed by searching every blob in every
+commit across all branches plus dangling objects: zero CSV rows for those
+rounds were ever in git.
+
+They were recovered from that session and are now committed. Verified from
+a clean wipe-and-rebuild (workbook + all 14 CSVs):
+
+- **1464 games through round 25**, matching the count PR #48's own test
+  plan recorded weeks earlier — an independent check written before the
+  recovery existed.
+- Rebuilding `DATA` reproduces the previously-committed dashboard
+  **exactly**: 160 teams identical across all 36 fields (`ovr`, `rank`,
+  `elo_raw`, `tot`, `dscr`, `eye`, `rlstr`, `sos`, `sov`, and each team's
+  full per-game `log`).
+- Regenerating the whole dashboard afterwards left **12 of 14** derived
+  constants byte-identical (`DATA`, `SCHEDULE_DATA`, `RANK_ELO_HISTORY`,
+  `CUP_REAL_RESULTS`, `RDS_ROUND_PAIRINGS`, `PA_*`, `STRENGTH_DATA`,
+  `CALENDAR_DATA`, `NEXT_MATCHDAY_DATA`). Only `RT_DATA` changed (the
+  staleness fix, 39/40 MD1 slots corrected) and `TEAMS_EXPORT_TSV` (whose
+  Secondary Type column is a fresh `random.randint(1, 18)` every export by
+  design).
+
+Round 26 (L7) is absent because it has not been played, not because it was
+lost.
+
 ## Recovering rounds that only exist in the database
 
 `deckfield export-results` is the exact inverse of `add-results`: it writes
@@ -92,7 +123,36 @@ all 928 games across 21 fields, and all 1,856 fatigue deltas.
 
 **Standing rule: keep the CSV for every matchday you ingest.** The
 database is gitignored precisely because it's supposed to be reproducible;
-that only holds if `results/` is complete.
+that only holds if `results/` is complete. Every round from 12 on now has
+its CSV here, and a rebuild reproduces the dashboard exactly — keep it that
+way.
+
+### Fatigue deltas are rederived on every ingest (fixed 2026-09-03)
+
+`add-results` now calls `recompute_all_fatigue_deltas()` after ingesting a
+file, before recomputing ratings. Without it, **replaying `results/` in the
+wrong order silently corrupts fatigue** — and the natural way to replay it
+is wrong: a shell glob sorts `thu` before `tue`, so `for f in
+results/*.csv` feeds round 25 before 24, 13 before 12, 16 before 15, 19
+before 18, and 22 before 21.
+
+The mechanism: `_record_fatigue_for_team()` asks "what was this team's most
+recent game *before* round N", which is only correct if every earlier round
+is already in the database. When round N-1 is still missing it finds an
+older game instead, computes too large a `skipped`, and halves that round's
+delta (`fatigue = distance / 2^skipped`). Caught during the rounds 15-25
+recovery: 307 delta rows differed, concentrated in exactly those six
+out-of-order rounds, and fatigue was wrong for 159/160 teams while all 35
+other rating fields matched perfectly.
+
+Rederiving from `host_region` history makes ingest order irrelevant, and
+matches how fatigue is defined everywhere else in this file (recomputed
+from real host history, never trusted as stored). Verified: ingesting all
+14 files in glob order, strict round order, and full reverse round order
+now produces byte-identical fatigue deltas *and* ratings, and the reverse
+-order build still reproduces the dashboard exactly. This mattered beyond
+bookkeeping — fatigue feeds `export_teams_for_deckfield()`, which feeds
+`deckfield.html`'s Spread calculation.
 
 ## Adding new game results
 
@@ -1435,16 +1495,6 @@ page errors on either path.
 
 ## Known open items
 
-- **`results/` is missing rounds 15-25 — recover them with `deckfield
-  export-results` from the live database** (found 2026-09-03, tool added
-  the same day). A full migration plus every CSV in `results/` reaches
-  **round 14**, while the committed `deckfield_dashboard.html`'s own
-  `DATA.round` is **25**; those eleven rounds were ingested without their
-  CSVs being kept, so they currently exist only in the gitignored
-  `deckfield.db`. This is recoverable, not lost — see "Recovering rounds
-  that only exist in the database" below — but it needs running once
-  against the machine that holds the round-25 database, and until then the
-  repo cannot rebuild past round 14.
 - Dashboard regeneration isn't in the CLI yet — still manual script runs.
 - Round numbering: the *historical* R1-R5/L1-L2 mapping is confirmed
   against real Archive data; everything from PA Draw round 1 onward uses
