@@ -133,7 +133,7 @@
   /* ---- Layout ---- */
   .layout{
     display:grid;
-    grid-template-columns: minmax(0,0.62fr) minmax(0,1.9fr) minmax(0,1fr);
+    grid-template-columns: minmax(0,0.85fr) minmax(0,1.65fr) minmax(0,1fr);
     grid-template-areas:
       "finals pitch cards"
       "finals pitch log";
@@ -186,23 +186,37 @@
     display:flex;flex-direction:row;align-items:center;justify-content:center;gap:1px;
     font-family:'JetBrains Mono',monospace;line-height:1;
   }
-  .zone-vals .zv-home{font-size:10px;color:var(--home-bright);opacity:0.6;}
-  .zone-vals .zv-away{font-size:10px;color:var(--away-bright);opacity:0.6;}
-  .zone-vals .zv-slash{font-size:10px;color:var(--chalk-dim);opacity:0.55;}
-  .zone-vals .zv-same{font-size:10px;color:var(--chalk-dim);opacity:0.55;}
+  .zone-vals .zv-home{font-size:12px;color:var(--home-bright);opacity:0.72;}
+  .zone-vals .zv-away{font-size:12px;color:var(--away-bright);opacity:0.72;}
+  .zone-vals .zv-slash{font-size:12px;color:var(--chalk-dim);opacity:0.6;}
+  .zone-vals .zv-same{font-size:12px;color:var(--chalk-dim);opacity:0.6;}
 
   .marker{
     position:relative;border-radius:50%;
     display:flex;align-items:center;justify-content:center;
     pointer-events:none;
   }
+  /* The ball marker is an arrow pointing the way the ball is about to travel:
+     home always drives left, away always drives right, and `turnTeam` is
+     settled before the move card is drawn, so the direction is known ahead of
+     the turn. Only the horizontal component is shown -- the vertical step
+     comes from the card's suit (lateralDelta), which isn't known until the
+     card is dealt, so an arrow claiming a diagonal would be inventing it.
+     Drawn pointing right and mirrored for home. drop-shadow, not box-shadow:
+     clip-path clips a box-shadow away, but a filter follows the clipped
+     shape. */
   .ball{
-    width:62%;height:62%;margin:auto;
-    background:radial-gradient(circle at 35% 30%, #fff6da, var(--gold) 55%, #b98c33 100%);
-    box-shadow:0 0 10px rgba(233,196,106,0.85), 0 2px 4px rgba(0,0,0,0.5);
-    transition:all .35s ease;
+    width:80%;height:58%;margin:auto;
+    border-radius:0;
+    background:linear-gradient(160deg, #fff6da 0%, var(--gold) 55%, #b98c33 100%);
+    clip-path:polygon(0% 30%, 56% 30%, 56% 6%, 100% 50%, 56% 94%, 56% 70%, 0% 70%);
+    filter:drop-shadow(0 0 7px rgba(233,196,106,0.9)) drop-shadow(0 2px 3px rgba(0,0,0,0.55));
+    /* transform is deliberately NOT transitioned: animating the mirror would
+       squash the arrow through zero width on every change of possession. */
+    transition:opacity .35s ease;
     z-index:5;
   }
+  .ball.point-left{transform:scaleX(-1);}
   .trail{
     width:34%;height:34%;margin:auto;
     border-radius:50%;
@@ -1839,7 +1853,11 @@
   }
 
   function renderBallAndTrail(){
-    placeMarker(document.getElementById('ballMarker'), game.ball.x, game.ball.y, 1);
+    const ballEl = document.getElementById('ballMarker');
+    placeMarker(ballEl, game.ball.x, game.ball.y, 1);
+    // Whoever is on the ball moves next, and their direction is fixed:
+    // home drives left, away drives right (Game.processTurn's `dir`).
+    ballEl.classList.toggle('point-left', game.turnTeam === 'home');
     const opac = [0.15, 0.3, 0.5];
     for (let i=0;i<3;i++){
       const t = document.getElementById('trail'+i);
