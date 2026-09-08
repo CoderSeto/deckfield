@@ -29,11 +29,17 @@ cross-referenced between conversations).
 - `migrate_s9.py` — one-shot migration from the real Excel workbook into
   the database. Exposes `run_full_migration(workbook_path=None)`.
 - `deckfield_cli.py` — the CLI for local use without going through chat.
-  Commands: `migrate`, `add-results <csv>`, `recompute --from N`, `status`,
-  `next-matchday [--output file]`, `export-teams [--output file]`,
-  `region-climate [--output file]`.
-- `deckfield.db` — the SQLite database (not checked in; regenerate via
-  `deckfield migrate`).
+  Commands: `migrate [workbook.xlsm]`, `add-results <csv>`,
+  `recompute --from N`, `status`, `next-matchday [--output file]`,
+  `export-teams [--output file]`, `region-climate [--output file]`,
+  `export-results [--from N] [--to N] [--force]`.
+- `Baccer Game S9 Stats.xlsm` — the real workbook, in the repo root. Note
+  the **spaces**: `migrate_s9.XLSM_PATH`'s default
+  (`/mnt/user-data/uploads/Baccer_Game_S9_Stats.xlsm`, underscores) is a
+  path that does not exist here, so always pass the workbook explicitly.
+- `deckfield.db` — the SQLite database (gitignored; **`migrate` alone only
+  rebuilds rounds 1-11** — the full rebuild is migrate + replaying
+  `results/`, see the runbook below).
 - `deckfield_dashboard.html` — a **static snapshot** dashboard: Rankings,
   Standings, RL Strength, Schedule, RDS Cup, PA Cup, Next Matchday,
   Calendar, Regional Playoffs. Rebuilt by re-running the export scripts
@@ -48,6 +54,154 @@ cross-referenced between conversations).
   History checkpoints, copied verbatim from `Rankings!CT:CL` -- see
   "Rank/Elo History tab" below).
 - `CLAUDE.md` — this file.
+
+## THE RUNBOOK: adding a matchday's results
+
+**Read this section before doing anything else when the task is "add these
+results."** Everything here is also explained in depth further down, but
+the details are spread across a dozen sections and the steps below are the
+whole job in order. Do not skip the verification steps — they are how every
+bug recorded in this file was caught.
+
+### 0. Bootstrap the container (fresh session = nothing is installed)
+
+`deckfield.db` is gitignored and the container starts clean, so a new
+session has **no database and no Python deps**:
+
+```
+pip install openpyxl playwright        # neither is preinstalled
+```
+
+Do **not** run `playwright install` — it is blocked, and Chromium is
+already on disk. See step 6 for how to point Playwright at it.
+
+### 1. Rebuild the database (migrate, then replay `results/` IN ROUND ORDER)
+
+```
+python3 deckfield_cli.py migrate "Baccer Game S9 Stats.xlsm"
+```
+
+The workbook path is a **positional** argument, not `--workbook`, and the
+filename has spaces (quote it). Migrate covers rounds 1-11 only; every
+round from 12 on lives in `results/` and must be replayed:
+
+```
+for f in $(for f in results/*.csv; do r=$(sed -n 2p "$f" | cut -d, -f1); \
+    echo "$r $f"; done | sort -n | cut -d' ' -f2); do
+  python3 deckfield_cli.py add-results "$f"
+done
+```
+
+That sorts by the round number **inside each file**, which is the only
+correct order. `for f in results/*.csv` looks equivalent and is **wrong** —
+a shell glob sorts `thu` before `tue`, feeding round 25 before 24, 13
+before 12, and so on. (Fatigue is rederived on every ingest now, so
+out-of-order replay no longer corrupts it — see the fatigue section — but
+ingest in round order anyway; nothing else guarantees it stays that way.)
+
+### 2. Prove the rebuild is faithful BEFORE ingesting anything new
+
+```
+python3 -c "import deckfield_ratings as db; c=db.get_connection(); \
+  print(c.execute('select count(*) from games').fetchone()[0])"
+```
+
+Check it against the counts recorded in the recovery section above (1544
+through round 26, 1576 through round 27; add the new count when you add a
+round). If it does not match, **stop** — something is wrong with the
+rebuild, and ingesting on top of a bad base silently corrupts everything
+downstream.
+
+Stronger check, worth doing whenever the count is the only evidence: copy
+`deckfield_dashboard.html` aside, run `python3 regenerate_dashboard.py`,
+and diff the `const` blocks. Every one should be byte-identical except
+**`TEAMS_EXPORT_TSV`**, whose Secondary Type column is a fresh
+`random.randint(1, 18)` on every export by design. That one exception is
+expected; any other difference is a real problem.
+
+### 3. Confirm the round number the CSV claims
+
+```
+python3 deckfield_cli.py next-matchday
+```
+
+It prints the event and "Use round=N when reporting results back." That N
+must equal the `round` column in the CSV you were given. If it does not,
+do not "fix" the CSV or hand-pick a number — work out why they disagree
+first (`abs_round_for_event()` is the single source of truth).
+
+### 4. Save the CSV into `results/` under the engine's own filename
+
+Never invent a filename. Copy the CSV in with your best guess, then let
+the engine confirm it:
+
+```
+cp <uploaded.csv> results/<year>-w<week>-<day>-<event>.csv
+python3 deckfield_cli.py add-results results/<...>.csv
+python3 deckfield_cli.py export-results --from N --to N
+```
+
+`export-results` derives the filename from
+`full_schedule_abs_round_mapping()` + `WEEKLY_SCHEDULE`. If your name was
+right it prints "already matches" and writes nothing — which also proves
+the ingest round-trips losslessly. If your name was wrong it writes the
+correct file, and you delete yours.
+
+**Keep the CSV. Always.** The database is gitignored precisely because
+`results/` is supposed to be able to rebuild it; that only holds if every
+ingested matchday's CSV is committed. Eleven rounds were once lost exactly
+this way (see the recovery section).
+
+### 5. Regenerate the dashboard — always, no exceptions
+
+```
+python3 regenerate_dashboard.py
+```
+
+Per explicit standing instruction, results are never added without this.
+It rebuilds every derived constant plus the header subtitle. If it raises
+about the const manifest, read `_check_const_manifest()`'s message and
+decide whether the new constant is derived or static — do **not** silence
+it by adding the name to `STATIC_CONSTS` without checking what it is
+derived from. That guard exists because this exact bug shipped six times.
+
+### 6. Verify in a real browser before committing
+
+Executing the `<script>` block in Node with a mocked `document` is the
+documented minimum, but Playwright against the real file is strictly
+better and is what the recent fixes used:
+
+```python
+from playwright.sync_api import sync_playwright
+import glob
+CHROME = glob.glob("/opt/pw-browsers/chromium-*/chrome-linux/chrome")[0]
+with sync_playwright() as pw:
+    b = pw.chromium.launch(executable_path=CHROME)   # REQUIRED
+    ...
+```
+
+`executable_path` is required: pip installs a newer Playwright than the
+Chromium build on disk, so a bare `launch()` fails looking for a build
+number that was never downloaded.
+
+Click through every tab (`button[data-tab="..."]`; the RDS one is `rds`,
+not `rdscup`; panels are `#panel-<tab>`) and assert **zero `pageerror`
+events**. Two things are expected noise and are **not** code bugs:
+
+- A failed request to `fonts.googleapis.com` (`ERR_CONNECTION_RESET`) —
+  the sandbox blocks outbound network. It surfaces as a console error and
+  a `requestfailed`, never as a `pageerror`. Distinguish the two before
+  reporting a failure.
+- Any check you wrote that greps rendered text for a section label. Query
+  the DOM (`.sb-round`, `thead th`) instead; text-matching produced two
+  false failures on a page that was rendering correctly.
+
+### 7. Commit and push
+
+Commit `results/*.csv`, `deckfield_dashboard.html`, and anything else you
+changed. Never commit `deckfield.db` (it is gitignored — keep it that
+way). Push to the branch named in the session instructions.
+
 
 ## The rounds 15-25 recovery (2026-09-03) — resolved
 
@@ -168,6 +322,10 @@ bookkeeping — fatigue feeds `export_teams_for_deckfield()`, which feeds
 `deckfield.html`'s Spread calculation.
 
 ## Adding new game results
+
+*(Format reference. For the end-to-end procedure — rebuilding the database
+first, verifying it, naming the file, regenerating and checking the
+dashboard — follow **THE RUNBOOK** near the top of this file.)*
 
 **Always use the CSV format**, not the old packed-string format
 (`3R!113+36-33^4.13(0.93)[102]{42.7}2183`). One row = one full game, both
