@@ -81,6 +81,18 @@ Round 26 (L7) was absent at the time of the recovery because it had not
 been played; it was ingested on 2026-09-03 and `results/` now runs 12-26
 (15 files). A clean rebuild reports 1544 games through round 26.
 
+Round 27 (PA Cup Draw round 3, week 11 Tue) was ingested 2026-09-08 as
+`results/2026-w11-tue-pa-draw-3.csv`; `results/` now runs 12-27 (16 files)
+and a clean rebuild reports 1576 games through round 27. The rebuild used
+to ingest it was itself verified against this file's own record: migrating
+the workbook and replaying rounds 12-26 in round order reproduced **1544
+games** and a dashboard whose constants were byte-identical to the
+committed ones, with the single documented exception of
+`TEAMS_EXPORT_TSV` (fresh `random.randint(1, 18)` Secondary Type every
+export, by design). `export-results --from 27 --to 27` then reported the
+new file already matching byte for byte, so the round trip is lossless and
+the filename matches the engine's own derived convention.
+
 ## Recovering rounds that only exist in the database
 
 `deckfield export-results` is the exact inverse of `add-results`: it writes
@@ -1095,6 +1107,20 @@ added without someone deciding once which kind it is. Both failure modes
 were tested by deliberately introducing them (an unaccounted new constant,
 and a renamed derived one) and confirming the run fails.
 
+**The header subtitle was a seventh instance of the same staleness bug —
+one layer below the guard, found and fixed 2026-09-08.** `<div
+class="subtitle">Season 9 &mdash; through round 11</div>` was plain HTML
+text, hand-written once and never wired into `regenerate_dashboard.py`, so
+it still read "round 11" while the database had run on to round 27 — the
+single most prominent number on the page, wrong by 16 rounds. The
+`DERIVED_CONSTS`/`STATIC_CONSTS` manifest could not have caught it:
+`_check_const_manifest()` only enumerates `const X = ...` blocks, and this
+is markup, not a constant. Fixed with `_replace_subtitle()`, which reads
+`MAX(round)` from `games` and rewrites the line every run (idempotent —
+re-running leaves it unchanged). The lesson extends the earlier one: the
+guard covers *constants*, so anything derived that lives outside a `const`
+— page text, a title, a hardcoded count — is still on its own.
+
 **Conflict log named the wrong seeds as swapped, found and fixed
 2026-08-07, same day.** Once the round 2-4 conflict log above was
 actually visible, real round-2 entries read e.g. "Swapped seed #96 &harr;
@@ -1165,6 +1191,21 @@ granularities, matching the workbook's own two granularities:
   uses for "current" rank everywhere else in the dashboard) — per explicit
   instruction, that's where the new system takes over. Every checkpoint
   from S5 onward is live-computed the same way.
+
+**Columns run newest-first, changed 2026-09-08 (per explicit request).**
+The most recent checkpoint now sits immediately beside the sticky Team
+column and the oldest (`S8 End` for rank, `R1` for Elo) is at the far
+right, so the numbers that actually matter are visible without scrolling
+a 26-column table to its end. Only the *column order* is reversed:
+`RANK_ELO_HISTORY`'s arrays stay chronological (the engine builds them
+that way, and the team sort still reads "latest" as the last element), and
+`renderHistory()` walks a `colOrder` index list instead. That distinction
+matters for the improved/worsened coloring — `historyCellStyle` still
+compares each cell against `hist[i - 1]`, the checkpoint *earlier in
+time*, which now renders to the cell's **right** rather than its left.
+Verified via Playwright in both modes: headers equal the checkpoint list
+reversed, all 160 team rows read their history backwards, and all 4,160
+rank cells carry the same color they did before the reversal.
 
 Both walk `full_schedule_abs_round_mapping()` (not `WEEKLY_SCHEDULE`'s
 week/day placement) to decide event order and merging, since the
@@ -1256,6 +1297,36 @@ the cells. Verified via Playwright: Indigo's Regional Standings shows the
 divider in Indigo's own bright red (`#E4574A`) after seeds 4 and 8 only,
 all other rows unstyled, and League (division) standings render with no
 divider styling at all.
+
+**RP/LP dropped as a standings tiebreaker, 2026-09-08 (per explicit
+instruction).** Regional/League Standings previously sorted W-L, then
+RP/LP, then H2H, then DSCR, and showed an RP/LP column. Points are now out
+of the standings entirely — both as a tiebreaker and as a displayed column
+— leaving **W-L, then H2H, then the respective DSCR**. RP/LP themselves
+are untouched everywhere else (they still feed `TOT`, the Rankings tab and
+`_points_buckets()`); this is only about what the standings leaderboards
+sort and show.
+
+The change has to be made in **two places that must agree**:
+`renderStandings()`/`standingsOrder()` in the dashboard JS, and
+`regional_standings_seeds()` in the engine — the latter is a deliberate
+port of the former (see the Regional Tournament section) and feeds
+`RT_DATA`, so leaving it on the old sort would have silently seeded the
+postseason off different standings than the tab displays. Both dropped
+`pointsOf`/`rp` from the sort key *and* from the tie-group boundary (the
+`while` that decides which teams form a tied group at all) — the second is
+easy to miss and is what actually widens the groups H2H/DSCR now resolve.
+
+**Not a no-op:** removing RP moved **63 of 160 seed slots**, in all 10
+regions (e.g. Indigo's seed 9 went Celadon City → Lavender Town, Kalosite
+and Phoenix moved 10 slots each), because RP was previously splitting
+teams into separate one-team groups that H2H/DSCR never got to compare.
+Verified end to end: `regional_standings_seeds()` and the tab's
+`standingsOrder()` return **identical orders for all 160 teams across all
+10 regions**, all 40 regenerated `RT_DATA` MD1 slots match the new
+seeding, the seed-4/seed-8 region-colored dividers still land on every
+`<td>` of those rows (one cell narrower now), and League standings keep
+their P/R markers.
 
 **`CUP_REAL_RESULTS`/`RDS_ROUND2`/`RDS_ROUND3` (RDS Cup tab) were the same
 kind of silent gap as `PA_CUP_DATA`/`SCHEDULE_DATA`, found and fixed

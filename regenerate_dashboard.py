@@ -468,6 +468,25 @@ def _check_const_manifest(content):
         )
 
 
+def _replace_subtitle(content):
+    """The header subtitle ("Season 9 -- through round N") is plain HTML text,
+    not a `const`, so _check_const_manifest() never covered it -- and it sat
+    frozen at "round 11" while the database ran on to round 27. Same
+    silent-staleness class as RT_DATA/SCHEDULE_DATA/PA_CUP_DATA, one layer
+    down, so it gets rebuilt here rather than hand-edited."""
+    conn = get_connection()
+    latest = conn.execute(
+        "SELECT MAX(round) m FROM games WHERE season=?", (SEASON,)
+    ).fetchone()["m"]
+    conn.close()
+    pattern = re.compile(r'(<div class="subtitle">Season )\d+( &mdash; through round )\d+(</div>)')
+    new_content, n = pattern.subn(
+        lambda m: f"{m.group(1)}{SEASON}{m.group(2)}{latest}{m.group(3)}", content, count=1)
+    if n != 1:
+        raise RuntimeError(f"expected exactly one header subtitle line, found {n}")
+    return new_content
+
+
 def _js_string_literal(s):
     return '"' + s.replace('\\', '\\\\').replace('"', '\\"').replace('\t', '\\t').replace('\n', '\\n') + '"'
 
@@ -509,6 +528,8 @@ def main():
     content = _replace_const(content, "PA_ROUND_PAIRINGS", pa_pairings)
     content = _replace_const(content, "PA_SWAP_LOG", pa_swap_log, is_array=True)
 
+    content = _replace_subtitle(content)
+
     content = _replace_const(content, "STRENGTH_DATA", build_strength_data())
     content = _replace_const(content, "RT_DATA", build_rt_data())
 
@@ -522,7 +543,8 @@ def main():
         f.write(content)
     print(f"Regenerated DATA, NEXT_MATCHDAY_DATA, CALENDAR_DATA, SCHEDULE_DATA, RANK_ELO_HISTORY, "
           f"CUP_REAL_RESULTS, RDS_ROUND_PAIRINGS, PA_CUP_DATA, PA_REAL_RESULTS, PA_ROUND_PAIRINGS, "
-          f"PA_SWAP_LOG, STRENGTH_DATA, RT_DATA, TEAMS_EXPORT_TSV in {DASHBOARD_PATH}")
+          f"PA_SWAP_LOG, STRENGTH_DATA, RT_DATA, TEAMS_EXPORT_TSV, header subtitle "
+          f"in {DASHBOARD_PATH}")
 
 
 if __name__ == "__main__":
