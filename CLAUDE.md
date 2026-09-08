@@ -29,11 +29,17 @@ cross-referenced between conversations).
 - `migrate_s9.py` — one-shot migration from the real Excel workbook into
   the database. Exposes `run_full_migration(workbook_path=None)`.
 - `deckfield_cli.py` — the CLI for local use without going through chat.
-  Commands: `migrate`, `add-results <csv>`, `recompute --from N`, `status`,
-  `next-matchday [--output file]`, `export-teams [--output file]`,
-  `region-climate [--output file]`.
-- `deckfield.db` — the SQLite database (not checked in; regenerate via
-  `deckfield migrate`).
+  Commands: `migrate [workbook.xlsm]`, `add-results <csv>`,
+  `recompute --from N`, `status`, `next-matchday [--output file]`,
+  `export-teams [--output file]`, `region-climate [--output file]`,
+  `export-results [--from N] [--to N] [--force]`.
+- `Baccer Game S9 Stats.xlsm` — the real workbook, in the repo root. Note
+  the **spaces**: `migrate_s9.XLSM_PATH`'s default
+  (`/mnt/user-data/uploads/Baccer_Game_S9_Stats.xlsm`, underscores) is a
+  path that does not exist here, so always pass the workbook explicitly.
+- `deckfield.db` — the SQLite database (gitignored; **`migrate` alone only
+  rebuilds rounds 1-11** — the full rebuild is migrate + replaying
+  `results/`, see the runbook below).
 - `deckfield_dashboard.html` — a **static snapshot** dashboard: Rankings,
   Standings, RL Strength, Schedule, RDS Cup, PA Cup, Next Matchday,
   Calendar, Regional Playoffs. Rebuilt by re-running the export scripts
@@ -48,6 +54,154 @@ cross-referenced between conversations).
   History checkpoints, copied verbatim from `Rankings!CT:CL` -- see
   "Rank/Elo History tab" below).
 - `CLAUDE.md` — this file.
+
+## THE RUNBOOK: adding a matchday's results
+
+**Read this section before doing anything else when the task is "add these
+results."** Everything here is also explained in depth further down, but
+the details are spread across a dozen sections and the steps below are the
+whole job in order. Do not skip the verification steps — they are how every
+bug recorded in this file was caught.
+
+### 0. Bootstrap the container (fresh session = nothing is installed)
+
+`deckfield.db` is gitignored and the container starts clean, so a new
+session has **no database and no Python deps**:
+
+```
+pip install openpyxl playwright        # neither is preinstalled
+```
+
+Do **not** run `playwright install` — it is blocked, and Chromium is
+already on disk. See step 6 for how to point Playwright at it.
+
+### 1. Rebuild the database (migrate, then replay `results/` IN ROUND ORDER)
+
+```
+python3 deckfield_cli.py migrate "Baccer Game S9 Stats.xlsm"
+```
+
+The workbook path is a **positional** argument, not `--workbook`, and the
+filename has spaces (quote it). Migrate covers rounds 1-11 only; every
+round from 12 on lives in `results/` and must be replayed:
+
+```
+for f in $(for f in results/*.csv; do r=$(sed -n 2p "$f" | cut -d, -f1); \
+    echo "$r $f"; done | sort -n | cut -d' ' -f2); do
+  python3 deckfield_cli.py add-results "$f"
+done
+```
+
+That sorts by the round number **inside each file**, which is the only
+correct order. `for f in results/*.csv` looks equivalent and is **wrong** —
+a shell glob sorts `thu` before `tue`, feeding round 25 before 24, 13
+before 12, and so on. (Fatigue is rederived on every ingest now, so
+out-of-order replay no longer corrupts it — see the fatigue section — but
+ingest in round order anyway; nothing else guarantees it stays that way.)
+
+### 2. Prove the rebuild is faithful BEFORE ingesting anything new
+
+```
+python3 -c "import deckfield_ratings as db; c=db.get_connection(); \
+  print(c.execute('select count(*) from games').fetchone()[0])"
+```
+
+Check it against the counts recorded in the recovery section above (1544
+through round 26, 1576 through round 27; add the new count when you add a
+round). If it does not match, **stop** — something is wrong with the
+rebuild, and ingesting on top of a bad base silently corrupts everything
+downstream.
+
+Stronger check, worth doing whenever the count is the only evidence: copy
+`deckfield_dashboard.html` aside, run `python3 regenerate_dashboard.py`,
+and diff the `const` blocks. Every one should be byte-identical except
+**`TEAMS_EXPORT_TSV`**, whose Secondary Type column is a fresh
+`random.randint(1, 18)` on every export by design. That one exception is
+expected; any other difference is a real problem.
+
+### 3. Confirm the round number the CSV claims
+
+```
+python3 deckfield_cli.py next-matchday
+```
+
+It prints the event and "Use round=N when reporting results back." That N
+must equal the `round` column in the CSV you were given. If it does not,
+do not "fix" the CSV or hand-pick a number — work out why they disagree
+first (`abs_round_for_event()` is the single source of truth).
+
+### 4. Save the CSV into `results/` under the engine's own filename
+
+Never invent a filename. Copy the CSV in with your best guess, then let
+the engine confirm it:
+
+```
+cp <uploaded.csv> results/<year>-w<week>-<day>-<event>.csv
+python3 deckfield_cli.py add-results results/<...>.csv
+python3 deckfield_cli.py export-results --from N --to N
+```
+
+`export-results` derives the filename from
+`full_schedule_abs_round_mapping()` + `WEEKLY_SCHEDULE`. If your name was
+right it prints "already matches" and writes nothing — which also proves
+the ingest round-trips losslessly. If your name was wrong it writes the
+correct file, and you delete yours.
+
+**Keep the CSV. Always.** The database is gitignored precisely because
+`results/` is supposed to be able to rebuild it; that only holds if every
+ingested matchday's CSV is committed. Eleven rounds were once lost exactly
+this way (see the recovery section).
+
+### 5. Regenerate the dashboard — always, no exceptions
+
+```
+python3 regenerate_dashboard.py
+```
+
+Per explicit standing instruction, results are never added without this.
+It rebuilds every derived constant plus the header subtitle. If it raises
+about the const manifest, read `_check_const_manifest()`'s message and
+decide whether the new constant is derived or static — do **not** silence
+it by adding the name to `STATIC_CONSTS` without checking what it is
+derived from. That guard exists because this exact bug shipped six times.
+
+### 6. Verify in a real browser before committing
+
+Executing the `<script>` block in Node with a mocked `document` is the
+documented minimum, but Playwright against the real file is strictly
+better and is what the recent fixes used:
+
+```python
+from playwright.sync_api import sync_playwright
+import glob
+CHROME = glob.glob("/opt/pw-browsers/chromium-*/chrome-linux/chrome")[0]
+with sync_playwright() as pw:
+    b = pw.chromium.launch(executable_path=CHROME)   # REQUIRED
+    ...
+```
+
+`executable_path` is required: pip installs a newer Playwright than the
+Chromium build on disk, so a bare `launch()` fails looking for a build
+number that was never downloaded.
+
+Click through every tab (`button[data-tab="..."]`; the RDS one is `rds`,
+not `rdscup`; panels are `#panel-<tab>`) and assert **zero `pageerror`
+events**. Two things are expected noise and are **not** code bugs:
+
+- A failed request to `fonts.googleapis.com` (`ERR_CONNECTION_RESET`) —
+  the sandbox blocks outbound network. It surfaces as a console error and
+  a `requestfailed`, never as a `pageerror`. Distinguish the two before
+  reporting a failure.
+- Any check you wrote that greps rendered text for a section label. Query
+  the DOM (`.sb-round`, `thead th`) instead; text-matching produced two
+  false failures on a page that was rendering correctly.
+
+### 7. Commit and push
+
+Commit `results/*.csv`, `deckfield_dashboard.html`, and anything else you
+changed. Never commit `deckfield.db` (it is gitignored — keep it that
+way). Push to the branch named in the session instructions.
+
 
 ## The rounds 15-25 recovery (2026-09-03) — resolved
 
@@ -80,6 +234,18 @@ a clean wipe-and-rebuild (workbook + all 14 CSVs):
 Round 26 (L7) was absent at the time of the recovery because it had not
 been played; it was ingested on 2026-09-03 and `results/` now runs 12-26
 (15 files). A clean rebuild reports 1544 games through round 26.
+
+Round 27 (PA Cup Draw round 3, week 11 Tue) was ingested 2026-09-08 as
+`results/2026-w11-tue-pa-draw-3.csv`; `results/` now runs 12-27 (16 files)
+and a clean rebuild reports 1576 games through round 27. The rebuild used
+to ingest it was itself verified against this file's own record: migrating
+the workbook and replaying rounds 12-26 in round order reproduced **1544
+games** and a dashboard whose constants were byte-identical to the
+committed ones, with the single documented exception of
+`TEAMS_EXPORT_TSV` (fresh `random.randint(1, 18)` Secondary Type every
+export, by design). `export-results --from 27 --to 27` then reported the
+new file already matching byte for byte, so the round trip is lossless and
+the filename matches the engine's own derived convention.
 
 ## Recovering rounds that only exist in the database
 
@@ -156,6 +322,10 @@ bookkeeping — fatigue feeds `export_teams_for_deckfield()`, which feeds
 `deckfield.html`'s Spread calculation.
 
 ## Adding new game results
+
+*(Format reference. For the end-to-end procedure — rebuilding the database
+first, verifying it, naming the file, regenerating and checking the
+dashboard — follow **THE RUNBOOK** near the top of this file.)*
 
 **Always use the CSV format**, not the old packed-string format
 (`3R!113+36-33^4.13(0.93)[102]{42.7}2183`). One row = one full game, both
@@ -1095,6 +1265,20 @@ added without someone deciding once which kind it is. Both failure modes
 were tested by deliberately introducing them (an unaccounted new constant,
 and a renamed derived one) and confirming the run fails.
 
+**The header subtitle was a seventh instance of the same staleness bug —
+one layer below the guard, found and fixed 2026-09-08.** `<div
+class="subtitle">Season 9 &mdash; through round 11</div>` was plain HTML
+text, hand-written once and never wired into `regenerate_dashboard.py`, so
+it still read "round 11" while the database had run on to round 27 — the
+single most prominent number on the page, wrong by 16 rounds. The
+`DERIVED_CONSTS`/`STATIC_CONSTS` manifest could not have caught it:
+`_check_const_manifest()` only enumerates `const X = ...` blocks, and this
+is markup, not a constant. Fixed with `_replace_subtitle()`, which reads
+`MAX(round)` from `games` and rewrites the line every run (idempotent —
+re-running leaves it unchanged). The lesson extends the earlier one: the
+guard covers *constants*, so anything derived that lives outside a `const`
+— page text, a title, a hardcoded count — is still on its own.
+
 **Conflict log named the wrong seeds as swapped, found and fixed
 2026-08-07, same day.** Once the round 2-4 conflict log above was
 actually visible, real round-2 entries read e.g. "Swapped seed #96 &harr;
@@ -1165,6 +1349,21 @@ granularities, matching the workbook's own two granularities:
   uses for "current" rank everywhere else in the dashboard) — per explicit
   instruction, that's where the new system takes over. Every checkpoint
   from S5 onward is live-computed the same way.
+
+**Columns run newest-first, changed 2026-09-08 (per explicit request).**
+The most recent checkpoint now sits immediately beside the sticky Team
+column and the oldest (`S8 End` for rank, `R1` for Elo) is at the far
+right, so the numbers that actually matter are visible without scrolling
+a 26-column table to its end. Only the *column order* is reversed:
+`RANK_ELO_HISTORY`'s arrays stay chronological (the engine builds them
+that way, and the team sort still reads "latest" as the last element), and
+`renderHistory()` walks a `colOrder` index list instead. That distinction
+matters for the improved/worsened coloring — `historyCellStyle` still
+compares each cell against `hist[i - 1]`, the checkpoint *earlier in
+time*, which now renders to the cell's **right** rather than its left.
+Verified via Playwright in both modes: headers equal the checkpoint list
+reversed, all 160 team rows read their history backwards, and all 4,160
+rank cells carry the same color they did before the reversal.
 
 Both walk `full_schedule_abs_round_mapping()` (not `WEEKLY_SCHEDULE`'s
 week/day placement) to decide event order and merging, since the
@@ -1256,6 +1455,36 @@ the cells. Verified via Playwright: Indigo's Regional Standings shows the
 divider in Indigo's own bright red (`#E4574A`) after seeds 4 and 8 only,
 all other rows unstyled, and League (division) standings render with no
 divider styling at all.
+
+**RP/LP dropped as a standings tiebreaker, 2026-09-08 (per explicit
+instruction).** Regional/League Standings previously sorted W-L, then
+RP/LP, then H2H, then DSCR, and showed an RP/LP column. Points are now out
+of the standings entirely — both as a tiebreaker and as a displayed column
+— leaving **W-L, then H2H, then the respective DSCR**. RP/LP themselves
+are untouched everywhere else (they still feed `TOT`, the Rankings tab and
+`_points_buckets()`); this is only about what the standings leaderboards
+sort and show.
+
+The change has to be made in **two places that must agree**:
+`renderStandings()`/`standingsOrder()` in the dashboard JS, and
+`regional_standings_seeds()` in the engine — the latter is a deliberate
+port of the former (see the Regional Tournament section) and feeds
+`RT_DATA`, so leaving it on the old sort would have silently seeded the
+postseason off different standings than the tab displays. Both dropped
+`pointsOf`/`rp` from the sort key *and* from the tie-group boundary (the
+`while` that decides which teams form a tied group at all) — the second is
+easy to miss and is what actually widens the groups H2H/DSCR now resolve.
+
+**Not a no-op:** removing RP moved **63 of 160 seed slots**, in all 10
+regions (e.g. Indigo's seed 9 went Celadon City → Lavender Town, Kalosite
+and Phoenix moved 10 slots each), because RP was previously splitting
+teams into separate one-team groups that H2H/DSCR never got to compare.
+Verified end to end: `regional_standings_seeds()` and the tab's
+`standingsOrder()` return **identical orders for all 160 teams across all
+10 regions**, all 40 regenerated `RT_DATA` MD1 slots match the new
+seeding, the seed-4/seed-8 region-colored dividers still land on every
+`<td>` of those rows (one cell narrower now), and League standings keep
+their P/R markers.
 
 **`CUP_REAL_RESULTS`/`RDS_ROUND2`/`RDS_ROUND3` (RDS Cup tab) were the same
 kind of silent gap as `PA_CUP_DATA`/`SCHEDULE_DATA`, found and fixed

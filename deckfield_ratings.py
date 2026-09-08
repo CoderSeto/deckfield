@@ -3113,8 +3113,9 @@ REGIONAL_TOURNAMENT_LANES = [
 
 def regional_standings_seeds(season, region):
     """{seed(1-16): team_name} for a region's postseason, from final
-    Regional Standings (the same W-L -> RP -> H2H -> TB sort as the
-    dashboard's Standings tab)."""
+    Regional Standings (the same W-L -> H2H -> TB sort as the dashboard's
+    Standings tab -- RP is deliberately NOT a tiebreaker in either place;
+    keep the two in step if one changes)."""
     conn = get_connection()
     teams = conn.execute("""
         SELECT t.team_id, t.name FROM teams t WHERE t.region = ?
@@ -3151,13 +3152,8 @@ def regional_standings_seeds(season, region):
         for wo in walkovers:
             won = wo["result"] in (2, 3)
             w, l = w + (1 if won else 0), l + (0 if won else 1)
-        rp_row = conn.execute(
-            "SELECT rp FROM team_round_ratings WHERE season=? AND round=? AND team_id=?",
-            (season, latest_round, team_id),
-        ).fetchone()
-        rp = rp_row["rp"] if rp_row else 0
         dscr_avg = sum(dscrs) / len(dscrs) if dscrs else 0
-        return w, l, rp, dscr_avg, log
+        return w, l, dscr_avg, log
 
     stats = {tid: record_and_stats(tid) for tid in team_ids}
     conn.close()
@@ -3165,15 +3161,12 @@ def regional_standings_seeds(season, region):
     def wl(tid):
         return stats[tid][0], stats[tid][1]
 
-    def rp(tid):
-        return stats[tid][2]
-
     def tb(tid):
-        return stats[tid][3]  # DSCR average
+        return stats[tid][2]  # DSCR average
 
     def h2h_record(a, b):
         w = l = 0
-        for opp, result in stats[a][4]:
+        for opp, result in stats[a][3]:
             if opp == b:
                 (w := w + 1) if result >= 2 else (l := l + 1)
         return w, l
@@ -3211,13 +3204,12 @@ def regional_standings_seeds(season, region):
                 return resolve_group([x for x in group if x != t]) + [t]
         return sorted(group, key=lambda t: -tb(t))
 
-    sorted_by_basic = sorted(team_ids, key=lambda t: (-wl(t)[0], wl(t)[1], -rp(t)))
+    sorted_by_basic = sorted(team_ids, key=lambda t: (-wl(t)[0], wl(t)[1]))
     groups, i = [], 0
     while i < len(sorted_by_basic):
         j = i + 1
         while (j < len(sorted_by_basic)
-               and wl(sorted_by_basic[j]) == wl(sorted_by_basic[i])
-               and rp(sorted_by_basic[j]) == rp(sorted_by_basic[i])):
+               and wl(sorted_by_basic[j]) == wl(sorted_by_basic[i])):
             j += 1
         groups.append(sorted_by_basic[i:j])
         i = j
