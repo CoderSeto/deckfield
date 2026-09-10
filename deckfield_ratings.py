@@ -3111,17 +3111,19 @@ REGIONAL_TOURNAMENT_LANES = [
 ]
 
 
-def regional_standings_seeds(season, region):
-    """{seed(1-16): team_name} for a region's postseason, from final
-    Regional Standings (the same W-L -> H2H -> TB sort as the dashboard's
-    Standings tab -- RP is deliberately NOT a tiebreaker in either place;
-    keep the two in step if one changes)."""
+def _standings_order(season, teams, game_type):
+    """Ordered team_ids for one standings group -- the same
+    W-L -> H2H -> TB(DSCR) sort the dashboard's Standings tab runs
+    client-side. RP/LP are deliberately NOT tiebreakers in either place;
+    the JS and this function are ports of each other, so keep them in step
+    if one changes.
+
+    `teams` are the group's rows (team_id + name); `game_type` picks which
+    games count -- 'R' for a region's Regional standings, 'L' for a
+    division's League standings. Both are true single round-robins within
+    their group, which is what makes one shared sort correct for both."""
     conn = get_connection()
-    teams = conn.execute("""
-        SELECT t.team_id, t.name FROM teams t WHERE t.region = ?
-    """, (region,)).fetchall()
     team_ids = [t["team_id"] for t in teams]
-    id_to_name = {t["team_id"]: t["name"] for t in teams}
 
     latest_round = conn.execute(
         "SELECT MAX(round) m FROM team_round_ratings WHERE season=?", (season,)
@@ -3130,12 +3132,12 @@ def regional_standings_seeds(season, region):
     def record_and_stats(team_id):
         games = conn.execute("""
             SELECT result_a, team_a, team_b, dscr_a, dscr_b FROM games
-            WHERE season=? AND round<=? AND game_type='R' AND (team_a=? OR team_b=?)
-        """, (season, latest_round, team_id, team_id)).fetchall()
+            WHERE season=? AND round<=? AND game_type=? AND (team_a=? OR team_b=?)
+        """, (season, latest_round, game_type, team_id, team_id)).fetchall()
         walkovers = conn.execute("""
             SELECT result FROM walkovers
-            WHERE season=? AND round<=? AND game_type='R' AND team_id=?
-        """, (season, latest_round, team_id)).fetchall()
+            WHERE season=? AND round<=? AND game_type=? AND team_id=?
+        """, (season, latest_round, game_type, team_id)).fetchall()
         w = l = 0
         dscrs = []
         log = []
@@ -3214,7 +3216,34 @@ def regional_standings_seeds(season, region):
         groups.append(sorted_by_basic[i:j])
         i = j
 
-    ordered = [tid for group in groups for tid in resolve_group(group)]
+    return [tid for group in groups for tid in resolve_group(group)]
+
+
+def regional_standings_seeds(season, region):
+    """{seed(1-16): team_name} for a region's postseason, from current
+    Regional Standings."""
+    conn = get_connection()
+    teams = conn.execute(
+        "SELECT team_id, name FROM teams WHERE region = ?", (region,)).fetchall()
+    conn.close()
+    id_to_name = {t["team_id"]: t["name"] for t in teams}
+    ordered = _standings_order(season, teams, "R")
+    return {i + 1: id_to_name[tid] for i, tid in enumerate(ordered)}
+
+
+def division_standings_seeds(season, division):
+    """{seed(1-16): team_name} for a league division, from current League
+    Standings -- the division counterpart of regional_standings_seeds(),
+    sharing its exact sort so the two can never drift."""
+    conn = get_connection()
+    teams = conn.execute("""
+        SELECT t.team_id, t.name FROM teams t
+        JOIN team_seasons ts ON ts.team_id = t.team_id AND ts.season = ?
+        WHERE ts.league_division = ?
+    """, (season, division)).fetchall()
+    conn.close()
+    id_to_name = {t["team_id"]: t["name"] for t in teams}
+    ordered = _standings_order(season, teams, "L")
     return {i + 1: id_to_name[tid] for i, tid in enumerate(ordered)}
 
 
@@ -3426,3 +3455,344 @@ def export_region_climate_for_deckfield():
     climate = generate_region_climate()
     lines = ["Region\tRegion Climate"] + [f"{region}\t{value}" for region, value in climate.items()]
     return climate, "\n".join(lines)
+
+
+# =====================================================================
+# World Championship qualification
+# =====================================================================
+#
+# 48 bids, awarded in a fixed order (see world_championship_field).  A
+# team can only be invited once; each category has its own replacement
+# chain for a duplicate, and a spot whose chain runs out falls through to
+# the highest-OVR pool so the field is always exactly WC_FIELD_SIZE.
+
+WC_FIELD_SIZE = 48
+WC_DIVISION_BIDS = {1: 5, 2: 4, 3: 3, 4: 3, 5: 2, 6: 1}          # 18
+WC_RT_BIDS_BY_ALLOCATION_RANK = [3, 3, 3, 2, 2, 2, 2, 1, 1, 1]   # 20
+
+RDS_CUP_REGIONS = {
+    "Ribbon": ("Indigo", "Silver", "Delta", "LilyValley"),
+    "Dream": ("Vertress", "Phoenix", "Lanakila"),
+    "Star": ("Kalosite", "Dynamax", "Terastal"),
+}
+
+# Regional strength for the two prior seasons, supplied already z-scored
+# within each season (each column is exactly mean 0, pstdev 1).  They are
+# NOT on the same scale as a season's stored strength multiplier, so
+# _normalized_prior_strength() runs them through the same tanh squash
+# _strength_formula_breakdown() applies, which is what puts all three
+# seasons on one 1.0-centered scale before they are blended.
+REGION_PRIOR_STRENGTH = {
+    "Indigo":     {"s8": -1.618536908, "s7": 0.813992377},
+    "Delta":      {"s8": -0.487695161, "s7": -1.152955718},
+    "LilyValley": {"s8": 0.865457176, "s7": -0.117069976},
+    "Vertress":   {"s8": 1.519002992, "s7": -0.112008686},
+    "Kalosite":   {"s8": -0.486722187, "s7": 0.249860533},
+    "Lanakila":   {"s8": -1.232247122, "s7": -0.341941543},
+    "Dynamax":    {"s8": -0.152808647, "s7": 0.516139358},
+    "Phoenix":    {"s8": 1.445175233, "s7": -1.428112097},
+    "Silver":     {"s8": 0.396588137, "s7": 2.245646685},
+    "Terastal":   {"s8": -0.248213512, "s7": -0.673550933},
+}
+
+# S9 counts for half the allocation score, S8 a third, S7 a sixth.  The
+# weights sum to 1, so the blend stays on the same scale as one season's
+# strength multiplier and x100 lands near 100.
+WC_ALLOCATION_WEIGHTS = {"s9": 1 / 2, "s8": 1 / 3, "s7": 1 / 6}
+
+
+def _normalized_prior_strength(key):
+    """{region: multiplier} for a prior season's z-scored strength column,
+    squashed exactly the way _strength_formula_breakdown() squashes its own
+    weighted sums -- same STRETCH, same k = pstdev * K_MULTIPLIER -- so a
+    prior season lands on the same 1.0-centered scale as the live one."""
+    col = {g: v[key] for g, v in REGION_PRIOR_STRENGTH.items()}
+    k = statistics.pstdev(col.values()) * STRENGTH_TANH_K_MULTIPLIER
+    if k == 0:
+        return {g: 1.0 for g in col}
+    return {g: 1.0 + STRENGTH_TANH_STRETCH * math.tanh(v / k) for g, v in col.items()}
+
+
+def region_allocation_ranking(season, round_num=None):
+    """Regions ordered best-first by allocation score, with the number of
+    Regional Tournament bids each one earns.
+
+    Allocation = (S9/2 + S8/3 + S7/6) * 100, rounded to 2dp, where S9 is
+    the region's live strength multiplier and S8/S7 are the normalized
+    prior-season columns.  Because the S9 term is live, this ranking moves
+    with every result -- it is derived, never static."""
+    if round_num is None:
+        conn = get_connection()
+        round_num = conn.execute(
+            "SELECT MAX(round) m FROM team_round_ratings WHERE season=?", (season,)
+        ).fetchone()["m"]
+        conn.close()
+
+    regional_bd, _ = compute_strength_breakdown(season, round_num)
+    s9 = {g: v["final"] for g, v in regional_bd.items()}
+    n8, n7 = _normalized_prior_strength("s8"), _normalized_prior_strength("s7")
+    w = WC_ALLOCATION_WEIGHTS
+
+    rows = []
+    for g in s9:
+        alloc = round(100 * (s9[g] * w["s9"] + n8[g] * w["s8"] + n7[g] * w["s7"]), 2)
+        rows.append({"region": g, "alloc": alloc, "s9": s9[g], "s8": n8[g], "s7": n7[g]})
+    # Ties broken by the live season, which is the half-weighted term.
+    rows.sort(key=lambda r: (-r["alloc"], -r["s9"], r["region"]))
+    for i, r in enumerate(rows):
+        r["rank"] = i + 1
+        r["bids"] = WC_RT_BIDS_BY_ALLOCATION_RANK[i]
+    return rows
+
+
+def _cup_survivors(conn, season, cup_name, bracket, candidates):
+    """Names from `candidates` that have not lost a game in this
+    cup+bracket.  Teams awaiting their first game (a bye, or a tier seed
+    that has not entered yet) count as alive, which is what makes this
+    correct mid-tournament for PA Cup's staggered ladder entries."""
+    rows = conn.execute("""
+        SELECT g.result_a, ta.name a_name, tb.name b_name FROM games g
+        JOIN teams ta ON ta.team_id = g.team_a JOIN teams tb ON tb.team_id = g.team_b
+        WHERE g.season=? AND g.cup_name=? AND g.cup_bracket=?
+    """, (season, cup_name, bracket)).fetchall()
+    eliminated = {
+        (r["b_name"] if r["result_a"] in (2, 3) else r["a_name"]) for r in rows
+    }
+    return [c for c in candidates if c not in eliminated]
+
+
+
+
+def _wc_team_meta(conn, season, round_num):
+    """({name: {team_id, name, region, division, ovr, rank}}, {name: rank})
+    for every team at round_num, ranked by OVR descending."""
+    rows = conn.execute("""
+        SELECT t.team_id, t.name, t.region, ts.league_division AS division, r.ovr
+        FROM team_round_ratings r
+        JOIN teams t ON t.team_id = r.team_id
+        JOIN team_seasons ts ON ts.team_id = t.team_id AND ts.season = r.season
+        WHERE r.season=? AND r.round=?
+        ORDER BY r.ovr DESC
+    """, (season, round_num)).fetchall()
+    meta, rank_of = {}, {}
+    for i, r in enumerate(rows):
+        meta[r["name"]] = {
+            "team_id": r["team_id"], "name": r["name"], "region": r["region"],
+            "division": r["division"], "ovr": round(r["ovr"], 2), "rank": i + 1,
+        }
+        rank_of[r["name"]] = i + 1
+    return meta, rank_of
+
+
+def _dedupe(names):
+    """Order-preserving dedupe."""
+    seen, out = set(), []
+    for n in names:
+        if n is not None and n not in seen:
+            seen.add(n)
+            out.append(n)
+    return out
+
+
+def _wc_cup_projection(conn, season, rank_of):
+    """Projected cup qualifiers and their replacement pools.
+
+    Draw and Process are two parallel brackets over the SAME teams, so one
+    team can still be alive in both -- which is exactly why the tournament
+    seats "4 semifinalists, max" and "six finalists" rather than a fixed
+    count.  Both brackets feed a shared end stage (PA's mutual
+    quarterfinal, each RDS cup's mutual semifinal) that collapses a
+    double-qualifier into one team, so these lists are deduplicated and
+    can legitimately come up short.  A short category is not an error; the
+    unused bids fall through to the OVR pool like any other unfilled spot.
+
+    Nothing past PA round 3 / RDS round 4 has been played and neither
+    mutual stage is modeled as a playable event, so advancement is
+    projected by current OVR rank among each bracket's survivors."""
+    all_teams = [r["name"] for r in conn.execute("SELECT name FROM teams").fetchall()]
+
+    def by_rank(names):
+        return sorted(names, key=lambda n: rank_of.get(n, 10 ** 6))
+
+    def by_seed(names, seed_of):
+        return sorted(names, key=lambda n: seed_of.get(n, 10 ** 6))
+
+    _, _, pa_draw_seeds, pa_process_seeds, _ = _pa_round1_games(conn)
+    # A team holds a seed in each bracket; its best is what "highest
+    # seeded" means when the two brackets' losers are pooled together.
+    pa_seed_of = {}
+    for seeds in (pa_draw_seeds, pa_process_seeds):
+        for seed, team in seeds.items():
+            pa_seed_of[team] = min(seed, pa_seed_of.get(team, 10 ** 6))
+
+    # PA: 4 alive per bracket reach the mutual quarterfinal, 2 per bracket
+    # come through it into the semifinal.
+    pa_draw = by_rank(_cup_survivors(conn, season, "PA", "Draw", all_teams))
+    pa_process = by_rank(_cup_survivors(conn, season, "PA", "Process", all_teams))
+    pa_semifinalists = _dedupe(pa_draw[:2] + pa_process[:2])
+    pa_quarterfinalists = _dedupe(pa_draw[:4] + pa_process[:4])
+    pa_losing_qf = by_seed([n for n in pa_quarterfinalists if n not in pa_semifinalists],
+                           pa_seed_of)
+
+    with open("cup_seeds_full.json") as f:
+        cup_seeds = {c: {int(k): v for k, v in m.items()} for c, m in json.load(f).items()}
+
+    # RDS: 2 alive per bracket reach that cup's mutual semifinal, 1 per
+    # bracket comes through it into the final.
+    rds_finalists, rds_losing_sf, rds_by_cup = [], [], {}
+    for cup, regions in RDS_CUP_REGIONS.items():
+        seed_of = {v: k for k, v in cup_seeds[cup].items()}
+        entrants = [r["name"] for r in conn.execute(
+            f"SELECT name FROM teams WHERE region IN ({','.join('?' * len(regions))})",
+            regions).fetchall()]
+        draw = by_rank(_cup_survivors(conn, season, cup, "Draw", entrants))
+        process = by_rank(_cup_survivors(conn, season, cup, "Process", entrants))
+        finalists = _dedupe(draw[:1] + process[:1])
+        semifinalists = _dedupe(draw[:2] + process[:2])
+        losers = by_seed([n for n in semifinalists if n not in finalists], seed_of)
+        rds_by_cup[cup] = {"finalists": finalists, "losing_sf": losers}
+        rds_finalists += finalists
+        rds_losing_sf += [(seed_of.get(n, 10 ** 6), n) for n in losers]
+
+    return {
+        "pa_semifinalists": by_rank(pa_semifinalists),
+        "pa_losing_qf": pa_losing_qf,
+        "rds_finalists": by_rank(_dedupe(rds_finalists)),
+        "rds_losing_sf": _dedupe([n for _, n in sorted(rds_losing_sf)]),
+        "rds_by_cup": rds_by_cup,
+    }
+
+
+def world_championship_field(season, round_num=None):
+    """The 48-team World Championship field as it currently projects.
+
+    Bids are awarded in the tournament's own order -- divisions, then PA
+    Cup, then the RDS Cups, then the Regional Tournaments in allocation
+    order, then highest OVR.  A team already invited is skipped in favour
+    of its category's replacement chain, and a bid whose chain is
+    exhausted (or that a short category never produced) falls through to
+    the OVR pool, so the field always closes at exactly WC_FIELD_SIZE.
+
+    Every bid is a projection of something: the season is incomplete, so
+    division placings and Regional Tournament seeds come from standings
+    still in motion, and no cup end stage or Regional Tournament game has
+    been played at all.  Each bid carries a `basis` saying which, and
+    every bid that could not be filled is reported in `passed_to_at_large`
+    with the team that would have taken it and where that team is already
+    in -- so a redundant bid is visible rather than silently absorbed."""
+    conn = get_connection()
+    if round_num is None:
+        round_num = conn.execute(
+            "SELECT MAX(round) m FROM team_round_ratings WHERE season=?", (season,)
+        ).fetchone()["m"]
+
+    meta, rank_of = _wc_team_meta(conn, season, round_num)
+    proj = _wc_cup_projection(conn, season, rank_of)
+    conn.close()
+
+    invites, invited, invited_from = [], set(), {}
+    passed = []
+
+    def award(chain, source, detail, basis, nominal=None, short_reason=None):
+        """Fill one bid from `chain`, in order, skipping anyone already in.
+        `nominal` is the team this specific bid would have gone to, so a
+        replacement can say who it stood in for."""
+        for i, name in enumerate([n for n in chain if n is not None]):
+            if name in invited:
+                continue
+            invited.add(name)
+            invited_from[name] = f"{source} ({detail})"
+            rec = dict(meta.get(name, {"name": name, "region": None, "division": None,
+                                       "ovr": None, "rank": None, "team_id": None}))
+            replaced = nominal is not None and name != nominal
+            rec.update({"seq": len(invites) + 1, "source": source, "detail": detail,
+                        "basis": basis, "replaced": replaced,
+                        "instead_of": nominal if replaced else None,
+                        "instead_of_via": invited_from.get(nominal) if replaced else None})
+            invites.append(rec)
+            return True
+        passed.append({
+            "source": source, "detail": detail, "nominal": nominal,
+            "already_in_via": invited_from.get(nominal) if nominal else None,
+            "reason": short_reason or ("every eligible replacement was already qualified"
+                                       if nominal else "the projection produced no candidate"),
+        })
+        return False
+
+    # 1. Divisions 1-6 (5/4/3/3/2/1). Divisions are disjoint, so these 18
+    #    are always distinct and no replacement chain can be needed.
+    for div in sorted(WC_DIVISION_BIDS):
+        standings = division_standings_seeds(season, div)
+        for place in range(1, WC_DIVISION_BIDS[div] + 1):
+            award([standings.get(place)], f"Division {div}", f"#{place}",
+                  "Current League standings", nominal=standings.get(place))
+
+    # 2. PA Cup semifinalists -> best-seeded losing quarterfinalist.
+    pa_sf = proj["pa_semifinalists"]
+    pa_short = (None if len(pa_sf) >= 4 else
+                f"only {len(pa_sf)} distinct semifinalist(s) project -- Draw and Process "
+                f"currently lead with the same teams, and the mutual quarterfinal "
+                f"collapses a double qualifier into one")
+    for k in range(4):
+        nominal = pa_sf[k] if k < len(pa_sf) else None
+        award(([nominal] if nominal else []) + proj["pa_losing_qf"],
+              "PA Cup", f"Semifinalist {k + 1}", "Projected from teams still alive",
+              nominal=nominal, short_reason=None if nominal else pa_short)
+
+    # 3. RDS Cup finalists -> best-seeded losing semifinalist.
+    rds_f = proj["rds_finalists"]
+    rds_short = (None if len(rds_f) >= 6 else
+                 f"only {len(rds_f)} distinct finalist(s) project -- across the three cups "
+                 f"Draw and Process currently lead with the same teams, and each mutual "
+                 f"semifinal collapses a double qualifier into one")
+    for k in range(6):
+        nominal = rds_f[k] if k < len(rds_f) else None
+        award(([nominal] if nominal else []) + proj["rds_losing_sf"],
+              "RDS Cup", f"Finalist {k + 1}", "Projected from teams still alive",
+              nominal=nominal, short_reason=None if nominal else rds_short)
+
+    # 4. Regional Tournaments, best-allocated region first. No RT game has
+    #    been played, so the bracket is projected on chalk (better seed
+    #    always advances), which puts seeds 1/2/3 in the top three and
+    #    makes the replacement chain the region's own seed order.
+    RT_PLACE = ["Champion", "Runner-up", "Semifinalist"]
+    allocation = region_allocation_ranking(season, round_num)
+    for row in allocation:
+        seeds = regional_standings_seeds(season, row["region"])
+        label = f"{region_display_name(row['region'])} RT"
+        for place in range(row["bids"]):
+            award([seeds.get(place + 1)] + [seeds.get(s) for s in (1, 2, 3, 4)],
+                  label, RT_PLACE[place], "Projected on seed (chalk)",
+                  nominal=seeds.get(place + 1))
+
+    # 5. Highest OVR closes the field, absorbing every bid the categories
+    #    above could not fill.
+    for m in sorted((m for m in meta.values() if m["name"] not in invited),
+                    key=lambda m: m["rank"]):
+        if len(invites) >= WC_FIELD_SIZE:
+            break
+        award([m["name"]], "At-large", f"OVR #{m['rank']}", "Highest OVR remaining")
+
+    counts = {}
+    for r in invites:
+        key = r["source"]
+        if key.endswith(" RT"):
+            key = "Regional Tournament"
+        elif key.startswith("Division"):
+            key = "Division"
+        counts[key] = counts.get(key, 0) + 1
+
+    return {
+        "field_size": WC_FIELD_SIZE,
+        "as_of_round": round_num,
+        "invites": invites,
+        "allocation": allocation,
+        "counts": counts,
+        "passed_to_at_large": passed,
+        "projection": {
+            "pa_semifinalists": proj["pa_semifinalists"],
+            "pa_losing_qf": proj["pa_losing_qf"],
+            "rds_finalists": proj["rds_finalists"],
+            "rds_losing_sf": proj["rds_losing_sf"],
+        },
+    }

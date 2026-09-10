@@ -44,6 +44,7 @@ from deckfield_ratings import (
     compute_strength_breakdown, generate_pod_schedule,
     rds_cup_real_results, rds_cup_round_pairings,
     regional_standings_seeds, regional_tournament_games, REGION_COLORS,
+    world_championship_field,
 )
 
 SEASON = 9
@@ -424,7 +425,7 @@ DERIVED_CONSTS = {
     "DATA", "NEXT_MATCHDAY_DATA", "CALENDAR_DATA", "SCHEDULE_DATA",
     "RANK_ELO_HISTORY", "CUP_REAL_RESULTS", "RDS_ROUND_PAIRINGS",
     "PA_CUP_DATA", "PA_REAL_RESULTS", "PA_ROUND_PAIRINGS", "PA_SWAP_LOG",
-    "STRENGTH_DATA", "RT_DATA", "TEAMS_EXPORT_TSV",
+    "STRENGTH_DATA", "RT_DATA", "TEAMS_EXPORT_TSV", "QUALIFICATION_DATA",
 }
 
 # STATIC: genuinely fixed, with the reason it can never go stale. Anything
@@ -466,6 +467,16 @@ def _check_const_manifest(content):
             "expected to regenerate constant(s) that aren't in the dashboard: "
             + ", ".join(sorted(missing))
         )
+
+
+def build_qualification():
+    """The projected 48-team World Championship field, plus the regional
+    allocation ranking behind its Regional Tournament bids.
+
+    Emphatically derived, not static: the allocation ranking's S9 term is
+    the live regional strength multiplier, and every bid resolves through
+    current standings, so this changes with every result added."""
+    return world_championship_field(SEASON)
 
 
 def _replace_subtitle(content):
@@ -532,6 +543,7 @@ def main():
 
     content = _replace_const(content, "STRENGTH_DATA", build_strength_data())
     content = _replace_const(content, "RT_DATA", build_rt_data())
+    content = _replace_const(content, "QUALIFICATION_DATA", build_qualification())
 
     teams_out, tsv = export_teams_for_deckfield(SEASON)
     pattern = re.compile(r'const TEAMS_EXPORT_TSV = "(?:[^"\\]|\\.)*";\n')
@@ -543,7 +555,7 @@ def main():
         f.write(content)
     print(f"Regenerated DATA, NEXT_MATCHDAY_DATA, CALENDAR_DATA, SCHEDULE_DATA, RANK_ELO_HISTORY, "
           f"CUP_REAL_RESULTS, RDS_ROUND_PAIRINGS, PA_CUP_DATA, PA_REAL_RESULTS, PA_ROUND_PAIRINGS, "
-          f"PA_SWAP_LOG, STRENGTH_DATA, RT_DATA, TEAMS_EXPORT_TSV, header subtitle "
+          f"PA_SWAP_LOG, STRENGTH_DATA, RT_DATA, QUALIFICATION_DATA, TEAMS_EXPORT_TSV, header subtitle "
           f"in {DASHBOARD_PATH}")
 
 

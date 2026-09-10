@@ -256,6 +256,9 @@
     font-family: inherit;
   }
   .group-toggle button.active { color: var(--accent); border-color: var(--accent-dim); }
+  .qual-sub { color: var(--muted); font-size: 11px; }
+  .qual-basis { font-size: 11px; color: var(--muted); max-width: 340px; white-space: normal; }
+  #qual-table td { vertical-align: top; }
   .meta-note {
     color: var(--text-dim);
     font-size: 12px;
@@ -286,6 +289,7 @@
   <button data-tab="nextmd">Next Matchday</button>
   <button data-tab="calendar">Calendar</button>
   <button data-tab="rt">Regional Playoffs</button>
+  <button data-tab="qual">Qualification</button>
   <button data-tab="history">Rank/Elo History</button>
 </nav>
 <main>
@@ -513,6 +517,28 @@
   <section id="panel-rt" class="panel">
     <div class="meta-note" style="margin-top:0">Seeded 1&ndash;16 by final Regional Standings. MD1: seeds 9&ndash;16, better seed hosts. MD2/3 and MD4/5: two-legged ties, worse seed hosts leg 1, better seed hosts leg 2 -- MD6/7 (semifinal) and MD8/9 (final) follow the same host rule. Only rounds with real prior results are shown.</div>
     <div class="standings-grid" id="rt-grid"></div>
+  </section>
+
+  <section id="panel-qual" class="panel">
+    <div class="meta-note" style="margin-top:0" id="qual-note"></div>
+    <div id="qual-summary" class="standings-grid" style="margin-bottom:16px"></div>
+    <div class="table-scroll" style="margin-bottom:18px">
+      <table id="qual-table">
+        <thead>
+          <tr>
+            <th class="col-sticky-1">#</th>
+            <th class="left col-sticky-2">Team</th>
+            <th class="left">Reg/Div</th>
+            <th class="num">OVR</th>
+            <th class="num">Rank</th>
+            <th class="left group-start">Bid</th>
+            <th class="left">How it projects</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="standings-grid" id="qual-detail"></div>
   </section>
 
   <section id="panel-history" class="panel">
@@ -1122,6 +1148,102 @@ document.querySelectorAll('nav.tabs button').forEach(btn => {
   });
 });
 
+const QUALIFICATION_DATA = {"field_size": 48, "as_of_round": 27, "invites": [{"team_id": 33, "name": "Canalave City", "region": "LilyValley", "division": 1, "ovr": 108.25, "rank": 1, "seq": 1, "source": "Division 1", "detail": "#1", "basis": "Current League standings", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 123, "name": "Pueltown", "region": "Phoenix", "division": 1, "ovr": 78.5, "rank": 19, "seq": 2, "source": "Division 1", "detail": "#2", "basis": "Current League standings", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 129, "name": "Cianwood City", "region": "Silver", "division": 1, "ovr": 79.88, "rank": 17, "seq": 3, "source": "Division 1", "detail": "#3", "basis": "Current League standings", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 49, "name": "Anville Town", "region": "Vertress", "division": 1, "ovr": 83.69, "rank": 10, "seq": 4, "source": "Division 1", "detail": "#4", "basis": "Current League standings", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 132, "name": "National Park", "region": "Silver", "division": 1, "ovr": 87.93, "rank": 7, "seq": 5, "source": "Division 1", "detail": "#5", "basis": "Current League standings", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 55, "name": "Nimbasa City", "region": "Vertress", "division": 2, "ovr": 100.13, "rank": 2, "seq": 6, "source": "Division 2", "detail": "#1", "basis": "Current League standings", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 12, "name": "Vermilion City", "region": "Indigo", "division": 2, "ovr": 72.72, "rank": 32, "seq": 7, "source": "Division 2", "detail": "#2", "basis": "Current League standings", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 72, "name": "Lumiose City", "region": "Kalosite", "division": 2, "ovr": 76.85, "rank": 25, "seq": 8, "source": "Division 2", "detail": "#3", "basis": "Current League standings", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 83, "name": "Seafolk Village", "region": "Lanakila", "division": 2, "ovr": 75.63, "rank": 27, "seq": 9, "source": "Division 2", "detail": "#4", "basis": "Current League standings", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 106, "name": "Postwick", "region": "Dynamax", "division": 3, "ovr": 68.44, "rank": 45, "seq": 10, "source": "Division 3", "detail": "#1", "basis": "Current League standings", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 80, "name": "Vaniville Town", "region": "Kalosite", "division": 3, "ovr": 79.35, "rank": 18, "seq": 11, "source": "Division 3", "detail": "#2", "basis": "Current League standings", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 30, "name": "Lilycove City", "region": "Delta", "division": 3, "ovr": 71.89, "rank": 33, "seq": 12, "source": "Division 3", "detail": "#3", "basis": "Current League standings", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 40, "name": "Snowpoint City", "region": "LilyValley", "division": 4, "ovr": 95.72, "rank": 4, "seq": 13, "source": "Division 4", "detail": "#1", "basis": "Current League standings", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 91, "name": "Po Town", "region": "Lanakila", "division": 4, "ovr": 92.08, "rank": 5, "seq": 14, "source": "Division 4", "detail": "#2", "basis": "Current League standings", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 69, "name": "Camphrier Town", "region": "Kalosite", "division": 4, "ovr": 88.38, "rank": 6, "seq": 15, "source": "Division 4", "detail": "#3", "basis": "Current League standings", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 28, "name": "Sootopolis City", "region": "Delta", "division": 5, "ovr": 76.9, "rank": 24, "seq": 16, "source": "Division 5", "detail": "#1", "basis": "Current League standings", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 20, "name": "Petalburg City", "region": "Delta", "division": 5, "ovr": 67.03, "rank": 48, "seq": 17, "source": "Division 5", "detail": "#2", "basis": "Current League standings", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 151, "name": "Casseroya Lake", "region": "Terastal", "division": 6, "ovr": 98.62, "rank": 3, "seq": 18, "source": "Division 6", "detail": "#1", "basis": "Current League standings", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 125, "name": "Aqua Resort", "region": "Phoenix", "division": 1, "ovr": 76.95, "rank": 23, "seq": 19, "source": "RDS Cup", "detail": "Finalist 1", "basis": "Projected from teams still alive", "replaced": true, "instead_of": "Canalave City", "instead_of_via": "Division 1 (#1)"}, {"team_id": 52, "name": "Mistralton City", "region": "Vertress", "division": 5, "ovr": 81.76, "rank": 12, "seq": 20, "source": "RDS Cup", "detail": "Finalist 2", "basis": "Projected from teams still alive", "replaced": true, "instead_of": "Nimbasa City", "instead_of_via": "Division 2 (#1)"}, {"team_id": 156, "name": "Cabo Poco", "region": "Terastal", "division": 6, "ovr": 87.38, "rank": 8, "seq": 21, "source": "RDS Cup", "detail": "Finalist 3", "basis": "Projected from teams still alive", "replaced": true, "instead_of": "Casseroya Lake", "instead_of_via": "Division 6 (#1)"}, {"team_id": 136, "name": "Ruins of Alph", "region": "Silver", "division": 6, "ovr": 80.02, "rank": 16, "seq": 22, "source": "RDS Cup", "detail": "Finalist 4", "basis": "Projected from teams still alive", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 56, "name": "Virbank City", "region": "Vertress", "division": 1, "ovr": 83.03, "rank": 11, "seq": 23, "source": "Vertress RT", "detail": "Champion", "basis": "Projected on seed (chalk)", "replaced": true, "instead_of": "Nimbasa City", "instead_of_via": "Division 2 (#1)"}, {"team_id": 37, "name": "Eterna City", "region": "LilyValley", "division": 6, "ovr": 74.69, "rank": 29, "seq": 24, "source": "Lily Valley RT", "detail": "Champion", "basis": "Projected on seed (chalk)", "replaced": true, "instead_of": "Canalave City", "instead_of_via": "Division 1 (#1)"}, {"team_id": 41, "name": "Mossui Town", "region": "LilyValley", "division": 8, "ovr": 73.31, "rank": 31, "seq": 25, "source": "Lily Valley RT", "detail": "Runner-up", "basis": "Projected on seed (chalk)", "replaced": true, "instead_of": "Snowpoint City", "instead_of_via": "Division 4 (#1)"}, {"team_id": 148, "name": "Blueberry Terarium", "region": "Terastal", "division": 7, "ovr": 86.23, "rank": 9, "seq": 26, "source": "Terastal RT", "detail": "Champion", "basis": "Projected on seed (chalk)", "replaced": true, "instead_of": "Casseroya Lake", "instead_of_via": "Division 6 (#1)"}, {"team_id": 160, "name": "Mesagoza", "region": "Terastal", "division": 2, "ovr": 77.15, "rank": 22, "seq": 27, "source": "Terastal RT", "detail": "Runner-up", "basis": "Projected on seed (chalk)", "replaced": true, "instead_of": "Blueberry Terarium", "instead_of_via": "Terastal RT (Champion)"}, {"team_id": 155, "name": "Levincia", "region": "Terastal", "division": 7, "ovr": 76.49, "rank": 26, "seq": 28, "source": "Terastal RT", "detail": "Semifinalist", "basis": "Projected on seed (chalk)", "replaced": true, "instead_of": "Mesagoza", "instead_of_via": "Terastal RT (Runner-up)"}, {"team_id": 138, "name": "Lake of Rage", "region": "Silver", "division": 6, "ovr": 77.74, "rank": 20, "seq": 29, "source": "Silver RT", "detail": "Champion", "basis": "Projected on seed (chalk)", "replaced": true, "instead_of": "National Park", "instead_of_via": "Division 1 (#5)"}, {"team_id": 95, "name": "Konikoni City", "region": "Lanakila", "division": 6, "ovr": 81.44, "rank": 13, "seq": 30, "source": "Lanakila RT", "detail": "Champion", "basis": "Projected on seed (chalk)", "replaced": true, "instead_of": "Po Town", "instead_of_via": "Division 4 (#2)"}, {"team_id": 81, "name": "Exeggutor Island", "region": "Lanakila", "division": 2, "ovr": 70.38, "rank": 38, "seq": 31, "source": "Lanakila RT", "detail": "Runner-up", "basis": "Projected on seed (chalk)", "replaced": true, "instead_of": "Konikoni City", "instead_of_via": "Lanakila RT (Champion)"}, {"team_id": 68, "name": "Shalour City", "region": "Kalosite", "division": 4, "ovr": 65.18, "rank": 59, "seq": 32, "source": "Kalosite RT", "detail": "Champion", "basis": "Projected on seed (chalk)", "replaced": true, "instead_of": "Camphrier Town", "instead_of_via": "Division 4 (#3)"}, {"team_id": 118, "name": "Ringtown", "region": "Phoenix", "division": 7, "ovr": 75.57, "rank": 28, "seq": 33, "source": "Phoenix RT", "detail": "Champion", "basis": "Projected on seed (chalk)", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 127, "name": "Dolce Island", "region": "Phoenix", "division": 8, "ovr": 65.39, "rank": 58, "seq": 34, "source": "Phoenix RT", "detail": "Runner-up", "basis": "Projected on seed (chalk)", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 98, "name": "Stow-on-Side", "region": "Dynamax", "division": 7, "ovr": 69.64, "rank": 41, "seq": 35, "source": "Dynamax RT", "detail": "Champion", "basis": "Projected on seed (chalk)", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 17, "name": "Dewford Town", "region": "Delta", "division": 9, "ovr": 51.74, "rank": 94, "seq": 36, "source": "Delta RT", "detail": "Champion", "basis": "Projected on seed (chalk)", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 3, "name": "Cerulean Cape", "region": "Indigo", "division": 4, "ovr": 57.71, "rank": 79, "seq": 37, "source": "Indigo RT", "detail": "Champion", "basis": "Projected on seed (chalk)", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 73, "name": "Anistar City", "region": "Kalosite", "division": 5, "ovr": 81.05, "rank": 14, "seq": 38, "source": "At-large", "detail": "OVR #14", "basis": "Highest OVR remaining", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 8, "name": "Victory Road", "region": "Indigo", "division": 6, "ovr": 80.18, "rank": 15, "seq": 39, "source": "At-large", "detail": "OVR #15", "basis": "Highest OVR remaining", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 113, "name": "Agate Village", "region": "Phoenix", "division": 1, "ovr": 77.53, "rank": 21, "seq": 40, "source": "At-large", "detail": "OVR #21", "basis": "Highest OVR remaining", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 88, "name": "Ultra Megalopolis", "region": "Lanakila", "division": 1, "ovr": 73.55, "rank": 30, "seq": 41, "source": "At-large", "detail": "OVR #30", "basis": "Highest OVR remaining", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 107, "name": "Wild Area", "region": "Dynamax", "division": 3, "ovr": 71.52, "rank": 34, "seq": 42, "source": "At-large", "detail": "OVR #34", "basis": "Highest OVR remaining", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 61, "name": "Humilau City", "region": "Vertress", "division": 7, "ovr": 71.36, "rank": 35, "seq": 43, "source": "At-large", "detail": "OVR #35", "basis": "Highest OVR remaining", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 46, "name": "Hearthome City", "region": "LilyValley", "division": 7, "ovr": 71.24, "rank": 36, "seq": 44, "source": "At-large", "detail": "OVR #36", "basis": "Highest OVR remaining", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 21, "name": "Fallarbor Town", "region": "Delta", "division": 3, "ovr": 70.44, "rank": 37, "seq": 45, "source": "At-large", "detail": "OVR #37", "basis": "Highest OVR remaining", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 104, "name": "Spikemuth", "region": "Dynamax", "division": 1, "ovr": 70.13, "rank": 39, "seq": 46, "source": "At-large", "detail": "OVR #39", "basis": "Highest OVR remaining", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 44, "name": "Veilstone City", "region": "LilyValley", "division": 2, "ovr": 69.85, "rank": 40, "seq": 47, "source": "At-large", "detail": "OVR #40", "basis": "Highest OVR remaining", "replaced": false, "instead_of": null, "instead_of_via": null}, {"team_id": 147, "name": "Tagtree Thicket", "region": "Terastal", "division": 5, "ovr": 69.58, "rank": 42, "seq": 48, "source": "At-large", "detail": "OVR #42", "basis": "Highest OVR remaining", "replaced": false, "instead_of": null, "instead_of_via": null}], "allocation": [{"region": "Vertress", "alloc": 139.39, "s9": 1.4814291693326616, "s8": 1.4805874288066172, "s7": 0.958040601938658, "rank": 1, "bids": 3}, {"region": "LilyValley", "alloc": 127.68, "s9": 1.3643637317593749, "s8": 1.3056993286542689, "s7": 0.9561488306369844, "rank": 2, "bids": 3}, {"region": "Terastal", "alloc": 108.49, "s9": 1.3126962732751295, "s8": 0.9073948951338352, "s7": 0.7565532760676847, "rank": 3, "bids": 3}, {"region": "Silver", "alloc": 107.78, "s9": 0.855513971434193, "s8": 1.1468014720992192, "s7": 1.606411547577039, "rank": 4, "bids": 2}, {"region": "Lanakila", "alloc": 101.66, "s9": 1.349674315379614, "s8": 0.5886825532166972, "s7": 0.8730068954195465, "rank": 5, "bids": 2}, {"region": "Kalosite", "alloc": 97.96, "s9": 1.0475385623091438, "s8": 0.8209990600606835, "s7": 1.0932132595139128, "rank": 6, "bids": 2}, {"region": "Phoenix", "alloc": 93.48, "s9": 0.7137350733375936, "s8": 1.463882180318821, "s7": 0.5400895177320213, "rank": 7, "bids": 2}, {"region": "Dynamax", "alloc": 84.3, "s9": 0.6609192064181344, "s8": 0.9428080024763568, "s7": 1.1893668653051672, "rank": 8, "bids": 1}, {"region": "Delta", "alloc": 67.61, "s9": 0.6018554069172921, "s8": 0.820655018375621, "s7": 0.6099244348849727, "rank": 9, "bids": 1}, {"region": "Indigo", "alloc": 67.2, "s9": 0.5820509102518598, "s8": 0.4981101209199452, "s7": 1.2894394037757655, "rank": 10, "bids": 1}], "counts": {"Division": 18, "RDS Cup": 4, "Regional Tournament": 15, "At-large": 11}, "passed_to_at_large": [{"source": "PA Cup", "detail": "Semifinalist 1", "nominal": "Canalave City", "already_in_via": "Division 1 (#1)", "reason": "every eligible replacement was already qualified"}, {"source": "PA Cup", "detail": "Semifinalist 2", "nominal": "Nimbasa City", "already_in_via": "Division 2 (#1)", "reason": "every eligible replacement was already qualified"}, {"source": "PA Cup", "detail": "Semifinalist 3", "nominal": null, "already_in_via": null, "reason": "only 2 distinct semifinalist(s) project -- Draw and Process currently lead with the same teams, and the mutual quarterfinal collapses a double qualifier into one"}, {"source": "PA Cup", "detail": "Semifinalist 4", "nominal": null, "already_in_via": null, "reason": "only 2 distinct semifinalist(s) project -- Draw and Process currently lead with the same teams, and the mutual quarterfinal collapses a double qualifier into one"}, {"source": "RDS Cup", "detail": "Finalist 5", "nominal": null, "already_in_via": null, "reason": "only 3 distinct finalist(s) project -- across the three cups Draw and Process currently lead with the same teams, and each mutual semifinal collapses a double qualifier into one"}, {"source": "RDS Cup", "detail": "Finalist 6", "nominal": null, "already_in_via": null, "reason": "only 3 distinct finalist(s) project -- across the three cups Draw and Process currently lead with the same teams, and each mutual semifinal collapses a double qualifier into one"}, {"source": "Vertress RT", "detail": "Runner-up", "nominal": "Mistralton City", "already_in_via": "RDS Cup (Finalist 2)", "reason": "every eligible replacement was already qualified"}, {"source": "Vertress RT", "detail": "Semifinalist", "nominal": "Virbank City", "already_in_via": "Vertress RT (Champion)", "reason": "every eligible replacement was already qualified"}, {"source": "Lily Valley RT", "detail": "Semifinalist", "nominal": "Eterna City", "already_in_via": "Lily Valley RT (Champion)", "reason": "every eligible replacement was already qualified"}, {"source": "Silver RT", "detail": "Runner-up", "nominal": "Cianwood City", "already_in_via": "Division 1 (#3)", "reason": "every eligible replacement was already qualified"}, {"source": "Kalosite RT", "detail": "Runner-up", "nominal": "Shalour City", "already_in_via": "Kalosite RT (Champion)", "reason": "every eligible replacement was already qualified"}], "projection": {"pa_semifinalists": ["Canalave City", "Nimbasa City"], "pa_losing_qf": ["Snowpoint City", "Casseroya Lake"], "rds_finalists": ["Canalave City", "Nimbasa City", "Casseroya Lake"], "rds_losing_sf": ["Snowpoint City", "Camphrier Town", "Aqua Resort", "Mistralton City", "Cabo Poco", "Ruins of Alph"]}};
+
+// ---------- Qualification tab ----------
+// Every bid on this tab is a projection: the season is incomplete, and no
+// cup end stage or Regional Tournament game has been played at all. The
+// engine (world_championship_field) decides the field; this only renders
+// it, so the two can't disagree about who is in.
+function qualBidLabel(r) {
+  return r.source === 'At-large' ? `At-large &middot; ${r.detail}` : `${r.source} &middot; ${r.detail}`;
+}
+function qualBasisHtml(r) {
+  if (!r.replaced) return escQ(r.basis);
+  const via = r.instead_of_via ? ` (already in via ${escQ(r.instead_of_via)})` : '';
+  return `${escQ(r.basis)}<br><span class="qual-sub">replaces ${escQ(r.instead_of)}${via}</span>`;
+}
+function escQ(v) {
+  return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function renderQualification() {
+  const d = QUALIFICATION_DATA;
+  const note = document.getElementById('qual-note');
+  const tbody = document.querySelector('#qual-table tbody');
+  const summary = document.getElementById('qual-summary');
+  const detail = document.getElementById('qual-detail');
+  if (!d || !d.invites) {
+    note.textContent = 'No qualification data yet -- run regenerate_dashboard.py.';
+    tbody.innerHTML = ''; summary.innerHTML = ''; detail.innerHTML = '';
+    return;
+  }
+
+  note.innerHTML = `Projected World Championship field &mdash; <strong>${d.field_size} bids</strong>, `
+    + `as of round ${d.as_of_round}. Bids are awarded in order: divisions, then PA Cup, then the RDS Cups, `
+    + `then the Regional Tournaments in allocation order, then highest OVR. A team is never invited twice; `
+    + `a duplicate falls to its category's own replacement chain, and a bid whose chain runs out passes to `
+    + `the at-large pool, so the field always closes at exactly ${d.field_size}. `
+    + `<strong>Everything here is a projection</strong> &mdash; the season is unfinished, and no cup end stage `
+    + `or Regional Tournament game has been played yet.`;
+
+  const CAT = ['Division', 'PA Cup', 'RDS Cup', 'Regional Tournament', 'At-large'];
+  const ALLOC = { 'Division': 18, 'PA Cup': 4, 'RDS Cup': 6, 'Regional Tournament': 20, 'At-large': 0 };
+  summary.innerHTML = CAT.map(c => {
+    const got = d.counts[c] || 0, want = ALLOC[c];
+    // At-large has no allocation of its own -- it exists to absorb bids the
+    // other categories could not fill, so any number there is expected and
+    // gets no win/loss color. Everywhere else, short of allocation is the
+    // thing worth seeing.
+    const atLarge = c === 'At-large';
+    const tone = atLarge || got === want ? '' : 'color:var(--grade-bad)';
+    const sub = atLarge ? 'absorbed from unfilled bids' : `of ${want} allocated`;
+    return `<div class="mini-standings" style="padding:10px 12px">
+      <div class="qual-sub">${c}</div>
+      <div style="font-size:20px;font-weight:700;${tone}">${got}<span class="qual-sub" style="font-size:12px"> ${sub}</span></div>
+    </div>`;
+  }).join('');
+
+  tbody.innerHTML = d.invites.map(r => `
+    <tr>
+      <td class="rank-num col-sticky-1">${r.seq}</td>
+      <td class="team-name left col-sticky-2">${winnerNameHtml(r.name)}</td>
+      <td class="left">${r.region ? regionBadgeHtml(r.region, regionName(r.region)) : ''}${r.division ? ` <span class="qual-sub">D${r.division}</span>` : ''}</td>
+      <td class="num">${r.ovr == null ? '&ndash;' : r.ovr.toFixed(2)}</td>
+      <td class="num">${r.rank == null ? '&ndash;' : r.rank}</td>
+      <td class="left group-start">${qualBidLabel(r)}</td>
+      <td class="left qual-basis">${qualBasisHtml(r)}</td>
+    </tr>`).join('');
+
+  const allocRows = (d.allocation || []).map(a => `
+    <tr>
+      <td class="rank-num">${a.rank}</td>
+      <td class="team-name left" style="${regionTextStyle(a.region)}">${regionName(a.region)}</td>
+      <td class="num">${a.alloc.toFixed(2)}</td>
+      <td class="num">${a.bids}</td>
+    </tr>`).join('');
+
+  const passedRows = (d.passed_to_at_large || []).map(pt => `
+    <tr>
+      <td class="left">${escQ(pt.source)} &middot; ${escQ(pt.detail)}</td>
+      <td class="left">${pt.nominal ? winnerNameHtml(pt.nominal) : '<span class="qual-sub">no candidate</span>'}</td>
+      <td class="left qual-basis">${pt.already_in_via ? 'already in via ' + escQ(pt.already_in_via) : escQ(pt.reason)}</td>
+    </tr>`).join('');
+
+  detail.innerHTML = `
+    <div class="mini-standings">
+      <h3>Regional allocation ranking</h3>
+      <div class="meta-note" style="margin:0;padding:8px 12px">S9 strength &divide;&nbsp;2 + S8 &divide;&nbsp;3 + S7 &divide;&nbsp;6, &times;100. Prior seasons are squashed onto the live scale with the same tanh the strength multiplier uses. Live &mdash; it moves with every result.</div>
+      <table id="qual-alloc-table"><thead><tr><th>#</th><th class="left">Region</th><th class="num">Allocation</th><th class="num">Bids</th></tr></thead>
+      <tbody>${allocRows}</tbody></table>
+    </div>
+    <div class="mini-standings">
+      <h3>Bids that passed to at-large</h3>
+      <div class="meta-note" style="margin:0;padding:8px 12px">A bid lands here when the team it projects to is already qualified and its category's replacement chain is exhausted &mdash; or when the category projects fewer distinct qualifiers than it has bids.</div>
+      <table id="qual-passed-table"><thead><tr><th class="left">Bid</th><th class="left">Would have gone to</th><th class="left">Why it passed</th></tr></thead>
+      <tbody>${passedRows || '<tr><td colspan="3" class="qual-sub">None &mdash; every bid was filled by its own category.</td></tr>'}</tbody></table>
+    </div>`;
+}
+
 // ---------- Init ----------
 document.getElementById('ex-header').textContent = `EX (${DATA.ex_taper_n})`;
 renderRankings();
@@ -1359,6 +1481,7 @@ renderNextMatchday();
 renderCalendar();
 renderRegionalTournament();
 renderHistory();
+renderQualification();
 </script>
 </body>
 </html>
