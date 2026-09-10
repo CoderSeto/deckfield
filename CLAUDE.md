@@ -237,17 +237,7 @@ been played; it was ingested on 2026-09-03 and `results/` now runs 12-26
 
 Round 27 (PA Cup Draw round 3, week 11 Tue) was ingested 2026-09-08 as
 `results/2026-w11-tue-pa-draw-3.csv`; `results/` now runs 12-27 (16 files)
-and a clean rebuild reports 1576 games through round 27.
-
-Rounds 28-31 (PA Process round 3, R8, L8, L9) were added on main by a
-separate session while the Qualification tab was being built on a branch.
-`results/` now runs 12-31 (20 files) and a clean rebuild reports **1848
-games through round 31** -- verified on 2026-09-10 by rebuilding from the
-workbook plus all 20 CSVs and regenerating: every derived constant came
-back byte-identical to main's committed dashboard, the only differences
-being `TEAMS_EXPORT_TSV` (random Secondary Type, by design) and the newly
-added `QUALIFICATION_DATA`. That reproduction is what proved the branch
-merge lost nothing. The rebuild used
+and a clean rebuild reports 1576 games through round 27. The rebuild used
 to ingest it was itself verified against this file's own record: migrating
 the workbook and replaying rounds 12-26 in round order reproduced **1544
 games** and a dashboard whose constants were byte-identical to the
@@ -256,6 +246,18 @@ committed ones, with the single documented exception of
 export, by design). `export-results --from 27 --to 27` then reported the
 new file already matching byte for byte, so the round trip is lossless and
 the filename matches the engine's own derived convention.
+
+Rounds 28-31 (PA Process round 3, R8, L8, L9) were added on main by a
+separate session while the Qualification tab was being built on a branch,
+so the branch had to pick them up before merging. `results/` now runs
+12-31 (20 files) and a clean rebuild reports **1848 games through round
+31**. Verified 2026-09-10 the same way as every rebuild above: rebuilding
+from the workbook plus all 20 CSVs and regenerating reproduced main's
+committed dashboard with every derived constant byte-identical, the only
+differences being `TEAMS_EXPORT_TSV` (random Secondary Type, by design)
+and the newly added `QUALIFICATION_DATA`. That reproduction is what
+proved the merge lost nothing -- worth repeating whenever a branch has to
+absorb rounds added elsewhere.
 
 ## Recovering rounds that only exist in the database
 
