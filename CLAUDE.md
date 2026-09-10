@@ -237,7 +237,17 @@ been played; it was ingested on 2026-09-03 and `results/` now runs 12-26
 
 Round 27 (PA Cup Draw round 3, week 11 Tue) was ingested 2026-09-08 as
 `results/2026-w11-tue-pa-draw-3.csv`; `results/` now runs 12-27 (16 files)
-and a clean rebuild reports 1576 games through round 27. The rebuild used
+and a clean rebuild reports 1576 games through round 27.
+
+Rounds 28-31 (PA Process round 3, R8, L8, L9) were added on main by a
+separate session while the Qualification tab was being built on a branch.
+`results/` now runs 12-31 (20 files) and a clean rebuild reports **1848
+games through round 31** -- verified on 2026-09-10 by rebuilding from the
+workbook plus all 20 CSVs and regenerating: every derived constant came
+back byte-identical to main's committed dashboard, the only differences
+being `TEAMS_EXPORT_TSV` (random Secondary Type, by design) and the newly
+added `QUALIFICATION_DATA`. That reproduction is what proved the branch
+merge lost nothing. The rebuild used
 to ingest it was itself verified against this file's own record: migrating
 the workbook and replaying rounds 12-26 in round order reproduced **1544
 games** and a dashboard whose constants were byte-identical to the
@@ -1022,7 +1032,7 @@ top-OVR teams currently lead both brackets everywhere.
 ("project from current standings, but make note of who is projected"),
 and each bid carries a `basis` saying which kind:
 - *Current League standings* -- division bids. Real played games, but the
-  season is only 7 of 15 league rounds in.
+  season is only part-way through its 15 league rounds (9 as of round 31).
 - *Projected from teams still alive* -- PA/RDS. Nothing past PA round 3 /
   RDS round 4 has been played and neither mutual stage is a playable event
   (both raise `NotImplementedError`), so advancement is projected by
@@ -1064,9 +1074,12 @@ blending. Since each prior column has pstdev exactly 1, k works out to
 exactly 2 for both.
 
 **This ranking is derived, not static** -- the S9 term moves with every
-result, so the tier boundaries move too. At round 27 Terastal (108.49) and
-Silver (107.78) sit 0.71 apart across the 3-bid/2-bid line, so that
-boundary is genuinely live.
+result, so the tier boundaries move too -- and they demonstrably do. Over
+rounds 28-31 alone, Kalosite and Lanakila swapped 5th/6th (both 2-bid, so
+no bid changed hands), and the 3-bid/2-bid line between Terastal and
+Silver went from 0.71 apart (108.49 / 107.78 at round 27) to 2.96 apart
+(111.97 / 109.01 at round 31). Never treat a printed allocation table as
+settled; regenerate it.
 
 ## Regional Tournament (postseason)
 
