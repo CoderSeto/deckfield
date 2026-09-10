@@ -3637,8 +3637,15 @@ def _wc_cup_projection(conn, season, rank_of):
     with open("cup_seeds_full.json") as f:
         cup_seeds = {c: {int(k): v for k, v in m.items()} for c, m in json.load(f).items()}
 
-    # RDS: 2 alive per bracket reach that cup's mutual semifinal, 1 per
-    # bracket comes through it into the final.
+    # RDS: 2 alive per bracket reach that cup's mutual semifinal, and that
+    # stage always seats exactly 2 in the final -- so every cup provides 2
+    # finalists, 6 across the three. A team topping BOTH of its cup's
+    # brackets does not halve that: the double qualifier byes straight to
+    # the final while the other two play the lone semifinal, so the second
+    # finalist still exists. Projecting it as "top 1 alive per bracket,
+    # deduplicated" was wrong for exactly that case and gave a cup only one
+    # finalist; the mutual-stage field is what gets ranked, and its top two
+    # are the finalists.
     rds_finalists, rds_losing_sf, rds_by_cup = [], [], {}
     for cup, regions in RDS_CUP_REGIONS.items():
         seed_of = {v: k for k, v in cup_seeds[cup].items()}
@@ -3647,9 +3654,9 @@ def _wc_cup_projection(conn, season, rank_of):
             regions).fetchall()]
         draw = by_rank(_cup_survivors(conn, season, cup, "Draw", entrants))
         process = by_rank(_cup_survivors(conn, season, cup, "Process", entrants))
-        finalists = _dedupe(draw[:1] + process[:1])
-        semifinalists = _dedupe(draw[:2] + process[:2])
-        losers = by_seed([n for n in semifinalists if n not in finalists], seed_of)
+        stage_field = by_rank(_dedupe(draw[:2] + process[:2]))
+        finalists = stage_field[:2]
+        losers = by_seed(stage_field[2:], seed_of)
         rds_by_cup[cup] = {"finalists": finalists, "losing_sf": losers}
         rds_finalists += finalists
         rds_losing_sf += [(seed_of.get(n, 10 ** 6), n) for n in losers]
@@ -3740,16 +3747,21 @@ def world_championship_field(season, round_num=None):
               nominal=nominal, short_reason=None if nominal else pa_short)
 
     # 3. RDS Cup finalists -> best-seeded losing semifinalist.
-    rds_f = proj["rds_finalists"]
-    rds_short = (None if len(rds_f) >= 6 else
-                 f"only {len(rds_f)} distinct finalist(s) project -- across the three cups "
-                 f"Draw and Process currently lead with the same teams, and each mutual "
-                 f"semifinal collapses a double qualifier into one")
-    for k in range(6):
-        nominal = rds_f[k] if k < len(rds_f) else None
-        award(([nominal] if nominal else []) + proj["rds_losing_sf"],
-              "RDS Cup", f"Finalist {k + 1}", "Projected from teams still alive",
-              nominal=nominal, short_reason=None if nominal else rds_short)
+    # Each cup provides its own 2 bids, and a duplicate is replaced from
+    # that cup's own losing semifinalists -- a Ribbon bid never falls to a
+    # Star team.
+    for cup in RDS_CUP_REGIONS:
+        cup_proj = proj["rds_by_cup"][cup]
+        finalists, losers = cup_proj["finalists"], cup_proj["losing_sf"]
+        short = (None if len(finalists) >= 2 else
+                 f"{cup} Cup projects only {len(finalists)} finalist(s) -- too few teams "
+                 f"remain alive in its brackets to seat a second")
+        for k in range(2):
+            nominal = finalists[k] if k < len(finalists) else None
+            award(([nominal] if nominal else []) + losers,
+                  "RDS Cup", f"{cup} finalist {k + 1}",
+                  "Projected from teams still alive",
+                  nominal=nominal, short_reason=None if nominal else short)
 
     # 4. Regional Tournaments, best-allocated region first. No RT game has
     #    been played, so the bracket is projected on chalk (better seed
