@@ -247,6 +247,18 @@ export, by design). `export-results --from 27 --to 27` then reported the
 new file already matching byte for byte, so the round trip is lossless and
 the filename matches the engine's own derived convention.
 
+Rounds 28-31 (PA Process round 3, R8, L8, L9) were added on main by a
+separate session while the Qualification tab was being built on a branch,
+so the branch had to pick them up before merging. `results/` now runs
+12-31 (20 files) and a clean rebuild reports **1848 games through round
+31**. Verified 2026-09-10 the same way as every rebuild above: rebuilding
+from the workbook plus all 20 CSVs and regenerating reproduced main's
+committed dashboard with every derived constant byte-identical, the only
+differences being `TEAMS_EXPORT_TSV` (random Secondary Type, by design)
+and the newly added `QUALIFICATION_DATA`. That reproduction is what
+proved the merge lost nothing -- worth repeating whenever a branch has to
+absorb rounds added elsewhere.
+
 ## Recovering rounds that only exist in the database
 
 `deckfield export-results` is the exact inverse of `add-results`: it writes
@@ -980,6 +992,97 @@ resolve_final_round=True)` instead. Verified synthetically: all 32
 round-4 survivors obtained this way actually appear in round 5's field,
 32/32.
 
+## World Championship qualification (Qualification tab)
+
+Added 2026-09-10. A 48-team field, built by `world_championship_field()`
+and rendered by the dashboard's **Qualification** tab. The engine decides
+the field and the JS only draws it, so the two can't disagree about who
+is in.
+
+**Bids, awarded strictly in this order** (the order is the rule -- earlier
+categories win a contested team, and everything downstream reacts):
+1. Divisions 1-6: **5 / 4 / 3 / 3 / 2 / 1** = 18.
+2. PA Cup semifinalists: 4 (max).
+3. RDS Cup finalists: 6 (max, 2 per cup).
+4. Regional Tournaments: 3 bids each from the top 3 regions by allocation
+   ranking, 2 each from the next 4, 1 each from the last 3 = 20.
+5. Highest OVR remaining, as needed.
+
+**No team is invited twice.** A bid whose team is already in falls to its
+own category's replacement chain: PA -> best-seeded losing quarterfinalist;
+RDS -> best-seeded losing semifinalist; RT -> that region's seed order
+(#1 seed, other finalist, best-seeded losing semifinalist, other losing
+semifinalist), which under a chalk projection is simply seeds 1-4. A bid
+whose chain is exhausted -- or that a short category never produced --
+passes to the OVR pool. **The field therefore always closes at exactly
+48**, and `passed_to_at_large` records every bid that fell through, naming
+the team it would have gone to and where that team is already in, so a
+redundant bid is visible rather than silently absorbed.
+
+**"Max" is load-bearing in "4 semifinalists, max" and "six finalists".**
+Draw and Process are two parallel brackets over the *same* teams, so one
+team can be alive in both, and the mutual end stage (PA's quarterfinal,
+each RDS cup's semifinal) collapses a double qualifier into one team. A
+category legitimately coming up short is not a bug. This was a real bug
+in the first draft, which projected each bracket independently and
+double-counted: `pa_semifinalists` read `[Canalave, Canalave, Nimbasa,
+Nimbasa]`. Deduplicated, PA currently projects only **2** distinct
+semifinalists and RDS only **3** distinct finalists, because the same
+top-OVR teams currently lead both brackets everywhere.
+
+**Everything on this tab is a projection**, per explicit instruction
+("project from current standings, but make note of who is projected"),
+and each bid carries a `basis` saying which kind:
+- *Current League standings* -- division bids. Real played games, but the
+  season is only part-way through its 15 league rounds (9 as of round 31).
+- *Projected from teams still alive* -- PA/RDS. Nothing past PA round 3 /
+  RDS round 4 has been played and neither mutual stage is a playable event
+  (both raise `NotImplementedError`), so advancement is projected by
+  current OVR rank among each bracket's survivors. `_cup_survivors()`
+  defines "alive" as *has not lost in this cup+bracket*, which
+  deliberately counts teams awaiting a first game -- byes, and PA's tier
+  seeds that enter at rounds 2/3/4 -- as alive. Anything stricter would
+  wrongly eliminate the entire top tier mid-ladder.
+- *Projected on seed (chalk)* -- Regional Tournaments. Zero RT games have
+  been played. Under chalk (better seed always advances) the lane
+  structure puts seeds 1/2/3 in the top three, which is also exactly the
+  replacement chain the rules describe.
+
+**Two readings were chosen where the spec was ambiguous**, both worth
+revisiting if they turn out wrong: the RDS replacement pool is **shared
+across all three cups** (the category is one pooled "six finalists", so a
+Ribbon bid can be replaced by a Star losing semifinalist), and
+"highest-seeded" everywhere means the **best (lowest-numbered)** seed,
+matching this file's usage everywhere else. For PA, where a team holds a
+different seed in each bracket, its *better* seed is the one used.
+
+### Allocation ranking (which regions get 3, 2, or 1 RT bids)
+
+`region_allocation_ranking()`. Per region:
+`(S9/2 + S8/3 + S7/6) * 100`, rounded to 2dp. The weights sum to 1, so the
+blend stays on the same scale as a single season's strength multiplier and
+x100 lands near 100.
+
+S9 is the region's **live** strength multiplier from
+`compute_strength_breakdown()`. S8 and S7 come from
+`REGION_PRIOR_STRENGTH`, supplied already z-scored within each season
+(each column is exactly mean 0, pstdev 1 -- verified). Those are **not**
+on the same scale as a stored strength multiplier, so
+`_normalized_prior_strength()` pushes them through the *same* transform
+`_strength_formula_breakdown()` applies to its own weighted sums --
+`1.0 + STRENGTH_TANH_STRETCH * tanh(x / (pstdev * STRENGTH_TANH_K_MULTIPLIER))`
+-- which is what puts all three seasons on one 1.0-centered scale before
+blending. Since each prior column has pstdev exactly 1, k works out to
+exactly 2 for both.
+
+**This ranking is derived, not static** -- the S9 term moves with every
+result, so the tier boundaries move too -- and they demonstrably do. Over
+rounds 28-31 alone, Kalosite and Lanakila swapped 5th/6th (both 2-bid, so
+no bid changed hands), and the 3-bid/2-bid line between Terastal and
+Silver went from 0.71 apart (108.49 / 107.78 at round 27) to 2.96 apart
+(111.97 / 109.01 at round 31). Never treat a printed allocation table as
+settled; regenerate it.
+
 ## Regional Tournament (postseason)
 
 One per region (10 total), 16 teams seeded by final **Regional Standings**
@@ -1464,6 +1567,18 @@ of the standings entirely — both as a tiebreaker and as a displayed column
 are untouched everywhere else (they still feed `TOT`, the Rankings tab and
 `_points_buckets()`); this is only about what the standings leaderboards
 sort and show.
+
+**As of 2026-09-10 the Python side lives in one place**: the sort was
+extracted into `_standings_order(season, teams, game_type)`, with
+`regional_standings_seeds()` (game_type `R`) and the new
+`division_standings_seeds()` (game_type `L`, added for the World
+Championship's division bids) as thin wrappers. Both are true single
+round-robins within their group, which is what makes one shared sort
+correct for both -- and it means a future tiebreak change can no longer
+be applied to regions but forgotten for divisions. The JS is still a
+separate port; that pair still has to be kept in step by hand. The
+refactor was verified byte-for-byte: `RT_DATA` and every other derived
+constant regenerated identically.
 
 The change has to be made in **two places that must agree**:
 `renderStandings()`/`standingsOrder()` in the dashboard JS, and
