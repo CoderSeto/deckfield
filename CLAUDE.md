@@ -1003,14 +1003,15 @@ is in.
 categories win a contested team, and everything downstream reacts):
 1. Divisions 1-6: **5 / 4 / 3 / 3 / 2 / 1** = 18.
 2. PA Cup semifinalists: 4 (max).
-3. RDS Cup finalists: 6 (max, 2 per cup).
+3. RDS Cup finalists: **exactly 2 per cup**, 6 across Ribbon/Dream/Star.
 4. Regional Tournaments: 3 bids each from the top 3 regions by allocation
    ranking, 2 each from the next 4, 1 each from the last 3 = 20.
 5. Highest OVR remaining, as needed.
 
 **No team is invited twice.** A bid whose team is already in falls to its
 own category's replacement chain: PA -> best-seeded losing quarterfinalist;
-RDS -> best-seeded losing semifinalist; RT -> that region's seed order
+RDS -> best-seeded losing semifinalist **of that same cup** (a Ribbon bid
+never falls to a Star team); RT -> that region's seed order
 (#1 seed, other finalist, best-seeded losing semifinalist, other losing
 semifinalist), which under a chalk projection is simply seeds 1-4. A bid
 whose chain is exhausted -- or that a short category never produced --
@@ -1019,16 +1020,31 @@ passes to the OVR pool. **The field therefore always closes at exactly
 the team it would have gone to and where that team is already in, so a
 redundant bid is visible rather than silently absorbed.
 
-**"Max" is load-bearing in "4 semifinalists, max" and "six finalists".**
-Draw and Process are two parallel brackets over the *same* teams, so one
-team can be alive in both, and the mutual end stage (PA's quarterfinal,
-each RDS cup's semifinal) collapses a double qualifier into one team. A
-category legitimately coming up short is not a bug. This was a real bug
-in the first draft, which projected each bracket independently and
-double-counted: `pa_semifinalists` read `[Canalave, Canalave, Nimbasa,
-Nimbasa]`. Deduplicated, PA currently projects only **2** distinct
-semifinalists and RDS only **3** distinct finalists, because the same
-top-OVR teams currently lead both brackets everywhere.
+**"Max" applies to PA only -- getting that wrong was a real bug, corrected
+2026-09-10 on being asked directly whether each RDS cup provides 2.** Draw
+and Process are two parallel brackets over the *same* teams, so one team
+can be alive in both. The first draft projected each bracket independently
+and double-counted (`pa_semifinalists` read `[Canalave, Canalave, Nimbasa,
+Nimbasa]`); deduplicating was right, but it was then applied to **both**
+cups on the assumption that a double qualifier shrinks the category. That
+holds for PA and **not** for RDS:
+
+- **PA: 4 semifinalists, max.** Its mutual quarterfinal sends 2 from each
+  bracket into the semifinal, and a team coming through both sides
+  occupies one slot instead of two, so the semifinal field can genuinely
+  be 3 or 2 distinct teams. PA currently projects only **2**.
+- **RDS: exactly 2 per cup, always.** A final has two participants by
+  definition. A team topping both of its cup's brackets does *not* halve
+  that -- per the mutual-stage rules above, the double qualifier byes
+  straight to the final while the other two play the lone semifinal, so
+  the second finalist still exists. Projecting "top 1 alive per bracket,
+  deduplicated" gave each cup a single finalist and quietly sent 3 bids
+  to at-large that were never the OVR pool's to take. Corrected to rank
+  the **mutual-stage field** -- `dedupe(draw[:2] + process[:2])` -- and
+  take its top two; the remainder are that cup's losing semifinalists.
+  Note the field size follows the same rules: 3 distinct teams (one bye +
+  one semifinal) yields exactly **1** losing semifinalist, 4 distinct
+  yields 2. Both are correct, not a shortfall.
 
 **Everything on this tab is a projection**, per explicit instruction
 ("project from current standings, but make note of who is projected"),
@@ -1048,13 +1064,13 @@ and each bid carries a `basis` saying which kind:
   structure puts seeds 1/2/3 in the top three, which is also exactly the
   replacement chain the rules describe.
 
-**Two readings were chosen where the spec was ambiguous**, both worth
-revisiting if they turn out wrong: the RDS replacement pool is **shared
-across all three cups** (the category is one pooled "six finalists", so a
-Ribbon bid can be replaced by a Star losing semifinalist), and
-"highest-seeded" everywhere means the **best (lowest-numbered)** seed,
-matching this file's usage everywhere else. For PA, where a team holds a
-different seed in each bracket, its *better* seed is the one used.
+**The RDS pool was briefly shared across all three cups and that was
+wrong** -- resolved 2026-09-10 by explicit clarification. Each cup awards
+its own 2 bids and replaces from its own losing semifinalists only. The
+one reading still chosen rather than given: "highest-seeded" everywhere
+means the **best (lowest-numbered)** seed, matching this file's usage
+everywhere else. For PA, where a team holds a different seed in each
+bracket, its *better* seed is the one used.
 
 ### Allocation ranking (which regions get 3, 2, or 1 RT bids)
 
