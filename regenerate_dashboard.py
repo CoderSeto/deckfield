@@ -44,7 +44,7 @@ from deckfield_ratings import (
     compute_strength_breakdown, generate_pod_schedule,
     rds_cup_real_results, rds_cup_round_pairings,
     regional_standings_seeds, regional_tournament_games, REGION_COLORS,
-    world_championship_field,
+    world_championship_field, rds_mutual_stage_data,
 )
 
 SEASON = 9
@@ -426,6 +426,7 @@ DERIVED_CONSTS = {
     "RANK_ELO_HISTORY", "CUP_REAL_RESULTS", "RDS_ROUND_PAIRINGS",
     "PA_CUP_DATA", "PA_REAL_RESULTS", "PA_ROUND_PAIRINGS", "PA_SWAP_LOG",
     "STRENGTH_DATA", "RT_DATA", "TEAMS_EXPORT_TSV", "QUALIFICATION_DATA",
+    "RDS_MUTUAL_STAGE",
 }
 
 # STATIC: genuinely fixed, with the reason it can never go stale. Anything
@@ -531,6 +532,9 @@ def main():
 
     content = _replace_const(content, "CUP_REAL_RESULTS", rds_cup_real_results(SEASON))
     content = _replace_const(content, "RDS_ROUND_PAIRINGS", rds_cup_round_pairings(SEASON))
+    # The shared stage after both brackets finish round 5 -- derived, and
+    # absent for any cup not there yet, so it appears on its own.
+    content = _replace_const(content, "RDS_MUTUAL_STAGE", rds_mutual_stage_data(SEASON))
 
     content = _replace_const(content, "PA_CUP_DATA", pa_cup_round1_seeding())
 
@@ -555,7 +559,7 @@ def main():
         f.write(content)
     print(f"Regenerated DATA, NEXT_MATCHDAY_DATA, CALENDAR_DATA, SCHEDULE_DATA, RANK_ELO_HISTORY, "
           f"CUP_REAL_RESULTS, RDS_ROUND_PAIRINGS, PA_CUP_DATA, PA_REAL_RESULTS, PA_ROUND_PAIRINGS, "
-          f"PA_SWAP_LOG, STRENGTH_DATA, RT_DATA, QUALIFICATION_DATA, TEAMS_EXPORT_TSV, header subtitle "
+          f"PA_SWAP_LOG, STRENGTH_DATA, RT_DATA, QUALIFICATION_DATA, RDS_MUTUAL_STAGE, TEAMS_EXPORT_TSV, header subtitle "
           f"in {DASHBOARD_PATH}")
 
 
