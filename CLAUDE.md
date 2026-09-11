@@ -1617,6 +1617,27 @@ seeding, the seed-4/seed-8 region-colored dividers still land on every
 `<td>` of those rows (one cell narrower now), and League standings keep
 their P/R markers.
 
+**Standings gained an overall-rank column, 2026-09-11 (per explicit
+request).** Each Standings box now shows a team's league-wide OVR rank
+(1-160) between its own standings position and its name, so a region's
+leader can be read against the other 159 teams without leaving the tab --
+Indigo's first-placed Cerulean Cape currently sits 86th overall, which the
+box alone never showed.
+
+Purely a renderer change: `t.rank` is already on every `DATA.teams` entry,
+so nothing new is derived and `regenerate_dashboard.py` was deliberately
+NOT re-run (it would have rewritten every constant from whatever the local
+database held, which is a different question from this change).
+
+The header is **"Rank"** because both obvious names were already taken and
+mean something else here: `#` is that box's own standings position, and
+the Rankings tab uses "Overall" for the OVR *score*, not a placing. A
+`title` on the `th` spells out that it is the OVR ranking across all 160.
+The cell carries `style="${divider}"` like every other cell in the row --
+the seed-4/seed-8 region dividers are applied per-`<td>` (see the divider
+entry above), so a new column that omitted it would have left a visible
+gap in the line.
+
 **`CUP_REAL_RESULTS`/`RDS_ROUND2`/`RDS_ROUND3` (RDS Cup tab) were the same
 kind of silent gap as `PA_CUP_DATA`/`SCHEDULE_DATA`, found and fixed
 2026-08-08.** Reported directly: RDS Cup round 3 (Draw = abs_round 15,
