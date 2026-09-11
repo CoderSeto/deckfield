@@ -1443,6 +1443,217 @@ def resolve_mutual_stage(draw_finalists, process_finalists, seed_lookup):
     }
 
 
+# ------------------------------------------ RDS mutual semifinal / final --
+# The shared stage after both brackets finish round 5. resolve_mutual_stage()
+# above decides the SHAPE (how many distinct finalists, who byes); the
+# helpers here resolve it against real results and turn it into playable
+# games. Both stages are two-legged ties occupying a week's Tue and Thu
+# slots, stored as cup_bracket 'SF'/'Final' with cup_round carrying the LEG
+# number (1 or 2) rather than a bracket round.
+
+RDS_BRACKET_LAST_ROUND = 5   # Draw and Process each end here
+
+
+def _rds_bracket_survivors(conn, season, cup, bracket):
+    """The two teams that won this cup+bracket's last round, or None if
+    that round isn't complete."""
+    rows = conn.execute("""
+        SELECT g.result_a, ta.name a_name, tb.name b_name FROM games g
+        JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
+        WHERE g.season=? AND g.cup_name=? AND g.cup_bracket=? AND g.cup_round=?
+    """, (season, cup, bracket, RDS_BRACKET_LAST_ROUND)).fetchall()
+    if len(rows) != 2:
+        return None
+    return [(r["a_name"] if r["result_a"] in (2, 3) else r["b_name"]) for r in rows]
+
+
+def _rds_seed_lookup(cup):
+    """{team_name: seed} for one cup -- the permanent seeding both brackets
+    share, which is what decides hosting in the shared stage."""
+    with open("cup_seeds_full.json") as f:
+        return {v: int(k) for k, v in json.load(f)[cup].items()}
+
+
+def rds_mutual_stage(season, cup):
+    """resolve_mutual_stage() applied to this cup's real round-5 winners, or
+    None if either bracket hasn't finished. Adds the cup and both brackets'
+    finalists to what resolve_mutual_stage returns."""
+    conn = get_connection()
+    draw = _rds_bracket_survivors(conn, season, cup, "Draw")
+    process = _rds_bracket_survivors(conn, season, cup, "Process")
+    conn.close()
+    if draw is None or process is None:
+        return None
+    stage = dict(resolve_mutual_stage(draw, process, _rds_seed_lookup(cup)))
+    stage.update(cup=cup, draw_finalists=draw, process_finalists=process)
+    return stage
+
+
+def _rds_leg_orientation(home, away, leg):
+    """Who hosts which leg of a two-legged mutual tie.
+
+    resolve_mutual_stage() seats the BETTER seed at home, which is leg 2 --
+    the decisive one. Leg 1 is hosted by the worse seed, so it is the same
+    pairing flipped. This is the Regional Tournament's two-legged
+    convention (worse seed leg 1, better seed leg 2), confirmed to apply
+    here as well: the written RDS rule names only one home team because it
+    describes who has home ADVANTAGE, not a single venue."""
+    return (away, home) if leg == 1 else (home, away)
+
+
+def _rds_mutual_tie_winner(conn, season, cup, bracket, team_a, team_b, seed_lookup):
+    """Combined-score winner of a two-legged mutual-stage tie (cup_round 1
+    and 2 of that bracket), or None if either leg is missing. An exact
+    aggregate tie goes to the better seed -- the same seed authority that
+    decides hosting, rather than whichever team happens to be stored
+    first."""
+    legs = []
+    for leg in (1, 2):
+        r = conn.execute("""
+            SELECT g.pf_a, g.pa_a, g.team_a FROM games g
+            JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
+            WHERE g.season=? AND g.cup_name=? AND g.cup_bracket=? AND g.cup_round=?
+            AND ((ta.name=? AND tb.name=?) OR (ta.name=? AND tb.name=?))
+        """, (season, cup, bracket, leg, team_a, team_b, team_b, team_a)).fetchone()
+        if r is None:
+            return None
+        legs.append(r)
+    a_id = conn.execute("SELECT team_id FROM teams WHERE name=?", (team_a,)).fetchone()["team_id"]
+    a_total = sum(r["pf_a"] if r["team_a"] == a_id else r["pa_a"] for r in legs)
+    b_total = sum(r["pf_a"] if r["team_a"] != a_id else r["pa_a"] for r in legs)
+    if a_total != b_total:
+        return team_a if a_total > b_total else team_b
+    return team_a if seed_lookup.get(team_a, 999) <= seed_lookup.get(team_b, 999) else team_b
+
+
+def rds_mutual_semifinal_pairs(season, cup):
+    """[(home, away)] for one cup's mutual semifinal in leg-2 orientation
+    (better seed home), or None if the stage isn't resolvable. Empty list
+    when both brackets produced the same two finalists -- that cup skips
+    the semifinal entirely and goes straight to the final."""
+    stage = rds_mutual_stage(season, cup)
+    if stage is None:
+        return None
+    return [(g["home"], g["away"]) for g in stage["semifinal"]]
+
+
+def rds_mutual_final_pair(season, cup):
+    """(home, away) for one cup's final in leg-2 orientation, or None if
+    the semifinal that feeds it isn't decided yet."""
+    stage = rds_mutual_stage(season, cup)
+    if stage is None:
+        return None
+    seed_lookup = _rds_seed_lookup(cup)
+    if not stage["semifinal"]:
+        f = stage["final"]                      # same pair both sides: no semifinal
+        return (f["home"], f["away"])
+
+    conn = get_connection()
+    finalists = []
+    for g in stage["semifinal"]:
+        winner = _rds_mutual_tie_winner(conn, season, cup, "SF", g["home"], g["away"], seed_lookup)
+        if winner is None:
+            conn.close()
+            return None
+        finalists.append(winner)
+        if g.get("bye_team"):
+            finalists.append(g["bye_team"])     # byed straight past the semifinal
+    conn.close()
+    if len(finalists) != 2:
+        return None
+    a, b = finalists
+    return (a, b) if seed_lookup.get(a, 999) <= seed_lookup.get(b, 999) else (b, a)
+
+
+def rds_mutual_games(season, bracket, leg):
+    """[(home, away)] across all three cups for one leg of the mutual
+    semifinal ('SF') or final ('Final'). None if any cup can't resolve
+    yet -- the whole matchday is played together, so a partial answer
+    would be worse than none."""
+    out = []
+    for cup in ("Ribbon", "Dream", "Star"):
+        pairs = (rds_mutual_semifinal_pairs(season, cup) if bracket == "SF"
+                 else [rds_mutual_final_pair(season, cup)])
+        if pairs is None or any(p is None for p in pairs):
+            return None
+        out.extend(_rds_leg_orientation(h, a, leg) for h, a in pairs)
+    return out
+
+
+def rds_mutual_stage_data(season):
+    """{cup: {...}} for the dashboard's Mutual Stage section: the shared
+    semifinal/final each cup reaches once both its brackets finish round 5.
+
+    Per cup: `note` (resolve_mutual_stage's own explanation, including who
+    byes), `bye` (the team that reached the final two on BOTH sides, if
+    any), `semifinal` and `final` pairings in leg-2 orientation (better seed
+    home) with each side's seed, and whatever real leg results exist. A cup
+    whose brackets haven't both finished is simply absent."""
+    conn = get_connection()
+    dex = {r["name"]: r["team_id"] for r in conn.execute("SELECT team_id, name FROM teams").fetchall()}
+
+    def leg_results(cup, bracket):
+        rows = conn.execute("""
+            SELECT g.cup_round leg, g.result_a, g.pf_a, g.pa_a,
+                   ta.name a_name, tb.name b_name FROM games g
+            JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
+            WHERE g.season=? AND g.cup_name=? AND g.cup_bracket=?
+            ORDER BY g.cup_round
+        """, (season, cup, bracket)).fetchall()
+        out = []
+        for r in rows:
+            a_won = r["result_a"] in (2, 3)
+            out.append({
+                "leg": r["leg"],
+                "winner": r["a_name"] if a_won else r["b_name"],
+                "loser": r["b_name"] if a_won else r["a_name"],
+                "winner_score": r["pf_a"] if a_won else r["pa_a"],
+                "loser_score": r["pa_a"] if a_won else r["pf_a"],
+            })
+        return out
+
+    data = {}
+    for cup in ("Ribbon", "Dream", "Star"):
+        stage = rds_mutual_stage(season, cup)
+        if stage is None:
+            continue
+        seed_lookup = _rds_seed_lookup(cup)
+
+        def pair(home, away):
+            return {"home": home, "away": away,
+                    "home_seed": seed_lookup.get(home), "away_seed": seed_lookup.get(away),
+                    "home_dex": dex.get(home), "away_dex": dex.get(away)}
+
+        bye = next((g.get("bye_team") for g in stage["semifinal"] if g.get("bye_team")), None)
+        final_pair = rds_mutual_final_pair(season, cup)
+        data[cup] = {
+            "note": stage["final_note"],
+            "bye": bye,
+            "draw_finalists": stage["draw_finalists"],
+            "process_finalists": stage["process_finalists"],
+            "semifinal": [pair(g["home"], g["away"]) for g in stage["semifinal"]],
+            "final": pair(*final_pair) if final_pair else None,
+            "results": {"SF": leg_results(cup, "SF"), "Final": leg_results(cup, "Final")},
+        }
+    conn.close()
+    return data
+
+
+def mutual_leg_number(event, week=None, day=None):
+    """Which leg of a repeated (kind, bracket, None) slot this is. Those
+    slots appear more than once in WEEKLY_SCHEDULE (Tue and Thu of the same
+    week for a two-legged tie), so the slot tuple alone cannot say -- the
+    caller has to supply the week/day it is asking about. Defaults to leg 1,
+    which is the first occurrence in calendar order."""
+    if week is None or day is None:
+        return 1
+    occurrences = [(wk["week"], d) for wk in WEEKLY_SCHEDULE
+                   for d in ("Tue", "Thu", "Weekend") if wk[d] == event]
+    if (week, day) in occurrences:
+        return occurrences.index((week, day)) + 1
+    return 1
+
+
 # ---------------------------------------------------------------- PA Cup --
 # 160-team Draw-and-Process ladder tournament. Seeds 1-32/33-64/65-96/97-160
 # form 32 independent "ladder rows" -- row i = (161-i, 96+i, 97-i, 32+i, 33-i)
@@ -1810,8 +2021,10 @@ REGIONAL_ABS_ROUND = {1: 1, 2: 2, 3: 3, 4: 6, 5: 9}
 LEAGUE_ABS_ROUND = {1: 7, 2: 8}
 
 
-def _event_is_played(conn, season, slot):
-    """True if real game data exists for this weekly-schedule slot."""
+def _event_is_played(conn, season, slot, week=None, day=None):
+    """True if real game data exists for this weekly-schedule slot. week/day
+    are needed only for the two-legged mutual stages, whose two legs share
+    one slot tuple."""
     if slot is None:
         return True  # empty slot, nothing to wait on
     kind = slot[0]
@@ -1837,7 +2050,14 @@ def _event_is_played(conn, season, slot):
     if kind == "RDS":
         _, bracket, cup_round = slot
         if bracket in ("SF", "Final"):
-            return False  # mutual stage -- not modeled/played yet
+            # Two-legged: cup_round stores the LEG (1 or 2), not a bracket
+            # round, so each leg is checked independently.
+            leg = mutual_leg_number(slot, week, day)
+            n = conn.execute(
+                "SELECT COUNT(*) c FROM games WHERE season=? AND cup_bracket=? AND cup_round=?",
+                (season, bracket, leg),
+            ).fetchone()["c"]
+            return n > 0
         n = conn.execute(
             "SELECT COUNT(*) c FROM games WHERE cup_name IS NOT NULL AND cup_bracket=? AND cup_round=?",
             (bracket, cup_round),
@@ -1870,7 +2090,7 @@ def next_matchday(season):
             slot = week[day]
             if slot is None:
                 continue
-            if not _event_is_played(conn, season, slot):
+            if not _event_is_played(conn, season, slot, week["week"], day):
                 conn.close()
                 return {"week": week["week"], "day": day, "event": slot}
     conn.close()
@@ -2380,11 +2600,12 @@ def _pa_round_games(conn, bracket, target_round):
     raise NotImplementedError(f"PA {bracket} round {target_round}: mutual quarterfinal+ not modeled yet.")
 
 
-def _games_for_event(season, event):
+def _games_for_event(season, event, week=None, day=None):
     """Returns a list of (home_team_id, away_team_id) for a weekly-schedule
-    event. Regional/League rounds use the pod schedule; RDS Cup rounds 1-5
-    and PA Cup rounds 1-7 resolve through real prior-round winners where
-    needed. Later cup stages (mutual semifinal/final) aren't modeled yet."""
+    event. Regional/League rounds use the pod schedule; RDS Cup rounds 1-5,
+    its mutual semifinal/final, and PA Cup rounds 1-7 all resolve through
+    real prior results. week/day identify which leg of a two-legged mutual
+    tie is being asked for (PA's mutual stages are still unmodelled)."""
     kind = event[0]
     conn = get_connection()
     name_to_dex = {r["name"]: r["team_id"] for r in conn.execute("SELECT team_id, name FROM teams").fetchall()}
@@ -2420,7 +2641,12 @@ def _games_for_event(season, event):
         _, bracket, cup_round = event
         if bracket in ("SF", "Final"):
             conn.close()
-            raise NotImplementedError("RDS mutual semifinal/final aren't modeled yet.")
+            leg = mutual_leg_number(event, week, day)
+            games = rds_mutual_games(season, bracket, leg)
+            if games is None:
+                raise ValueError(
+                    f"RDS mutual {bracket} leg {leg}: the stage that feeds it isn't complete yet.")
+            return [(name_to_dex[h], name_to_dex[a]) for h, a in games]
         games = []
         for cup in ("Ribbon", "Dream", "Star"):
             cup_games = _rds_round_games(conn, cup, bracket, cup_round)
@@ -2466,9 +2692,9 @@ def export_matchday_for_deckfield(season, event=None):
         event = info["event"]
     else:
         info = {"event": event}
-    info["abs_round"] = abs_round_for_event(event)
+    info["abs_round"] = abs_round_for_event(event, info.get("week"), info.get("day"))
 
-    games = _games_for_event(season, event)
+    games = _games_for_event(season, event, info.get("week"), info.get("day"))
     ranks = current_rank_lookup(season)
     # Play order is worst-ranked team first, not the source bracket/pod
     # order (e.g. PA Cup's ladder-row order) -- sort each game by its
@@ -2541,7 +2767,7 @@ def export_matchday_batches(season, event=None):
     else:
         info = {"event": event}
         info["week"], info["day"] = _week_day_for_event(event)
-    info["abs_round"] = abs_round_for_event(event)
+    info["abs_round"] = abs_round_for_event(event, info.get("week"), info.get("day"))
     weekend = info.get("day") == "Weekend"
 
     conn = get_connection()
@@ -2574,20 +2800,33 @@ def export_matchday_batches(season, event=None):
     kind = event[0]
     if kind == "RDS":
         _, bracket, cup_round = event
+        mutual = bracket in ("SF", "Final")
+        leg = mutual_leg_number(event, info.get("week"), info.get("day")) if mutual else None
         all_games = []
         cup_per_game = {}
         for cup in ("Ribbon", "Dream", "Star"):
-            cup_games = _rds_round_games(conn, cup, bracket, cup_round)
-            if cup_games is None:
-                conn.close()
-                raise ValueError(f"RDS {cup} {bracket} round {cup_round}: a prior round isn't complete yet.")
+            if mutual:
+                pairs = (rds_mutual_semifinal_pairs(season, cup) if bracket == "SF"
+                         else [rds_mutual_final_pair(season, cup)])
+                if pairs is None or any(p is None for p in pairs):
+                    conn.close()
+                    raise ValueError(
+                        f"RDS {cup} mutual {bracket} leg {leg}: the stage that feeds it isn't complete yet.")
+                cup_games = [_rds_leg_orientation(h, a, leg) for h, a in pairs]
+            else:
+                cup_games = _rds_round_games(conn, cup, bracket, cup_round)
+                if cup_games is None:
+                    conn.close()
+                    raise ValueError(f"RDS {cup} {bracket} round {cup_round}: a prior round isn't complete yet.")
             for h, a in cup_games:
                 home_dex, away_dex = name_to_dex[h], name_to_dex[a]
                 all_games.append((home_dex, away_dex))
                 cup_per_game[(home_dex, away_dex)] = cup
-        agg = bracket in ("SF", "Final")
-        label = f"RDS Cup {bracket} R{cup_round}" if cup_round is not None else f"RDS Cup {bracket}"
-        batch = build_batch(label, "Cup", agg, "", bracket, cup_round if cup_round is not None else "",
+        agg = mutual
+        # cup_round carries the LEG for a mutual tie, which is what the
+        # results CSV needs to file leg 1 and leg 2 separately.
+        label = f"RDS Cup {bracket} R{cup_round}" if cup_round is not None else f"RDS Cup {bracket} leg {leg}"
+        batch = build_batch(label, "Cup", agg, "", bracket, cup_round if cup_round is not None else leg,
                              all_games, cup_per_game=cup_per_game)
         conn.close()
         return info, [batch]
@@ -2596,7 +2835,7 @@ def export_matchday_batches(season, event=None):
         _, bracket, cup_round = event
         label = f"PA {bracket} R{cup_round}" if cup_round is not None else f"PA {bracket}"
         agg = bracket in ("QF", "SF", "Final") or cup_round is None
-        games = _games_for_event(season, event)
+        games = _games_for_event(season, event, info.get("week"), info.get("day"))
         batch = build_batch(label, "Cup", agg, "PA", bracket, cup_round if cup_round is not None else "", games)
         conn.close()
         return info, [batch]
@@ -2605,7 +2844,7 @@ def export_matchday_batches(season, event=None):
         _, matchday = event
         label = f"RT{matchday}"
         agg = matchday != 1
-        games = _games_for_event(season, event)
+        games = _games_for_event(season, event, info.get("week"), info.get("day"))
         batch = build_batch(label, "Playoffs", agg, "", "", "", games)
         conn.close()
         return info, [batch]
@@ -2614,7 +2853,7 @@ def export_matchday_batches(season, event=None):
     _, rnd = event
     label = f"{kind}{rnd}"
     game_type = "Regional" if kind == "R" else "League"
-    games = _games_for_event(season, event)
+    games = _games_for_event(season, event, info.get("week"), info.get("day"))
     batch = build_batch(label, game_type, False, "", "", "", games)
     conn.close()
     return info, [batch]
@@ -3075,20 +3314,27 @@ def full_schedule_abs_round_mapping():
     return mapping
 
 
-def abs_round_for_event(event):
+def abs_round_for_event(event, week=None, day=None):
     """The absolute round number to use in games.round for a given
-    weekly-schedule event tuple, e.g. ('R', 6) or ('PA', 'Draw', 2)."""
+    weekly-schedule event tuple, e.g. ('R', 6) or ('PA', 'Draw', 2).
+
+    A two-legged/Bo3 slot (cup_round None) occupies the SAME tuple on more
+    than one day, so the tuple alone cannot identify which leg is meant --
+    pass the week and day to get that leg's own round. Without them this
+    falls back to the first occurrence in calendar order (leg 1), which is
+    what every caller wanted before those stages became playable, but is
+    wrong for leg 2: it would file leg 2's results under leg 1's round."""
     mapping = full_schedule_abs_round_mapping()
     if event[0] in ("R", "L", "RT"):
         return mapping[(event[0], event[1])]
     if event[2] is not None:
         return mapping[(event[0], event[1], event[2])]
-    # SF/Final/QF: find this event's actual week/day to resolve the key
-    for week in WEEKLY_SCHEDULE:
-        for day in ("Tue", "Thu", "Weekend"):
-            slot = week[day]
-            if slot == event:
-                return mapping[_schedule_event_key(week["week"], day, slot)]
+    if week is not None and day is not None:
+        return mapping[_schedule_event_key(week, day, event)]
+    for wk in WEEKLY_SCHEDULE:
+        for d in ("Tue", "Thu", "Weekend"):
+            if wk[d] == event:
+                return mapping[_schedule_event_key(wk["week"], d, event)]
     raise ValueError(f"Event {event} not found in WEEKLY_SCHEDULE")
 
 

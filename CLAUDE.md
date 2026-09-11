@@ -639,10 +639,40 @@ Lanakila, Star = Kalosite/Dynamax/Terastal (48 real teams each, seeds
   - 2 distinct (same pair both sides): no semifinal, straight to final.
   - Home team for the semifinal/final: whichever team has the better
     original seed (a separate rule from either bracket's own convention).
-  - **Not yet built**: the mutual semifinal/final stage itself isn't
-    modeled in `_games_for_event` (raises `NotImplementedError`) — the
-    resolution *logic* above is confirmed correct, just not wired up as a
-    playable event yet.
+  - **Built and wired 2026-09-11**, when both brackets finished round 5
+    for real and the dashboard had nothing to show. `rds_mutual_stage()`
+    feeds `resolve_mutual_stage()` the real round-5 winners plus the cup's
+    shared seeding; `rds_mutual_games()` turns the result into playable
+    games; `_games_for_event` resolves `("RDS","SF",None)` and
+    `("RDS","Final",None)` instead of raising. PA's mutual
+    quarterfinal/semifinal/final is still unmodelled.
+
+    **Both stages are two-legged**, occupying a week's Tue and Thu slots
+    (`agg = bracket in ("SF","Final")` was already true in
+    `export_matchday_batches`). The written rule names only one home team
+    ("whichever has the better original seed"), which describes home
+    *advantage*, not a single venue -- per explicit instruction the legs
+    split the Regional Tournament's way: **worse seed hosts leg 1, better
+    seed hosts leg 2**. `resolve_mutual_stage()` returns the better seed at
+    home, i.e. leg-2 orientation, and `_rds_leg_orientation()` flips it for
+    leg 1.
+
+    **Stored as `cup_bracket` `SF`/`Final` with `cup_round` carrying the
+    LEG number (1 or 2)**, not a bracket round -- which is what lets each
+    leg be checked, exported and ingested independently. `deckfield.html`'s
+    Cup Bracket dropdown gained `SF`/`Final` to match; without those it
+    could not have recorded these games at all.
+
+    An exact aggregate tie goes to the **better seed** -- the same seed
+    authority that decides hosting, rather than whichever team happens to
+    be stored as `team_a` (which is what `_rt_tie_winner` does for the
+    Regional Tournament, and is arbitrary).
+
+    Real data exercises two of the three shapes: Ribbon and Star each have
+    a team that won BOTH brackets (Canalave City, Casseroya Lake) and byes
+    to the final while the other two play the lone semifinal; Dream has 4
+    distinct finalists and two semifinals. So week 15 is **4 ties, 8
+    games** across the two legs, not 6.
 - **Dashboard bug, fixed 2026-08-04**: the RDS Cup tab's Round 2 section
   (`rdsRound2RowHtml` in `deckfield_dashboard.html`) was rendering the
   *winner* into the home column and the loser into away, unconditionally —
@@ -1384,6 +1414,24 @@ added without someone deciding once which kind it is. Both failure modes
 were tested by deliberately introducing them (an unaccounted new constant,
 and a renamed derived one) and confirming the run fails.
 
+**A leg-numbering bug in the schedule helpers, found and fixed
+2026-09-11 while wiring the RDS mutual stage.** `_schedule_event_key()`
+has always given each leg of a two-legged tie its own absolute round (RDS
+SF = 39/40, Final = 48/49, PA QF = 57/58, SF = 60/61 -- verified), but
+`abs_round_for_event(event)` took only the slot tuple and resolved it by
+scanning `WEEKLY_SCHEDULE` for the **first** match, so it could only ever
+return leg 1's round. Leg 2's was unreachable through the public helper,
+which would have filed leg 2's results under leg 1's round. Fixed by
+adding optional `week`/`day` parameters (falling back to the old
+first-occurrence behaviour when omitted, which is what every pre-existing
+caller wanted) and threading `info["week"]`/`info["day"]` through
+`_games_for_event`, `_event_is_played` and both export entry points.
+
+`_event_is_played()` was also returning `False` unconditionally for RDS
+SF/Final ("mutual stage -- not modeled/played yet"), which was correct
+while nothing could be played but would have stalled `next_matchday()` on
+week 15 forever. It now counts real games at that leg.
+
 **The header subtitle was a seventh instance of the same staleness bug —
 one layer below the guard, found and fixed 2026-09-08.** `<div
 class="subtitle">Season 9 &mdash; through round 11</div>` was plain HTML
@@ -1616,6 +1664,20 @@ Verified end to end: `regional_standings_seeds()` and the tab's
 seeding, the seed-4/seed-8 region-colored dividers still land on every
 `<td>` of those rows (one cell narrower now), and League standings keep
 their P/R markers.
+
+**The RDS Cup tab gained a Mutual Stage section, 2026-09-11.** The shared
+semifinal/final belongs to neither Draw nor Process, so it renders as its
+own full-width section under the two bracket tables rather than being
+duplicated into both. `RDS_MUTUAL_STAGE` (derived, in the manifest) carries
+each cup's pairing in leg-2 orientation with both seeds, the bye team where
+there is one, `resolve_mutual_stage`'s own explanation, and any real leg
+results. A cup whose brackets have not both finished round 5 is simply
+absent from it.
+
+That panel's `meta-note` was badly stale and was rewritten at the same
+time: it claimed real results existed only for rounds 1-2 and that "rounds
+4-5 aren't shown yet -- no results exist for round 3 in this database yet",
+when rounds 3, 4 and 5 have all since been played.
 
 **Standings gained an overall-rank column, 2026-09-11 (per explicit
 request).** Each Standings box now shows a team's league-wide OVR rank
@@ -2013,11 +2075,15 @@ page errors on either path.
   `abs_round_for_event()`'s sequential assignment, which is only "confirmed
   right" in the sense that it's internally consistent, not independently
   cross-checked against a second source the way the historical portion was.
-- RDS Cup mutual semifinal/final and PA Cup mutual quarterfinal/semifinal/
-  final: the resolution *logic* (`resolve_mutual_stage`, the lane-4-vs-1
-  semifinal rule, etc.) is built and tested in isolation, but not wired
-  into `_games_for_event` as playable events yet — both raise
-  `NotImplementedError` deliberately rather than guessing.
+- **RDS Cup's mutual semifinal/final is wired as of 2026-09-11** (see the
+  RDS Cup section). **PA Cup's mutual quarterfinal/semifinal/final is
+  not** — `_games_for_event` still raises `NotImplementedError` for it
+  deliberately rather than guessing. PA is further out (weeks 21-23) and
+  its quarterfinal has its own pairing rule (Draw pairs vs Draw pairs,
+  Process vs Process) before the shared duplicate-handling applies, so it
+  is a genuinely separate piece of work — but the RDS wiring is the
+  template: resolve the stage, orient the legs, store the leg in
+  `cup_round`.
 - DECKFIELD's Results tab now exports directly in the `add-results` CSV
   format (comma-separated, header row, `CSV_GAME_FIELDS` order + `ex_a`/
   `ex_b`/`cup_name`/`cup_bracket`/`cup_round`) instead of the old
