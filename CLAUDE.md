@@ -1667,12 +1667,39 @@ their P/R markers.
 
 **The RDS Cup tab gained a Mutual Stage section, 2026-09-11.** The shared
 semifinal/final belongs to neither Draw nor Process, so it renders as its
-own full-width section under the two bracket tables rather than being
-duplicated into both. `RDS_MUTUAL_STAGE` (derived, in the manifest) carries
-each cup's pairing in leg-2 orientation with both seeds, the bye team where
-there is one, `resolve_mutual_stage`'s own explanation, and any real leg
-results. A cup whose brackets have not both finished round 5 is simply
-absent from it.
+own full-width section rather than being duplicated into both bracket
+tables. `RDS_MUTUAL_STAGE` (derived, in the manifest) carries each cup's
+pairing in leg-2 orientation with both seeds, the bye team where there is
+one, `resolve_mutual_stage`'s own explanation, and any real leg results. A
+cup whose brackets have not both finished round 5 is simply absent from it.
+
+**It is per-cup and sits at the TOP of the panel, corrected the same day
+per explicit instruction.** The first version rendered one shared table at
+the *bottom* of `#panel-rds` listing all three cups stacked -- so the
+identical block appeared under every cup, since the `#rds-cup-toggle`
+handler only called `renderRdsCup()`. Each cup now gets its own block,
+above the Draw/Process columns, showing only `RDS_MUTUAL_STAGE[rdsCup]`.
+Three things this needs that are easy to miss:
+
+- `#rds-mutual-section` wraps the heading *and* the table, and
+  `renderRdsMutual()` toggles `section.hidden` -- hiding only the table
+  would leave an orphan "Mutual Stage" heading for a cup that has not
+  reached it.
+- The cup toggle handler has to call `renderRdsMutual()` alongside
+  `renderRdsCup()`, or switching cups leaves the previous cup's stage on
+  screen.
+- The "Awaiting the semifinal." placeholder uses `qual-sub`, not
+  `sb-round`: `.sb-round` is `text-transform: uppercase`, which shouted it.
+
+That uppercase rule also produced a **false test failure** -- a check for
+the literal string `Ribbon` in the rendered rows fails against the rendered
+`RIBBON CUP`. Exactly the text-matching trap the runbook warns about;
+compare case-insensitively or query the DOM. Verified via Playwright:
+section renders before `.schedule-columns` in `#panel-rds`, each cup's
+toggle swaps the block (Ribbon and Star one SF + a bye row, Dream two SFs
+and no bye), a cup deleted from the constant hides the section to zero
+height while its Draw/Process tables still render, and all 11 tabs load
+with zero `pageerror` events.
 
 That panel's `meta-note` was badly stale and was rewritten at the same
 time: it claimed real results existed only for rounds 1-2 and that "rounds

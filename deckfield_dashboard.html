@@ -426,6 +426,12 @@
         <button data-cup="Star">Star Cup</button>
       </div>
     </div>
+    <div id="rds-mutual-section" hidden>
+      <h3 class="rds-bracket-title" style="margin-top:0">Mutual Stage</h3>
+      <div class="table-scroll">
+        <table id="rds-mutual-table" class="scoreboard"><tbody></tbody></table>
+      </div>
+    </div>
     <div class="schedule-columns">
       <div>
         <h3 class="rds-bracket-title">Draw</h3>
@@ -440,11 +446,7 @@
         </div>
       </div>
     </div>
-    <h3 class="rds-bracket-title" style="margin-top:18px">Mutual Stage</h3>
-    <div class="table-scroll">
-      <table id="rds-mutual-table" class="scoreboard"><tbody></tbody></table>
-    </div>
-    <div class="meta-note">Each round's pairings are generated as soon as the round before it is complete, so the newest section is the next one to be played. Draw: higher (better) seed hosts. Process: lower (worse) seed hosts. After round 5 both brackets converge on the <strong>Mutual Stage</strong> above: 4 distinct finalists means a Draw semifinal and a Process semifinal; if one team reached the final two on <em>both</em> sides it byes straight to the final and the other two play the lone semifinal. Semifinal and final are two-legged &mdash; the worse seed hosts leg 1, the better seed hosts leg 2 &mdash; and the pairing below is shown in leg-2 orientation.</div>
+    <div class="meta-note">Each round's pairings are generated as soon as the round before it is complete, so the newest section is the next one to be played. Draw: higher (better) seed hosts. Process: lower (worse) seed hosts. After round 5 both brackets converge on the <strong>Mutual Stage</strong> above: 4 distinct finalists means a Draw semifinal and a Process semifinal; if one team reached the final two on <em>both</em> sides it byes straight to the final and the other two play the lone semifinal. Semifinal and final are two-legged &mdash; the worse seed hosts leg 1, the better seed hosts leg 2 &mdash; and the pairing is shown in leg-2 orientation. Each cup has its own Mutual Stage block, shown above this bracket as soon as that cup&rsquo;s round 5 is complete in both brackets.</div>
   </section>
 
   <section id="panel-pacup" class="panel">
@@ -1048,6 +1050,7 @@ document.querySelectorAll('#rds-cup-toggle button').forEach(btn => {
     document.querySelectorAll('#rds-cup-toggle button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     renderRdsCup();
+    renderRdsMutual();
   });
 });
 
@@ -1177,26 +1180,26 @@ function rdsMutualRowHtml(g, results, label) {
   </tr>`;
 }
 function renderRdsMutual() {
+  const section = document.getElementById('rds-mutual-section');
   const tbody = document.querySelector('#rds-mutual-table tbody');
-  if (!tbody) return;
-  const cups = ['Ribbon', 'Dream', 'Star'].filter(c => RDS_MUTUAL_STAGE[c]);
-  if (!cups.length) {
-    tbody.innerHTML = '<tr><td colspan="3" class="sb-round">Not reached yet &mdash; both brackets must finish round 5.</td></tr>';
-    return;
+  if (!section || !tbody) return;
+  const d = RDS_MUTUAL_STAGE[rdsCup];
+  // A cup whose brackets haven't both finished round 5 isn't in the data at
+  // all -- hide the whole section (heading included) rather than showing an
+  // empty table for it.
+  if (!d) { section.hidden = true; tbody.innerHTML = ''; return; }
+  section.hidden = false;
+  let html = `<tr><td colspan="3" class="sb-round">${rdsCup} Cup &mdash; Semifinal</td></tr>`;
+  html += d.semifinal.map(g => rdsMutualRowHtml(g, d.results.SF, 'SF')).join('');
+  if (d.bye) {
+    html += `<tr><td colspan="3" class="qual-sub" style="padding:4px 10px">${winnerNameHtml(d.bye)} byes to the final</td></tr>`;
   }
-  tbody.innerHTML = cups.map(cup => {
-    const d = RDS_MUTUAL_STAGE[cup];
-    let html = `<tr><td colspan="3" class="sb-round">${cup} Cup &mdash; ${escQ(d.note)}</td></tr>`;
-    html += d.semifinal.map(g => rdsMutualRowHtml(g, d.results.SF, 'SF')).join('');
-    if (d.bye) {
-      html += `<tr><td colspan="3" class="qual-sub" style="padding:4px 10px">${winnerNameHtml(d.bye)} byes to the final</td></tr>`;
-    }
-    if (d.final) {
-      html += `<tr><td colspan="3" class="sb-round">${cup} Cup &mdash; Final</td></tr>`;
-      html += rdsMutualRowHtml(d.final, d.results.Final, 'Final');
-    }
-    return html;
-  }).join('');
+  html += `<tr><td colspan="3" class="sb-round">${rdsCup} Cup &mdash; Final</td></tr>`;
+  html += d.final
+    ? rdsMutualRowHtml(d.final, d.results.Final, 'Final')
+    : '<tr><td colspan="3" class="qual-sub" style="padding:4px 10px">Awaiting the semifinal.</td></tr>';
+  html += `<tr><td colspan="3" class="qual-sub" style="padding:4px 10px">${escQ(d.note)}</td></tr>`;
+  tbody.innerHTML = html;
 }
 
 // ---------- Qualification tab ----------
