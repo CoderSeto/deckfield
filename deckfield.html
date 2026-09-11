@@ -741,9 +741,14 @@
       </p>
       <p class="roster-help">
         Paste the Batch Settings row from deckfield_dashboard.html's Next Matchday tab to fill
-        in everything below except Starting Timeslot and Games per Timeslot — those two you
-        still set yourself. RDS Cup matchdays give you three separate rows (Ribbon/Dream/Star);
-        apply and import each one as its own batch.
+        in everything below except Starting Timeslot, Games per Timeslot and Factor Multiplier —
+        those three you still set yourself. An RDS Cup matchday comes as one combined row
+        covering Ribbon, Dream and Star together; each matchup carries its own Cup Name, so
+        apply and import it as a single batch.
+        <br><br>
+        Factor Multiplier (1&ndash;2, default 1) always favours the <strong>home</strong> team:
+        the spread subtotal is multiplied by it when home is favoured and divided by it when
+        home is not. Above 1 it also adds 8 to the Elo K-value for every game in the batch.
       </p>
       <label class="roster-checkbox">
         <input type="checkbox" id="schedSettingsHasHeader" checked>
@@ -788,6 +793,9 @@
         </label>
         <label>Games per Timeslot
           <input type="number" id="schedGamesPerSlot" min="1" max="20" value="8">
+        </label>
+        <label>Factor Multiplier
+          <input type="number" id="schedFactorMult" min="1" max="2" step="0.01" value="1">
         </label>
         <label>Cup Name (Cup games only)
           <select id="schedCupName">
@@ -1257,8 +1265,18 @@
     // home/away.
     const rawSpreadSign = rawSpread < 0 ? -1 : 1;
     const fatigueMult = 1 + rawSpreadSign * (TEAM_FATIGUE.away - TEAM_FATIGUE.home) * 0.005;
-    let spread = rawSpread * fatigueMult;
-    spread *= SPREAD_FACTOR_MULTIPLIER;
+    const subtotal = rawSpread * fatigueMult;
+
+    // The Factor Multiplier ALWAYS favours the home team -- deliberately, and
+    // deliberately NOT the favourite/underdog-symmetric rule the Fatigue
+    // Multiplier directly above uses. Home favoured (subtotal >= 0): multiply,
+    // growing home's margin. Away favoured: divide, shrinking away's. So a
+    // multiplier above 1 helps home in both branches, which is the intent --
+    // do not "fix" this to match the fatigue rule's symmetry. The input is
+    // clamped to 1-2 when the schedule is parsed, so the divisor is never 0.
+    const factorDivides = subtotal < 0;
+    let spread = factorDivides ? subtotal / SPREAD_FACTOR_MULTIPLIER
+                               : subtotal * SPREAD_FACTOR_MULTIPLIER;
     spread += SPREAD_FACTOR_MODIFIER;
 
     const team = spread < 0 ? 'away' : 'home';
@@ -1267,7 +1285,8 @@
       team, value: truncResult.value, decimals: truncResult.decimals,
       breakdown: {
         skillTerm, hfa, climate:CLIMATE_BONUS, eyeTest:EYE_TEST_BONUS, elo:ELO_BONUS, rawSpread,
-        fatigueMult, factorMultiplier:SPREAD_FACTOR_MULTIPLIER, factorModifier:SPREAD_FACTOR_MODIFIER, spread
+        fatigueMult, subtotal, factorDivides,
+        factorMultiplier:SPREAD_FACTOR_MULTIPLIER, factorModifier:SPREAD_FACTOR_MODIFIER, spread
       }
     };
   }
@@ -2101,7 +2120,12 @@
     }
     html += `<div class="drow dtotal"><span>Raw Spread</span><span>${fmt(b.rawSpread, 3)}</span></div>`;
     for (const [key, label] of SPREAD_ROW_LABELS_POST){
-      html += `<div class="drow"><span>${label}</span><span>${fmt(b[key], 3)}</span></div>`;
+      // An away-favoured subtotal is divided by the Factor Multiplier, not
+      // multiplied, so the row has to say so or the panel misstates its own
+      // arithmetic.
+      const shown = (key === 'factorMultiplier' && b.factorDivides)
+        ? label.replace('\u00d7', '\u00f7') : label;
+      html += `<div class="drow"><span>${shown}</span><span>${fmt(b[key], 3)}</span></div>`;
     }
     // Truncated (not rounded) the same way SPREAD_VALUE is, so this matches it exactly
     // instead of differing by a rounding hair at the last displayed digit.
@@ -2698,6 +2722,11 @@
     const roundNum = roundNumRaw === '' ? '' : parseInt(roundNumRaw, 10);
     const startSlot = Math.max(1, parseInt(document.getElementById('schedStartSlot').value, 10) || 1);
     const gamesPerSlot = Math.max(1, parseInt(document.getElementById('schedGamesPerSlot').value, 10) || 1);
+    // Clamped rather than trusted: the Factor Multiplier only ever runs 1-2, and
+    // anything under 1 would invert its always-favours-home effect (see
+    // computeSpread), while 0 would divide an away-favoured subtotal to Infinity.
+    const factorMultRaw = parseFloat(document.getElementById('schedFactorMult').value);
+    const factorMult = Math.min(2, Math.max(1, isNaN(factorMultRaw) ? 1 : factorMultRaw));
     const cupName = document.getElementById('schedCupName').value;
     const cupBracket = document.getElementById('schedCupBracket').value;
     const cupRoundRaw = document.getElementById('schedCupRound').value.trim();
@@ -2718,7 +2747,7 @@
       const awayTeam = findTeamByRank(awayRank);
       const homeTeam = findTeamByRank(homeRank);
       return {
-        round, roundNum, gameType, agg, weekend, timeslot,
+        round, roundNum, gameType, agg, weekend, timeslot, factorMult,
         awayRank, homeRank, adv: isNaN(advParsed) ? 0 : advParsed,
         awayName: awayTeam ? awayTeam['Team Name'] : '',
         homeName: homeTeam ? homeTeam['Team Name'] : '',
@@ -2976,6 +3005,7 @@
     IS_WEEKEND = match.weekend;
     TIMESLOT = match.timeslot;
     SPREAD_FACTOR_MODIFIER = match.adv || 0;
+    SPREAD_FACTOR_MULTIPLIER = match.factorMult || 1;
 
     const awayLabel = awayTeam['Team Name'] || 'Away';
     const homeLabel = homeTeam['Team Name'] || 'Home';
