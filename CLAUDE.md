@@ -1757,6 +1757,81 @@ the actual Game Spread Calculation panel:
   Team +2.2248 instead of the pre-fix +5.19 that the reversed multiplier
   would have produced.
 
+**Factor Multiplier, added 2026-09-11 (per explicit request).**
+`SPREAD_FACTOR_MULTIPLIER` had sat at a hardcoded `1` since the file was
+written ("placeholder for future conditional multiplier"). It is now a real
+input, and it **always favours the home team** -- deliberately:
+
+```
+subtotal = rawSpread * fatigueMult
+spread   = (subtotal >= 0) ? subtotal * M : subtotal / M
+spread  += SPREAD_FACTOR_MODIFIER
+```
+
+Home favoured, so multiply and home's margin grows; away favoured, so
+divide and away's margin shrinks. Either way an M above 1 helps home.
+
+**This is the opposite convention from the Fatigue Multiplier one line
+above it, and that is intentional** -- the fatigue rule was specifically
+fixed (see the Spread section above) to be favourite/underdog-symmetric so
+it never cares which side is home, while this one is home-biased on
+purpose. The call site says so in a comment, because the obvious "cleanup"
+is to make them match, and that would silently delete the home factor.
+
+Where it lives: a manual input in **Schedule Batch Settings**, beside
+Starting Timeslot and Games per Timeslot. Those two were already the only
+fields the pasted Batch Settings row does not fill, and this is a third of
+the same kind -- `parseBatchSettingsPaste()` only ever writes the 8
+`BATCH_SETTINGS_COLUMNS`, so a new manual field needs **no engine change
+and no change to the pasted row's strict 8-column check**. It is read and
+clamped once at parse time and stamped onto every match as `factorMult`
+(exactly how `timeslot` is derived from the two timeslot fields), then
+loaded per match in `loadScheduledMatch()` next to its sibling
+`SPREAD_FACTOR_MODIFIER` (`Adv`).
+
+Worth knowing if this ever needs to vary **within** a matchday: its
+sibling `Adv` is already per-game (column 3 of every Matchups row), so the
+two halves of the same formula step currently arrive at different
+granularities. Batch level is right while a multiplier is a property of
+the occasion, which is what the Elo coupling below implies. If it ever
+needs to be per-matchup, the pattern is already proven in this file --
+per-row Cup Name overriding batch-level Cup Name -- so add a 4th Matchups
+column that wins when present and falls back to the batch field otherwise.
+
+Three details that matter:
+- **Clamped to 1-2 on parse**, not trusted from the field. Below 1 would
+  invert the always-favours-home effect, and 0 would divide an
+  away-favoured subtotal to `Infinity`.
+- **The Elo K bonus is now live.** `computeEloUpdate()`'s
+  `(SPREAD_FACTOR_MULTIPLIER > 1.0) ? 8 : 0` had never once fired while the
+  value was pinned at 1; any batch above 1 now adds 8 to K for every game
+  in it. Confirmed intended.
+- **The breakdown row flips its own operator**: `renderSpreadBreakdown()`
+  renders `&divide; Factor Multiplier` when `factorDivides`, otherwise
+  `&times;`. Without that the panel misstates the arithmetic it is showing.
+
+No Results CSV change was needed: the multiplier lands in the spread that
+`spread_a` already exports, so the 21-column `CSV_GAME_FIELDS` contract is
+untouched (verified -- an away-favoured M=2 game exported `spread_a
+-3.8540`, the divided value).
+
+Verified via Playwright through the real roster/schedule import, reading
+the rendered Game Spread Calculation panel (the whole script is inside an
+IIFE, so internals are unreachable from `page.evaluate` -- read the DOM):
+home favoured went 12.2919 -> 24.5839 at M=2 (x2, margin grew) and away
+favoured went -7.7080 -> -3.8540 (/2, margin shrank), the row label read
+`x` then `&divide;` respectively, inputs 0/-5/5/1.5/blank clamped to
+1/1/2/1.5/1, and the Elo panel showed `K: multiplier bonus` 8 at M=2 and 0
+at M=1.
+
+**Two stale instructions in that panel's own help text were corrected at
+the same time.** It claimed the pasted row fills everything "except
+Starting Timeslot and Games per Timeslot" (now three fields), and -- this
+one stale since 2026-08-07 -- that "RDS Cup matchdays give you three
+separate rows (Ribbon/Dream/Star); apply and import each one as its own
+batch", which the single-combined-batch change replaced long ago. The UI
+was still telling the reader to do the old three-batch workflow.
+
 ## deckfield.html layout (three columns + inline tabs)
 
 **Reformed 2026-09-03 (per explicit request).** The page used to stack
