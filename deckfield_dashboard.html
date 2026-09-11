@@ -787,6 +787,7 @@ function renderStandings() {
       <tr>
         ${standingsMode === 'division' ? `<td class="num ${markerClass}">${marker || ''}</td>` : ''}
         <td class="rank-num ${i<3?'top3':''}" style="${divider}">${i+1}</td>
+        <td class="num" style="${divider}">${t.rank}</td>
         <td class="team-name" style="${divider}">${t.name}</td>
         <td class="num" style="${divider}">${standingsMode === 'region' ? t.regional : t.league}</td>
         <td class="num" style="${divider}">${h2hDisplayFor(t, tieGroupOf[t.dex], gameType)}</td>
@@ -803,6 +804,7 @@ function renderStandings() {
             <tr>
               ${standingsMode === 'division' ? '<th class="num">P/R</th>' : ''}
               <th>#</th>
+              <th class="num" title="Overall ranking by OVR across all 160 teams">Rank</th>
               <th class="left">Team</th>
               <th class="num">${recordLabel}</th>
               <th class="num">H2H</th>
