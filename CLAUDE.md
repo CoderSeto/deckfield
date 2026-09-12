@@ -1395,7 +1395,8 @@ querying `_pa_ladder_walk(conn, 2, ...)`'s own returned swap log and
 finding it non-empty, contradicting what the rendered report showed.
 Fixed by having `pa_cup_round_preview()` re-run `_pa_ladder_walk()` for
 `target_round` (rounds 2-4 only; rounds 5-7 have no conflict resolution,
-so their swap_log is always `[]`) and attach the result as
+so their swap_log is always `[]` -- see the 2026-09-12 entry below for the
+bug that empty log later caused) and attach the result as
 `preview["swap_log"]`, which `build_pa_cup()` already passes straight
 through into `PA_ROUND_PREVIEW`. The dashboard's log table now merges
 `PA_CUP_DATA.swap_log` (tagged round 1) with `PA_ROUND_PREVIEW.swap_log`
@@ -1409,6 +1410,43 @@ fully-resolved, real-winners-pending-play pairing RDS Cup's round 3+ has
 always shown without a "projected" qualifier; the label was left over
 from language written when only one bracket's round 1 was done and round
 2 genuinely could still shift.
+
+**The Conflict Resolution Log emptied itself the moment PA round 5 became
+resolvable, found and fixed 2026-09-12.** Reported directly: the PA tab
+"stopped giving me the conflict resolutions." `build_pa_cup()` walks
+`pa_cup_round_preview()` round by round and does `swap_log =
+preview["swap_log"]` on every iteration. Only rounds 2-4 get conflict
+resolution, so round 5's preview carries an **empty** log by design -- and
+the moment both brackets finished round 4 (making round 5's pairing
+resolvable), that empty list overwrote the complete rounds 2-4 history.
+`PA_SWAP_LOG` went to `[]` and the tab fell back to `PA_CUP_DATA.swap_log`
+alone: 10 round-1 entries where there should have been 39.
+
+The function's own docstring already said the log was "capped at 4" -- the
+cap was simply never written. Fixed with `PA_CONFLICT_LAST_ROUND = 4` in
+the engine, beside `PA_BRACKET_LAST_ROUND`, now the single authority for
+both `pa_cup_round_preview()`'s `if 2 <= target_round <= 4` (previously a
+magic number) and `build_pa_cup()`'s new guard.
+
+Two things worth carrying forward:
+
+- **An empty swap log is not the same claim as "no conflicts here."** Past
+  round 4 it means "this round doesn't do conflict resolution at all," and
+  any code accumulating the log has to tell those apart. The same shape of
+  mistake would hit `RDS_ROUND_PAIRINGS` if a similar per-round log were
+  ever added there.
+- **It was latent for weeks and fired on a data change, not a code
+  change.** Nothing about the tab or this function was edited; playing PA
+  round 4 was enough. A constant that reads correctly today can be wrong
+  at the next matchday, which is the same lesson as the staleness entries
+  below arrived at from the opposite direction.
+
+Verified: `pa_cup_round_preview()` returns 14 / 21 / 29 accumulated entries
+for target rounds 2 / 3 / 4 and 0 for round 5, confirming round 4's log is
+self-complete and round 5's is the empty one; regenerating moves only
+`PA_SWAP_LOG` (2 chars to 3155) and `TEAMS_EXPORT_TSV`; Playwright reads 39
+rows off the rendered table -- 10 / 14 / 7 / 8 across rounds 1-4 -- with
+zero `pageerror` events.
 
 **`RT_DATA` was the sixth instance of the same silent-staleness bug, found
 and fixed 2026-09-03 — and this time the class of bug got a guard.**

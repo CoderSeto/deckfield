@@ -39,6 +39,7 @@ import sys
 
 from deckfield_ratings import (
     PA_BRACKET_LAST_ROUND,
+    PA_CONFLICT_LAST_ROUND,
     get_connection, taper_n, export_teams_for_deckfield,
     export_matchday_batches, rank_elo_history,
     pa_cup_real_results, pa_cup_round_preview, pa_cup_round1_seeding,
@@ -330,7 +331,14 @@ def build_pa_cup():
         if preview["Draw"] is None or preview["Process"] is None:
             break
         pairings[str(rnd)] = {"Draw": preview["Draw"], "Process": preview["Process"]}
-        swap_log = preview["swap_log"]
+        # Only rounds up to PA_CONFLICT_LAST_ROUND carry a swap log at all;
+        # past it the preview's log is empty by design, so assigning it
+        # unconditionally would wipe the rounds 2-4 history the moment round 5
+        # became resolvable. That is exactly what happened once both brackets
+        # finished round 4 -- the tab's Conflict Resolution Log went from 39
+        # entries to round 1's 10.
+        if rnd <= PA_CONFLICT_LAST_ROUND:
+            swap_log = preview["swap_log"]
     return real_results, pairings, swap_log
 
 
