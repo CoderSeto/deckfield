@@ -2095,6 +2095,88 @@ separate rows (Ribbon/Dream/Star); apply and import each one as its own
 batch", which the single-combined-batch change replaced long ago. The UI
 was still telling the reader to do the old three-batch workflow.
 
+## deckfield.html score banner
+
+**Replaced the old scoreboard 2026-09-12 (per explicit request), after five
+rounds of review against a standalone `scoreboard_mockup.html`.** The old
+score/time area was three boxes in a flex row (away card | clock box | home
+card). It is now one full-width banner on a single horizontal axis --
+**away above, home below in every column** -- which is what lets it be read
+straight across.
+
+Five columns: **accolades | records+typing+name | score | time | stat strip**.
+
+- **Accolades are new to the game.** The roster's Accolades column was parsed
+  by `parseRosterPaste` and then dropped on the floor -- nothing stored or
+  displayed it. `TEAM_ACCOLADES` now holds it and `renderAccolades()` splits
+  on semicolons, one row each, which is exactly the shape
+  `export_teams_for_deckfield()` writes ("; "-separated, see the export
+  section above).
+- **Rank moved to the LEFT of the team name** (it used to sit right). Records
+  sit **outboard** (top for away, bottom for home); typing, ATK and Every X
+  sit **inboard** in the team's colour. The "P Type"/"S Type" labels are gone
+  -- the pair reads as typing on its own.
+- **The spread lost its team name.** It renders as `[+7.8962]` in the
+  favourite's colour, left of that team's name; which side it sits on is what
+  identifies it. `spreadNoteTeam`/`spreadNoteValue` are gone.
+- **Stat labels sit outboard of their numbers**, so the values themselves
+  meet at the axis. `renderMiniStats` emits keys-then-values for away and
+  values-then-keys for home into one 7-column grid.
+
+**The time block spans all three grid rows deliberately.** Round name /
+period / clock / target / weather is five stacked lines; putting them in the
+shared axis ROW would grow that row and prise the away and home halves apart
+in every other column. Round name along the top, weather along the bottom.
+
+**The clock is a clock face, not a fraction.** `clockFace()` appends a zero,
+pads to four digits and puts a colon before the last two, so tick 502 reads
+`50:20`. Beneath it sits the target -- the period's own end plus accrued
+stoppage, which is exactly `game.maxTime()` (`periodBase + periodTarget +
+stoppageAccrued`), so the 2nd half with +35 stoppage reads `53:50`.
+
+Two things about it that look wrong and are not:
+
+- **It is a tick counter dressed as a clock**, so the last two digits run
+  00-90, not 00-59. Tick 138 reads `13:80`.
+- **The clock can pass its target.** A turn that *starts* inside stoppage
+  still resolves and adds its card value, so a half ends a few ticks beyond
+  `maxTime()`. The old display showed the same overshoot as `623 / 500
+  (+60)`; nothing changed here but the formatting.
+
+**`periodLabel()` now says "1st Overtime", not "Overtime 1"** -- ordinal, to
+match "1st Half"/"2nd Half", via a new `ordinal()` helper that handles the
+11/12/13 exception. This also changes the play-by-play log, which calls the
+same function.
+
+**Every column is a locked px width and the banner a fixed 1560px** that
+scrolls rather than reflowing. This is load-bearing, not tidiness: the score
+and time tracks were `auto`, and three digits at the maximum score size
+measure ~117px against what was a ~40px content box -- `100` would have
+overflowed and shoved the whole banner sideways. Score is pinned at 176px,
+time at 250px, and the score digits use `tabular-nums` so 111 and 888 measure
+the same.
+
+The name line's worst case is the longest real team name (18 chars --
+"Blueberry Terarium" and "City of Circhester" tie), a three-digit rank and a
+spread over +10 at four decimals: `[+10.1234] #160 BLUEBERRY TERARIUM`. That
+needed 525px against 510px available, so the name column takes the difference
+from the stat strip's slack (1.65fr vs 1.0fr), leaving 39px headroom. Long
+round names and long team names ellipsis rather than push, which is what lets
+the locks hold.
+
+Verified against the real page, not just the mock-up: pasted the engine's own
+160-team roster and a real matchup (Camphrier Town at Canalave City), loaded
+it, and read the rendered banner -- 2 and 4 accolade rows respectively, all
+four records, typing/ATK/Every X, `[+7.8962]` on the favourite only, all seven
+stats, and column geometry identical to the mock-up's (180/593/176/250/359,
+172px tall) with nothing truncated. Then simulated the match: clock, target,
+period and both scores all update, the Results CSV is still 21 columns header
+and row (`CSV_GAME_FIELDS` untouched), all four tabs render, the Final Scores
+column still fills, and zero `pageerror` events.
+
+**Still unplaced:** the **DEX #** and raw **PF/PA** exist in the roster but
+appear nowhere on the banner -- they were not on the old scoreboard either.
+
 ## deckfield.html layout (three columns + inline tabs)
 
 **Reformed 2026-09-03 (per explicit request).** The page used to stack
