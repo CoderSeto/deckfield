@@ -45,7 +45,7 @@
      ====================================================================== */
   .banner{
     display:grid;
-    grid-template-columns:minmax(150px,0.5fr) minmax(270px,1.5fr) auto auto minmax(330px,1.15fr);
+    grid-template-columns:minmax(150px,0.5fr) minmax(270px,1.5fr) 176px 250px minmax(330px,1.15fr);
     grid-template-rows:1fr auto 1fr;
     background:var(--panel);
     border:1px solid var(--panel-line);
@@ -103,6 +103,15 @@
   .cell.home .id-mid{color:var(--home-bright);}
   .id-mid .sep{opacity:0.45;}
   .id-name{display:flex;align-items:baseline;justify-content:flex-end;gap:9px;margin:2px 0;}
+  /* Only the favoured side carries it, so which team it belongs to is obvious
+     from the row it sits on -- the team name the old scoreboard printed
+     alongside it is dropped. */
+  .id-spread{
+    font-family:'JetBrains Mono',monospace;font-weight:600;font-size:13px;
+    letter-spacing:-0.2px;flex:0 0 auto;
+  }
+  .cell.away .id-spread{color:var(--away-bright);}
+  .cell.home .id-spread{color:var(--home-bright);}
   .id-rank{
     font-family:'JetBrains Mono',monospace;font-weight:700;font-size:18px;
     color:var(--chalk-dim);letter-spacing:-0.5px;flex:0 0 auto;
@@ -127,6 +136,8 @@
   .score-num{
     font-family:'Anton',sans-serif;line-height:0.86;
     font-size:clamp(46px,4.8vw,70px);
+    font-variant-numeric:tabular-nums;   /* 1 and 8 measure the same */
+    white-space:nowrap;
   }
   .score-cell.away .score-num{color:var(--away-bright);}
   .score-cell.home .score-num{color:var(--home-bright);}
@@ -142,9 +153,14 @@
   }
   .tb-round{
     font-family:'Anton',sans-serif;text-transform:uppercase;letter-spacing:1.2px;
-    font-size:12px;color:var(--gold);white-space:nowrap;
+    font-size:12px;color:var(--gold);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
   }
-  .tb-clockwrap{display:flex;flex-direction:column;align-items:center;}
+  .tb-clockwrap{display:flex;flex-direction:column;align-items:center;max-width:100%;}
+  .tb-period{
+    font-size:10px;text-transform:uppercase;letter-spacing:1.3px;
+    color:var(--chalk-dim);margin-bottom:3px;white-space:nowrap;
+  }
   .tb-clock{
     font-family:'JetBrains Mono',monospace;font-weight:700;
     font-size:clamp(28px,2.8vw,40px);line-height:1;color:var(--chalk);
@@ -188,7 +204,7 @@
      rather than reflowing -- a mock-up shouldn't invent responsive behaviour
      that hasn't been asked for, and a seven-across stat strip has a real floor. */
   .banner-scroll{overflow-x:auto;}
-  .banner{min-width:1460px;}
+  .banner{width:1560px;}
 </style>
 </head>
 <body>
@@ -201,10 +217,12 @@
     <b>left</b> of the name; both names hug the centre. Records sit <b>outboard</b> (top and bottom);
     typing, ATK and Every X sit <b>inboard</b> in team colour, with the &ldquo;P Type / S Type&rdquo;
     labels dropped. Stat labels sit outboard of their numbers, so the values meet at the axis.
-    Score is stacked away-over-home; the names and score sit
-    <b>left</b> to make room for the time block on their right: round name on top, clock over its target in the middle, weather along
-    the bottom. Ticks read as a clock face &mdash; 502 &rarr; 50:20, target
-    500+35 &rarr; 53:50.
+    The spread sits in brackets left of the <b>favourite's</b> name, in that team's
+    colour, with the team label dropped. Score is stacked away-over-home; the names and score sit
+    <b>left</b> to make room for the time block on their right: round name on top, then period over
+    clock over target, weather along the bottom. Ticks read as a clock face &mdash; 502 &rarr;
+    50:20, target 500+35 &rarr; 53:50. Every column is a <b>locked</b> px width, so a three-digit
+    score, a long team name or a long round name can never shift the banner.
   </p>
 
   <div class="section-label">Proposed banner</div>
@@ -218,7 +236,7 @@
     <div class="cell away colsep c2 r1">
       <div class="id-meta" id="metaAway"></div>
       <div class="id-mid" id="midAway"></div>
-      <div class="id-name"><span class="id-rank" id="rankAway"></span><span class="id-team" id="nameAway"></span></div>
+      <div class="id-name"><span class="id-spread" id="spreadAway"></span><span class="id-rank" id="rankAway"></span><span class="id-team" id="nameAway"></span></div>
     </div>
     <!-- 3 ─ SCORE, away half -->
     <div class="score-cell away colsep r1"><div class="score-num" id="scoreAway">2</div></div>
@@ -226,6 +244,7 @@
     <div class="time-cell colsep">
       <div class="tb-round" id="roundName"></div>
       <div class="tb-clockwrap">
+        <div class="tb-period" id="period"></div>
         <div class="tb-clock" id="clock"></div>
         <div class="tb-target" id="clockTarget"></div>
       </div>
@@ -247,7 +266,7 @@
     <div class="cell home c1 r3"><div class="acc-list" id="accHome"></div></div>
     <!-- 2 ─ RECORDS + NAME -->
     <div class="cell home colsep c2 r3">
-      <div class="id-name"><span class="id-rank" id="rankHome"></span><span class="id-team" id="nameHome"></span></div>
+      <div class="id-name"><span class="id-spread" id="spreadHome"></span><span class="id-rank" id="rankHome"></span><span class="id-team" id="nameHome"></span></div>
       <div class="id-mid" id="midHome"></div>
       <div class="id-meta" id="metaHome"></div>
     </div>
@@ -287,11 +306,14 @@
   // periodBase + periodTarget + stoppageAccrued.
   const MATCH = {
     roundName:'PA Cup \u2014 Draw Round 5',
+    period:'2nd Half',    // periodLabel(n): 1st Half / 2nd Half / Overtime 1, 2, ...
     clock:502,            // game.clock
     periodBase:250,       // 2nd half
     periodTarget:250,     // so the period ends at 500
     stoppage:35,          // game.stoppageAccrued
     weather:'Fair', weatherDelta:0,
+    // SPREAD_TEAM / SPREAD_VALUE.toFixed(SPREAD_DECIMALS)
+    spreadTeam:'home', spreadValue:'7.7080',
   };
 
   // Ticks read as a clock face: append a 0, pad to four digits, colon before
@@ -347,6 +369,7 @@
   document.getElementById('statsKeyHome').innerHTML = keyRow;
 
   document.getElementById('roundName').textContent = MATCH.roundName;
+  document.getElementById('period').textContent = MATCH.period;
   document.getElementById('clock').textContent = clockFace(MATCH.clock);
   document.getElementById('clockTarget').textContent =
     clockFace(MATCH.periodBase + MATCH.periodTarget + MATCH.stoppage);
@@ -359,6 +382,12 @@
   renderMeta('metaHome', HOME);
   renderMid('midAway', AWAY);
   renderMid('midHome', HOME);
+  // Favourite only: the empty side keeps the element so the rows stay aligned.
+  document.getElementById('spreadAway').textContent =
+    MATCH.spreadTeam === 'away' ? `[+${MATCH.spreadValue}]` : '';
+  document.getElementById('spreadHome').textContent =
+    MATCH.spreadTeam === 'home' ? `[+${MATCH.spreadValue}]` : '';
+
   document.getElementById('rankAway').textContent = '#' + AWAY.rank;
   document.getElementById('rankHome').textContent = '#' + HOME.rank;
   document.getElementById('nameAway').textContent = AWAY.name;
