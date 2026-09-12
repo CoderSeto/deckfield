@@ -84,7 +84,7 @@
   .acc span{color:var(--chalk);}
   .acc-empty{font-size:10.5px;color:var(--chalk-dim);font-style:italic;opacity:0.5;}
 
-  /* ---------- 2. Records + typing + name ---------- */
+  /* ---------- 2. Records (outboard) / typing+ATK+EveryX (inboard) / name ---------- */
   .id-meta{
     display:flex;flex-wrap:wrap;gap:2px 11px;justify-content:flex-end;
     font-size:10px;color:var(--chalk-dim);letter-spacing:0.3px;line-height:1.5;
@@ -95,7 +95,17 @@
   .cell.away .id-meta .types i{color:var(--away-bright);}
   .cell.home .id-meta .types i{color:var(--home-bright);}
 
-  .id-name{display:flex;align-items:baseline;justify-content:flex-end;gap:9px;margin:3px 0;}
+  /* Second band, between the records and the name: typing, ATK and Every X,
+     all in the team's own colour. */
+  .id-mid{
+    display:flex;flex-wrap:wrap;gap:2px 12px;justify-content:flex-end;
+    font-size:10.5px;line-height:1.5;letter-spacing:0.3px;white-space:nowrap;
+  }
+  .id-mid .g{font-family:'JetBrains Mono',monospace;font-weight:600;}
+  .cell.away .id-mid{color:var(--away-bright);}
+  .cell.home .id-mid{color:var(--home-bright);}
+  .id-mid .sep{opacity:0.45;}
+  .id-name{display:flex;align-items:baseline;justify-content:flex-end;gap:9px;margin:2px 0;}
   .id-rank{
     font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;
     color:var(--chalk-dim);letter-spacing:-0.5px;flex:0 0 auto;
@@ -108,28 +118,25 @@
   .cell.away .id-team{color:var(--away-bright);}
   .cell.home .id-team{color:var(--home-bright);}
 
-  /* ---------- 3. Score (spans all three rows) ---------- */
-  .score-col{
-    grid-column:3;grid-row:1 / 4;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;
-    padding:10px 22px;background:rgba(0,0,0,0.30);
+  /* ---------- 3. Score ---------- */
+  /* Away score above the axis, home below, like every other column. Clock and
+     period are out for now, per instruction. */
+  .score-cell{
+    grid-column:3;display:flex;align-items:center;justify-content:center;
+    padding:0 26px;background:rgba(0,0,0,0.30);min-width:0;
   }
-  .score-nums{
-    display:flex;align-items:center;gap:13px;
-    font-family:'Anton',sans-serif;line-height:0.9;font-size:clamp(38px,4.6vw,64px);
+  .score-cell.away{align-items:flex-end;padding-top:8px;}
+  .score-cell.home{align-items:flex-start;padding-bottom:8px;}
+  .score-num{
+    font-family:'Anton',sans-serif;line-height:0.86;
+    font-size:clamp(34px,3.6vw,50px);
   }
-  .score-nums .a{color:var(--away-bright);}
-  .score-nums .h{color:var(--home-bright);}
-  .score-nums .dash{color:var(--chalk-dim);font-size:0.45em;opacity:0.55;}
-  .score-clock{
-    font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;
-    color:var(--gold);margin-top:5px;letter-spacing:0.5px;
-  }
-  .score-period{font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:var(--chalk-dim);margin-top:2px;}
+  .score-cell.away .score-num{color:var(--away-bright);}
+  .score-cell.home .score-num{color:var(--home-bright);}
 
   /* ---------- 4. Stat strip ---------- */
-  /* Seven columns. The labels form the black middle line itself, with the
-     away value directly above and the home value directly below. */
+  /* Seven columns. The labels form the middle line itself, with the away
+     value directly above and the home value directly below. */
   .stats-away,.stats-home,.stats-axis{
     display:grid;grid-template-columns:repeat(7,1fr);text-align:center;
   }
@@ -143,11 +150,13 @@
   .stats-away .stat-v{color:var(--away-bright);}
   .stats-home .stat-v{color:var(--home-bright);}
   .stat-k{
-    background:#000;color:var(--chalk);
+    /* Was solid black; now the middle section's own panel colour, with the
+       hairlines kept so it still reads as the axis rather than dissolving. */
+    background:var(--panel);color:var(--chalk);
     font-size:8.5px;font-weight:700;letter-spacing:0.7px;text-transform:uppercase;
     padding:3px 2px;
-    border-top:1px solid rgba(255,255,255,0.10);
-    border-bottom:1px solid rgba(255,255,255,0.10);
+    border-top:1px solid rgba(255,255,255,0.16);
+    border-bottom:1px solid rgba(255,255,255,0.16);
   }
   .stats-axis{margin:2px 0;}
   .stat-k:first-child{border-radius:3px 0 0 3px;}
@@ -168,8 +177,9 @@
     <b>Mock-up only</b> &mdash; a standalone page, nothing is wired into the game. Real season-9 data
     (Camphrier Town at Canalave City). One axis runs the full width and every column hangs off it:
     <b>away above, home below</b>. Accolades split into rows on semicolons; rank sits to the
-    <b>left</b> of the name; both names hug the centre; records and P/S typing sit outboard of the
-    names, with the &ldquo;P Type / S Type&rdquo; labels dropped.
+    <b>left</b> of the name; both names hug the centre. Records sit <b>outboard</b> (top and bottom);
+    typing, ATK and Every X sit <b>inboard</b> in team colour, with the &ldquo;P Type / S Type&rdquo;
+    labels dropped. Score is stacked away-over-home; clock and period are out for now.
   </p>
 
   <div class="section-label">Proposed banner</div>
@@ -182,22 +192,18 @@
     <!-- 2 ─ RECORDS + NAME -->
     <div class="cell away colsep c2 r1">
       <div class="id-meta" id="metaAway"></div>
+      <div class="id-mid" id="midAway"></div>
       <div class="id-name"><span class="id-rank" id="rankAway"></span><span class="id-team" id="nameAway"></span></div>
     </div>
-    <!-- 3 ─ SCORE (spans all three rows) -->
-    <div class="score-col colsep">
-      <div class="score-nums">
-        <span class="a" id="scoreAway">2</span><span class="dash">&ndash;</span><span class="h" id="scoreHome">3</span>
-      </div>
-      <div class="score-clock" id="clock">138 / 250</div>
-      <div class="score-period" id="period">2nd Half</div>
-    </div>
+    <!-- 3 ─ SCORE, away half -->
+    <div class="score-cell away colsep r1"><div class="score-num" id="scoreAway">2</div></div>
     <!-- 4 ─ STATS, away half -->
     <div class="cell away colsep stat-pad c4 r1"><div class="stats-away" id="statsAway"></div></div>
 
     <!-- ── the axis row ── -->
     <div class="axis-cell c1"></div>
     <div class="axis-cell colsep c2"></div>
+    <div class="axis-cell colsep c3 score-cell"></div>
     <div class="axis-cell colsep stat-pad c4"><div class="stats-axis" id="statsAxis"></div></div>
 
     <!-- 1 ─ ACCOLADES -->
@@ -205,8 +211,11 @@
     <!-- 2 ─ RECORDS + NAME -->
     <div class="cell home colsep c2 r3">
       <div class="id-name"><span class="id-rank" id="rankHome"></span><span class="id-team" id="nameHome"></span></div>
+      <div class="id-mid" id="midHome"></div>
       <div class="id-meta" id="metaHome"></div>
     </div>
+    <!-- 3 ─ SCORE, home half -->
+    <div class="score-cell home colsep r3"><div class="score-num" id="scoreHome">3</div></div>
     <!-- 4 ─ STATS, home half -->
     <div class="cell home colsep stat-pad c4 r3"><div class="stats-home" id="statsHome"></div></div>
 
@@ -222,16 +231,16 @@
     accolades:'World Finalist S8; Kalosite S8',
     regionRecord:'9-0', leagueRecord:'10-0', cupRecord:'6-4', overallRecord:'25-4',
     primary:'Normal', secondary:'Normal',
-    skill:'88.25', grade:'S', dscr:'8.21', offdef:'0.94', fatigue:'147.0', climate:'6.91',
-    elo:'2347', winPct:'27.4%'
+    skill:'88.25', grade:'S', dscr:'8.21', offdef:'-0.21', fatigue:'147.0', climate:'6.91',
+    elo:'2347', winPct:'27.4%', atk:'-1', everyX:'4'
   };
   const HOME = {
     name:'Canalave City', rank:3, region:'Lily Valley', division:'First Div.',
     accolades:'World Champion S6; World Finalist S7; Swiss S8; Lily Valley S6, S7, S8',
     regionRecord:'8-1', leagueRecord:'8-2', cupRecord:'12-0', overallRecord:'28-3',
     primary:'Dark', secondary:'Dragon',
-    skill:'100.99', grade:'SS', dscr:'10.0', offdef:'1.08', fatigue:'145.5', climate:'12.08',
-    elo:'2503', winPct:'72.6%'
+    skill:'100.99', grade:'SS', dscr:'10.0', offdef:'0.12', fatigue:'145.5', climate:'12.08',
+    elo:'2503', winPct:'72.6%', atk:'+2', everyX:'3'
   };
 
   const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -254,7 +263,15 @@
       `<span class="m">${esc(t.division)} <b>${esc(t.leagueRecord)}</b></span>`,
       `<span class="m">Cup <b>${esc(t.cupRecord)}</b></span>`,
       `<span class="m">Overall <b>${esc(t.overallRecord)}</b></span>`,
-      `<span class="m types"><i>${esc(t.primary)}</i> / <i>${esc(t.secondary)}</i></span>`,
+    ].join('');
+  }
+
+  // The inboard band: typing, ATK modifier and Every X, all in team colour.
+  function renderMid(elId, t){
+    document.getElementById(elId).innerHTML = [
+      `<span>${esc(t.primary)} <span class="sep">/</span> ${esc(t.secondary)}</span>`,
+      `<span>ATK <span class="g">${esc(t.atk)}</span></span>`,
+      `<span>Every <span class="g">${esc(t.everyX)}</span></span>`,
     ].join('');
   }
 
@@ -273,6 +290,8 @@
   renderAccolades('accHome', HOME);
   renderMeta('metaAway', AWAY);
   renderMeta('metaHome', HOME);
+  renderMid('midAway', AWAY);
+  renderMid('midHome', HOME);
   document.getElementById('rankAway').textContent = '#' + AWAY.rank;
   document.getElementById('rankHome').textContent = '#' + HOME.rank;
   document.getElementById('nameAway').textContent = AWAY.name;
