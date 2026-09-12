@@ -784,17 +784,15 @@ for *i* = 1..32:
     instruction. This also happens to be structurally required anyway:
     the cross-bracket duplicate check (step 2) needs the other bracket's
     same-round pairing to exist before it can run.
-  - **Rounds 5-7 (the champions bracket among the 32 row-champions) do
-    NOT yet get conflict resolution** — deliberately deferred, not
-    silently skipped. Unlike rounds 1-4, there's no fixed "seed pool" of
-    not-yet-committed teams to swap at this stage; every entrant is
-    already a fully-determined real team by the time round 5 starts, so a
-    "swap" there would mean reassigning which two already-decided
-    champions face each other (a re-seeding operation, not a seed-holder
-    swap) — a genuinely different, untested mechanism with no real data
-    to validate against yet (round 4 hasn't been played). Round 5-7
-    pairing generation itself (seed-based home/away, no entrant-swap
-    conflicts) was re-verified working end to end regardless.
+  - **Rounds 5-8 (the champions bracket) DO get conflict resolution as of
+    2026-09-12** — `_pa_champions_walk` / `_pa_swap_champion_opponents`.
+    They were deferred for a long time on the grounds that a swap there
+    "would mean reassigning which two already-decided champions face each
+    other (a re-seeding operation, not a seed-holder swap) — a genuinely
+    different, untested mechanism with no real data to validate against
+    yet (round 4 hasn't been played)." Round 4 has since been played in
+    both brackets, so that reason expired; see "The deferral was read as
+    the rule" below for how it then caused a real bug.
   - **Verified via a full synthetic walk** (a scratch copy of the
     database, not the real one): round 2 is correctly gated (`None`)
     until both brackets finish round 1, and remains gated symmetrically
@@ -808,6 +806,84 @@ for *i* = 1..32:
     32, 32, 16, 8, 4) with no blocked/failed step; and `_games_for_event`
     (the real matchday-export consumer) was confirmed working end to end
     against the synthetic walk's round 3 data.
+
+**The deferral was read as the rule, corrected 2026-09-12.** The
+conflict-resolution rules scope themselves by **round 6** (steps 1 and 3,
+same-region/same-division) and by **the mutual semifinal** (step 2, a
+Process pairing repeating a Draw pairing). They have never said "rounds
+2-4" — that was only ever how far the implementation reached, because
+rounds 5+ were deferred.
+
+That distinction got lost. On 2026-09-12, the PA tab's Conflict Resolution
+Log emptied itself: `build_pa_cup()` reassigned `swap_log` on every
+iteration, so once both brackets finished round 4 and round 5's pairing
+became resolvable, round 5's empty log (empty because nothing computed it)
+overwrote the real rounds 2-4 history. The first fix introduced a
+`PA_CONFLICT_LAST_ROUND = 4` cap — which stopped the symptom by writing the
+**gap** down as though it were the rule. It was reverted the same day.
+
+**The actual fix is to resolve rounds 5-8.** Scoping now follows the rules:
+`PA_REGION_CHECK_LAST_ROUND = 6` bounds steps 1 and 3, and step 2 is bounded
+by `PA_BRACKET_LAST_ROUND` (every bracket round, since the mutual semifinal
+is what follows round 8). It was not hypothetical — round 5 was already on
+the dashboard carrying three unresolved violations: Nimbasa City vs
+Accumula Town (both Vertress) and Lilycove City vs Cherrygrove City (both
+division 3) in the Draw, Snowpoint City vs Eterna City (both LilyValley) in
+the Process.
+
+`_pa_champions_walk` is the champions-bracket counterpart of
+`_pa_ladder_walk` and keeps its central discipline: walk one round at a
+time, resolve that round's conflicts, and look up the round's real winner
+from the pairing **just resolved** rather than a guessed one. Its swap log
+prepends the ladder walk's own rounds 2-4 log, so any single call's log is
+self-complete from round 2 — which is what let `build_pa_cup()`'s cap be
+deleted outright rather than re-tuned.
+
+The swap mechanism differs from rounds 1-4 and the difference is the point
+the old deferral was gesturing at:
+
+- **Rounds 1-4** protect the fresh tier entrant and move the *survivor*
+  visiting it. **Rounds 5-8** have no fresh seeds at all, so per "from that
+  point forward, the higher seed should always be protected in its
+  pathway", the better-seeded side of each game is the anchor and the
+  worse-seeded side is exchanged with another game's worse side.
+- **Game order is never disturbed**, only which worse-seeded team sits in
+  each game — so the bracket's own adjacency into the next round survives a
+  swap intact.
+- **Two different seeds are in play here and conflating them is easy.**
+  Bracket structure, protection and the top/bottom-half test all use each
+  row's permanent *identity* seed (1-32, the `33-i` that also sets the
+  round-5 pairing), because that is what defines a champion's pathway.
+  **Hosting still uses the team's own 1-160 entry seed**, the same as every
+  other PA round. This is the one reading chosen rather than given.
+
+**A separate, pre-existing bug fell out of the rewrite**: `_pa_round_games`
+returned rounds 5-8 as `(better_seed, worse_seed)` unconditionally, but
+`_games_for_event` treats that tuple as `(home, away)`. So the Draw seated
+the wrong team in 6 of 16 round-5 games and the Process in **12 of 16** —
+the Process's rule is that the *worse* seed hosts, and it was getting the
+opposite in every game the seeds didn't happen to order correctly. It never
+showed on the dashboard because `pa_cup_round_preview()` re-derives
+orientation from seeds itself; it would have shown the moment week 16's
+matchday was exported. Rounds 1-4 were always correct (`final_pairs`
+applies `home_is_lower_seed`).
+
+Verified: round 5 goes from 3 violations to 0 with 3 swaps, 32 distinct
+teams per bracket, 0 cross-bracket repeats and 0 hosting-rule violations; a
+synthetic walk through rounds 5-8 holds every invariant (16/8/4/2 games per
+bracket, no swap crossing the half boundary, rounds 7-8 logging no
+region/division entries since those checks stop after round 6, and a round-6
+same-division pairing correctly left standing and logged under rule 5 rather
+than forced); regenerating moves only `PA_ROUND_PAIRINGS` (round 5 alone,
+rounds 2-4 byte-identical), `PA_SWAP_LOG` and `TEAMS_EXPORT_TSV`; Playwright
+reads 42 rows off the rendered log — 10/14/7/8/3 across rounds 1-5 — with
+zero `pageerror` events.
+
+**Worth keeping in mind generally:** a deferral note and a rule read almost
+the same after a few months, especially when the deferral has a good reason
+attached. This one even carried its own expiry ("round 4 hasn't been
+played") and still got mistaken for the spec. When something looks like a
+boundary, check whether the rules name it before encoding it.
 
 **Round-1 pairing bug, found and fixed 2026-08-06.** The formula above
 replaces an earlier, wrong version that paired row *i* as `(128+i) vs
@@ -857,9 +933,13 @@ the same 160 teams as Draw before using it.
 
 **Conflict-resolution order of operations, fixed 2026-08-06 (per explicit
 instruction — Draw now gets checked too, not just Process). Originally
-built for round 1 only; extended to rounds 2-4 the same day (see above) —
-this exact 5-step order applies at every round, just scoped each round to
-that round's own tier-seed range for swaps:**
+built for round 1 only; extended to rounds 2-4 the same day and to rounds
+5-8 on 2026-09-12 — this exact 5-step order applies at every round, just
+scoped each round to that round's own swappable pool. The parenthesised
+reaches below are the rules' own and are the authority on scope
+(`PA_REGION_CHECK_LAST_ROUND = 6` for steps 1 and 3; step 2 runs every
+bracket round). Per explicit instruction 2026-09-12, "up until round 6"
+is read as **inclusive** — rounds 1-6 get those two checks:**
 1. (up until round 6) Check the **Draw** for same-region/same-division
    pairings and make appropriate switches.
 2. (up until the mutual semifinal) Check the **Process** for any
@@ -1412,41 +1492,15 @@ from language written when only one bracket's round 1 was done and round
 2 genuinely could still shift.
 
 **The Conflict Resolution Log emptied itself the moment PA round 5 became
-resolvable, found and fixed 2026-09-12.** Reported directly: the PA tab
-"stopped giving me the conflict resolutions." `build_pa_cup()` walks
-`pa_cup_round_preview()` round by round and does `swap_log =
-preview["swap_log"]` on every iteration. Only rounds 2-4 get conflict
-resolution, so round 5's preview carries an **empty** log by design -- and
-the moment both brackets finished round 4 (making round 5's pairing
-resolvable), that empty list overwrote the complete rounds 2-4 history.
-`PA_SWAP_LOG` went to `[]` and the tab fell back to `PA_CUP_DATA.swap_log`
-alone: 10 round-1 entries where there should have been 39.
-
-The function's own docstring already said the log was "capped at 4" -- the
-cap was simply never written. Fixed with `PA_CONFLICT_LAST_ROUND = 4` in
-the engine, beside `PA_BRACKET_LAST_ROUND`, now the single authority for
-both `pa_cup_round_preview()`'s `if 2 <= target_round <= 4` (previously a
-magic number) and `build_pa_cup()`'s new guard.
-
-Two things worth carrying forward:
-
-- **An empty swap log is not the same claim as "no conflicts here."** Past
-  round 4 it means "this round doesn't do conflict resolution at all," and
-  any code accumulating the log has to tell those apart. The same shape of
-  mistake would hit `RDS_ROUND_PAIRINGS` if a similar per-round log were
-  ever added there.
-- **It was latent for weeks and fired on a data change, not a code
-  change.** Nothing about the tab or this function was edited; playing PA
-  round 4 was enough. A constant that reads correctly today can be wrong
-  at the next matchday, which is the same lesson as the staleness entries
-  below arrived at from the opposite direction.
-
-Verified: `pa_cup_round_preview()` returns 14 / 21 / 29 accumulated entries
-for target rounds 2 / 3 / 4 and 0 for round 5, confirming round 4's log is
-self-complete and round 5's is the empty one; regenerating moves only
-`PA_SWAP_LOG` (2 chars to 3155) and `TEAMS_EXPORT_TSV`; Playwright reads 39
-rows off the rendered table -- 10 / 14 / 7 / 8 across rounds 1-4 -- with
-zero `pageerror` events.
+resolvable, found 2026-09-12.** `build_pa_cup()` reassigned `swap_log` on
+every iteration of its round walk, so once round 5 became resolvable its
+empty log wiped the rounds 2-4 history and the tab fell back to round 1's 10
+entries alone. The first fix capped the accumulation at round 4; that was
+wrong in premise and was reverted the same day — the log was empty because
+rounds 5+ had no conflict resolution implemented, not because the rules stop
+at 4. See "The deferral was read as the rule" in the PA Cup section for the
+real fix. The guard is gone: every round 2-8 now returns a log that
+self-accumulates from round 2.
 
 **`RT_DATA` was the sixth instance of the same silent-staleness bug, found
 and fixed 2026-09-03 — and this time the class of bug got a guard.**
