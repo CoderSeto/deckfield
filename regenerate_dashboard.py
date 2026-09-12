@@ -39,7 +39,6 @@ import sys
 
 from deckfield_ratings import (
     PA_BRACKET_LAST_ROUND,
-    PA_CONFLICT_LAST_ROUND,
     get_connection, taper_n, export_teams_for_deckfield,
     export_matchday_batches, rank_elo_history,
     pa_cup_real_results, pa_cup_round_preview, pa_cup_round1_seeding,
@@ -315,14 +314,13 @@ def build_pa_cup():
     "has this round been played yet" is decided independently by
     PA_REAL_RESULTS at render time, not by this accumulation.
 
-    PA_SWAP_LOG is the fullest available conflict-resolution history
-    (rounds 2-4 only -- rounds 5-7 never get conflict resolution): each
-    pa_cup_round_preview() call for target round N in 2-4 already
-    self-accumulates every round from 2 up to N (via _pa_ladder_walk), so
-    using the swap_log from whichever round resolved highest (capped at
-    4) is complete on its own -- concatenating swap_logs across multiple
-    stored rounds here would double-count rounds 2..N-1 every time N
-    increases."""
+    PA_SWAP_LOG is the fullest available conflict-resolution history.
+    Every pa_cup_round_preview() call for a target round N in 2-8 already
+    self-accumulates every round from 2 up to N (via _pa_ladder_walk for
+    2-4 and _pa_champions_walk, which prepends that walk's own log, for
+    5-8), so the log from whichever round resolved highest is complete on
+    its own -- concatenating swap_logs across multiple stored rounds here
+    would double-count rounds 2..N-1 every time N increases."""
     real_results = pa_cup_real_results(SEASON)
     pairings = {}
     swap_log = []
@@ -331,14 +329,10 @@ def build_pa_cup():
         if preview["Draw"] is None or preview["Process"] is None:
             break
         pairings[str(rnd)] = {"Draw": preview["Draw"], "Process": preview["Process"]}
-        # Only rounds up to PA_CONFLICT_LAST_ROUND carry a swap log at all;
-        # past it the preview's log is empty by design, so assigning it
-        # unconditionally would wipe the rounds 2-4 history the moment round 5
-        # became resolvable. That is exactly what happened once both brackets
-        # finished round 4 -- the tab's Conflict Resolution Log went from 39
-        # entries to round 1's 10.
-        if rnd <= PA_CONFLICT_LAST_ROUND:
-            swap_log = preview["swap_log"]
+        # Every round 2-8 now returns a log that self-accumulates from round
+        # 2, so the newest resolvable round's log is complete on its own and
+        # concatenating across rounds would double-count.
+        swap_log = preview["swap_log"]
     return real_results, pairings, swap_log
 
 

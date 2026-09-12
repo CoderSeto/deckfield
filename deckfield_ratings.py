@@ -1457,14 +1457,12 @@ RDS_BRACKET_LAST_ROUND = 5   # Draw and Process each end here
 # bracket sends TWO teams into the mutual semifinal, exactly as RDS does after
 # its round 5. There is no mutual quarterfinal.
 PA_BRACKET_LAST_ROUND = 8
-# Conflict resolution only runs on rounds 1-4, the rounds that still have a
-# pool of fresh tier seeds to swap. From round 5 on every entrant is an
-# already-decided real team, so a swap there would be a re-seeding operation
-# -- deliberately deferred, see _pa_ladder_walk's docstring. A preview past
-# this round therefore carries an EMPTY swap log, which is not the same thing
-# as "no conflicts were resolved": callers accumulating the log must stop
-# here rather than let round 5 overwrite rounds 2-4's history.
-PA_CONFLICT_LAST_ROUND = 4
+# How far each conflict-resolution rule reaches, per explicit instruction:
+# steps 1 and 3 (same-region/same-division, in either bracket) run "up until
+# round 6", and step 2 (a Process pairing repeating a Draw pairing) runs "up
+# until the mutual semifinal" -- i.e. every bracket round, so it is bounded by
+# PA_BRACKET_LAST_ROUND rather than by its own constant.
+PA_REGION_CHECK_LAST_ROUND = 6
 
 
 def _rds_bracket_survivors(conn, season, cup, bracket):
@@ -2545,6 +2543,223 @@ def _pa_round1_games(conn):
     return draw_games, process_games, draw_seed_to_team, process_seed_to_team, swap_log
 
 
+def _pa_swap_champion_opponents(games, seed_of, violates_fn):
+    """Swap-search engine for the PA champions bracket (rounds 5-8).
+
+    Rounds 1-4 always had a pool of fresh, not-yet-committed tier seeds to
+    swap. Here every entrant is an already-decided real team, so a swap
+    reassigns which two champions face each other. Per explicit instruction
+    -- "from that point forward, the higher seed should always be protected
+    in its pathway" -- the BETTER-seeded side of each game is the anchor and
+    the worse-seeded side is what moves, exchanged with another game's worse
+    side.
+
+    Seeds here are each row's own permanent identity seed (1-32, the `33-i`
+    that also decides the round-5 bracket), not the team's 1-160 entry seed:
+    the identity seed is what defines a champion's pathway through this
+    bracket, which is what "protected in its pathway" is about. Hosting is a
+    separate question and still keys off the entry seed, the same as every
+    other PA round.
+
+    games: [[better_team, worse_team], ...] -- MUTATED in place. Game ORDER
+    is never disturbed, only which worse-seeded team sits in each game, so
+    the bracket's own adjacency into the next round survives a swap intact.
+    Candidates are restricted to the same half of THIS round's remaining
+    field by seed, so no swap ever crosses the top/bottom-half boundary.
+    Returns a log shaped like _pa_swap_survivors' (row is 1-indexed).
+    """
+    log = []
+    field = sorted(seed_of[t] for g in games for t in g)
+    half = len(field) // 2
+    upper_half = set(field[half:])          # numerically higher == worse seeds
+    lower_half = set(field[:half])
+
+    for i in range(len(games)):
+        anchor, mover = games[i]
+        reason = violates_fn(anchor, mover)
+        if reason is None:
+            continue
+
+        my_seed = seed_of[mover]
+        same_half = sorted(upper_half if my_seed in upper_half else lower_half)
+        # Next-worse (numerically higher) seed first, then better ones --
+        # the same search direction _pa_swap_survivors uses.
+        search = [x for x in same_half if x > my_seed] + \
+                 [x for x in reversed(same_half) if x < my_seed]
+
+        swapped = False
+        for cand_seed in search:
+            j = next((k for k in range(len(games))
+                      if k != i and seed_of[games[k][1]] == cand_seed), None)
+            if j is None:
+                continue
+            if violates_fn(games[i][0], games[j][1]) is not None:
+                continue
+            if violates_fn(games[j][0], games[i][1]) is not None:
+                continue
+            games[i][1], games[j][1] = games[j][1], games[i][1]
+            log.append({'row': i + 1, 'swapped_seed': my_seed,
+                        'with_seed': cand_seed, 'reason': reason})
+            swapped = True
+            break
+
+        if not swapped:
+            log.append({'row': i + 1, 'swapped_seed': None, 'with_seed': None,
+                        'reason': f'{reason} -- no valid swap available, original pairing stands'})
+    return log
+
+
+def _pa_draw_pairs_through(conn, up_to_round):
+    """Every real Draw matchup played in PA rounds 1..up_to_round-1, as a set
+    of frozensets -- the "any round of the Draw" half of conflict rule 2."""
+    out = set()
+    for prior in range(1, up_to_round):
+        for r in conn.execute("""
+            SELECT ta.name a, tb.name b FROM games g
+            JOIN teams ta ON ta.team_id = g.team_a JOIN teams tb ON tb.team_id = g.team_b
+            WHERE g.cup_name='PA' AND g.cup_bracket='Draw' AND g.cup_round=?
+        """, (prior,)).fetchall():
+            out.add(frozenset([r['a'], r['b']]))
+    return out
+
+
+def _pa_champions_walk(conn, up_to_round, team_region, team_division):
+    """(draw_pairs, process_pairs, swap_log) for PA champions-bracket rounds
+    5-PA_BRACKET_LAST_ROUND, or (None, None, []) if a prior round isn't
+    complete in BOTH brackets yet.
+
+    The champions-bracket counterpart of _pa_ladder_walk, and it keeps that
+    function's central discipline: walk one round at a time, resolve THAT
+    round's conflicts, and look up the round's real winner using the pairing
+    just resolved -- never a pairing guessed from an unmutated mapping, which
+    would silently read as "not played yet" the moment a swap moved anyone.
+
+    The 5-step order applies here exactly as it does on the ladder, scoped
+    per the rules: steps 1 and 3 (same-region/same-division) run up until
+    round 6, step 2 (Process repeating a Draw pairing) runs every round up to
+    the mutual semifinal, then step 4 re-checks the finished state.
+
+    swap_log carries rounds 2 onward: _pa_ladder_walk's own rounds 2-4 log is
+    prepended, since the round-4 champions this starts from come from that
+    same walk. So any single call's log is self-complete and callers must not
+    concatenate logs across rounds.
+    """
+    draw_r1, process_r1, _, _, _ = _pa_round1_games(conn)
+    _, _, draw_s4, process_s4, ladder_log = _pa_ladder_walk(
+        conn, 4, team_region, team_division, resolve_final_round=True)
+    if draw_s4 is None:
+        return None, None, []
+
+    def region_division_violation(a, b):
+        if a is None or b is None:
+            return None
+        if team_division.get(a) == team_division.get(b):
+            return 'same division'
+        if team_region.get(a) == team_region.get(b):
+            return 'same region'
+        return None
+
+    seed_of, games = {}, {}
+    for bracket, s4, r1 in (("Draw", draw_s4, draw_r1), ("Process", process_s4, process_r1)):
+        # Each round-4 champion carries its ROW's own permanent identity seed
+        # (33-i), not the tier seed it happened to enter the ladder on.
+        champs = [(s4[idx][0], r1[idx]["row"][4]) for idx in range(32)]
+        seed_of[bracket] = {team: seed for team, seed in champs}
+        by_seed = {seed: team for team, seed in champs}
+        # Round 5: row-seed k vs row-seed 33-k, better seed first.
+        games[bracket] = [[by_seed[k], by_seed[33 - k]] for k in range(1, 17)]
+
+    swap_log = list(ladder_log)
+
+    for rnd in range(5, up_to_round + 1):
+        if rnd > 5 and not (_pa_bracket_round_complete(conn, 'Draw', rnd - 1)
+                            and _pa_bracket_round_complete(conn, 'Process', rnd - 1)):
+            return None, None, []
+
+        round_log = []
+        do_region = rnd <= PA_REGION_CHECK_LAST_ROUND
+
+        # 1. The Draw's own same-region/same-division pairings.
+        if do_region:
+            round_log += [dict(bracket='Draw', round=rnd, **e) for e in
+                          _pa_swap_champion_opponents(games['Draw'], seed_of['Draw'],
+                                                      region_division_violation)]
+
+        # 2. Process pairings repeating a Draw pairing from ANY round,
+        #    including this one -- checked against the Draw's now-final
+        #    pairing from step 1.
+        draw_seen = _pa_draw_pairs_through(conn, rnd)
+        draw_seen.update(frozenset(g) for g in games['Draw'])
+
+        def duplicate_violation(a, b, _seen=draw_seen):
+            if a is None or b is None:
+                return None
+            return 'repeat matchup (Draw)' if frozenset([a, b]) in _seen else None
+
+        round_log += [dict(bracket='Process', round=rnd, **e) for e in
+                      _pa_swap_champion_opponents(games['Process'], seed_of['Process'],
+                                                  duplicate_violation)]
+
+        # 3. The Process's own same-region/same-division pairings.
+        if do_region:
+            round_log += [dict(bracket='Process', round=rnd, **e) for e in
+                          _pa_swap_champion_opponents(games['Process'], seed_of['Process'],
+                                                      region_division_violation)]
+
+        # 4. Confirm the finished state against all three rules together --
+        #    step 3 can reintroduce a duplicate step 2 already fixed.
+        already = {(e['bracket'], e['row']) for e in round_log if e['swapped_seed'] is None}
+        draw_final = _pa_draw_pairs_through(conn, rnd)
+        draw_final.update(frozenset(g) for g in games['Draw'])
+        for bracket in ('Draw', 'Process'):
+            for idx, (a, b) in enumerate(games[bracket]):
+                if (bracket, idx + 1) in already:
+                    continue
+                reason = region_division_violation(a, b) if do_region else None
+                if reason is None and bracket == 'Process' and frozenset([a, b]) in draw_final:
+                    reason = 'repeat matchup (Draw)'
+                if reason is not None:
+                    round_log.append({'row': idx + 1, 'swapped_seed': None, 'with_seed': None,
+                                      'bracket': bracket, 'round': rnd,
+                                      'reason': f'{reason} -- found during final confirmation, no swap attempted'})
+
+        swap_log.extend(round_log)
+        if rnd == up_to_round:
+            break
+
+        # Advance on THIS round's resolved pairing, never a guessed one.
+        nxt = {}
+        for bracket in ('Draw', 'Process'):
+            winners = []
+            for a, b in games[bracket]:
+                w = _real_bracket_winner(conn, "PA", bracket, rnd, a, b)
+                if w is None:
+                    return None, None, []
+                winners.append(w)
+            pairs = []
+            for i in range(0, len(winners), 2):
+                x, y = winners[i], winners[i + 1]
+                pairs.append([x, y] if seed_of[bracket][x] < seed_of[bracket][y] else [y, x])
+            nxt[bracket] = pairs
+        games = nxt
+
+    # Hosting keys off each team's own permanent ENTRY seed (1-160), the same
+    # convention as every other PA round -- Draw seats the better seed,
+    # Process the worse -- which is a separate question from the identity
+    # seed driving the bracket above.
+    _, _, draw_seed_to_team, process_seed_to_team, _ = _pa_round1_games(conn)
+    out = {}
+    for bracket, seed_to_team in (("Draw", draw_seed_to_team), ("Process", process_seed_to_team)):
+        entry_seed = {v: k for k, v in seed_to_team.items() if v not in (None, "bye")}
+        home_is_lower = (bracket == "Draw")
+        oriented = []
+        for a, b in games[bracket]:
+            better_first = (entry_seed[a] < entry_seed[b]) == home_is_lower
+            oriented.append((a, b) if better_first else (b, a))
+        out[bracket] = oriented
+    return out["Draw"], out["Process"], swap_log
+
+
 def _pa_round_games(conn, bracket, target_round):
     """[(home,away)] (team names) for a given PA Cup round. Rounds 1-4 are
     each ladder row's independent climb (round1: seed pair; round2: round1
@@ -2567,46 +2782,19 @@ def _pa_round_games(conn, bracket, target_round):
             return None
         return draw_pairs if bracket == "Draw" else process_pairs
 
-    # Rounds 5-7: every row must have finished round 4 first. Reuse the
-    # same walk (not a fresh stale-mapping reconstruction) to get each
-    # row's actual round-4 champion -- resolve_final_round=True advances
-    # THROUGH round 4's own real results (requires round 4 itself
-    # complete), not just up to round 4's pairing.
-    draw_r1, process_r1, _, _, _ = _pa_round1_games(conn)
-    _, _, draw_survivors4, process_survivors4, _ = _pa_ladder_walk(
-        conn, 4, team_region, team_division, resolve_final_round=True)
-    if draw_survivors4 is None:
+    if target_round > PA_BRACKET_LAST_ROUND:
+        raise NotImplementedError(
+            f"PA {bracket} round {target_round}: the brackets end at round "
+            f"{PA_BRACKET_LAST_ROUND}; the mutual semifinal/final isn't modeled yet.")
+
+    # Rounds 5-8: the champions bracket among the 32 row-champions, which
+    # gets the same conflict resolution the ladder does (see
+    # _pa_champions_walk). Both brackets are resolved together because rule 2
+    # compares the Process against the Draw's final pairing for the round.
+    draw_pairs, process_pairs, _ = _pa_champions_walk(conn, target_round, team_region, team_division)
+    if draw_pairs is None:
         return None
-    round1_games = draw_r1 if bracket == "Draw" else process_r1
-    survivors4 = draw_survivors4 if bracket == "Draw" else process_survivors4
-
-    # (team, row's own fixed identity 33-i, used for round-5 bracket
-    # seeding -- NOT the champion's own survivor_seed, which could be any
-    # tier they entered on)
-    row_champions = [(survivors4[idx][0], round1_games[idx]["row"][4]) for idx in range(32)]
-
-    # Round 5: standard bracket, row-seed k vs row-seed (33-k)
-    champ_by_seed = {seed: team for team, seed in row_champions}
-    pairs = [(champ_by_seed[k], champ_by_seed[33 - k]) for k in range(1, 17)]
-
-    # Rounds 5-8 are the same halving step repeated (16, 8, 4 and 2 games), so
-    # walk them rather than writing a block per round -- the maintenance trap
-    # the RDS renderer was rewritten to avoid. Round 8's two survivors are what
-    # this bracket sends into the mutual semifinal.
-    for rnd in range(5, PA_BRACKET_LAST_ROUND + 1):
-        if target_round == rnd:
-            return pairs
-        survivors = []
-        for team_a, team_b in pairs:
-            w = _real_bracket_winner(conn, "PA", bracket, rnd, team_a, team_b)
-            if w is None:
-                return None
-            survivors.append(w)
-        pairs = [(survivors[i], survivors[i + 1]) for i in range(0, len(survivors), 2)]
-
-    raise NotImplementedError(
-        f"PA {bracket} round {target_round}: the brackets end at round "
-        f"{PA_BRACKET_LAST_ROUND}; the mutual semifinal/final isn't modeled yet.")
+    return draw_pairs if bracket == "Draw" else process_pairs
 
 
 def _games_for_event(season, event, week=None, day=None):
@@ -2987,13 +3175,18 @@ def pa_cup_round_preview(season, target_round):
     seed_lookup = {"Draw": draw_seeds, "Process": process_seeds}
 
     swap_log = []
-    if 2 <= target_round <= PA_CONFLICT_LAST_ROUND:
+    if 2 <= target_round <= PA_BRACKET_LAST_ROUND:
         team_region = {r["name"]: r["region"] for r in conn.execute("SELECT name, region FROM teams").fetchall()}
         team_division = {r["name"]: r["league_division"] for r in conn.execute("""
             SELECT t.name, ts.league_division FROM teams t
             JOIN team_seasons ts ON ts.team_id = t.team_id AND ts.season = 9
         """).fetchall()}
-        _, _, _, _, swap_log = _pa_ladder_walk(conn, target_round, team_region, team_division)
+        if target_round <= 4:
+            _, _, _, _, swap_log = _pa_ladder_walk(conn, target_round, team_region, team_division)
+        else:
+            # Self-accumulating from round 2: the champions walk prepends the
+            # ladder's own rounds 2-4 log.
+            _, _, swap_log = _pa_champions_walk(conn, target_round, team_region, team_division)
         swap_log = swap_log or []
 
     preview = {}
