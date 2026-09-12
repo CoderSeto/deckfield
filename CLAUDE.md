@@ -2174,6 +2174,41 @@ period and both scores all update, the Results CSV is still 21 columns header
 and row (`CSV_GAME_FIELDS` untouched), all four tabs render, the Final Scores
 column still fills, and zero `pageerror` events.
 
+**Sized up against the real fonts, 2026-09-12 (per explicit request).** The
+first cut was measured in this sandbox, which **cannot load Anton or JetBrains
+Mono** -- the fallbacks are far wider, so every width was pessimistic and the
+real page showed an abundance of unused space. Adjusted: bigger type in the
+name block and the stat strip, a bigger round name, "Bad **Weather** -1"
+rather than "Bad -1", the score block recoloured to match the time block
+(`--sb-inner`), and a 2px line in that same colour drawn straight down the
+axis (the `.sb-axis` row, which is empty in every column but the stat strip,
+just gets a height and that background -- it runs continuous through the score
+and time blocks because they already carry the colour).
+
+**The banner no longer scrolls.** It was a fixed 1560px inside a wrapper
+that is at most 1560px, so any narrower viewport produced a small horizontal
+scroll. It is now `width:100%` with the score and time tracks still fixed px
+(176/250) and the other three fr, so it fills the wrapper exactly at any
+width. The px locks were never about the viewport -- they exist because those
+two tracks were `auto` and a three-digit score would shove the banner
+sideways.
+
+**The team name now fits itself, which is the fix for not being able to
+measure the font.** `fitTeamName()` steps the size down until the name fits
+its box, and re-runs on `document.fonts.ready` (first paint measures the
+fallback; Anton needs materially less room, so the name grows back) and on
+resize. This is what let the name column give up the width that brings the
+score/time pair onto the banner's centre line -- sizing that column for a
+guessed font metric was the alternative, and a wrong guess either wastes
+space or ellipsises a team's name. In the sandbox's fallback "Vast Poni
+Canyon" settles at 27px and the forced worst case ("Blueberry Terarium" +
+`#160` + `[+10.1234]`) at 22px; in Anton both sit at the full 35px.
+
+Verified: the score/time pair centres within ~20px of the banner's own centre,
+nothing scrolls, nothing truncates anywhere, and a full match still plays with
+the Results CSV at 21 columns, all four tabs rendering and zero `pageerror`
+events.
+
 **Still unplaced:** the **DEX #** and raw **PF/PA** exist in the roster but
 appear nowhere on the banner -- they were not on the old scoreboard either.
 
