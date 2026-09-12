@@ -441,9 +441,10 @@ copy of the PA Cup tab instead of play order.
 **What's actually reachable** via `_games_for_event()`: Regional/League any
 round (via the pod schedule), RDS Cup rounds 1-5 (resolving through real
 prior-round winners where needed — round 3+ isn't a placeholder, it's
-generated live), PA Cup rounds 1-7 (same). RDS's mutual semifinal/final and
-PA's mutual quarterfinal/semifinal/final raise `NotImplementedError`
-deliberately — not modeled yet, see "Known open items."
+generated live), PA Cup rounds 1-8 (same), and RDS's mutual semifinal/final
+(wired 2026-09-11). **PA's mutual semifinal/final** raise
+`NotImplementedError` deliberately — not modeled yet, see "Known open
+items."
 
 ## Ratings formulas (validated against real S9 data)
 
@@ -645,7 +646,7 @@ Lanakila, Star = Kalosite/Dynamax/Terastal (48 real teams each, seeds
     shared seeding; `rds_mutual_games()` turns the result into playable
     games; `_games_for_event` resolves `("RDS","SF",None)` and
     `("RDS","Final",None)` instead of raising. PA's mutual
-    quarterfinal/semifinal/final is still unmodelled.
+    semifinal/final is still unmodelled.
 
     **Both stages are two-legged**, occupying a week's Tue and Thu slots
     (`agg = bracket in ("SF","Final")` was already true in
@@ -713,12 +714,38 @@ for *i* = 1..32:
   not `i`) — row-seed *k* vs row-seed *33-k* in round 5, standard
   progression after. This rule itself never changed; it just inherits the
   corrected row identity.
-- After round 7: 4 teams remain per bracket → mutual **quarterfinal**
-  (Draw pairs vs Draw pairs, Process pairs vs Process pairs), then the
-  same duplicate-handling rules as RDS Cup for the semifinal/final.
-- **Rounds 2-7 are fully generated** via `_pa_round_games()`, same
-  real-winner resolution pattern as RDS. **Not yet built**: the mutual
-  quarterfinal+ stage (raises `NotImplementedError`).
+- Rounds 5-8 are that bracket: 32 → 16 → 8 → 4 → 2, so **each bracket
+  sends two teams into a shared mutual semifinal**, then the final — the
+  same duplicate-handling rules as RDS Cup, and the same shape as RDS's
+  own end stage.
+- **There is no mutual quarterfinal — changed 2026-09-12 per explicit
+  instruction.** The plan used to stop each bracket at round 7 (4 left)
+  and open the shared stage with a mutual *quarterfinal* that paired Draw's
+  four against each other and Process's four against each other. That
+  pairing is a within-bracket round in everything but name, so it is now
+  simply **round 8**, and the shared stage starts at the semifinal.
+  Nothing had been implemented (the stage was a `WEEKLY_SCHEDULE` slot,
+  a few `bracket in (...)` guards and two `NotImplementedError`s) and no
+  PA game past round 3 has been played, so there was no data to migrate.
+  `PA_BRACKET_LAST_ROUND = 8` is the constant to read, beside
+  `RDS_BRACKET_LAST_ROUND = 5`.
+  **Week 21 changed with it**: `{Tue: ("PA","QF",None), Thu: ("PA","QF",None)}`
+  became `{Tue: ("PA","Draw",8), Thu: ("PA","Process",8)}` — the Draw-Tue/
+  Process-Thu pattern every other PA round already uses. The slot *count*
+  is unchanged, so **no absolute round number downstream shifted**
+  (verified: SF still 60/61, Final still 63). One incidental improvement:
+  the calendar used to print both week-21 legs as abs_round 57, since
+  `abs_round_for_event` without week/day can only return leg 1's; two
+  ordinary rounds get 57 and 58 correctly.
+- **Rounds 2-8 are fully generated** via `_pa_round_games()`, same
+  real-winner resolution pattern as RDS. Rounds 5-8 are now **one halving
+  loop** rather than a block per round — the same maintenance trap the RDS
+  renderer was rewritten to avoid; adding round 8 needed no new branch.
+  Verified by a synthetic walk on a scratch database: rounds 1-8 produce
+  32/32/32/32/16/8/4/2 games per bracket, round 8 yields exactly the two
+  mutual-semifinal entrants per bracket, and round 9 raises.
+  **Not yet built**: the mutual semifinal/final (raises
+  `NotImplementedError`).
 - **Rounds 2-4 conflict resolution and seed-based home/away, fixed
   2026-08-06.** `_pa_round_games()` previously just walked each row's
   ladder climb assuming the tier entrant (row[2]/row[3]/row[4]) was fixed
@@ -835,7 +862,7 @@ this exact 5-step order applies at every round, just scoped each round to
 that round's own tier-seed range for swaps:**
 1. (up until round 6) Check the **Draw** for same-region/same-division
    pairings and make appropriate switches.
-2. (up until the mutual quarterfinal) Check the **Process** for any
+2. (up until the mutual semifinal) Check the **Process** for any
    pairing that repeats a Draw pairing from any round (including the
    current one) — checked against Draw's now-final round-1 pairings from
    step 1 — and make appropriate switches.
@@ -1059,10 +1086,13 @@ Nimbasa]`); deduplicating was right, but it was then applied to **both**
 cups on the assumption that a double qualifier shrinks the category. That
 holds for PA and **not** for RDS:
 
-- **PA: 4 semifinalists, max.** Its mutual quarterfinal sends 2 from each
-  bracket into the semifinal, and a team coming through both sides
-  occupies one slot instead of two, so the semifinal field can genuinely
-  be 3 or 2 distinct teams. PA currently projects only **2**.
+- **PA: 4 semifinalists, max.** Each bracket's round 8 sends 2 into the
+  mutual semifinal, and a team coming through both sides occupies one slot
+  instead of two, so the semifinal field can genuinely be 3 or 2 distinct
+  teams. PA currently projects only **2**. (`pa_losing_qf`, the
+  replacement pool, still means what it always did: the round-8 entrants —
+  each bracket's own quarterfinal field — who didn't get through, so the
+  quarterfinal-dropping change above left this computation untouched.)
 - **RDS: exactly 2 per cup, always.** A final has two participants by
   definition. A team topping both of its cup's brackets does *not* halve
   that -- per the mutual-stage rules above, the double qualifier byes
@@ -1706,6 +1736,37 @@ time: it claimed real results existed only for rounds 1-2 and that "rounds
 4-5 aren't shown yet -- no results exist for round 3 in this database yet",
 when rounds 3, 4 and 5 have all since been played.
 
+**The Mutual Stage box was full-panel width and is now bracket width,
+2026-09-12 (per explicit request).** The Draw/Process boxes are
+content-width — `.schedule-columns` is a flex row whose items are bare
+`<div>`s, and the `flex: 1` rule targets `.table-scroll` *inside* them, so
+it never applies — leaving them about 985-1045px of a 1536px panel at
+1600px viewport. The Mutual Stage box meanwhile filled the panel with its
+table centred by `table.scoreboard { margin: 0 auto }`, so it floated
+across dead space the brackets never used.
+
+Fixed with a `.rds-stack` wrapper around the mutual section and the
+brackets: `width: fit-content` makes it take the widest block inside it
+(the two brackets side by side) and `.rds-stack > * { width: 100% }` makes
+every child fill exactly that. Two things are load-bearing and neither is
+obvious:
+
+- **The panel's `meta-note` must stay OUT of the wrapper.** A paragraph's
+  max-content is one unwrapped line, so including it sized the wrapper
+  straight back to the full 1536px. That was the first attempt, and it
+  looked like `fit-content` simply not working.
+- **`#rds-mutual-section { contain: inline-size }`** keeps the mutual box
+  out of the wrapper's intrinsic-width calculation, so the brackets alone
+  decide it and a long resolution note can never widen the panel. Without
+  it Dream's box (the longest note) overran the brackets at ≤800px.
+
+Verified via Playwright: the mutual section, `.schedule-columns` and the
+wrapper come out at identical widths for all three cups (985 / 1002 /
+1045px against a 1536px panel), the table fills its box less the 1px
+scroll-box border each side, and all 11 tabs load with zero `pageerror`
+events. Note the page already scrolls horizontally below ~1400px — that
+predates this change (confirmed against main) and is untouched.
+
 **Standings gained an overall-rank column, 2026-09-11 (per explicit
 request).** Each Standings box now shows a team's league-wide OVR rank
 (1-160) between its own standings position and its name, so a region's
@@ -2103,14 +2164,16 @@ page errors on either path.
   right" in the sense that it's internally consistent, not independently
   cross-checked against a second source the way the historical portion was.
 - **RDS Cup's mutual semifinal/final is wired as of 2026-09-11** (see the
-  RDS Cup section). **PA Cup's mutual quarterfinal/semifinal/final is
-  not** — `_games_for_event` still raises `NotImplementedError` for it
-  deliberately rather than guessing. PA is further out (weeks 21-23) and
-  its quarterfinal has its own pairing rule (Draw pairs vs Draw pairs,
-  Process vs Process) before the shared duplicate-handling applies, so it
-  is a genuinely separate piece of work — but the RDS wiring is the
-  template: resolve the stage, orient the legs, store the leg in
-  `cup_round`.
+  RDS Cup section). **PA Cup's mutual semifinal/final is not** —
+  `_games_for_event` still raises `NotImplementedError` for it
+  deliberately rather than guessing. Since the quarterfinal was dropped
+  (2026-09-12, above), PA's end stage is now structurally **identical** to
+  RDS's — 2 per bracket, same duplicate-handling, two-legged SF then the
+  final — so `rds_mutual_stage()` / `resolve_mutual_stage()` /
+  `_rds_leg_orientation()` are not just a template but very nearly the
+  implementation; the differences left are PA's seeding source (a team
+  holds a different seed in each bracket, so "better seed" needs deciding)
+  and its best-of-three final (week 23's three slots, not two legs).
 - DECKFIELD's Results tab now exports directly in the `add-results` CSV
   format (comma-separated, header row, `CSV_GAME_FIELDS` order + `ex_a`/
   `ex_b`/`cup_name`/`cup_bracket`/`cup_round`) instead of the old

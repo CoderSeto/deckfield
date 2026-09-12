@@ -38,6 +38,7 @@ import re
 import sys
 
 from deckfield_ratings import (
+    PA_BRACKET_LAST_ROUND,
     get_connection, taper_n, export_teams_for_deckfield,
     export_matchday_batches, rank_elo_history,
     pa_cup_real_results, pa_cup_round_preview, pa_cup_round1_seeding,
@@ -324,7 +325,7 @@ def build_pa_cup():
     real_results = pa_cup_real_results(SEASON)
     pairings = {}
     swap_log = []
-    for rnd in range(2, 8):
+    for rnd in range(2, PA_BRACKET_LAST_ROUND + 1):
         preview = pa_cup_round_preview(SEASON, rnd)
         if preview["Draw"] is None or preview["Process"] is None:
             break
