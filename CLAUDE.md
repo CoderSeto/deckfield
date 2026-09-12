@@ -2209,6 +2209,28 @@ nothing scrolls, nothing truncates anywhere, and a full match still plays with
 the Results CSV at 21 columns, all four tabs rendering and zero `pageerror`
 events.
 
+**Width was moved into the accolade column, 2026-09-12 (per explicit
+request).** Some accolades were ellipsising. The widest real one is 25
+characters (`Vertress S1, S2 S3, S4 S8`, Castelia City; 68 entries across 44
+teams, 95th percentile 22 chars), which needs ~147px -- the column was
+narrower than that. Rather than let accolades wrap (the alternative offered,
+and it would have cut how many rows fit), the width was taken from the three
+blocks on either side of them:
+
+- score track 176 -> 156px and its padding `0 26px` -> `0 16px`; time track
+  250 -> 228px and its padding `9px 30px` -> `9px 19px`.
+- the stat strip's text tightened: `.stat-v` 13.5 -> 12.5px, `.stat-k` 10 ->
+  9.5px with letter-spacing 0.6 -> 0.4px, `.grade` 10.5 -> 9.5px, `.stat-pad`
+  `0 10px` -> `0 7px`.
+- the fr weights re-dealt: `0.40fr / 1.22fr / .. / 1.50fr` ->
+  `0.70fr / 1.05fr / .. / 1.55fr`.
+
+Accolades went 176 -> 249px, so the widest real one now has ~100px of
+headroom and **nothing clips**. Two costs, both accepted: the name column
+gives up ~69px (443 -> 374px), absorbed by `fitTeamName()` rather than by
+truncation, and the score/time pair sits 36px off the banner's centre instead
+of 22px. A long round name still ellipsises by design.
+
 **Still unplaced:** the **DEX #** and raw **PF/PA** exist in the roster but
 appear nowhere on the banner -- they were not on the old scoreboard either.
 
