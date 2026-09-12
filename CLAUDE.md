@@ -2231,6 +2231,76 @@ gives up ~69px (443 -> 374px), absorbed by `fitTeamName()` rather than by
 truncation, and the score/time pair sits 36px off the banner's centre instead
 of 22px. A long round name still ellipsises by design.
 
+**Width moved back into the team name, and the banner stopped being a scroll
+container, 2026-09-12 (per explicit request).** Long names were rendering at a
+reduced size -- `fitTeamName()` was stepping Camphrier Town down to 31px away /
+28px home. Both now sit at the full 35px, in the sandbox's *fallback* font,
+which is far wider than Anton.
+
+The width came from the two blocks either side of the score:
+
+- **time** 228 -> 176px (padding `9px 19px` -> `9px 10px`). Its binding content
+  is the clock, and the widest the clock can ever read is six digits
+  (`105:50`, deep in overtime) at 148px -- everything else in that column
+  (period 100px, weather 116px, target 47px) is smaller, and the round name
+  ellipsises by design. 156px of content box leaves 8px spare.
+- **stat strip** 551 -> 508px. Its seven columns need 314px in total
+  (Skill 70, DSCR 31, O/D 46, Fatigue 44, Climate 46, Elo 31, Win% 46), so even
+  at 508 it keeps ~1.55x headroom on every column.
+- **name** 374 -> 469px, against the ~415px its worst case
+  (`[+10.1234] #160 BLUEBERRY TERARIUM`) needs in Anton.
+
+**The stat strip's fr weights were re-dealt to match those seven measurements**
+(`2.25 / 1 / 1.45 / 1.4 / 1.45 / 1 / 1.45`). The old weights were arbitrary and
+gave **O/D** only 10.7% of the strip against a 46px need -- it would have been
+the first to ellipsise, at a strip width of 430px, while Skill still had 40px
+spare. Even weights mean the strip degrades all at once or not at all.
+
+**`.scoreboard-row` is no longer a scroll container, which is the actual fix
+for the scrollbar down the banner's right edge.** `overflow-x:auto` silently
+computes `overflow-y` to `auto` as well, so the banner could only ever be
+one pixel of content height away from a vertical bar -- and once a *horizontal*
+bar appeared it stole ~15px of client height and forced the vertical one
+outright. That second path is invisible in this sandbox: **headless Chromium
+uses overlay scrollbars (0px) and ignores `--disable-features=OverlayScrollbar`**,
+so `scrollHeight > clientHeight` reads false here while a real browser with
+classic scrollbars shows both bars. Check it arithmetically
+(`scrollHeight > clientHeight - 15`) rather than trusting the sandbox.
+
+With no overflow set, the header simply grows to the banner's natural height
+and carries its divider and the whole page below it down -- which is what the
+request asked for directly.
+
+**That only works if the banner can actually shrink**, so two things had to
+give:
+
+- `.mini-stats`' tracks are `minmax(0,..fr)`, not bare `fr`. An fr track's
+  automatic minimum is **min-content**, so the seven stat labels were a hard
+  floor the banner could not compress past -- they were what pushed the page at
+  800px. `.stat-k` gained the same `nowrap`/`ellipsis` treatment `.stat-v`
+  already had.
+- score and time are `minmax(96px,156px)` / `minmax(112px,176px)` rather than
+  plain px. A minmax track takes its max whenever the fr tracks have space to
+  give, so nothing changes at normal widths.
+
+Verified at 1920/1600/1400/1240/1000/800/760/600: no vertical bar, no
+horizontal bar, no page-level horizontal scroll, and zero `pageerror` events.
+**Below ~530px the page gains a horizontal scrollbar** where `main` instead
+scrolled the banner itself -- a deliberate trade, since the page is a 1560px
+desktop tool whose `.layout` is already single-column by then.
+
+**The cost is centring: the score/time pair now sits 105px right of the
+banner's centre, up from 36px.** That is arithmetic, not a bug --
+`offset = (accolades + name - stats) / 2`, so the pair can be centred or the
+name column can be wide, but not both while accolades hold 248px. Taking from
+the time column is half as costly as taking from the stat strip (it does not
+appear in that formula at all), which is why time was robbed first. The lever
+if it ever needs re-centring is the accolade column: its widest real entry
+needs ~150px against the 248px it holds.
+
+**Every X now precedes the ATK modifier** on the inboard line (per explicit
+request) -- a straight reorder of the two `<span>`s in `renderTeamMid`.
+
 **Still unplaced:** the **DEX #** and raw **PF/PA** exist in the roster but
 appear nowhere on the banner -- they were not on the old scoreboard either.
 
