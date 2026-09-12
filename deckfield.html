@@ -65,18 +65,31 @@
      One full-width banner on a single horizontal axis: AWAY above, HOME below,
      in every column. Three grid rows (away / axis / home) and five columns:
      accolades | records+name | score | time | stat strip.
-     Every column is a locked px width and the banner a fixed 1560px, because
-     the two content-sized tracks it replaced could shift the whole layout --
-     a three-digit score measures ~117px against what was a ~40px box. */
-  .scoreboard-row{overflow-x:auto;}
+     The score and time tracks are locked px because the two content-sized
+     tracks they replaced could shift the whole layout -- a three-digit score
+     measures ~117px against what was a ~40px box.
+
+     `.scoreboard-row` is deliberately NOT a scroll container: `overflow-x:auto`
+     silently forces overflow-y to `auto` too, so a horizontal bar -- or a
+     single pixel of extra content height once Anton loads -- drew a vertical
+     bar down the banner's right edge. With no overflow set, the header just
+     grows to whatever height the banner needs, carrying its divider and the
+     rest of the page down with it. */
   .scoreboard{
     display:grid;width:100%;
     /* Score and time stay fixed px -- they were the only content-sized tracks
        and a three-digit score would otherwise shove the banner. The other
-       three are fr, so the banner fills its wrapper exactly and never scrolls;
-       content can't widen them either (min-width:0 plus ellipsis throughout).
-       Weights are set so the score/time pair lands on the banner's centre. */
-    grid-template-columns:minmax(120px,0.70fr) minmax(230px,1.05fr) 156px 228px minmax(300px,1.55fr);
+       three are fr, so the banner fills its wrapper exactly; content can't
+       widen them either (min-width:0 plus ellipsis throughout).
+       The name track is sized so a long name never has to shrink: the weights
+       put it at 469px against the ~415px its worst case needs in Anton, paid
+       for by the time track (which only ever needed room for a six-digit
+       clock) and the stat strip (which was ~180px wider than its widest
+       reading).
+       Score and time are minmax rather than plain px so the banner can still
+       compress: with the minimums below it fits without overflowing down to a
+       ~530px banner, which is what lets the scroll container go. */
+    grid-template-columns:minmax(60px,0.70fr) minmax(110px,1.325fr) minmax(96px,156px) minmax(112px,176px) minmax(150px,1.435fr);
     grid-template-rows:1fr auto 1fr;
     background:var(--panel);border:1px solid var(--panel-line);border-radius:10px;
   }
@@ -164,7 +177,7 @@
   .clock-box{
     grid-column:4;grid-row:1 / 4;
     display:flex;flex-direction:column;align-items:center;justify-content:space-between;
-    padding:9px 19px;background:var(--sb-inner);min-width:0;
+    padding:9px 10px;background:var(--sb-inner);min-width:0;
   }
   .clock-box .round-label{
     font-family:'Anton',sans-serif;text-transform:uppercase;letter-spacing:1.2px;
@@ -190,10 +203,16 @@
   }
   .clock-box .weather-spread-note b{color:var(--chalk);font-weight:600;}
 
-  /* Labels sit OUTBOARD of their numbers, so the values meet at the axis. */
+  /* Labels sit OUTBOARD of their numbers, so the values meet at the axis.
+     Weights track each column's widest reading (Skill 70px, DSCR 31, O/D 46,
+     Fatigue 44, Climate 46, Elo 31, Win% 46), so the strip degrades evenly
+     instead of starving O/D first. minmax(0,..) rather than a bare fr: an fr
+     track's automatic minimum is min-content, which made the labels a hard
+     floor the whole banner could not shrink past. */
   .mini-stats{
     display:grid;text-align:center;
-    grid-template-columns:1.75fr .85fr .8fr 1fr 1.1fr .95fr 1fr;
+    grid-template-columns:minmax(0,2.25fr) minmax(0,1fr) minmax(0,1.45fr)
+      minmax(0,1.4fr) minmax(0,1.45fr) minmax(0,1fr) minmax(0,1.45fr);
   }
   .mini-stats .stat-v{
     font-family:'JetBrains Mono',monospace;font-weight:600;font-size:12.5px;
@@ -205,6 +224,7 @@
   .mini-stats .stat-k{
     color:var(--chalk-dim);font-size:9.5px;font-weight:700;
     letter-spacing:0.4px;text-transform:uppercase;line-height:1.45;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   .stat-pad{padding:0 7px;}
 
@@ -3545,8 +3565,8 @@
     const every = team === 'home' ? HOME_BONUS_EVERY_X_GOALS : AWAY_BONUS_EVERY_X_GOALS;
     document.getElementById(elId).innerHTML = [
       `<span>${escHtml(titleCase(types.primary))} <span class="sep">/</span> ${escHtml(titleCase(types.secondary))}</span>`,
-      `<span>ATK <span class="g">${atk >= 0 ? '+' : ''}${atk}</span></span>`,
       `<span>Every <span class="g">${every}</span></span>`,
+      `<span>ATK <span class="g">${atk >= 0 ? '+' : ''}${atk}</span></span>`,
     ].join('');
   }
 
