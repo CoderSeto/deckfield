@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DECKFIELD — Scoreboard Banner Mock-up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Palette copied verbatim from deckfield.html so the mock-up reads in the
+     real page's colours rather than an invented set. */
+  :root{
+    --turf-dark:#0E2018; --chalk:#EDEDE2; --chalk-dim:#9FB0A5;
+    --gold:#E9C46A; --panel:#0B2118; --panel-line:#1D4230;
+    --away-bright:#B18AF2;   /* Camphrier Town — Kalosite purple */
+    --home-bright:#6FCF97;   /* Canalave City  — Lily Valley green */
+    --away-tint:rgba(177,138,242,0.30);
+    --home-tint:rgba(111,207,151,0.26);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(ellipse at top,#133226 0%,var(--turf-dark) 55%,#060F0B 100%);
+    color:var(--chalk); font-family:'Inter',sans-serif; min-height:100vh;
+    padding:20px 14px 60px;
+  }
+  .wrap{max-width:1560px;margin:0 auto;}
+  .brand{
+    font-family:'Anton',sans-serif;font-size:clamp(26px,4.5vw,40px);
+    letter-spacing:1px;text-transform:uppercase;line-height:1;margin-bottom:4px;
+  }
+  .brand span{color:var(--gold);}
+  .mock-note{font-size:12px;color:var(--chalk-dim);margin:0 0 20px;line-height:1.6;max-width:980px;}
+  .mock-note b{color:var(--gold);font-weight:600;}
+  .section-label{
+    font-family:'Anton',sans-serif;text-transform:uppercase;letter-spacing:1.5px;
+    font-size:13px;color:var(--chalk-dim);margin:24px 0 8px;
+  }
+
+  /* ======================================================================
+     THE BANNER — three rows: AWAY / AXIS / HOME.
+     Every column hangs off the one shared axis row, which is what makes the
+     banner readable straight across. Away content sits hard against the axis
+     from above, home from below.
+     ====================================================================== */
+  .banner{
+    display:grid;
+    grid-template-columns:minmax(150px,0.5fr) minmax(270px,1.65fr) 176px 250px minmax(330px,1.0fr);
+    grid-template-rows:1fr auto 1fr;
+    background:var(--panel);
+    border:1px solid var(--panel-line);
+    border-radius:10px;
+  }
+  .banner > *{min-width:0;}
+  /* Placement is explicit for every cell. A cell that spans rows but names no
+     column gets auto-placed into the first column that can hold it, which put
+     the score block on the far left the first time round. */
+  .c1{grid-column:1;} .c2{grid-column:2;} .c3{grid-column:3;} .c4{grid-column:4;} .c5{grid-column:5;}
+  .r1{grid-row:1;} .r2{grid-row:2;} .r3{grid-row:3;}
+  /* Faint team tint, top half away, bottom half home. */
+  .cell.away{background:linear-gradient(0deg,var(--away-tint),rgba(0,0,0,0));}
+  .cell.home{background:linear-gradient(180deg,var(--home-tint),rgba(0,0,0,0));}
+
+  .cell{display:flex;flex-direction:column;min-width:0;padding:0 14px;}
+  .cell.away{justify-content:flex-end;padding-top:8px;padding-bottom:4px;}
+  .cell.home{justify-content:flex-start;padding-top:4px;padding-bottom:8px;}
+  .colsep{border-left:1px solid rgba(255,255,255,0.07);}
+  .axis-cell{grid-row:2;}
+
+  /* ---------- 1. Accolades ---------- */
+  .acc-list{display:flex;flex-direction:column;align-items:flex-start;gap:2px;max-width:100%;}
+  .acc{
+    max-width:100%;font-size:10.5px;line-height:1.4;letter-spacing:0.2px;
+    padding:1px 7px;border-radius:3px;
+    background:rgba(255,255,255,0.055);
+    border-left:2px solid currentColor;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .cell.away .acc{color:var(--away-bright);}
+  .cell.home .acc{color:var(--home-bright);}
+  .acc span{color:var(--chalk);}
+  .acc-empty{font-size:10.5px;color:var(--chalk-dim);font-style:italic;opacity:0.5;}
+
+  /* ---------- 2. Records (outboard) / typing+ATK+EveryX (inboard) / name ---------- */
+  .id-meta{
+    display:flex;flex-wrap:wrap;gap:2px 11px;justify-content:flex-end;
+    font-size:10px;color:var(--chalk-dim);letter-spacing:0.3px;line-height:1.5;
+  }
+  .id-meta .m{white-space:nowrap;}
+  .id-meta .m b{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--chalk);}
+  .id-meta .types i{font-style:normal;font-weight:600;}
+  .cell.away .id-meta .types i{color:var(--away-bright);}
+  .cell.home .id-meta .types i{color:var(--home-bright);}
+
+  /* Second band, between the records and the name: typing, ATK and Every X,
+     all in the team's own colour. */
+  .id-mid{
+    display:flex;flex-wrap:wrap;gap:2px 12px;justify-content:flex-end;
+    font-size:10.5px;line-height:1.5;letter-spacing:0.3px;white-space:nowrap;
+  }
+  .id-mid .g{font-family:'JetBrains Mono',monospace;font-weight:600;}
+  .cell.away .id-mid{color:var(--away-bright);}
+  .cell.home .id-mid{color:var(--home-bright);}
+  .id-mid .sep{opacity:0.45;}
+  .id-name{display:flex;align-items:baseline;justify-content:flex-end;gap:9px;margin:2px 0;}
+  /* Only the favoured side carries it, so which team it belongs to is obvious
+     from the row it sits on -- the team name the old scoreboard printed
+     alongside it is dropped. */
+  .id-spread{
+    font-family:'JetBrains Mono',monospace;font-weight:600;font-size:13px;
+    letter-spacing:-0.2px;flex:0 0 auto;
+  }
+  .cell.away .id-spread{color:var(--away-bright);}
+  .cell.home .id-spread{color:var(--home-bright);}
+  .id-rank{
+    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:18px;
+    color:var(--chalk-dim);letter-spacing:-0.5px;flex:0 0 auto;
+  }
+  .id-team{
+    font-family:'Anton',sans-serif;text-transform:uppercase;letter-spacing:0.6px;
+    font-size:clamp(21px,2.15vw,33px);line-height:1;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .cell.away .id-team{color:var(--away-bright);}
+  .cell.home .id-team{color:var(--home-bright);}
+
+  /* ---------- 3. Score ---------- */
+  /* Away score above the axis, home below, like every other column, held off
+     the axis by 13px each so the two don't crowd it. The track is a fixed
+     176px: three digits at the maximum size measure 117px, which `auto` would
+     have let shove the whole banner sideways. */
+  .score-cell{
+    grid-column:3;display:flex;align-items:center;justify-content:center;
+    padding:0 26px;background:rgba(0,0,0,0.30);min-width:0;
+  }
+  .score-cell.away{align-items:flex-end;padding-top:8px;padding-bottom:13px;}
+  .score-cell.home{align-items:flex-start;padding-bottom:8px;padding-top:13px;}
+  .score-num{
+    font-family:'Anton',sans-serif;line-height:0.86;
+    font-size:clamp(46px,4.8vw,70px);
+    font-variant-numeric:tabular-nums;   /* 1 and 8 measure the same */
+    white-space:nowrap;
+  }
+  .score-cell.away .score-num{color:var(--away-bright);}
+  .score-cell.home .score-num{color:var(--home-bright);}
+
+  /* ---------- 3b. Time block ---------- */
+  /* Spans all three rows deliberately. Round name / clock / target / weather is
+     four stacked lines; putting the clock in the shared axis ROW instead would
+     grow that row and prise the two halves apart in every other column. */
+  .time-cell{
+    grid-column:4;grid-row:1 / 4;
+    display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+    padding:9px 30px;background:rgba(0,0,0,0.18);min-width:0;
+  }
+  .tb-round{
+    font-family:'Anton',sans-serif;text-transform:uppercase;letter-spacing:1.2px;
+    font-size:12px;color:var(--gold);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+  }
+  .tb-clockwrap{display:flex;flex-direction:column;align-items:center;max-width:100%;}
+  .tb-period{
+    font-size:10px;text-transform:uppercase;letter-spacing:1.3px;
+    color:var(--chalk-dim);margin-bottom:3px;white-space:nowrap;
+  }
+  .tb-clock{
+    font-family:'JetBrains Mono',monospace;font-weight:700;
+    font-size:clamp(28px,2.8vw,40px);line-height:1;color:var(--chalk);
+    letter-spacing:0.5px;
+  }
+  .tb-target{
+    font-family:'JetBrains Mono',monospace;font-weight:600;font-size:12px;
+    color:var(--chalk-dim);margin-top:3px;letter-spacing:0.5px;
+  }
+  .tb-weather{
+    font-size:10.5px;letter-spacing:0.4px;color:var(--chalk-dim);white-space:nowrap;
+  }
+  .tb-weather b{color:var(--chalk);font-weight:600;}
+
+  /* ---------- 4. Stat strip ---------- */
+  /* Seven columns. Labels sit OUTBOARD -- above the away numbers and below the
+     home numbers -- so the values themselves are what meets at the axis. No
+     middle strip any more. */
+  /* Uneven tracks: Skill carries the longest value ("100.99(SS)") and Climate
+     the longest label, so an even 7-way split starves both. Declared once --
+     an earlier duplicate of this rule was silently losing to it. */
+  .stats-away,.stats-home{
+    display:grid;text-align:center;
+    grid-template-columns:1.5fr .8fr .75fr 1fr 1.1fr .85fr 1fr;
+  }
+  .stat-v{
+    font-family:'JetBrains Mono',monospace;font-weight:600;font-size:12px;
+    line-height:1.65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .stat-v .grade{font-size:9.5px;opacity:0.75;margin-left:1px;}
+  .stats-away .stat-v{color:var(--away-bright);}
+  .stats-home .stat-v{color:var(--home-bright);}
+  .stat-k{
+    color:var(--chalk-dim);
+    font-size:8.5px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;
+    line-height:1.5;
+  }
+  .stat-pad{padding:0 10px;}
+
+  /* One layout at every width. Below the banner's natural minimum it scrolls
+     rather than reflowing -- a mock-up shouldn't invent responsive behaviour
+     that hasn't been asked for, and a seven-across stat strip has a real floor. */
+  .banner-scroll{overflow-x:auto;}
+  .banner{width:1560px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">DECK<span>FIELD</span></div>
+  <p class="mock-note">
+    <b>Mock-up only</b> &mdash; a standalone page, nothing is wired into the game. Real season-9 data
+    (Camphrier Town at Canalave City). One axis runs the full width and every column hangs off it:
+    <b>away above, home below</b>. Accolades split into rows on semicolons; rank sits to the
+    <b>left</b> of the name; both names hug the centre. Records sit <b>outboard</b> (top and bottom);
+    typing, ATK and Every X sit <b>inboard</b> in team colour, with the &ldquo;P Type / S Type&rdquo;
+    labels dropped. Stat labels sit outboard of their numbers, so the values meet at the axis.
+    The spread sits in brackets left of the <b>favourite's</b> name, in that team's
+    colour, with the team label dropped. Score is stacked away-over-home; the names and score sit
+    <b>left</b> to make room for the time block on their right: round name on top, then period over
+    clock over target, weather along the bottom. Ticks read as a clock face &mdash; 502 &rarr;
+    50:20, target 500+35 &rarr; 53:50. Every column is a <b>locked</b> px width, so a three-digit
+    score, a long team name or a long round name can never shift the banner.
+  </p>
+
+  <div class="section-label">Proposed banner</div>
+
+  <div class="banner-scroll">
+  <div class="banner">
+
+    <!-- 1 ─ ACCOLADES -->
+    <div class="cell away c1 r1"><div class="acc-list" id="accAway"></div></div>
+    <!-- 2 ─ RECORDS + NAME -->
+    <div class="cell away colsep c2 r1">
+      <div class="id-meta" id="metaAway"></div>
+      <div class="id-mid" id="midAway"></div>
+      <div class="id-name"><span class="id-spread" id="spreadAway"></span><span class="id-rank" id="rankAway"></span><span class="id-team" id="nameAway"></span></div>
+    </div>
+    <!-- 3 ─ SCORE, away half -->
+    <div class="score-cell away colsep r1"><div class="score-num" id="scoreAway">2</div></div>
+    <!-- 4 ─ TIME (spans all three rows) -->
+    <div class="time-cell colsep">
+      <div class="tb-round" id="roundName"></div>
+      <div class="tb-clockwrap">
+        <div class="tb-period" id="period"></div>
+        <div class="tb-clock" id="clock"></div>
+        <div class="tb-target" id="clockTarget"></div>
+      </div>
+      <div class="tb-weather" id="weather"></div>
+    </div>
+    <!-- 5 ─ STATS, away half -->
+    <div class="cell away colsep stat-pad c5 r1">
+      <div class="stats-away" id="statsKeyAway"></div>
+      <div class="stats-away" id="statsAway"></div>
+    </div>
+
+    <!-- ── the axis row ── -->
+    <div class="axis-cell c1"></div>
+    <div class="axis-cell colsep c2"></div>
+    <div class="axis-cell colsep c3 score-cell"></div>
+    <div class="axis-cell colsep stat-pad c5"></div>
+
+    <!-- 1 ─ ACCOLADES -->
+    <div class="cell home c1 r3"><div class="acc-list" id="accHome"></div></div>
+    <!-- 2 ─ RECORDS + NAME -->
+    <div class="cell home colsep c2 r3">
+      <div class="id-name"><span class="id-spread" id="spreadHome"></span><span class="id-rank" id="rankHome"></span><span class="id-team" id="nameHome"></span></div>
+      <div class="id-mid" id="midHome"></div>
+      <div class="id-meta" id="metaHome"></div>
+    </div>
+    <!-- 3 ─ SCORE, home half -->
+    <div class="score-cell home colsep r3"><div class="score-num" id="scoreHome">3</div></div>
+    <!-- 5 ─ STATS, home half -->
+    <div class="cell home colsep stat-pad c5 r3">
+      <div class="stats-home" id="statsHome"></div>
+      <div class="stats-home" id="statsKeyHome"></div>
+    </div>
+
+  </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Real season-9 rows, straight out of export_teams_for_deckfield().
+  const AWAY = {
+    name:'Camphrier Town', rank:9, region:'Kalosite', division:'Fourth Div.',
+    accolades:'World Finalist S8; Kalosite S8',
+    regionRecord:'9-0', leagueRecord:'10-0', cupRecord:'6-4', overallRecord:'25-4',
+    primary:'Normal', secondary:'Normal',
+    skill:'88.25', grade:'S', dscr:'8.21', offdef:'-0.21', fatigue:'147.0', climate:'6.91',
+    elo:'2347', winPct:'27.4%', atk:'-1', everyX:'4'
+  };
+  const HOME = {
+    name:'Canalave City', rank:3, region:'Lily Valley', division:'First Div.',
+    accolades:'World Champion S6; World Finalist S7; Swiss S8; Lily Valley S6, S7, S8',
+    regionRecord:'8-1', leagueRecord:'8-2', cupRecord:'12-0', overallRecord:'28-3',
+    primary:'Dark', secondary:'Dragon',
+    skill:'100.99', grade:'SS', dscr:'10.0', offdef:'0.12', fatigue:'145.5', climate:'12.08',
+    elo:'2503', winPct:'72.6%', atk:'+2', everyX:'3'
+  };
+
+  // Match state, named the way the game names it: maxTime() is already
+  // periodBase + periodTarget + stoppageAccrued.
+  const MATCH = {
+    roundName:'PA Cup \u2014 Draw Round 5',
+    period:'2nd Half',    // periodLabel(n): 1st Half / 2nd Half / Overtime 1, 2, ...
+    clock:502,            // game.clock
+    periodBase:250,       // 2nd half
+    periodTarget:250,     // so the period ends at 500
+    stoppage:35,          // game.stoppageAccrued
+    weather:'Fair', weatherDelta:0,
+    // SPREAD_TEAM / SPREAD_VALUE.toFixed(SPREAD_DECIMALS)
+    spreadTeam:'home', spreadValue:'7.7080',
+  };
+
+  // Ticks read as a clock face: append a 0, pad to four digits, colon before
+  // the last two. 502 -> "5020" -> 50:20; 535 -> 53:50.
+  function clockFace(ticks){
+    const padded = (String(Math.max(0, Math.round(ticks))) + '0').padStart(4, '0');
+    return padded.slice(0, -2) + ':' + padded.slice(-2);
+  }
+
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  // "separated into rows based on the presence of semicolons in the input"
+  const accoladeRows = raw => String(raw || '').split(';').map(s => s.trim()).filter(Boolean);
+
+  function renderAccolades(elId, team){
+    const rows = accoladeRows(team.accolades);
+    document.getElementById(elId).innerHTML = rows.length
+      ? rows.map(a => `<div class="acc"><span>${esc(a)}</span></div>`).join('')
+      : '<div class="acc-empty">No accolades</div>';
+  }
+
+  // Region and division print their own names as the label, as the current
+  // scoreboard already does; typing drops the "P Type"/"S Type" words.
+  function renderMeta(elId, t){
+    document.getElementById(elId).innerHTML = [
+      `<span class="m">${esc(t.region)} <b>${esc(t.regionRecord)}</b></span>`,
+      `<span class="m">${esc(t.division)} <b>${esc(t.leagueRecord)}</b></span>`,
+      `<span class="m">Cup <b>${esc(t.cupRecord)}</b></span>`,
+      `<span class="m">Overall <b>${esc(t.overallRecord)}</b></span>`,
+    ].join('');
+  }
+
+  // The inboard band: typing, ATK modifier and Every X, all in team colour.
+  function renderMid(elId, t){
+    document.getElementById(elId).innerHTML = [
+      `<span>${esc(t.primary)} <span class="sep">/</span> ${esc(t.secondary)}</span>`,
+      `<span>ATK <span class="g">${esc(t.atk)}</span></span>`,
+      `<span>Every <span class="g">${esc(t.everyX)}</span></span>`,
+    ].join('');
+  }
+
+  const STATS = [
+    ['Skill',   t => `${esc(t.skill)}<span class="grade">(${esc(t.grade)})</span>`],
+    ['DSCR',    t => esc(t.dscr)],
+    ['O/D',     t => esc(t.offdef)],  ['Fatigue', t => esc(t.fatigue)],
+    ['Climate', t => esc(t.climate)], ['Elo',     t => esc(t.elo)],
+    ['Win%',    t => esc(t.winPct)],
+  ];
+  document.getElementById('statsAway').innerHTML = STATS.map(([, g]) => `<div class="stat-v">${g(AWAY)}</div>`).join('');
+  document.getElementById('statsHome').innerHTML = STATS.map(([, g]) => `<div class="stat-v">${g(HOME)}</div>`).join('');
+  const keyRow = STATS.map(([k]) => `<div class="stat-k">${esc(k)}</div>`).join('');
+  document.getElementById('statsKeyAway').innerHTML = keyRow;
+  document.getElementById('statsKeyHome').innerHTML = keyRow;
+
+  document.getElementById('roundName').textContent = MATCH.roundName;
+  document.getElementById('period').textContent = MATCH.period;
+  document.getElementById('clock').textContent = clockFace(MATCH.clock);
+  document.getElementById('clockTarget').textContent =
+    clockFace(MATCH.periodBase + MATCH.periodTarget + MATCH.stoppage);
+  document.getElementById('weather').innerHTML =
+    `<b>${esc(MATCH.weather)}</b> ${MATCH.weatherDelta >= 0 ? '+' : ''}${MATCH.weatherDelta}`;
+
+  renderAccolades('accAway', AWAY);
+  renderAccolades('accHome', HOME);
+  renderMeta('metaAway', AWAY);
+  renderMeta('metaHome', HOME);
+  renderMid('midAway', AWAY);
+  renderMid('midHome', HOME);
+  // Favourite only: the empty side keeps the element so the rows stay aligned.
+  document.getElementById('spreadAway').textContent =
+    MATCH.spreadTeam === 'away' ? `[+${MATCH.spreadValue}]` : '';
+  document.getElementById('spreadHome').textContent =
+    MATCH.spreadTeam === 'home' ? `[+${MATCH.spreadValue}]` : '';
+
+  document.getElementById('rankAway').textContent = '#' + AWAY.rank;
+  document.getElementById('rankHome').textContent = '#' + HOME.rank;
+  document.getElementById('nameAway').textContent = AWAY.name;
+  document.getElementById('nameHome').textContent = HOME.name;
+})();
+</script>
+</body>
+</html>
