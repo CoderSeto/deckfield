@@ -45,7 +45,7 @@
      ====================================================================== */
   .banner{
     display:grid;
-    grid-template-columns:minmax(150px,0.95fr) minmax(270px,1.5fr) auto minmax(320px,1.1fr);
+    grid-template-columns:minmax(150px,0.5fr) minmax(270px,1.5fr) auto auto minmax(330px,1.15fr);
     grid-template-rows:1fr auto 1fr;
     background:var(--panel);
     border:1px solid var(--panel-line);
@@ -55,7 +55,7 @@
   /* Placement is explicit for every cell. A cell that spans rows but names no
      column gets auto-placed into the first column that can hold it, which put
      the score block on the far left the first time round. */
-  .c1{grid-column:1;} .c2{grid-column:2;} .c3{grid-column:3;} .c4{grid-column:4;}
+  .c1{grid-column:1;} .c2{grid-column:2;} .c3{grid-column:3;} .c4{grid-column:4;} .c5{grid-column:5;}
   .r1{grid-row:1;} .r2{grid-row:2;} .r3{grid-row:3;}
   /* Faint team tint, top half away, bottom half home. */
   .cell.away{background:linear-gradient(0deg,var(--away-tint),rgba(0,0,0,0));}
@@ -131,6 +131,34 @@
   .score-cell.away .score-num{color:var(--away-bright);}
   .score-cell.home .score-num{color:var(--home-bright);}
 
+  /* ---------- 3b. Time block ---------- */
+  /* Spans all three rows deliberately. Round name / clock / target / weather is
+     four stacked lines; putting the clock in the shared axis ROW instead would
+     grow that row and prise the two halves apart in every other column. */
+  .time-cell{
+    grid-column:4;grid-row:1 / 4;
+    display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+    padding:9px 30px;background:rgba(0,0,0,0.18);min-width:0;
+  }
+  .tb-round{
+    font-family:'Anton',sans-serif;text-transform:uppercase;letter-spacing:1.2px;
+    font-size:12px;color:var(--gold);white-space:nowrap;
+  }
+  .tb-clockwrap{display:flex;flex-direction:column;align-items:center;}
+  .tb-clock{
+    font-family:'JetBrains Mono',monospace;font-weight:700;
+    font-size:clamp(28px,2.8vw,40px);line-height:1;color:var(--chalk);
+    letter-spacing:0.5px;
+  }
+  .tb-target{
+    font-family:'JetBrains Mono',monospace;font-weight:600;font-size:12px;
+    color:var(--chalk-dim);margin-top:3px;letter-spacing:0.5px;
+  }
+  .tb-weather{
+    font-size:10.5px;letter-spacing:0.4px;color:var(--chalk-dim);white-space:nowrap;
+  }
+  .tb-weather b{color:var(--chalk);font-weight:600;}
+
   /* ---------- 4. Stat strip ---------- */
   /* Seven columns. Labels sit OUTBOARD -- above the away numbers and below the
      home numbers -- so the values themselves are what meets at the axis. No
@@ -160,7 +188,7 @@
      rather than reflowing -- a mock-up shouldn't invent responsive behaviour
      that hasn't been asked for, and a seven-across stat strip has a real floor. */
   .banner-scroll{overflow-x:auto;}
-  .banner{min-width:1320px;}
+  .banner{min-width:1460px;}
 </style>
 </head>
 <body>
@@ -173,7 +201,10 @@
     <b>left</b> of the name; both names hug the centre. Records sit <b>outboard</b> (top and bottom);
     typing, ATK and Every X sit <b>inboard</b> in team colour, with the &ldquo;P Type / S Type&rdquo;
     labels dropped. Stat labels sit outboard of their numbers, so the values meet at the axis.
-    Score is stacked away-over-home; clock and period are out for now.
+    Score is stacked away-over-home; the names and score sit
+    <b>left</b> to make room for the time block on their right: round name on top, clock over its target in the middle, weather along
+    the bottom. Ticks read as a clock face &mdash; 502 &rarr; 50:20, target
+    500+35 &rarr; 53:50.
   </p>
 
   <div class="section-label">Proposed banner</div>
@@ -191,8 +222,17 @@
     </div>
     <!-- 3 ─ SCORE, away half -->
     <div class="score-cell away colsep r1"><div class="score-num" id="scoreAway">2</div></div>
-    <!-- 4 ─ STATS, away half -->
-    <div class="cell away colsep stat-pad c4 r1">
+    <!-- 4 ─ TIME (spans all three rows) -->
+    <div class="time-cell colsep">
+      <div class="tb-round" id="roundName"></div>
+      <div class="tb-clockwrap">
+        <div class="tb-clock" id="clock"></div>
+        <div class="tb-target" id="clockTarget"></div>
+      </div>
+      <div class="tb-weather" id="weather"></div>
+    </div>
+    <!-- 5 ─ STATS, away half -->
+    <div class="cell away colsep stat-pad c5 r1">
       <div class="stats-away" id="statsKeyAway"></div>
       <div class="stats-away" id="statsAway"></div>
     </div>
@@ -201,7 +241,7 @@
     <div class="axis-cell c1"></div>
     <div class="axis-cell colsep c2"></div>
     <div class="axis-cell colsep c3 score-cell"></div>
-    <div class="axis-cell colsep stat-pad c4"></div>
+    <div class="axis-cell colsep stat-pad c5"></div>
 
     <!-- 1 ─ ACCOLADES -->
     <div class="cell home c1 r3"><div class="acc-list" id="accHome"></div></div>
@@ -213,8 +253,8 @@
     </div>
     <!-- 3 ─ SCORE, home half -->
     <div class="score-cell home colsep r3"><div class="score-num" id="scoreHome">3</div></div>
-    <!-- 4 ─ STATS, home half -->
-    <div class="cell home colsep stat-pad c4 r3">
+    <!-- 5 ─ STATS, home half -->
+    <div class="cell home colsep stat-pad c5 r3">
       <div class="stats-home" id="statsHome"></div>
       <div class="stats-home" id="statsKeyHome"></div>
     </div>
@@ -242,6 +282,24 @@
     skill:'100.99', grade:'SS', dscr:'10.0', offdef:'0.12', fatigue:'145.5', climate:'12.08',
     elo:'2503', winPct:'72.6%', atk:'+2', everyX:'3'
   };
+
+  // Match state, named the way the game names it: maxTime() is already
+  // periodBase + periodTarget + stoppageAccrued.
+  const MATCH = {
+    roundName:'PA Cup \u2014 Draw Round 5',
+    clock:502,            // game.clock
+    periodBase:250,       // 2nd half
+    periodTarget:250,     // so the period ends at 500
+    stoppage:35,          // game.stoppageAccrued
+    weather:'Fair', weatherDelta:0,
+  };
+
+  // Ticks read as a clock face: append a 0, pad to four digits, colon before
+  // the last two. 502 -> "5020" -> 50:20; 535 -> 53:50.
+  function clockFace(ticks){
+    const padded = (String(Math.max(0, Math.round(ticks))) + '0').padStart(4, '0');
+    return padded.slice(0, -2) + ':' + padded.slice(-2);
+  }
 
   const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -287,6 +345,13 @@
   const keyRow = STATS.map(([k]) => `<div class="stat-k">${esc(k)}</div>`).join('');
   document.getElementById('statsKeyAway').innerHTML = keyRow;
   document.getElementById('statsKeyHome').innerHTML = keyRow;
+
+  document.getElementById('roundName').textContent = MATCH.roundName;
+  document.getElementById('clock').textContent = clockFace(MATCH.clock);
+  document.getElementById('clockTarget').textContent =
+    clockFace(MATCH.periodBase + MATCH.periodTarget + MATCH.stoppage);
+  document.getElementById('weather').innerHTML =
+    `<b>${esc(MATCH.weather)}</b> ${MATCH.weatherDelta >= 0 ? '+' : ''}${MATCH.weatherDelta}`;
 
   renderAccolades('accAway', AWAY);
   renderAccolades('accHome', HOME);
