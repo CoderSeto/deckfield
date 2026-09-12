@@ -1457,6 +1457,14 @@ RDS_BRACKET_LAST_ROUND = 5   # Draw and Process each end here
 # bracket sends TWO teams into the mutual semifinal, exactly as RDS does after
 # its round 5. There is no mutual quarterfinal.
 PA_BRACKET_LAST_ROUND = 8
+# Conflict resolution only runs on rounds 1-4, the rounds that still have a
+# pool of fresh tier seeds to swap. From round 5 on every entrant is an
+# already-decided real team, so a swap there would be a re-seeding operation
+# -- deliberately deferred, see _pa_ladder_walk's docstring. A preview past
+# this round therefore carries an EMPTY swap log, which is not the same thing
+# as "no conflicts were resolved": callers accumulating the log must stop
+# here rather than let round 5 overwrite rounds 2-4's history.
+PA_CONFLICT_LAST_ROUND = 4
 
 
 def _rds_bracket_survivors(conn, season, cup, bracket):
@@ -2979,7 +2987,7 @@ def pa_cup_round_preview(season, target_round):
     seed_lookup = {"Draw": draw_seeds, "Process": process_seeds}
 
     swap_log = []
-    if 2 <= target_round <= 4:
+    if 2 <= target_round <= PA_CONFLICT_LAST_ROUND:
         team_region = {r["name"]: r["region"] for r in conn.execute("SELECT name, region FROM teams").fetchall()}
         team_division = {r["name"]: r["league_division"] for r in conn.execute("""
             SELECT t.name, ts.league_division FROM teams t
