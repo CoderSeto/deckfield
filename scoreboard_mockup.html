@@ -45,7 +45,7 @@
      ====================================================================== */
   .banner{
     display:grid;
-    grid-template-columns:minmax(150px,0.5fr) minmax(270px,1.5fr) 176px 250px minmax(330px,1.15fr);
+    grid-template-columns:minmax(150px,0.5fr) minmax(270px,1.65fr) 176px 250px minmax(330px,1.0fr);
     grid-template-rows:1fr auto 1fr;
     background:var(--panel);
     border:1px solid var(--panel-line);
@@ -125,14 +125,16 @@
   .cell.home .id-team{color:var(--home-bright);}
 
   /* ---------- 3. Score ---------- */
-  /* Away score above the axis, home below, like every other column. Clock and
-     period are out for now, per instruction. */
+  /* Away score above the axis, home below, like every other column, held off
+     the axis by 13px each so the two don't crowd it. The track is a fixed
+     176px: three digits at the maximum size measure 117px, which `auto` would
+     have let shove the whole banner sideways. */
   .score-cell{
     grid-column:3;display:flex;align-items:center;justify-content:center;
     padding:0 26px;background:rgba(0,0,0,0.30);min-width:0;
   }
-  .score-cell.away{align-items:flex-end;padding-top:8px;}
-  .score-cell.home{align-items:flex-start;padding-bottom:8px;}
+  .score-cell.away{align-items:flex-end;padding-top:8px;padding-bottom:13px;}
+  .score-cell.home{align-items:flex-start;padding-bottom:8px;padding-top:13px;}
   .score-num{
     font-family:'Anton',sans-serif;line-height:0.86;
     font-size:clamp(46px,4.8vw,70px);
