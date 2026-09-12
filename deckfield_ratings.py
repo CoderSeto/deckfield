@@ -1452,6 +1452,11 @@ def resolve_mutual_stage(draw_finalists, process_finalists, seed_lookup):
 # number (1 or 2) rather than a bracket round.
 
 RDS_BRACKET_LAST_ROUND = 5   # Draw and Process each end here
+# PA's ladder rounds 1-4 take 160 seeds to 32 row champions; rounds 5-8 are a
+# standard bracket among those champions (32 -> 16 -> 8 -> 4 -> 2), so each
+# bracket sends TWO teams into the mutual semifinal, exactly as RDS does after
+# its round 5. There is no mutual quarterfinal.
+PA_BRACKET_LAST_ROUND = 8
 
 
 def _rds_bracket_survivors(conn, season, cup, bracket):
@@ -1894,7 +1899,7 @@ def resolve_pa_cup_conflicts(draw_seed_to_team, draw_opponent_of, process_seed_t
     Exact order (per explicit instruction):
       1. (up until round 6) Fix the Draw for same-region/same-division
          pairings.
-      2. (up until the mutual quarterfinal) Fix the Process for any
+      2. (up until the mutual semifinal) Fix the Process for any
          pairing that repeats a Draw pairing (checked against the Draw's
          now-final round-1 pairings from step 1).
       3. (up until round 6) Fix the Process for same-region/same-division
@@ -2005,7 +2010,7 @@ WEEKLY_SCHEDULE = [
     {"week": 18, "Tue": ("RDS", "Final", None), "Thu": ("RDS", "Final", None), "Weekend": ("L", 14)},
     {"week": 19, "Tue": ("PA", "Draw", 6), "Thu": ("PA", "Process", 6), "Weekend": ("R", 13)},
     {"week": 20, "Tue": ("PA", "Draw", 7), "Thu": ("PA", "Process", 7), "Weekend": ("L", 15)},
-    {"week": 21, "Tue": ("PA", "QF", None), "Thu": ("PA", "QF", None), "Weekend": ("R", 14)},
+    {"week": 21, "Tue": ("PA", "Draw", 8), "Thu": ("PA", "Process", 8), "Weekend": ("R", 14)},
     {"week": 22, "Tue": ("PA", "SF", None), "Thu": ("PA", "SF", None), "Weekend": ("R", 15)},
     {"week": 23, "Tue": ("PA", "Final", 1), "Thu": ("PA", "Final", 2), "Weekend": ("PA", "Final", 3)},
     {"week": 24, "Tue": ("RT", 1), "Thu": ("RT", 2), "Weekend": ("RT", 3)},
@@ -2066,7 +2071,7 @@ def _event_is_played(conn, season, slot, week=None, day=None):
 
     if kind == "PA":
         _, bracket, cup_round = slot
-        if bracket in ("QF", "SF", "Final") or cup_round is None:
+        if bracket in ("SF", "Final") or cup_round is None:
             return False  # not modeled/played yet
         n = conn.execute(
             "SELECT COUNT(*) c FROM games WHERE cup_name='PA' AND cup_bracket=? AND cup_round=?",
@@ -2574,30 +2579,26 @@ def _pa_round_games(conn, bracket, target_round):
 
     # Round 5: standard bracket, row-seed k vs row-seed (33-k)
     champ_by_seed = {seed: team for team, seed in row_champions}
-    round5_pairs = [(champ_by_seed[k], champ_by_seed[33 - k]) for k in range(1, 17)]
-    if target_round == 5:
-        return round5_pairs
+    pairs = [(champ_by_seed[k], champ_by_seed[33 - k]) for k in range(1, 17)]
 
-    survivors = []
-    for team_a, team_b in round5_pairs:
-        w = _real_bracket_winner(conn, "PA", bracket, 5, team_a, team_b)
-        if w is None:
-            return None
-        survivors.append(w)
-    if target_round == 6:
-        return [(survivors[i], survivors[i + 1]) for i in range(0, len(survivors), 2)]
+    # Rounds 5-8 are the same halving step repeated (16, 8, 4 and 2 games), so
+    # walk them rather than writing a block per round -- the maintenance trap
+    # the RDS renderer was rewritten to avoid. Round 8's two survivors are what
+    # this bracket sends into the mutual semifinal.
+    for rnd in range(5, PA_BRACKET_LAST_ROUND + 1):
+        if target_round == rnd:
+            return pairs
+        survivors = []
+        for team_a, team_b in pairs:
+            w = _real_bracket_winner(conn, "PA", bracket, rnd, team_a, team_b)
+            if w is None:
+                return None
+            survivors.append(w)
+        pairs = [(survivors[i], survivors[i + 1]) for i in range(0, len(survivors), 2)]
 
-    round6_pairs = [(survivors[i], survivors[i + 1]) for i in range(0, len(survivors), 2)]
-    survivors2 = []
-    for team_a, team_b in round6_pairs:
-        w = _real_bracket_winner(conn, "PA", bracket, 6, team_a, team_b)
-        if w is None:
-            return None
-        survivors2.append(w)
-    if target_round == 7:
-        return [(survivors2[i], survivors2[i + 1]) for i in range(0, len(survivors2), 2)]
-
-    raise NotImplementedError(f"PA {bracket} round {target_round}: mutual quarterfinal+ not modeled yet.")
+    raise NotImplementedError(
+        f"PA {bracket} round {target_round}: the brackets end at round "
+        f"{PA_BRACKET_LAST_ROUND}; the mutual semifinal/final isn't modeled yet.")
 
 
 def _games_for_event(season, event, week=None, day=None):
@@ -2659,9 +2660,9 @@ def _games_for_event(season, event, week=None, day=None):
 
     if kind == "PA":
         _, bracket, cup_round = event
-        if bracket in ("QF", "SF", "Final") or cup_round is None:
+        if bracket in ("SF", "Final") or cup_round is None:
             conn.close()
-            raise NotImplementedError("PA mutual quarterfinal+ isn't modeled yet.")
+            raise NotImplementedError("PA's mutual semifinal/final isn't modeled yet.")
         games = _pa_round_games(conn, bracket, cup_round)
         conn.close()
         if games is None:
@@ -2711,7 +2712,7 @@ _BATCH_SETTINGS_HEADER = "Game Type\tFormat\tDay\tRound Label\tRound #\tCup Name
 def _week_day_for_event(event):
     """(week, day) of an event's first occurrence in WEEKLY_SCHEDULE, for
     events not reached via next_matchday() (which already knows its own
-    day). Good enough for SF/Final/QF slots too -- those repeat the same
+    day). Good enough for SF/Final slots too -- those repeat the same
     event tuple across multiple days, but they're not exportable anyway
     (_games_for_event raises NotImplementedError for them)."""
     for week in WEEKLY_SCHEDULE:
@@ -2834,7 +2835,7 @@ def export_matchday_batches(season, event=None):
     if kind == "PA":
         _, bracket, cup_round = event
         label = f"PA {bracket} R{cup_round}" if cup_round is not None else f"PA {bracket}"
-        agg = bracket in ("QF", "SF", "Final") or cup_round is None
+        agg = bracket in ("SF", "Final") or cup_round is None
         games = _games_for_event(season, event, info.get("week"), info.get("day"))
         batch = build_batch(label, "Cup", agg, "PA", bracket, cup_round if cup_round is not None else "", games)
         conn.close()
@@ -2963,11 +2964,11 @@ def pa_cup_round_preview(season, target_round):
     whose prior round(s) are complete -- the "what's coming up next"
     preview, same idea as RDS Cup's RDS_ROUND3. A bracket's value is None
     if a prior round isn't complete yet (mirrors _pa_round_games' own
-    contract) or if target_round is beyond what's modeled (8+, the mutual
-    quarterfinal stage -- see _pa_round_games's NotImplementedError).
+    contract) or if target_round is beyond what's modeled (9+, the mutual
+    semifinal stage -- see _pa_round_games's NotImplementedError).
 
     swap_log carries this round's own conflict-resolution swaps (rounds
-    2-4 only -- rounds 5-7 don't get conflict resolution, see
+    2-4 only -- rounds 5-8 don't get conflict resolution, see
     _pa_ladder_walk's docstring) -- previously computed by the same
     _pa_ladder_walk() call underlying _pa_round_games() but silently
     discarded, so the dashboard's swap-log report only ever showed round
@@ -3281,7 +3282,7 @@ _CONFIRMED_ABS_ROUND = {
 def _schedule_event_key(week, day, slot):
     """Unique key for a weekly-schedule slot. Numbered cup rounds and R/L
     rounds are naturally unique by (kind, ..., round). Two-legged-tie and
-    best-of-three slots (SF/Final/QF, cup_round=None) repeat the same
+    best-of-three slots (SF/Final, cup_round=None) repeat the same
     (kind, bracket, None) across Tue/Thu/Weekend, so those need week+day
     folded into the key to stay distinct -- otherwise leg 1 and leg 2 of
     the same tie would collapse onto a single absolute round."""
@@ -3846,8 +3847,8 @@ def _wc_cup_projection(conn, season, rank_of):
     Draw and Process are two parallel brackets over the SAME teams, so one
     team can still be alive in both -- which is exactly why the tournament
     seats "4 semifinalists, max" and "six finalists" rather than a fixed
-    count.  Both brackets feed a shared end stage (PA's mutual
-    quarterfinal, each RDS cup's mutual semifinal) that collapses a
+    count.  Both brackets feed a shared end stage (the mutual
+    semifinal -- PA's and each RDS cup's alike) that collapses a
     double-qualifier into one team, so these lists are deduplicated and
     can legitimately come up short.  A short category is not an error; the
     unused bids fall through to the OVR pool like any other unfilled spot.
@@ -3871,8 +3872,9 @@ def _wc_cup_projection(conn, season, rank_of):
         for seed, team in seeds.items():
             pa_seed_of[team] = min(seed, pa_seed_of.get(team, 10 ** 6))
 
-    # PA: 4 alive per bracket reach the mutual quarterfinal, 2 per bracket
-    # come through it into the semifinal.
+    # PA: 4 alive per bracket contest round 8 -- each bracket's own
+    # quarterfinal -- and its 2 winners per bracket enter the mutual
+    # semifinal, exactly as RDS does after its round 5.
     pa_draw = by_rank(_cup_survivors(conn, season, "PA", "Draw", all_teams))
     pa_process = by_rank(_cup_survivors(conn, season, "PA", "Process", all_teams))
     pa_semifinalists = _dedupe(pa_draw[:2] + pa_process[:2])
@@ -3984,7 +3986,7 @@ def world_championship_field(season, round_num=None):
     pa_sf = proj["pa_semifinalists"]
     pa_short = (None if len(pa_sf) >= 4 else
                 f"only {len(pa_sf)} distinct semifinalist(s) project -- Draw and Process "
-                f"currently lead with the same teams, and the mutual quarterfinal "
+                f"currently lead with the same teams, and the mutual semifinal "
                 f"collapses a double qualifier into one")
     for k in range(4):
         nominal = pa_sf[k] if k < len(pa_sf) else None
