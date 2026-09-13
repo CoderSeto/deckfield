@@ -778,12 +778,9 @@ def home_away_records(season, through_round=None):
     being guessed at, so home + away can be short of the overall record; at
     round 41 no game is in that state.
 
-    WALKOVERS ARE NOT COUNTED, which is the real reason home + away can trail
-    the Overall record on the Rankings tab. `_points_buckets` folds walkovers
-    into a team's record, but a walkover is a bye -- no game was played, so it
-    is neither a home nor an away result. At round 41 that is exactly the 32
-    teams holding an RDS Dream/Star bye seed (64 rows, all game_type 'S'), and
-    for all 160 teams home + away equals real games played exactly.
+    Walkovers are not counted -- a bye is neither a home nor an away result --
+    and as of 2026-09-13 they are not counted in the Overall/Cup records
+    either, so home + away reconciles with Overall exactly for all 160 teams.
     """
     conn = get_connection()
     sql = """
@@ -3475,9 +3472,6 @@ def export_teams_for_deckfield(season):
             SELECT game_type, result_a, team_a, team_b FROM games
             WHERE season=? AND round<=? AND (team_a=? OR team_b=?)
         """, (season, latest_round, team_id, team_id)).fetchall()
-        walkovers = conn.execute("""
-            SELECT game_type, result FROM walkovers WHERE season=? AND round<=? AND team_id=?
-        """, (season, latest_round, team_id)).fetchall()
         buckets = {"R": [0, 0], "L": [0, 0], "S": [0, 0], "PF": [0, 0]}
         overall = [0, 0]
         for g in games:
@@ -3486,11 +3480,11 @@ def export_teams_for_deckfield(season):
             key = "PF" if g["game_type"] in ("P", "F") else g["game_type"]
             buckets[key][0 if won else 1] += 1
             overall[0 if won else 1] += 1
-        for w in walkovers:
-            won = w["result"] in (2, 3)
-            key = "PF" if w["game_type"] in ("P", "F") else w["game_type"]
-            buckets[key][0 if won else 1] += 1
-            overall[0 if won else 1] += 1
+        # Byes are NOT counted as wins in the displayed record -- same rule as
+        # the dashboard's Rankings tab (per explicit instruction 2026-09-13),
+        # so the roster export and the dashboard cannot disagree about a
+        # team's record. They keep their SP/TOT contribution via
+        # _points_buckets; only the W-L shown to a reader changes.
         fmt = lambda p: f"{p[0]}-{p[1]}"
         return fmt(overall), fmt(buckets["R"]), fmt(buckets["L"]), fmt(buckets["S"])
 
@@ -3654,10 +3648,6 @@ def _standings_order(season, teams, game_type):
             SELECT result_a, team_a, team_b, dscr_a, dscr_b FROM games
             WHERE season=? AND round<=? AND game_type=? AND (team_a=? OR team_b=?)
         """, (season, latest_round, game_type, team_id, team_id)).fetchall()
-        walkovers = conn.execute("""
-            SELECT result FROM walkovers
-            WHERE season=? AND round<=? AND game_type=? AND team_id=?
-        """, (season, latest_round, game_type, team_id)).fetchall()
         w = l = 0
         dscrs = []
         log = []
@@ -3671,9 +3661,12 @@ def _standings_order(season, teams, game_type):
                 dscrs.append(own_dscr)
             opp = g["team_b"] if is_a else g["team_a"]
             log.append((opp, result))
-        for wo in walkovers:
-            won = wo["result"] in (2, 3)
-            w, l = w + (1 if won else 0), l + (0 if won else 1)
+        # No walkover term: a bye is not a win in any displayed record (per
+        # explicit instruction 2026-09-13), and standings W-L also seeds the
+        # Regional Tournament. This is a no-op against real data -- every
+        # walkover is game_type 'S' and this only ever runs with 'R'/'L' --
+        # but leaving it in would have made standings disagree with the
+        # Rankings tab the first time an R/L bye existed.
         dscr_avg = sum(dscrs) / len(dscrs) if dscrs else 0
         return w, l, dscr_avg, log
 

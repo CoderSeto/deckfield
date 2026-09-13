@@ -76,11 +76,13 @@ def _records_for(conn, team_id, latest_round):
         overall[0 if won else 1] += 1
         opp = g["team_b"] if g["team_a"] == team_id else g["team_a"]
         log.append([opp, g["game_type"], result])
-    for w in walkovers:
-        won = w["result"] in (2, 3)
-        key = "PF" if w["game_type"] in ("P", "F") else w["game_type"]
-        buckets[key][0 if won else 1] += 1
-        overall[0 if won else 1] += 1
+    # WALKOVERS ARE DELIBERATELY NOT IN THE DISPLAYED RECORD (per explicit
+    # instruction 2026-09-13). A bye is not a game and reads wrong as a win --
+    # the 32 RDS Dream/Star bye seeds showed 13 cup wins against 11 cup games
+    # played. They still carry their points: _points_buckets keeps folding them
+    # into SP/TOT/cup_wins, so no rating, OVR or rank moves. `walkovers` is
+    # still fetched because that is what makes the omission visible here rather
+    # than looking like nobody thought about it.
     fmt = lambda p: f"{p[0]}-{p[1]}"
     return {
         "overall": fmt(overall), "regional": fmt(buckets["R"]), "league": fmt(buckets["L"]),

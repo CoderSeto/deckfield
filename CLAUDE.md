@@ -1634,14 +1634,10 @@ the committed CSVs. Confirmed still a no-op: all 30 files "already matches".
 whether the team hosted; `build_data()` attaches `home`/`away` to each
 `DATA.teams` entry.
 
-**Walkovers are not counted, and that is why Home + Away can trail Overall.**
-`_points_buckets` folds walkovers into a team's record, but a walkover is a
-bye -- no game was played, so it is neither a home nor an away result. At
-round 41 that is exactly the **32 teams** holding an RDS Dream/Star bye seed
-(64 rows, all `game_type='S'`), and those 32 are precisely the teams whose
-Home + Away is short of Overall. For all 160 teams, Home + Away equals real
-games played **exactly**. The record group's header tooltip says so, because
-the discrepancy is otherwise the first thing a reader will query.
+**Walkovers are not counted** -- a bye is neither a home nor an away result.
+They are no longer counted in the Overall/Cup records either (see "Byes are
+not wins in a displayed record" below), so Home + Away reconciles with
+Overall exactly for all 160 teams.
 
 **The record columns are now ONE table column that scrolls sideways on its
 own** (per explicit request), holding Overall / Regional / League / Cup / P/F
@@ -1669,6 +1665,53 @@ shared constants byte-identical, `TEAMS_EXPORT_TSV` differing by design
 (random Secondary Type), and `DATA` differing **only** by the two new fields
 -- zero pre-existing fields changed across all 160 teams. That is what proves
 the local rebuild was faithful and the new fields are purely additive.
+
+### Byes are not wins in a displayed record (2026-09-13, per explicit instruction)
+
+Raised directly: "I didn't realize that Byes counted in a team's Cup W-L."
+They did. All 64 walkover rows carry `result = 3` -- an outright win -- and
+`_points_buckets` folded them into the record, so the 32 RDS Dream/Star bye
+seeds showed **13 cup wins against 11 cup games played**. They are the
+rounds 1-2 byes of Draw and Process (abs_rounds 4 and 5), migrated faithfully
+from the workbook, which scored them that way itself.
+
+**The audit that came with it: a bye never contributed a 0 to anything.**
+Checked across all 160 teams, not read off the code: no walkover reaches
+`games_played`, `regional_games` or `league_games`, and every average
+(`avg_pf`, `avg_pa`, `avg_pd`, spread, DSCR, GI, Elo) iterates `games` only.
+So nothing was ever diluted by a phantom scoreless fixture.
+
+**What a bye actually fed**, per team (each of the 32 holds 2):
+`sp` +12 (result 3 x the ×2 cup multiplier, twice), `tot` +12, `cup_wins` +2 --
+and through those, `intl_w` -> RLStr, and `sp/1000` inside both RW and LW,
+which is Block A of OVR.
+
+**The resolution chosen: drop byes from the DISPLAYED record only.** They keep
+every point they award, so no rating, OVR, rank or seeding moves; only the
+W-L a reader sees changes. Three builders had to agree:
+
+- `_records_for()` in `regenerate_dashboard.py` (Rankings tab),
+- `records_for()` inside `export_teams_for_deckfield()` (the roster's own
+  Region/League/Cup/Overall Record columns, which feed `deckfield.html`'s
+  score banner -- leaving this one alone would have had the game and the
+  dashboard disagree about a team's record),
+- `_standings_order()`, which was a **no-op in practice** (every walkover is
+  `game_type='S'`; that function only ever runs with `'R'`/`'L'`) but would
+  have made standings -- and therefore Regional Tournament seeding -- disagree
+  the first time an R/L bye existed.
+
+`_points_buckets` is deliberately unchanged: it is what still awards the
+points.
+
+Verified by regenerating: **only `DATA` and `TEAMS_EXPORT_TSV` moved**, and
+within `DATA` only the `overall` and `cup` fields, on exactly 32 teams.
+`RT_DATA`, `STRENGTH_DATA`, `QUALIFICATION_DATA` and `RANK_ELO_HISTORY` came
+out byte-identical, which is what proves the standings edit really was a
+no-op and that seeding did not shift. Nimbasa City reads cup 13-1 -> 11-1 and
+overall 32-3 -> 30-3 with `tot` 272, `ovr` 102.48 and rank 3 all unchanged.
+The roster export agrees with the dashboard on all 160 teams, and every team
+now reconciles both ways: home + away = Overall, and Regional + League + Cup
++ P/F = Overall.
 
 ### Rank/Elo History tab
 
