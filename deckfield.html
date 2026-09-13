@@ -584,6 +584,12 @@
   }
   .gi-panel.show{display:block;}
   .gi-big{font-family:'Anton',sans-serif;font-size:36px;color:var(--home-bright);line-height:1.1;margin:6px 0;}
+  /* EX is banked per team now, so this headline states two values rather than
+     one. Two team names do not fit the panel at .gi-big's 36px, and neither
+     team owns the line's colour any more -- each half carries its own. */
+  .gi-big.ex-final{font-size:20px;color:var(--chalk);display:flex;flex-wrap:wrap;gap:4px 10px;}
+  .gi-big.ex-final .n-away{color:var(--away-bright);}
+  .gi-big.ex-final .n-home{color:var(--home-bright);}
   .elo-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:8px 0;}
   .elo-change{font-family:'Anton',sans-serif;font-size:20px;color:var(--gold);line-height:1.2;}
 
@@ -849,7 +855,7 @@
           <span class="log-title">EX Bonus</span>
           <span class="toggle-icon">▶</span>
         </div>
-        <div class="gi-big" id="exFinalBig">+0</div>
+        <div class="gi-big ex-final" id="exFinalBig">+0</div>
         <div class="dmax-cols dmax-rows">
           <div class="dmax-col">
             <div class="dmax-team-label n-away" id="exAwayLabel">Away</div>
@@ -1578,6 +1584,15 @@
     // Ordinal to match the halves -- "1st Overtime", not "Overtime 1".
     return ordinal(n - 2) + ' Overtime';
   }
+  // What the period line reads once the game is over. The count only appears
+  // past the first overtime, which is how a scoreline is normally written:
+  // "Final", "Final / OT", "Final / 2OT". Deliberately NOT folded into
+  // periodLabel() -- that one also writes the play-by-play's period headings,
+  // where "1st Overtime BEGINS" still has to say which period began.
+  function finalTag(otPeriods){
+    if (!otPeriods) return 'Final';
+    return 'Final / ' + (otPeriods > 1 ? otPeriods : '') + 'OT';
+  }
 
   // The clock reads as a clock face rather than a fraction: append a zero, pad
   // to four digits, colon before the last two. Tick 502 -> 50:20. It is a tick
@@ -1958,8 +1973,10 @@
 
   // ---- EX Bonus ----
   // Each team tracks its own EX total from the rules below (all whole numbers — every
-  // "per X above Y" rule floors to an integer). Final result = winner's EX - loser's EX;
-  // the winner keeps whatever's left (the loser's total isn't separately awarded).
+  // "per X above Y" rule floors to an integer). BOTH teams bank their own total,
+  // win or lose — the old model awarded only the winner the differential
+  // (winnerEX - loserEX), and the Results CSV has exported each team's own raw
+  // score as ex_a/ex_b since that changed.
   function computeEXBonus(game, team){
     if (!game.gameOver) return null;
     const opp = game.otherTeam(team);
@@ -2014,7 +2031,7 @@
     const loser = game.otherTeam(winner);
     const winnerEX = computeEXBonus(game, winner);
     const loserEX = computeEXBonus(game, loser);
-    return {winner, loser, winnerEX, loserEX, finalEX: winnerEX.ex - loserEX.ex};
+    return {winner, loser, winnerEX, loserEX};
   }
 
   // ---------- Rendering ----------
@@ -2072,12 +2089,28 @@
     // 12-character name topped out at 68% of it). Spread the leftover length
     // across the gaps instead, which is how a real end zone is set. Capped so
     // a very short name gets wide tracking rather than absurd tracking.
-    const gaps = Math.max(1, (el.textContent || '').trim().length);
-    const slack = maxLen - el.scrollHeight;
-    if (slack > 0) {
-      el.style.letterSpacing = Math.min(slack / gaps, 16) + 'px';
-    }
-    centreEndZoneInk(el);
+    //
+    // Two things about that spread are easy to get wrong, and both were:
+    //  - there are n-1 GAPS between n characters, not n; and
+    //  - letter-spacing is also applied AFTER the last character, so the
+    //    element measures one whole tracking unit longer than anything
+    //    visible. Centring THAT leaves the ink sitting half a unit high --
+    //    negligible on a long name, glaring on a short one with wide
+    //    tracking, which is what an 8-character name (CORTONDO) was reported
+    //    for: 13px of zone above the ink against 35px below it.
+    // The overhang is measured rather than assumed, because whether a UA adds
+    // that last unit at all is genuinely optional (CSS Text 3) -- and it is
+    // invisible to a Range rect, which ends where the element does. Only the
+    // painted pixels show it, so measure the element's own growth instead.
+    const chars = (el.textContent || '').trim().length;
+    const gaps = Math.max(1, chars - 1);
+    const base = el.scrollHeight;              // length at zero tracking
+    el.style.letterSpacing = '10px';
+    const units = Math.round((el.scrollHeight - base) / 10);   // gaps, or gaps+1
+    const track = Math.max(0, Math.min((maxLen - base) / gaps, 16));
+    el.style.letterSpacing = track + 'px';
+    // Visible ink is base + gaps*track either way; the rest is overhang.
+    centreEndZoneInk(el, Math.max(0, units - gaps) * track);
   }
 
   // Centre the GLYPHS across the zone's width, which is not where the browser
@@ -2091,9 +2124,13 @@
   // The correction has to ride AFTER the rotation in the transform list so it
   // acts in the element's own rotated frame; a layout margin would be mirrored
   // by the rotation and end up doubling the error on the home side.
-  function centreEndZoneInk(el){
+  function centreEndZoneInk(el, overhang){
     const flipped = el.classList.contains('ez-flip');
-    const base = flipped ? 'rotate(180deg)' : '';
+    // The trailing letter-space sits at the text's END, and translateY rides
+    // after the rotation -- so local +y points at that end whichever way the
+    // zone reads, and this one needs no sign flip (unlike translateX below).
+    const dy = (overhang || 0) / 2;
+    const base = (flipped ? 'rotate(180deg)' : '') + (dy ? ` translateY(${dy.toFixed(2)}px)` : '');
     el.style.transform = base;
     const txt = el.firstChild;
     if (!txt || !txt.length) return;
@@ -2203,7 +2240,9 @@
     // which is exactly what maxTime() already is.
     clockTimeEl.textContent = clockFace(game.clock);
     clockTargetEl.textContent = clockFace(game.maxTime());
-    periodLabelEl.textContent = periodLabel(game.periodIndex);
+    periodLabelEl.textContent = game.gameOver
+      ? finalTag(Math.max(0, game.periodIndex - 2))
+      : periodLabel(game.periodIndex);
     document.getElementById('goalsAwayValue').textContent = `${TEAM_DISPLAY_NAME.away} ${game.goalsScored.away}`;
     document.getElementById('goalsHomeValue').textContent = `${TEAM_DISPLAY_NAME.home} ${game.goalsScored.home}`;
     const totalTicksSoFar = game.possessionTicks.home + game.possessionTicks.away;
@@ -2397,8 +2436,12 @@
     const awayReport = (r.winner === 'away') ? r.winnerEX : r.loserEX;
     renderEXColumn(homeReport, document.getElementById('exHomeBig'), document.getElementById('exHomeRows'));
     renderEXColumn(awayReport, document.getElementById('exAwayBig'), document.getElementById('exAwayRows'));
-    const finalEl = document.getElementById('exFinalBig');
-    finalEl.textContent = `${TEAM_DISPLAY_NAME[r.winner].toUpperCase()} ${r.finalEX >= 0 ? '+' : ''}${r.finalEX}`;
+    // Both banked totals, away then home -- the same order as the columns
+    // below and as every other away-over-home reading on the page.
+    const signed = (n) => (n >= 0 ? '+' : '') + n;
+    document.getElementById('exFinalBig').innerHTML =
+      `<span class="n-away">${escHtml(TEAM_DISPLAY_NAME.away.toUpperCase())} ${signed(awayReport.ex)}</span>`
+      + `<span class="n-home">${escHtml(TEAM_DISPLAY_NAME.home.toUpperCase())} ${signed(homeReport.ex)}</span>`;
     exPanel.classList.add('show');
   }
 
@@ -3401,7 +3444,7 @@
       awayRank: RANK_AWAY, homeRank: RANK_HOME,
       awayRegion: TEAM_REGION.away, homeRegion: TEAM_REGION.home,
       awayScore: g.score.away, homeScore: g.score.home,
-      ot: Math.max(0, g.periodIndex - 2) > 0,
+      otPeriods: Math.max(0, g.periodIndex - 2),
       round: CURRENT_ROUND, gameType: GAME_TYPE, cupName: CUP_NAME
     };
   }
@@ -3429,7 +3472,7 @@
     return `<div class="final-card"${idAttr}>`
       + `<div class="fc-top"><span class="fc-ctx">`
       + `${escHtml(finalContextLabel(rec.round, rec.gameType, rec.cupName))}</span>`
-      + `<span class="fc-tag done">${rec.ot ? 'Final / OT' : 'Final'}</span></div>`
+      + `<span class="fc-tag done">${finalTag(rec.otPeriods)}</span></div>`
       + finalTeamRowHtml(rec.awayName, rec.awayRank, rec.awayRegion, rec.awayScore, state[0])
       + finalTeamRowHtml(rec.homeName, rec.homeRank, rec.homeRegion, rec.homeScore, state[1])
       + `</div>`;

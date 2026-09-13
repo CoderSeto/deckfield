@@ -2161,6 +2161,28 @@ unscored (still upcoming); the Conflict Resolution Log shows all 24
 entries (10 from round 1, 14 from round 2 — matching the count already
 confirmed in the 2026-08-07 conflict-log entry above).
 
+## deckfield.html EX Bonus panel
+
+**The headline stated the differential and now states both banked totals,
+2026-09-13 (per explicit request).** The panel's two per-team columns were
+already correct -- each team's own EX and its own component breakdown -- but the
+big line above them still read `WINNER +differential`, which is the **old**
+model: before 2026-07-30 only the winner banked anything, and what they banked
+was `winnerEX.ex - loserEX.ex`. Both teams have banked their own score for a
+year, and the Results CSV has exported them independently as `ex_a`/`ex_b` that
+whole time, so the headline was the last place the superseded rule was still
+being asserted.
+
+It now reads both, away then home -- the same order as the columns beneath it
+and as every other away-over-home reading on the page. `computeEXFinal` no
+longer computes `finalEX` at all (nothing else read it), and the stale comment
+above `computeEXBonus` that described the differential was rewritten.
+
+Two small things the change needed: the line carries two team names, which do
+not fit `.gi-big`'s 36px in that panel, and **neither team owns its colour any
+more** -- so `.gi-big.ex-final` drops to 20px and each half takes its own
+team's bright colour via `.n-away`/`.n-home`.
+
 ## deckfield.html Spread calculation
 
 **Fatigue Multiplier applied in reverse for an away-favored spread, fixed
@@ -2673,6 +2695,69 @@ characters) and corrects it. Two things about it are easy to get wrong:
 Verified: both sides now read exactly **0** off-centre with symmetric gaps, for
 names from 7 to 18 characters, while the length-axis fill stays at 96% (82%
 for the short name at the tracking cap).
+
+**End-zone names were also off-centre ALONG the zone, fixed 2026-09-13 (per
+explicit report: a screenshot of the pitch and the words "See Cortondo").** The
+cross-axis entry above is a different bug and both were real; this one was the
+visible one, and it had been hiding behind the way it was measured.
+
+**`letter-spacing` is applied after the LAST character too**, so the element
+measures one whole tracking unit longer than anything painted. Flex-centring
+that element leaves the ink half a unit high -- negligible on a long name,
+glaring on a short one, because the tracking is exactly what grows as a name
+gets shorter. CORTONDO (8 characters, ~15.6px of tracking) rendered with 13px
+of zone above the ink against 35px below it.
+
+**The measurement is the lesson.** A `Range` rect ends where the element ends,
+so the overhang is invisible to it -- the earlier verification read first- and
+last-character rects and reported the zone perfectly centred while the painted
+pixels were not. Measured directly (`ls: 0px/20px/40px` on an 8-character name)
+the element grows by 8 units, not 7, and `elBox.bottom - lastCharRect.bottom`
+is **0** at every one. **Only the painted pixels show this class of bug**:
+screenshot the zone and find the bounds of pixels matching the name's own
+colour. Not a luminance threshold -- the 2px chalk goal line and the hatch are
+both brighter than the tint, so a threshold finds those instead, running the
+zone's full height and reporting a perfect fill.
+
+Two fixes, both in `fitEndZoneName`:
+
+- **The overhang is measured, not assumed**, because whether a UA adds that
+  last unit is genuinely optional (CSS Text 3). Set 10px of tracking, see
+  whether the element grew by `n` units or `n-1`, and treat the difference as
+  overhang. `centreEndZoneInk` takes it as a second argument and applies
+  `translateY(overhang / 2)`. **That one needs no sign flip**, unlike its
+  `translateX` sibling: it rides after the rotation, so local +y points at the
+  trailing end of the text whichever way the zone reads.
+- **There are n-1 gaps between n characters, not n.** The old count under-filled
+  every uncapped name slightly (Alfornada 91.2% -> 95.6%). It changes nothing
+  for a name at the 16px cap, where the applied tracking is 16px either way.
+
+Verified by pixel measurement at device scale 2, against the pre-fix file as a
+baseline, for nine names from 7 to 18 characters: the length-axis gaps went
+from as much as **17/47** (Cortondo, and the mirror image of that on the home
+side) to **within 2.5 CSS px on every name, both sides**. Fill is unchanged for
+capped names (Po Town 74.6%) and slightly better for the rest.
+
+**The period line reads "Final" once the game is over, 2026-09-13 (per explicit
+request).** It used to keep whatever period the game ended in -- "2nd Half", or
+"1st Overtime" for a game that went past regulation -- so a finished game and a
+game paused at the same point read identically. It now reads **Final**,
+**Final / OT**, or **Final / 2OT** (the count only appears past the first
+overtime, which is how a scoreline is normally written). Driven by
+`game.gameOver`, so every path that finishes a game gets it -- a manual
+play-out, Sim Game, Auto-Play and Auto-Play Week alike, which the request asked
+for specifically ("even during simulated games").
+
+`finalTag(otPeriods)` is deliberately **not** folded into `periodLabel()`: that
+one also writes the play-by-play's period headings, where "1ST OVERTIME BEGINS"
+still has to name the period that began.
+
+**The Final Scores column reads the same way**, and it needed the OT *count* to
+do it. `buildFinalRecord` stored `ot` as a boolean, so the card could say
+"Final / OT" but never "Final / 2OT"; it now snapshots `otPeriods` and both
+callers share `finalTag`. Verified by forcing ties at the end of regulation and
+of each overtime: 1, 3 and 4 overtimes all render identically in the banner and
+on the card.
 
 **Still unplaced:** the **DEX #** and raw **PF/PA** exist in the roster but
 appear nowhere on the banner -- they were not on the old scoreboard either.
