@@ -280,6 +280,10 @@ def migrate_host_region(wb, conn):
     WINNER was home or away. If the winner was away, the loser hosted.
     Matched back to the games table the same way as the EX bonus backfill:
     by team pair, scores, and Elo.
+
+    Stores host_team_id alongside host_region. Fatigue only ever needs the
+    region, but home/away RECORDS need the identity, and for a game between
+    two teams of the same region the region cannot supply it.
     """
     ws = wb["Archive"]
     team_ids_by_name = {r["name"]: r["team_id"] for r in
@@ -327,8 +331,11 @@ def migrate_host_region(wb, conn):
         if game_id is None:
             unmatched.append((row, winner_name, "no matching game"))
             continue
-        conn.execute("UPDATE games SET host_region = ? WHERE game_id = ?",
-                     (host_region, game_id["game_id"]))
+        # host_team_id as well as the region: the region alone cannot say WHICH
+        # side hosted when both teams share one (every Regional game, and some
+        # League/Cup games), and this loop already knows the answer.
+        conn.execute("UPDATE games SET host_region = ?, host_team_id = ? WHERE game_id = ?",
+                     (host_region, host_team_id, game_id["game_id"]))
         matched += 1
 
     conn.commit()
