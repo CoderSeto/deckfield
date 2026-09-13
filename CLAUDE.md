@@ -247,6 +247,22 @@ export, by design). `export-results --from 27 --to 27` then reported the
 new file already matching byte for byte, so the round trip is lossless and
 the filename matches the engine's own derived convention.
 
+Round 42 (PA Cup Draw round 5, week 16 Tue) was ingested 2026-09-13 as
+`results/2026-w16-tue-pa-draw-5.csv`; `results/` now runs 12-42 (31 files)
+and the database reports **2268 games through round 42**. The base was
+proved faithful before ingesting, per step 2 of the runbook: regenerating
+against the pre-ingest database reproduced main's committed dashboard with
+every constant byte-identical except `TEAMS_EXPORT_TSV` (random Secondary
+Type, by design). `export-results --from 42 --to 42` then reported the new
+file already matching byte for byte, so the filename matches the engine's
+own derived convention and the round trip is lossless.
+
+Worth noting what did NOT move on that regenerate: `PA_ROUND_PAIRINGS` and
+`PA_SWAP_LOG` held still, which is correct rather than suspicious -- round
+6's pairing needs BOTH brackets through round 5 and Process round 5 has not
+been played (Draw plays Tue, Process Thu). `RT_DATA` and `SCHEDULE_DATA`
+held still too, since round 42 was a cup round and neither depends on one.
+
 Rounds 28-31 (PA Process round 3, R8, L8, L9) were added on main by a
 separate session while the Qualification tab was being built on a branch,
 so the branch had to pick them up before merging. `results/` now runs
