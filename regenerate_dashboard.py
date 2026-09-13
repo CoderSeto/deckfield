@@ -448,9 +448,6 @@ STATIC_CONSTS = {
     "CUP_BRACKET_DATA": "real RDS Cup round-1 seed data, fixed for the season",
     "PROMO_RELEGATION": "league promotion/relegation rules, not results",
     "RANK_BY_DEX": "computed client-side from DATA, so it follows it automatically",
-    "REC_KEYS": "which record columns the Rankings record group shows, and in what "
-                "order -- a display ordering, not data; the records themselves are "
-                "fields on DATA.teams and are regenerated with it",
     "REGION_BY_NAME": "region name lookup table",
     "REGION_COLORS": "fixed palette, mirrored from deckfield.html",
     "REGION_DISPLAY": "internal -> display region names",

@@ -3498,9 +3498,15 @@ def export_teams_for_deckfield(season):
             return None
         return row["elo_a_after"] if row["team_a"] == team_id else row["elo_b_after"]
 
+    # Home/Away records ride along on the roster so deckfield.html's score
+    # banner can show each side's own split (the away team's road record, the
+    # home team's home record) without a second data source.
+    splits = home_away_records(season, latest_round)
+
     teams_out = []
     for rank, r in enumerate(rows, start=1):
         overall, regional, league, cup = records_for(r["dex"])
+        split = splits.get(r["dex"], {"home": "0-0", "away": "0-0"})
         teams_out.append({
             "rank": rank, "dex": r["dex"], "region": region_display_name(r["region"]), "name": r["name"],
             "division": r["league_division"],
@@ -3513,14 +3519,16 @@ def export_teams_for_deckfield(season):
             "pa": round(r["pa_norm"], 2), "dscr": round(r["d_sqrt_raw"], 2),
             "skill_rating": round(r["ovr"], 2), "elo": round(raw_elo(r["dex"]) or 0),
             "grade": r["grade"], "region_record": regional, "league_record": league,
-            "cup_record": cup, "overall_record": overall, "primary_type": r["primary_type"],
+            "cup_record": cup, "home_record": split["home"], "away_record": split["away"],
+            "overall_record": overall, "primary_type": r["primary_type"],
             "secondary_type": random.randint(1, 18),
         })
     conn.close()
 
     header = ["Team Rank", "DEX #", "Region", "Team Name", "League Division", "Accolades",
               "Fatigue", "Climate", "PF", "PA", "DSCR", "Skill Rating", "Elo", "Rating Grade",
-              "Region Record", "League Record", "Cup Record", "Overall Record",
+              "Region Record", "League Record", "Cup Record",
+              "Home Record", "Away Record", "Overall Record",
               "Primary Type", "Secondary Type"]
     lines = ["\t".join(header)]
     for t in teams_out:
@@ -3528,7 +3536,8 @@ def export_teams_for_deckfield(season):
             t["rank"], t["dex"], t["region"], t["name"], t["division"], t["accolades"],
             t["fatigue"], t["climate"], t["pf"], t["pa"], t["dscr"], t["skill_rating"],
             t["elo"], t["grade"], t["region_record"], t["league_record"],
-            t["cup_record"], t["overall_record"], t["primary_type"], t["secondary_type"],
+            t["cup_record"], t["home_record"], t["away_record"], t["overall_record"],
+            t["primary_type"], t["secondary_type"],
         ]))
     return teams_out, "\n".join(lines)
 

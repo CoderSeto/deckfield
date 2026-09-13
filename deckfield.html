@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DECKFIELD</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --ez-w:0.85fr;          /* pitch end-zone column width, in grid fr */
@@ -330,10 +330,15 @@
       rgba(237,237,226,0.07) 0 6px, rgba(0,0,0,0) 6px 12px);
   }
   .endzone{position:relative;}
+  /* Deliberately NOT Anton like the rest of the page: Anton is extremely
+     condensed, which is the opposite of what an end zone wants. Archivo Black
+     is wide, and Arial Black is the fallback because it is already on most
+     machines -- so this still renders wide where Google Fonts cannot load.
+     The size is set by fitEndZoneName(), not here. */
   .ez-name{
-    font-family:'Anton',sans-serif;text-transform:uppercase;
-    font-size:15px;letter-spacing:2px;line-height:1;white-space:nowrap;
-    writing-mode:vertical-rl;max-height:100%;overflow:hidden;
+    font-family:'Archivo Black','Arial Black','Helvetica Neue',sans-serif;
+    text-transform:uppercase;letter-spacing:1px;line-height:1;white-space:nowrap;
+    writing-mode:vertical-rl;overflow:hidden;
   }
   /* Mirrored, so each name reads up its own side of the pitch. */
   .endzone.home .ez-name{transform:rotate(180deg);color:var(--home-bright);}
@@ -1290,6 +1295,8 @@
   let TEAM_REGION_RECORD = {home:'0-0', away:'0-0'};   // placeholder — from the roster's Region Record column (W-L, no draws)
   let TEAM_LEAGUE_RECORD = {home:'0-0', away:'0-0'};   // from League Record
   let TEAM_CUP_RECORD = {home:'0-0', away:'0-0'};      // from Cup Record
+  let TEAM_HOME_RECORD = {home:'0-0', away:'0-0'};     // from Home Record -- each team's own record AT HOME
+  let TEAM_AWAY_RECORD = {home:'0-0', away:'0-0'};     // from Away Record -- each team's own record ON THE ROAD
   let TEAM_OVERALL_RECORD = {home:'0-0', away:'0-0'};  // from Overall Record
 
   // ---- Region colors ----
@@ -2017,6 +2024,47 @@
   // anything on the pitch adds this.
   const PITCH_COL_OFFSET = 1;
 
+  // Grow an end-zone name until it spans the zone's full length. This is the
+  // mirror of fitTeamName(), which only ever shrinks: here the point is that
+  // the LONGEST names reach all the way across, so short ones are allowed to
+  // grow too rather than sitting tiny in the middle.
+  //
+  // Two ceilings, and both bind in practice. The name is rotated, so its
+  // LENGTH runs down the zone's height while its glyph height runs across the
+  // zone's WIDTH -- a size that fills the length can still overflow the
+  // 36px-wide column sideways. Whichever ceiling is hit first wins.
+  function fitEndZoneName(el){
+    const zone = el.parentElement;
+    const maxLen = zone.clientHeight - 12;      // length available down the zone
+    const maxThick = zone.clientWidth - 6;      // glyph height across the zone
+    if (maxLen <= 0 || maxThick <= 0) return;
+    el.style.letterSpacing = '0px';
+    let px = 8;
+    el.style.fontSize = px + 'px';
+    // scrollHeight is the text's LENGTH here (vertical writing mode).
+    while (px < 48 && el.scrollHeight <= maxLen && el.scrollWidth <= maxThick){
+      px += 1;
+      el.style.fontSize = px + 'px';
+    }
+    // The loop exits one step past fitting; step back to the last size that did.
+    px -= 1;
+    el.style.fontSize = px + 'px';
+
+    // Font size alone cannot fill the zone: the 36px WIDTH ceiling stops the
+    // glyphs growing long before a short name has run the zone's length (a
+    // 12-character name topped out at 68% of it). Spread the leftover length
+    // across the gaps instead, which is how a real end zone is set. Capped so
+    // a very short name gets wide tracking rather than absurd tracking.
+    const gaps = Math.max(1, (el.textContent || '').trim().length);
+    const slack = maxLen - el.scrollHeight;
+    if (slack > 0) {
+      el.style.letterSpacing = Math.min(slack / gaps, 16) + 'px';
+    }
+  }
+  function fitEndZoneNames(){
+    document.querySelectorAll('.ez-name').forEach(fitEndZoneName);
+  }
+
   function buildPitchCells(){
     pitchEl.innerHTML = '';
     // Home drives left (processTurn: dir = -1 for home) and scores off the
@@ -2032,6 +2080,8 @@
       ez.appendChild(nm);
       pitchEl.appendChild(ez);
     }
+    // After the cells are in the DOM, so the zone has a real measured size.
+    requestAnimationFrame(fitEndZoneNames);
     for (let row=1; row<=7; row++){
       for (let col=1; col<=17; col++){
         const cell = document.createElement('div');
@@ -2696,7 +2746,8 @@
   const ROSTER_COLUMNS = [
     'Team Rank', 'DEX #', 'Region', 'Team Name', 'League Division', 'Accolades',
     'Fatigue', 'Climate', 'PF', 'PA', 'DSCR', 'Skill Rating', 'Elo', 'Rating Grade',
-    'Region Record', 'League Record', 'Cup Record', 'Overall Record',
+    'Region Record', 'League Record', 'Cup Record',
+    'Home Record', 'Away Record', 'Overall Record',
     'Primary Type', 'Secondary Type'
   ];
   let TEAM_ROSTER = [];
@@ -3171,6 +3222,8 @@
     TEAM_REGION_RECORD = {home: homeTeam['Region Record'] || TEAM_REGION_RECORD.home, away: awayTeam['Region Record'] || TEAM_REGION_RECORD.away};
     TEAM_LEAGUE_RECORD = {home: homeTeam['League Record'] || TEAM_LEAGUE_RECORD.home, away: awayTeam['League Record'] || TEAM_LEAGUE_RECORD.away};
     TEAM_CUP_RECORD = {home: homeTeam['Cup Record'] || TEAM_CUP_RECORD.home, away: awayTeam['Cup Record'] || TEAM_CUP_RECORD.away};
+    TEAM_HOME_RECORD = {home: homeTeam['Home Record'] || TEAM_HOME_RECORD.home, away: awayTeam['Home Record'] || TEAM_HOME_RECORD.away};
+    TEAM_AWAY_RECORD = {home: homeTeam['Away Record'] || TEAM_AWAY_RECORD.home, away: awayTeam['Away Record'] || TEAM_AWAY_RECORD.away};
     TEAM_OVERALL_RECORD = {home: homeTeam['Overall Record'] || TEAM_OVERALL_RECORD.home, away: awayTeam['Overall Record'] || TEAM_OVERALL_RECORD.away};
     TEAM_FATIGUE = {home: safeNum(homeTeam['Fatigue'], 0), away: safeNum(awayTeam['Fatigue'], 0)};
     TEAM_CLIMATE = {home: safeNum(homeTeam['Climate'], TEAM_CLIMATE.home), away: safeNum(awayTeam['Climate'], TEAM_CLIMATE.away)};
@@ -3619,6 +3672,12 @@
       [TEAM_REGION[team], team === 'home' ? TEAM_REGION_RECORD.home : TEAM_REGION_RECORD.away],
       [TEAM_DIVISION[team], team === 'home' ? TEAM_LEAGUE_RECORD.home : TEAM_LEAGUE_RECORD.away],
       ['Cup', team === 'home' ? TEAM_CUP_RECORD.home : TEAM_CUP_RECORD.away],
+      // Each side shows the split it is actually playing under today: the home
+      // team's home record, the away team's road record. Not both for both --
+      // the point is how this team does in the situation it is now in.
+      (team === 'home')
+        ? ['Home', TEAM_HOME_RECORD.home]
+        : ['Away', TEAM_AWAY_RECORD.away],
       ['Overall', team === 'home' ? TEAM_OVERALL_RECORD.home : TEAM_OVERALL_RECORD.away],
     ];
     document.getElementById(elId).innerHTML = rows
@@ -3657,8 +3716,14 @@
   }
   // Re-fit once the real font arrives: the first paint measures the fallback,
   // and Anton needs materially less room, so the name can grow back.
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTeamNames);
-  window.addEventListener('resize', fitTeamNames);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => {
+    fitTeamNames();
+    fitEndZoneNames();
+  });
+  window.addEventListener('resize', () => {
+    fitTeamNames();
+    fitEndZoneNames();
+  });
 
   function renderAccolades(elId, team){
     const rows = String(TEAM_ACCOLADES[team] || '').split(';').map(a => a.trim()).filter(Boolean);
