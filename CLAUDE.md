@@ -2569,6 +2569,40 @@ would silently shift every column after Cup Record. The export is now 22
 columns, not 20 -- an older 20-column paste will mis-map, which is the one
 compatibility cost.
 
+**Small coloured text was hard to read, fixed 2026-09-13 (per explicit
+request), on the banner and on the pitch.**
+
+**The pitch zone numbers were the worse of the two, and size was not the main
+problem -- opacity was.** They sat at 12px and were then dimmed to `0.72`
+(team colours) and `0.6` (the slash and the same-value case), so already-small
+coloured text on turf was being given away twice over. Now full colour, weight
+600, and a dark `text-shadow` so a bright region colour still separates from a
+light turf stripe. `.zv-same` also moved from `--chalk-dim` to `--chalk`.
+
+**Their size is a `clamp`, not a number, and that is load-bearing.** A flat
+14px measured 41px of text in a 42px cell at a 1600px viewport -- fine there,
+and overflowing the moment the window narrowed, because the cells shrink with
+it. `clamp(10px, 0.85vw, 14px)` tracks the pitch: verified zero zone-text
+overflow at 1920 / 1600 / 1400 / 1240 / 1000 / 800.
+
+**On the banner**, everything small went up a step and the coloured bands also
+gained weight, which does more for legibility at these sizes than size alone:
+`.stat-v` 12.5 -> 14px and weight 600 -> 700, `.stat-k` 9.5 -> 10.5px,
+`.grade` 9.5 -> 10.5px at opacity 0.75 -> 0.9, `.team-mid` 11.5 -> 13px plus
+weight 600, `.team-records` 11 -> 12.5px, `.acc` 10.5 -> 11.5px plus weight
+600.
+
+Room was there because the stat strip had been sized for its *content* (314px
+of need in a 508px track), not for its type. Verified nothing truncates and
+nothing wraps at 1240px and up: the records line stays one line at five
+entries, the typing line stays one line, and the banner grew only 172 -> 183px
+tall.
+
+**The clipping below 1240px is pre-existing, not a cost of this change** --
+checked against `main` at the same widths with an equivalent roster: main
+clips 14 elements at 1000px and 23 at 800px, this branch 14 and 24. The single
+extra is the new fifth record entry (Home/Away), not the larger type.
+
 **Still unplaced:** the **DEX #** and raw **PF/PA** exist in the roster but
 appear nowhere on the banner -- they were not on the old scoreboard either.
 

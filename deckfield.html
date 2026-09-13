@@ -123,7 +123,7 @@
   /* Accolades: one row per semicolon-separated entry in the roster column. */
   .acc-list{display:flex;flex-direction:column;align-items:flex-start;gap:2px;max-width:100%;}
   .acc{
-    max-width:100%;font-size:10.5px;line-height:1.4;letter-spacing:0.2px;
+    max-width:100%;font-size:11.5px;font-weight:600;line-height:1.4;letter-spacing:0.2px;
     padding:1px 7px;border-radius:3px;background:rgba(255,255,255,0.055);
     border-left:2px solid currentColor;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -135,13 +135,13 @@
   /* Records outboard, typing/ATK/Every X inboard, name against the axis. */
   .team-records{
     display:flex;flex-wrap:wrap;gap:2px 11px;justify-content:flex-end;
-    font-size:11px;color:var(--chalk-dim);letter-spacing:0.3px;line-height:1.5;
+    font-size:12.5px;color:var(--chalk-dim);letter-spacing:0.3px;line-height:1.5;
   }
   .team-records .m{white-space:nowrap;}
   .team-records .m b{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--chalk);}
   .team-mid{
     display:flex;flex-wrap:wrap;gap:2px 12px;justify-content:flex-end;
-    font-size:11.5px;line-height:1.5;letter-spacing:0.3px;white-space:nowrap;
+    font-size:13px;font-weight:600;line-height:1.5;letter-spacing:0.3px;white-space:nowrap;
   }
   .team-mid .g{font-family:'JetBrains Mono',monospace;font-weight:600;}
   .team-mid .sep{opacity:0.45;}
@@ -225,14 +225,14 @@
       minmax(0,1.4fr) minmax(0,1.45fr) minmax(0,1fr) minmax(0,1.45fr);
   }
   .mini-stats .stat-v{
-    font-family:'JetBrains Mono',monospace;font-weight:600;font-size:12.5px;
-    line-height:1.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:14px;
+    line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
-  .mini-stats .stat-v .grade{font-size:9.5px;opacity:0.75;margin-left:1px;}
+  .mini-stats .stat-v .grade{font-size:10.5px;opacity:0.9;margin-left:1px;}
   .sb-cell.away .mini-stats .stat-v{color:var(--away-bright);}
   .sb-cell.home .mini-stats .stat-v{color:var(--home-bright);}
   .mini-stats .stat-k{
-    color:var(--chalk-dim);font-size:9.5px;font-weight:700;
+    color:var(--chalk-dim);font-size:10.5px;font-weight:700;
     letter-spacing:0.4px;text-transform:uppercase;line-height:1.45;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
@@ -349,10 +349,22 @@
     display:flex;flex-direction:row;align-items:center;justify-content:center;gap:1px;
     font-family:'JetBrains Mono',monospace;line-height:1;
   }
-  .zone-vals .zv-home{font-size:12px;color:var(--home-bright);opacity:0.72;}
-  .zone-vals .zv-away{font-size:12px;color:var(--away-bright);opacity:0.72;}
-  .zone-vals .zv-slash{font-size:12px;color:var(--chalk-dim);opacity:0.6;}
-  .zone-vals .zv-same{font-size:12px;color:var(--chalk-dim);opacity:0.6;}
+  /* Readability, not decoration. These sit on the turf at small size, and
+     they used to be dimmed to 0.72/0.6 on top of that -- the opacity was
+     costing more contrast than the size was. Full colour, heavier weight, and
+     a dark shadow so a bright region colour still separates from a light turf
+     stripe. `5/6` at 14px is ~26px of text in a 42px cell, so there is room. */
+  .zone-vals span{
+    /* Scales with the pitch. A flat 14px measured 41px of text in a 42px cell
+       at a 1600px viewport -- fine there and overflowing the moment the window
+       narrowed, since the cells shrink with it. */
+    font-size:clamp(10px,0.85vw,14px);font-weight:600;
+    text-shadow:0 1px 2px rgba(0,0,0,0.75),0 0 1px rgba(0,0,0,0.9);
+  }
+  .zone-vals .zv-home{color:var(--home-bright);}
+  .zone-vals .zv-away{color:var(--away-bright);}
+  .zone-vals .zv-slash{color:var(--chalk-dim);}
+  .zone-vals .zv-same{color:var(--chalk);}
 
   .marker{
     position:relative;border-radius:50%;
