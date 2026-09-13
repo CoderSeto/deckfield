@@ -1859,6 +1859,55 @@ scroll-box border each side, and all 11 tabs load with zero `pageerror`
 events. Note the page already scrolls horizontally below ~1400px — that
 predates this change (confirmed against main) and is untouched.
 
+**A two-legged tie showed BOTH teams as the winner when the legs split 1-1,
+fixed 2026-09-13 (per explicit request).** `rdsMutualRowHtml` printed both
+legs into one row (`L1 56&ndash;28 / L2 38&ndash;28`) and coloured a name if
+it won *any* leg -- `new Set(legs.map(r => r.winner))`. Dream's semifinal is
+exactly that case: Cocona Village won leg 1, Humilau City won leg 2, and the
+tab showed both names in winner colour with nothing saying who actually went
+through.
+
+Replaced by `rdsMutualTieRows(g, results)`, which returns **one row per leg
+plus an aggregate row**:
+
+- Each leg row carries only that leg's winner in colour, and is drawn in
+  **that leg's own orientation** -- leg 1 is hosted by the worse seed, so the
+  stored pairing (leg-2 orientation, better seed home) is flipped for it,
+  exactly as `_rds_leg_orientation()` does in the engine.
+- The **AGG** row sums both legs and colours the aggregate winner alone. An
+  exact aggregate tie goes to the better (lower-numbered) seed, matching
+  `_rds_mutual_tie_winner()` -- the JS is a port of that rule and the two
+  have to stay in step.
+- It renders only once **both** legs are in. After one leg an "aggregate"
+  would just repeat that leg's score under a heading claiming to have
+  settled the tie.
+
+The score still resolves each team's number **by name** (`scoreOf`), not by
+printing `winner_score` as the home score: `leg_results()` stores
+winner/loser, so the naive read is backwards in every game the home side
+lost. That was fixed once already (`af5827b`) and the per-leg rewrite had to
+keep it.
+
+The leg label lives in the score cell (`.sb-leg`) and is load-bearing, not
+decoration: the two teams **swap ends between legs**, so without `L1`/`L2`
+the second row reads like a transcription error. `.sb-agg` gets a top border
+to separate the summary from the games it sums.
+
+**The final gets the same outline for free** -- it runs through the same
+function, so each cup's final now shows its two legs as unplayed `L1 -` /
+`L2 -` rows against the real finalists (Ribbon: Canalave City #3 vs Snowpoint
+City #4; Dream: Nimbasa City #3 vs Cocona Village #10; Star: Mesagoza #9 vs
+Casseroya Lake #18), instead of the single dashed row it used to be.
+
+Renderer-only: nothing derived changed, so `regenerate_dashboard.py` was
+deliberately **not** re-run (it would have rewritten every constant from
+whatever the local database held -- a different question from this change),
+the same call as the Standings rank-column entry above. Verified via
+Playwright across all three cups: every leg row colours exactly one name,
+each AGG row colours the aggregate winner only (Dream's 1-1 semifinal
+resolves to Cocona Village 84-66), the score cells do not overflow, all 11
+tabs render, zero `pageerror` events.
+
 **Standings gained an overall-rank column, 2026-09-11 (per explicit
 request).** Each Standings box now shows a team's league-wide OVR rank
 (1-160) between its own standings position and its name, so a region's
