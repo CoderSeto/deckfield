@@ -82,15 +82,18 @@
        and a three-digit score would otherwise shove the banner. The other
        three are fr, so the banner fills its wrapper exactly; content can't
        widen them either (min-width:0 plus ellipsis throughout).
-       The name track is sized so a long name never has to shrink: the weights
-       put it at 469px against the ~415px its worst case needs in Anton, paid
-       for by the time track (which only ever needed room for a six-digit
-       clock) and the stat strip (which was ~180px wider than its widest
-       reading).
+       The name track is sized by the RECORDS LINE, not the name: five entries
+       at the current type measure 437px today against 440px of box, which is
+       why it started wrapping mid-season as records grew a digit. A projected
+       end-of-season worst case (Lily Valley / Seventh Div. / five-character
+       records) needs 476px and a pathological one 491px, so the track is set
+       to 529px -- about 500px of records box. Paid for by the stat strip
+       (346px of real need in what was a 508px track) and a little by the
+       accolades (160px of widest real entry in what was 248px).
        Score and time are minmax rather than plain px so the banner can still
        compress: with the minimums below it fits without overflowing down to a
        ~530px banner, which is what lets the scroll container go. */
-    grid-template-columns:minmax(60px,0.70fr) minmax(110px,1.325fr) minmax(96px,156px) minmax(112px,176px) minmax(150px,1.435fr);
+    grid-template-columns:minmax(60px,0.70fr) minmax(110px,1.624fr) minmax(96px,156px) minmax(112px,176px) minmax(150px,1.437fr);
     grid-template-rows:1fr auto 1fr;
     background:var(--panel);border:1px solid var(--panel-line);border-radius:10px;
   }
@@ -341,7 +344,9 @@
     writing-mode:vertical-rl;overflow:hidden;
   }
   /* Mirrored, so each name reads up its own side of the pitch. */
-  .endzone.home .ez-name{transform:rotate(180deg);color:var(--home-bright);}
+  /* The 180deg flip is applied by centreEndZoneInk() via .ez-flip, not here:
+     it has to compose with the ink correction in one transform. */
+  .endzone.home .ez-name{color:var(--home-bright);}
   .endzone.away .ez-name{color:var(--away-bright);}
 
   .zone-vals{
@@ -2072,6 +2077,42 @@
     if (slack > 0) {
       el.style.letterSpacing = Math.min(slack / gaps, 16) + 'px';
     }
+    centreEndZoneInk(el);
+  }
+
+  // Centre the GLYPHS across the zone's width, which is not where the browser
+  // puts them. In vertical writing mode a glyph is centred on its em box, and
+  // uppercase Latin ink does not sit symmetrically in that box -- the unused
+  // descender space pushes the ink about 1.5px off. The home side carries
+  // `rotate(180deg)`, which mirrors the error rather than cancelling it, so the
+  // two zones lean opposite ways and the pair reads lopsided: measured gaps of
+  // 4.5px and 1.5px on a 36px zone.
+  //
+  // The correction has to ride AFTER the rotation in the transform list so it
+  // acts in the element's own rotated frame; a layout margin would be mirrored
+  // by the rotation and end up doubling the error on the home side.
+  function centreEndZoneInk(el){
+    const flipped = el.classList.contains('ez-flip');
+    const base = flipped ? 'rotate(180deg)' : '';
+    el.style.transform = base;
+    const txt = el.firstChild;
+    if (!txt || !txt.length) return;
+    const zb = el.parentElement.getBoundingClientRect();
+    const charRect = (i) => {
+      const r = document.createRange();
+      r.setStart(txt, i); r.setEnd(txt, i + 1);
+      return r.getBoundingClientRect();
+    };
+    const a = charRect(0), b = charRect(txt.length - 1);
+    const inkMid = (Math.min(a.left, b.left) + Math.max(a.right, b.right)) / 2;
+    const off = inkMid - (zb.left + zb.width / 2);
+    if (Math.abs(off) > 0.25) {
+      // translateX rides after the rotation, so on the flipped side its local
+      // +x points the opposite way on screen -- the correction has to be
+      // negated there or it doubles the error instead of cancelling it.
+      const dx = flipped ? off : -off;
+      el.style.transform = `${base} translateX(${dx.toFixed(2)}px)`;
+    }
   }
   function fitEndZoneNames(){
     document.querySelectorAll('.ez-name').forEach(fitEndZoneName);
@@ -2087,7 +2128,8 @@
       ez.className = `endzone ${side}`;
       ez.style.gridColumn = col;
       const nm = document.createElement('div');
-      nm.className = 'ez-name';
+      // Mirrored so each name reads up its own side of the pitch.
+      nm.className = side === 'home' ? 'ez-name ez-flip' : 'ez-name';
       nm.textContent = TEAM_DISPLAY_NAME[side];
       ez.appendChild(nm);
       pitchEl.appendChild(ez);

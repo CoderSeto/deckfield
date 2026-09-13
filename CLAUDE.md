@@ -247,6 +247,22 @@ export, by design). `export-results --from 27 --to 27` then reported the
 new file already matching byte for byte, so the round trip is lossless and
 the filename matches the engine's own derived convention.
 
+Round 42 (PA Cup Draw round 5, week 16 Tue) was ingested 2026-09-13 as
+`results/2026-w16-tue-pa-draw-5.csv`; `results/` now runs 12-42 (31 files)
+and the database reports **2268 games through round 42**. The base was
+proved faithful before ingesting, per step 2 of the runbook: regenerating
+against the pre-ingest database reproduced main's committed dashboard with
+every constant byte-identical except `TEAMS_EXPORT_TSV` (random Secondary
+Type, by design). `export-results --from 42 --to 42` then reported the new
+file already matching byte for byte, so the filename matches the engine's
+own derived convention and the round trip is lossless.
+
+Worth noting what did NOT move on that regenerate: `PA_ROUND_PAIRINGS` and
+`PA_SWAP_LOG` held still, which is correct rather than suspicious -- round
+6's pairing needs BOTH brackets through round 5 and Process round 5 has not
+been played (Draw plays Tue, Process Thu). `RT_DATA` and `SCHEDULE_DATA`
+held still too, since round 42 was a cup round and neither depends on one.
+
 Rounds 28-31 (PA Process round 3, R8, L8, L9) were added on main by a
 separate session while the Qualification tab was being built on a branch,
 so the branch had to pick them up before merging. `results/` now runs
@@ -2602,6 +2618,61 @@ tall.
 checked against `main` at the same widths with an equivalent roster: main
 clips 14 elements at 1000px and 23 at 800px, this branch 14 and 24. The single
 extra is the new fifth record entry (Home/Away), not the larger type.
+
+**The records line was wrapping mid-season, fixed 2026-09-13 (per explicit
+report).** Reported from a real Auto-Play Week: "at some point, the record
+line got too big and wrapped." It did, and the margin was the reason --
+`.team-records` is `flex-wrap: wrap`, so it fails quietly by reflowing rather
+than overflowing, and it was **3px** from doing so.
+
+Measured across all 160 teams x both sides: the widest line today is **437px
+against 440px of box**. Nothing wrapped at the moment it was measured; a
+couple of games' worth of extra digits is all it took. The worst case is
+"Lily Valley" (longest region) + "Seventh Div." (longest division label) + five
+records.
+
+**Sized for the end of the season, not for today**, since records only grow:
+a projected end-of-season line needs **476px** and a pathological one (every
+record five characters) **491px**. The name track went 469 -> **529px**,
+giving a **500px** records box -- 24px of headroom at season end, 9px at
+pathological, and zero of the 320 real lines wrapping.
+
+Paid for by the two neighbours, per explicit instruction:
+
+- **stat strip 508 -> 468px.** Its true intrinsic need is **346px** (Skill 77,
+  DSCR 34, O/D 51, Fatigue 48, Climate 51, Elo 34, Win% 51), so it keeps 1.35x
+  headroom. Measure that with an off-DOM probe **inside the real parent** --
+  reading the rendered `scrollWidth` of the live cells returns the grid's
+  clamped widths, not the need, and reported a misleading 494px.
+- **accolades 248 -> 228px.** The widest real entry is 160px, so 54px spare.
+
+**Cost: the score/time pair now sits 145px right of the banner's centre, up
+from 105px.** Same arithmetic as before -- `(accolades + name - stats) / 2` --
+and the same trade taken knowingly.
+
+**End-zone names were off-centre ACROSS the zone, fixed at the same time (per
+explicit report).** The length axis was always exact; the cross axis was not.
+In vertical writing mode a glyph is centred on its **em box**, and uppercase
+Latin ink does not sit symmetrically in that box -- the unused descender space
+pushed the ink ~1.5px off. The home side carries `rotate(180deg)`, which
+**mirrors** that error rather than cancelling it, so the two zones leaned
+opposite ways: measured gaps of 4.5px and 1.5px on a 36px zone.
+
+`centreEndZoneInk()` measures the real ink (a `Range` over the first and last
+characters) and corrects it. Two things about it are easy to get wrong:
+
+- The correction **must ride after the rotation in the transform list**, so it
+  acts in the element's own rotated frame. A layout margin would be mirrored
+  by the rotation and double the error on the home side instead of cancelling
+  it -- which is why the flip moved out of CSS onto an `.ez-flip` class, so the
+  JS owns the whole transform.
+- **Its sign flips with the rotation.** The first version applied `-off` on
+  both sides and took the home side from -1.5px to **-3px** -- worse, not
+  better, because local +x points the other way once rotated.
+
+Verified: both sides now read exactly **0** off-centre with symmetric gaps, for
+names from 7 to 18 characters, while the length-axis fill stays at 96% (82%
+for the short name at the tracking cap).
 
 **Still unplaced:** the **DEX #** and raw **PF/PA** exist in the roster but
 appear nowhere on the banner -- they were not on the old scoreboard either.
