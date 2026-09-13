@@ -1188,7 +1188,16 @@ function rdsMutualRowHtml(g, results, label) {
   const legs = (results || []).filter(r => r.winner === g.home || r.winner === g.away
                                         || r.loser === g.home || r.loser === g.away);
   const score = legs.length
-    ? legs.map(r => `L${r.leg} ${r.winner_score}&ndash;${r.loser_score}`).join(' / ')
+    ? legs.map(r => {
+        // Score column reads away-home, like every other RDS row
+        // (rdsRound1RowHtml) -- winner_score/loser_score has to be resolved
+        // onto the away/home side that actually won, not printed as-is,
+        // or the score reads backwards whenever the home side lost.
+        const homeWon = r.winner === g.home;
+        const homeScore = homeWon ? r.winner_score : r.loser_score;
+        const awayScore = homeWon ? r.loser_score : r.winner_score;
+        return `L${r.leg} ${awayScore}&ndash;${homeScore}`;
+      }).join(' / ')
     : '&ndash;';
   const winners = new Set(legs.map(r => r.winner));
   const nm = (n) => winners.has(n) ? winnerNameHtml(n) : escQ(n);
