@@ -1639,32 +1639,35 @@ They are no longer counted in the Overall/Cup records either (see "Byes are
 not wins in a displayed record" below), so Home + Away reconciles with
 Overall exactly for all 160 teams.
 
-**The record columns are now ONE table column that scrolls sideways on its
-own** (per explicit request), holding Overall / Regional / League / Cup / P/F
-/ Home / Away. Seven record columns would otherwise have pushed the already
-28-column table further past its sticky Team column.
+**They render as ordinary columns** alongside Overall / Regional / League /
+Cup / P/F.
 
-- Every `.rec-scroll` -- the header's and all 160 rows' -- is kept at the same
-  `scrollLeft`, or the headings stop naming the numbers under them. `scroll`
-  does not bubble, so the listener is on the table in the **capture** phase,
-  which also survives `tbody` being rebuilt on every sort and every keystroke
-  in the search box. `syncRecScroll()` re-applies the header's offset after a
-  render, since a fresh `tbody` starts at 0.
-- The sort targets are the **spans** inside the header cell, not the `<th>`,
-  so the click handler is delegated from `thead`.
 - **Record sorting was broken and is now fixed.** It compared the raw strings,
   so `"37-0"` sorted before `"9-1"` because `'3' < '9'` -- every record column
   silently sorted by first digit. `recordRank()` parses `W-L` and orders by
   wins then losses.
-- `REC_KEYS` builds both the header and every row, so the two cannot drift
-  apart. It is in `STATIC_CONSTS` (a display ordering, not data) -- the
-  manifest guard caught it on the first regenerate, which is exactly its job.
+
+(The scrolling group these columns briefly lived in was reverted the same day
+-- see "The record columns went back to plain side-by-side columns" below.)
 
 **The regenerate was verified against main's committed dashboard**: 24 of 26
 shared constants byte-identical, `TEAMS_EXPORT_TSV` differing by design
 (random Secondary Type), and `DATA` differing **only** by the two new fields
 -- zero pre-existing fields changed across all 160 teams. That is what proves
 the local rebuild was faithful and the new fields are purely additive.
+
+**The record columns went back to plain side-by-side columns, 2026-09-13 (per
+explicit request -- a reversal of the scrolling group added the same day).**
+Overall / Regional / League / Cup / P/F / Home / Away are seven ordinary
+`<th>`/`<td>` pairs again at the table's own spacing, which is wider than the
+82px cells the scroll group used.
+
+Removed with it: `.rec-scroll`/`.rec-col` CSS, the `REC_KEYS` constant (and its
+`STATIC_CONSTS` entry), the capture-phase scroll-sync listener, `syncRecScroll()`
+and the delegated `thead` click handler -- the per-`<th>` sort listener came
+back. **`recordRank()` stayed**: sorting these columns as raw strings put
+`"37-0"` before `"9-1"` on first digit, and that is a real fix independent of
+the layout.
 
 ### Byes are not wins in a displayed record (2026-09-13, per explicit instruction)
 
@@ -2518,6 +2521,87 @@ rendered without overflow, the ball marker centred on its own cell (which is
 what a wrong offset would break), a 124px divider, and a full match still
 plays with the Results CSV at 21 columns, all four tabs rendering and zero
 `pageerror` events.
+
+**End-zone type: wide font, stretched to span the zone, 2026-09-13 (per
+explicit request).** The names were set in Anton at a flat 15px. Anton is
+extremely condensed -- the opposite of what an end zone wants -- so they read
+as a thin stripe down the middle of the zone.
+
+Now **Archivo Black**, added to the Google Fonts link, with **Arial Black** as
+the fallback: that one is already on most machines, so the zone still renders
+wide where Google Fonts cannot load (which includes this sandbox). It is the
+only place on the page not set in Anton, deliberately.
+
+`fitEndZoneName()` sizes each name, and the two-step shape of it is the point:
+
+1. **Grow the font** until it hits a ceiling. There are two, and they are not
+   the same axis: the name is rotated, so its LENGTH runs down the zone's
+   height while its glyph height runs across the zone's 36px WIDTH. Whichever
+   binds first wins.
+2. **Then spread the leftover length as letter-spacing.** Font size alone
+   cannot fill the zone -- the width ceiling stops the glyphs growing long
+   before a short name has run the zone's length; "Nimbasa City" topped out at
+   **68%** of it. Tracking is how a real end zone is set, and it takes every
+   real name to **96%** (the remaining 4% is the 6px padding at each end).
+
+Tracking is capped at 16px per gap so a very short name gets wide spacing
+rather than absurd spacing: "Po Town" (7 chars) settles at the cap and 82%,
+which is the deliberate floor of the design. The longest real name
+("Blueberry Terarium", 18 chars) needs almost no tracking at all -- it fills
+96% on font size alone at 24px.
+
+It re-runs on `document.fonts.ready` and on resize, alongside `fitTeamName()`,
+for exactly the same reason: first paint measures the fallback, and Archivo
+Black is a different width from Arial Black.
+
+**The banner's records line gained the split that matters for the fixture**
+(per explicit request): between Cup and Overall, the **home** team shows its
+**Home** record and the **away** team shows its **Away** record. Not both on
+both sides -- the question a reader has is how this team does in the situation
+it is in today.
+
+That needed the roster to carry them, so `export_teams_for_deckfield()` gained
+**Home Record** and **Away Record** columns (from `home_away_records()`),
+placed between Cup Record and Overall Record. **`ROSTER_COLUMNS` in
+`deckfield.html` had to move in lockstep**: the roster paste is positional,
+mapped by index into that list, so inserting two columns on one side only
+would silently shift every column after Cup Record. The export is now 22
+columns, not 20 -- an older 20-column paste will mis-map, which is the one
+compatibility cost.
+
+**Small coloured text was hard to read, fixed 2026-09-13 (per explicit
+request), on the banner and on the pitch.**
+
+**The pitch zone numbers were the worse of the two, and size was not the main
+problem -- opacity was.** They sat at 12px and were then dimmed to `0.72`
+(team colours) and `0.6` (the slash and the same-value case), so already-small
+coloured text on turf was being given away twice over. Now full colour, weight
+600, and a dark `text-shadow` so a bright region colour still separates from a
+light turf stripe. `.zv-same` also moved from `--chalk-dim` to `--chalk`.
+
+**Their size is a `clamp`, not a number, and that is load-bearing.** A flat
+14px measured 41px of text in a 42px cell at a 1600px viewport -- fine there,
+and overflowing the moment the window narrowed, because the cells shrink with
+it. `clamp(10px, 0.85vw, 14px)` tracks the pitch: verified zero zone-text
+overflow at 1920 / 1600 / 1400 / 1240 / 1000 / 800.
+
+**On the banner**, everything small went up a step and the coloured bands also
+gained weight, which does more for legibility at these sizes than size alone:
+`.stat-v` 12.5 -> 14px and weight 600 -> 700, `.stat-k` 9.5 -> 10.5px,
+`.grade` 9.5 -> 10.5px at opacity 0.75 -> 0.9, `.team-mid` 11.5 -> 13px plus
+weight 600, `.team-records` 11 -> 12.5px, `.acc` 10.5 -> 11.5px plus weight
+600.
+
+Room was there because the stat strip had been sized for its *content* (314px
+of need in a 508px track), not for its type. Verified nothing truncates and
+nothing wraps at 1240px and up: the records line stays one line at five
+entries, the typing line stays one line, and the banner grew only 172 -> 183px
+tall.
+
+**The clipping below 1240px is pre-existing, not a cost of this change** --
+checked against `main` at the same widths with an equivalent roster: main
+clips 14 elements at 1000px and 23 at 800px, this branch 14 and 24. The single
+extra is the new fifth record entry (Home/Away), not the larger type.
 
 **Still unplaced:** the **DEX #** and raw **PF/PA** exist in the roster but
 appear nowhere on the banner -- they were not on the old scoreboard either.
