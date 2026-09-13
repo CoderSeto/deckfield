@@ -96,6 +96,11 @@ def init_db():
         elo_a_after REAL,
         elo_b_after REAL,
         host_region TEXT,                   -- which region physically hosted the game (fatigue input)
+        host_team_id INTEGER REFERENCES teams(team_id),  -- WHICH TEAM hosted. host_region alone cannot
+                                            -- answer that: both teams of a Regional game share a region
+                                            -- (and some League/Cup games do too), which is 43% of all
+                                            -- games. Fatigue only ever needs the region, so the identity
+                                            -- used to be computed and thrown away by both writers.
         cup_name TEXT,                      -- Ribbon/Dream/Star/PA -- which cup this game belongs to, if any
         cup_bracket TEXT,                   -- Draw/Process
         cup_round INTEGER                   -- 1st/2nd/... round WITHIN the cup (not the absolute season round)
@@ -294,18 +299,19 @@ def add_game(season, round_num, game_type, team_a, team_b, pf_a, pa_a, result_a,
              raw_goal_score_a=None, raw_goal_score_b=None, spread_a=None,
              interest_score=None, dscr_a=None, dscr_b=None,
              ex_bonus_a=0, ex_bonus_b=0, elo_a_after=None, elo_b_after=None,
-             host_region=None, cup_name=None, cup_bracket=None, cup_round=None):
+             host_region=None, cup_name=None, cup_bracket=None, cup_round=None,
+             host_team_id=None):
     conn = get_connection()
     conn.execute("""
         INSERT INTO games (season, round, game_type, team_a, team_b, pf_a, pa_a, result_a,
                             raw_goal_score_a, raw_goal_score_b, spread_a, interest_score,
                             dscr_a, dscr_b, ex_bonus_a, ex_bonus_b, elo_a_after, elo_b_after,
-                            host_region, cup_name, cup_bracket, cup_round)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                            host_region, cup_name, cup_bracket, cup_round, host_team_id)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, (season, round_num, game_type, team_a, team_b, pf_a, pa_a, result_a,
           raw_goal_score_a, raw_goal_score_b, spread_a, interest_score,
           dscr_a, dscr_b, ex_bonus_a, ex_bonus_b, elo_a_after, elo_b_after,
-          host_region, cup_name, cup_bracket, cup_round))
+          host_region, cup_name, cup_bracket, cup_round, host_team_id))
     conn.commit()
     conn.close()
 
@@ -583,6 +589,7 @@ def add_game_from_dict(season, values):
         elo_a_after=float(values["elo_a_after"]), elo_b_after=float(values["elo_b_after"]),
         ex_bonus_a=float(values.get("ex_a") or 0), ex_bonus_b=float(values.get("ex_b") or 0),
         host_region=host_region,
+        host_team_id=host_team_id,
         cup_name=values.get("cup_name") or None,
         cup_bracket=values.get("cup_bracket") or None,
         cup_round=int(values["cup_round"]) if values.get("cup_round") else None,
@@ -754,6 +761,50 @@ _UNDER3_TABLE = {
     (1, "1-0"): 200/3, (1, "0-1"): 100/3,
     (2, "2-0"): 500/6, (2, "1-1"): 50.0, (2, "0-2"): 100/6,
 }
+
+
+def home_away_records(season, through_round=None):
+    """{team_id: {"home": "W-L", "away": "W-L"}} across every game a team has
+    played, split by whether they hosted.
+
+    Reads `games.host_team_id`, which both writers now store (the CSV's own
+    `home` column for anything ingested through add_game_from_dict, the
+    Archive's Home/Away column for the migrated rounds 1-11). It is stored
+    rather than derived because `host_region` genuinely cannot answer the
+    question: both teams of a Regional game share a region, as do some
+    League and Cup pairings -- 975 of 2252 games at round 41.
+
+    A game with no host_team_id counts toward neither record rather than
+    being guessed at, so home + away can be short of the overall record; at
+    round 41 no game is in that state.
+
+    Walkovers are not counted -- a bye is neither a home nor an away result --
+    and as of 2026-09-13 they are not counted in the Overall/Cup records
+    either, so home + away reconciles with Overall exactly for all 160 teams.
+    """
+    conn = get_connection()
+    sql = """
+        SELECT team_a, team_b, result_a, host_team_id FROM games
+        WHERE season = ? AND host_team_id IS NOT NULL
+    """
+    params = [season]
+    if through_round is not None:
+        sql += " AND round <= ?"
+        params.append(through_round)
+    tally = {}
+
+    def bump(team_id, side, won):
+        rec = tally.setdefault(team_id, {"home": [0, 0], "away": [0, 0]})
+        rec[side][0 if won else 1] += 1
+
+    for r in conn.execute(sql, params).fetchall():
+        # result_a is team_a's points: 3 win, 2 OT win, 1 OT loss, 0 loss.
+        a_won = r["result_a"] in (2, 3)
+        for team_id, won in ((r["team_a"], a_won), (r["team_b"], not a_won)):
+            bump(team_id, "home" if team_id == r["host_team_id"] else "away", won)
+    conn.close()
+    return {tid: {side: f"{w}-{l}" for side, (w, l) in rec.items()}
+            for tid, rec in tally.items()}
 
 
 def _record_key(games, game_type):
@@ -3421,9 +3472,6 @@ def export_teams_for_deckfield(season):
             SELECT game_type, result_a, team_a, team_b FROM games
             WHERE season=? AND round<=? AND (team_a=? OR team_b=?)
         """, (season, latest_round, team_id, team_id)).fetchall()
-        walkovers = conn.execute("""
-            SELECT game_type, result FROM walkovers WHERE season=? AND round<=? AND team_id=?
-        """, (season, latest_round, team_id)).fetchall()
         buckets = {"R": [0, 0], "L": [0, 0], "S": [0, 0], "PF": [0, 0]}
         overall = [0, 0]
         for g in games:
@@ -3432,11 +3480,11 @@ def export_teams_for_deckfield(season):
             key = "PF" if g["game_type"] in ("P", "F") else g["game_type"]
             buckets[key][0 if won else 1] += 1
             overall[0 if won else 1] += 1
-        for w in walkovers:
-            won = w["result"] in (2, 3)
-            key = "PF" if w["game_type"] in ("P", "F") else w["game_type"]
-            buckets[key][0 if won else 1] += 1
-            overall[0 if won else 1] += 1
+        # Byes are NOT counted as wins in the displayed record -- same rule as
+        # the dashboard's Rankings tab (per explicit instruction 2026-09-13),
+        # so the roster export and the dashboard cannot disagree about a
+        # team's record. They keep their SP/TOT contribution via
+        # _points_buckets; only the W-L shown to a reader changes.
         fmt = lambda p: f"{p[0]}-{p[1]}"
         return fmt(overall), fmt(buckets["R"]), fmt(buckets["L"]), fmt(buckets["S"])
 
@@ -3600,10 +3648,6 @@ def _standings_order(season, teams, game_type):
             SELECT result_a, team_a, team_b, dscr_a, dscr_b FROM games
             WHERE season=? AND round<=? AND game_type=? AND (team_a=? OR team_b=?)
         """, (season, latest_round, game_type, team_id, team_id)).fetchall()
-        walkovers = conn.execute("""
-            SELECT result FROM walkovers
-            WHERE season=? AND round<=? AND game_type=? AND team_id=?
-        """, (season, latest_round, game_type, team_id)).fetchall()
         w = l = 0
         dscrs = []
         log = []
@@ -3617,9 +3661,12 @@ def _standings_order(season, teams, game_type):
                 dscrs.append(own_dscr)
             opp = g["team_b"] if is_a else g["team_a"]
             log.append((opp, result))
-        for wo in walkovers:
-            won = wo["result"] in (2, 3)
-            w, l = w + (1 if won else 0), l + (0 if won else 1)
+        # No walkover term: a bye is not a win in any displayed record (per
+        # explicit instruction 2026-09-13), and standings W-L also seeds the
+        # Regional Tournament. This is a no-op against real data -- every
+        # walkover is game_type 'S' and this only ever runs with 'R'/'L' --
+        # but leaving it in would have made standings disagree with the
+        # Rankings tab the first time an R/L bye existed.
         dscr_avg = sum(dscrs) / len(dscrs) if dscrs else 0
         return w, l, dscr_avg, log
 

@@ -45,7 +45,7 @@ from deckfield_ratings import (
     compute_strength_breakdown, generate_pod_schedule,
     rds_cup_real_results, rds_cup_round_pairings,
     regional_standings_seeds, regional_tournament_games, REGION_COLORS,
-    world_championship_field, rds_mutual_stage_data,
+    world_championship_field, rds_mutual_stage_data, home_away_records,
 )
 
 SEASON = 9
@@ -76,11 +76,13 @@ def _records_for(conn, team_id, latest_round):
         overall[0 if won else 1] += 1
         opp = g["team_b"] if g["team_a"] == team_id else g["team_a"]
         log.append([opp, g["game_type"], result])
-    for w in walkovers:
-        won = w["result"] in (2, 3)
-        key = "PF" if w["game_type"] in ("P", "F") else w["game_type"]
-        buckets[key][0 if won else 1] += 1
-        overall[0 if won else 1] += 1
+    # WALKOVERS ARE DELIBERATELY NOT IN THE DISPLAYED RECORD (per explicit
+    # instruction 2026-09-13). A bye is not a game and reads wrong as a win --
+    # the 32 RDS Dream/Star bye seeds showed 13 cup wins against 11 cup games
+    # played. They still carry their points: _points_buckets keeps folding them
+    # into SP/TOT/cup_wins, so no rating, OVR or rank moves. `walkovers` is
+    # still fetched because that is what makes the omission visible here rather
+    # than looking like nobody thought about it.
     fmt = lambda p: f"{p[0]}-{p[1]}"
     return {
         "overall": fmt(overall), "regional": fmt(buckets["R"]), "league": fmt(buckets["L"]),
@@ -131,13 +133,20 @@ def build_data():
         ORDER BY r.ovr DESC
     """, (SEASON, latest_round)).fetchall()
 
+    # Home/away splits come from the engine rather than being recomputed here:
+    # they need games.host_team_id, which host_region cannot substitute for
+    # (both teams of a Regional game share a region).
+    ha = home_away_records(SEASON, latest_round)
+
     teams_out = []
     for rank, r in enumerate(rows, start=1):
         rec = _records_for(conn, r["team_id"], latest_round)
+        split = ha.get(r["team_id"], {"home": "0-0", "away": "0-0"})
         teams_out.append({
             "dex": r["team_id"], "name": r["name"], "region": r["region"], "division": r["league_division"],
             "overall": rec["overall"], "regional": rec["regional"], "league": rec["league"], "cup": rec["cup"],
             "playoff_finals": rec["playoff_finals"], "regional_w": rec["regional_w"], "league_w": rec["league_w"],
+            "home": split["home"], "away": split["away"],
             "rp": int(r["rp"]), "lp": int(r["lp"]),
             "dscr_regional_avg": _dscr_avg(conn, r["team_id"], latest_round, "R"),
             "dscr_league_avg": _dscr_avg(conn, r["team_id"], latest_round, "L"),
@@ -439,6 +448,9 @@ STATIC_CONSTS = {
     "CUP_BRACKET_DATA": "real RDS Cup round-1 seed data, fixed for the season",
     "PROMO_RELEGATION": "league promotion/relegation rules, not results",
     "RANK_BY_DEX": "computed client-side from DATA, so it follows it automatically",
+    "REC_KEYS": "which record columns the Rankings record group shows, and in what "
+                "order -- a display ordering, not data; the records themselves are "
+                "fields on DATA.teams and are regenerated with it",
     "REGION_BY_NAME": "region name lookup table",
     "REGION_COLORS": "fixed palette, mirrored from deckfield.html",
     "REGION_DISPLAY": "internal -> display region names",

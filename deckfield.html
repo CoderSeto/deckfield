@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
+    --ez-w:0.85fr;          /* pitch end-zone column width, in grid fr */
     --turf-dark:#0E2018;
     --turf:#163A2A;
     --turf-light:#1E4B36;
@@ -109,6 +110,15 @@
      middle of the banner, continuous through the score and time blocks since
      they already carry the same colour. */
   .sb-axis{grid-row:2;height:2px;background:var(--sb-inner);}
+  /* In the score column the axis is the SAME colour as the block it crosses,
+     so it is invisible there -- which left the two scores stacked with nothing
+     between them. Draw a real rule, inset by the block's own padding so it sits
+     between the numbers rather than running edge to edge into the separators. */
+  .sb-axis.score-cell{position:relative;}
+  .sb-axis.score-cell::after{
+    content:'';position:absolute;top:0;bottom:0;left:16px;right:16px;
+    background:rgba(237,237,226,0.38);border-radius:1px;
+  }
 
   /* Accolades: one row per semicolon-separated entry in the roster column. */
   .acc-list{display:flex;flex-direction:column;align-items:flex-start;gap:2px;max-width:100%;}
@@ -240,7 +250,10 @@
   /* ---- Layout ---- */
   .layout{
     display:grid;
-    grid-template-columns: minmax(0,0.85fr) minmax(0,1.65fr) minmax(0,1fr);
+    /* The pitch grew two decorative end-zone columns (see .pitch below), so
+       the cards/log column gives up the width to keep each playing cell the
+       size it was. */
+    grid-template-columns: minmax(0,0.85fr) minmax(0,1.85fr) minmax(0,0.85fr);
     grid-template-areas:
       "finals pitch cards"
       "finals pitch log";
@@ -266,12 +279,22 @@
   .dot.home{background:var(--home-bright);}
   .dot.away{background:var(--away-bright);}
 
+  /* The playable field is x = 1..17, and a goal is scored by LEAVING it
+     (processTurn: newX < 1 || newX > 17) -- so columns 1 and 17 are real
+     playable positions, just worth 0 zone points. They used to carry the team
+     tint, which read as scoring territory. The tint now belongs to a
+     decorative END ZONE outside the field on each side, and the last playable
+     column is plain turf again.
+
+     Nothing about the game changed: the grid simply gained one non-playable
+     column at each end, so every marker is offset by one to land on the right
+     cell (see PITCH_COL_OFFSET). */
   .pitch{
     position:relative;
     display:grid;
-    grid-template-columns:repeat(17,1fr);
+    grid-template-columns:var(--ez-w) repeat(17,1fr) var(--ez-w);
     grid-template-rows:repeat(7,1fr);
-    aspect-ratio:17/7;
+    aspect-ratio:18.7/7;
     width:100%;
     border-radius:8px;
     overflow:hidden;
@@ -285,8 +308,36 @@
   }
   .cell.alt{background:var(--turf-light);}
   .cell.center-col{border-left:2px dashed rgba(237,237,226,0.35);border-right:2px dashed rgba(237,237,226,0.35);}
-  .cell.home-end{background:var(--home-tint) !important;}
-  .cell.away-end{background:var(--away-tint) !important;}
+  .endzone{
+    grid-row:1 / -1;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+  }
+  /* The GOAL LINE -- a chalk rule on the end zone's inner edge. It is doing
+     real work, not decoration: a team whose region colour is green (Lily
+     Valley, say) tints its end zone to almost exactly the turf, and without
+     this the boundary between the last playable column and the end zone
+     simply disappears. */
+  .endzone.home{border-right:2px solid rgba(237,237,226,0.55);}
+  .endzone.away{border-left:2px solid rgba(237,237,226,0.55);}
+  /* The tint is translucent, so give it an opaque base rather than letting
+     the panel behind show through at a different value than the turf. */
+  .endzone.home{background:linear-gradient(var(--home-tint),var(--home-tint)),var(--turf-dark);}
+  .endzone.away{background:linear-gradient(var(--away-tint),var(--away-tint)),var(--turf-dark);}
+  /* Chalk hatching, so an end zone still reads as one even at a glance. */
+  .endzone::before{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(45deg,
+      rgba(237,237,226,0.07) 0 6px, rgba(0,0,0,0) 6px 12px);
+  }
+  .endzone{position:relative;}
+  .ez-name{
+    font-family:'Anton',sans-serif;text-transform:uppercase;
+    font-size:15px;letter-spacing:2px;line-height:1;white-space:nowrap;
+    writing-mode:vertical-rl;max-height:100%;overflow:hidden;
+  }
+  /* Mirrored, so each name reads up its own side of the pitch. */
+  .endzone.home .ez-name{transform:rotate(180deg);color:var(--home-bright);}
+  .endzone.away .ez-name{color:var(--away-bright);}
 
   .zone-vals{
     position:absolute;inset:0;z-index:1;pointer-events:none;
@@ -1961,17 +2012,33 @@
   let game = new Game();
   let autoTimer = null;
 
+  // Grid column 1 is the home end zone, so playable x = 1..17 sits at grid
+  // columns 2..18 and the away end zone is 19. Everything that positions
+  // anything on the pitch adds this.
+  const PITCH_COL_OFFSET = 1;
+
   function buildPitchCells(){
     pitchEl.innerHTML = '';
+    // Home drives left (processTurn: dir = -1 for home) and scores off the
+    // LEFT edge, so the left end zone is the one home attacks into -- which is
+    // the side the old tinted column already marked in home's colour.
+    for (const [side, col] of [['home', 1], ['away', 19]]){
+      const ez = document.createElement('div');
+      ez.className = `endzone ${side}`;
+      ez.style.gridColumn = col;
+      const nm = document.createElement('div');
+      nm.className = 'ez-name';
+      nm.textContent = TEAM_DISPLAY_NAME[side];
+      ez.appendChild(nm);
+      pitchEl.appendChild(ez);
+    }
     for (let row=1; row<=7; row++){
       for (let col=1; col<=17; col++){
         const cell = document.createElement('div');
         cell.className = 'cell';
         if (col % 2 === 0) cell.classList.add('alt');
         if (col === 9) cell.classList.add('center-col');
-        if (col === 1) cell.classList.add('home-end');
-        if (col === 17) cell.classList.add('away-end');
-        cell.style.gridColumn = col;
+        cell.style.gridColumn = col + PITCH_COL_OFFSET;
         cell.style.gridRow = row;
 
         if (col !== 1 && col !== 2 && col !== 16 && col !== 17){
@@ -2002,7 +2069,7 @@
   }
 
   function placeMarker(el, x, y, opacity){
-    el.style.gridColumn = x;
+    el.style.gridColumn = x + PITCH_COL_OFFSET;
     el.style.gridRow = y;
     if (opacity !== undefined) el.style.opacity = opacity;
   }
@@ -2370,8 +2437,8 @@
   //      is shut out (scores 0).
   //   2. Second-half play-out (first half flushed instantly, then replayed
   //      turn-by-turn from the second-half kickoff onward) if not tier 1, and:
-  //      both teams top 48; a top-48 team loses; it goes to overtime; the
-  //      pre-game spread is under 2; or the favorite was favored by more than
+  //      both teams top 48; a top-32 team loses; it goes to overtime; the
+  //      pre-game spread is under 1; or the favorite was favored by more than
   //      8 but wins by less than 5 (or loses).
   //   3. Otherwise, simulate -- flush the final result instantly, no replay.
   // "Playing out" (fully or from the second half) replays the exact turns the
@@ -2434,15 +2501,17 @@
     if (bothTop32 || shutout) return 'full';
 
     const bothTop48 = RANK_HOME <= 48 && RANK_AWAY <= 48;
-    const top48TeamLoses = (RANK_HOME <= 48 && game.score.home < game.score.away)
-      || (RANK_AWAY <= 48 && game.score.away < game.score.home);
+    const top32TeamLoses = (RANK_HOME <= 32 && game.score.home < game.score.away)
+      || (RANK_AWAY <= 32 && game.score.away < game.score.home);
     const wentToOT = game.periodIndex >= 3;
-    const closeSpread = Math.abs(SPREAD_VALUE) < 2;
+    // SPREAD_VALUE is already a magnitude (computeSpread returns Math.abs of
+    // its own signed result, with SPREAD_TEAM naming the favourite).
+    const closeSpread = SPREAD_VALUE < 1;
     const favoriteMargin = (SPREAD_TEAM === 'home')
       ? (game.score.home - game.score.away)
       : (game.score.away - game.score.home);
     const bigFavoriteFizzle = Math.abs(SPREAD_VALUE) > 8 && favoriteMargin < 5;
-    if (bothTop48 || top48TeamLoses || wentToOT || closeSpread || bigFavoriteFizzle) return 'second-half';
+    if (bothTop48 || top32TeamLoses || wentToOT || closeSpread || bigFavoriteFizzle) return 'second-half';
 
     return 'sim';
   }

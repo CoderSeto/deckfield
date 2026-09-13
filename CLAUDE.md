@@ -1598,6 +1598,121 @@ after; only the seed values written into the log entry changed. Row 1's
 entry now reads "Swapped seed #97 &harr; #98," matching the real
 Stow-on-Side/Oreburgh City exchange.
 
+**`games.host_team_id` -- WHICH team hosted, added 2026-09-13.** `host_region`
+cannot answer that question and never could: both teams of a Regional game
+share a region, as do some League and Cup pairings, which is **975 of 2252
+games at round 41 (43%)**. Fatigue only ever needs the region, so both
+writers computed the host's identity and threw it away --
+`migrate_host_region()` derives `host_team_id` from the Archive's Home/Away
+column and stored only its region, and `add_game_from_dict()` does the same
+from the CSV's own `home` field. Both now store it.
+
+This was added for the Rankings tab's Home/Away records, and it is stored
+rather than derived because the alternatives are all heuristics: the pod
+schedule covers Regional/League only, `team_a`-is-home holds only for rounds
+12+ (DECKFIELD's Results export contract), and `host_region` leaves 69
+historical cup games unattributable.
+
+**Validated four ways after a clean rebuild**, all exact:
+- 2252/2252 games have a `host_team_id`, and it is always one of the two teams.
+- It never disagrees with `host_region` (the host's own region, 0 mismatches).
+- It agrees with the **pod schedule** on all **1680** Regional/League
+  pairings -- including rounds 1-11, which the pod schedule independently
+  validated against real Archive host data.
+- It agrees with **`team_a` is home** on all **1468** round-12+ games.
+
+**`export_results()` was deliberately left alone.** It still recovers `home`
+from `host_region`, which is arbitrary-but-harmless for a same-region game
+(either answer resolves to the same `host_region`, which is all `home` is
+used for on re-ingest). Switching it to `host_team_id` would change the
+exported bytes for those games and break the byte-for-byte round trip against
+the committed CSVs. Confirmed still a no-op: all 30 files "already matches".
+
+### Home/Away records on the Rankings tab
+
+`home_away_records(season, through_round)` in the engine splits every game by
+whether the team hosted; `build_data()` attaches `home`/`away` to each
+`DATA.teams` entry.
+
+**Walkovers are not counted** -- a bye is neither a home nor an away result.
+They are no longer counted in the Overall/Cup records either (see "Byes are
+not wins in a displayed record" below), so Home + Away reconciles with
+Overall exactly for all 160 teams.
+
+**The record columns are now ONE table column that scrolls sideways on its
+own** (per explicit request), holding Overall / Regional / League / Cup / P/F
+/ Home / Away. Seven record columns would otherwise have pushed the already
+28-column table further past its sticky Team column.
+
+- Every `.rec-scroll` -- the header's and all 160 rows' -- is kept at the same
+  `scrollLeft`, or the headings stop naming the numbers under them. `scroll`
+  does not bubble, so the listener is on the table in the **capture** phase,
+  which also survives `tbody` being rebuilt on every sort and every keystroke
+  in the search box. `syncRecScroll()` re-applies the header's offset after a
+  render, since a fresh `tbody` starts at 0.
+- The sort targets are the **spans** inside the header cell, not the `<th>`,
+  so the click handler is delegated from `thead`.
+- **Record sorting was broken and is now fixed.** It compared the raw strings,
+  so `"37-0"` sorted before `"9-1"` because `'3' < '9'` -- every record column
+  silently sorted by first digit. `recordRank()` parses `W-L` and orders by
+  wins then losses.
+- `REC_KEYS` builds both the header and every row, so the two cannot drift
+  apart. It is in `STATIC_CONSTS` (a display ordering, not data) -- the
+  manifest guard caught it on the first regenerate, which is exactly its job.
+
+**The regenerate was verified against main's committed dashboard**: 24 of 26
+shared constants byte-identical, `TEAMS_EXPORT_TSV` differing by design
+(random Secondary Type), and `DATA` differing **only** by the two new fields
+-- zero pre-existing fields changed across all 160 teams. That is what proves
+the local rebuild was faithful and the new fields are purely additive.
+
+### Byes are not wins in a displayed record (2026-09-13, per explicit instruction)
+
+Raised directly: "I didn't realize that Byes counted in a team's Cup W-L."
+They did. All 64 walkover rows carry `result = 3` -- an outright win -- and
+`_points_buckets` folded them into the record, so the 32 RDS Dream/Star bye
+seeds showed **13 cup wins against 11 cup games played**. They are the
+rounds 1-2 byes of Draw and Process (abs_rounds 4 and 5), migrated faithfully
+from the workbook, which scored them that way itself.
+
+**The audit that came with it: a bye never contributed a 0 to anything.**
+Checked across all 160 teams, not read off the code: no walkover reaches
+`games_played`, `regional_games` or `league_games`, and every average
+(`avg_pf`, `avg_pa`, `avg_pd`, spread, DSCR, GI, Elo) iterates `games` only.
+So nothing was ever diluted by a phantom scoreless fixture.
+
+**What a bye actually fed**, per team (each of the 32 holds 2):
+`sp` +12 (result 3 x the ×2 cup multiplier, twice), `tot` +12, `cup_wins` +2 --
+and through those, `intl_w` -> RLStr, and `sp/1000` inside both RW and LW,
+which is Block A of OVR.
+
+**The resolution chosen: drop byes from the DISPLAYED record only.** They keep
+every point they award, so no rating, OVR, rank or seeding moves; only the
+W-L a reader sees changes. Three builders had to agree:
+
+- `_records_for()` in `regenerate_dashboard.py` (Rankings tab),
+- `records_for()` inside `export_teams_for_deckfield()` (the roster's own
+  Region/League/Cup/Overall Record columns, which feed `deckfield.html`'s
+  score banner -- leaving this one alone would have had the game and the
+  dashboard disagree about a team's record),
+- `_standings_order()`, which was a **no-op in practice** (every walkover is
+  `game_type='S'`; that function only ever runs with `'R'`/`'L'`) but would
+  have made standings -- and therefore Regional Tournament seeding -- disagree
+  the first time an R/L bye existed.
+
+`_points_buckets` is deliberately unchanged: it is what still awards the
+points.
+
+Verified by regenerating: **only `DATA` and `TEAMS_EXPORT_TSV` moved**, and
+within `DATA` only the `overall` and `cup` fields, on exactly 32 teams.
+`RT_DATA`, `STRENGTH_DATA`, `QUALIFICATION_DATA` and `RANK_ELO_HISTORY` came
+out byte-identical, which is what proves the standings edit really was a
+no-op and that seeding did not shift. Nimbasa City reads cup 13-1 -> 11-1 and
+overall 32-3 -> 30-3 with `tot` 272, `ovr` 102.48 and rank 3 all unchanged.
+The roster export agrees with the dashboard on all 160 teams, and every team
+now reconciles both ways: home + away = Overall, and Regional + League + Cup
++ P/F = Overall.
+
 ### Rank/Elo History tab
 
 Added 2026-08-05, mirroring the S9 workbook's own hand-tracked history
@@ -2350,6 +2465,60 @@ needs ~150px against the 248px it holds.
 **Every X now precedes the ATK modifier** on the inboard line (per explicit
 request) -- a straight reorder of the two `<span>`s in `renderTeamMid`.
 
+**The pitch gained end zones OUTSIDE the playable field, 2026-09-13 (per
+explicit request).** Columns 1 and 17 carried the team tint and read as
+scoring territory, but they are ordinary playable positions: the field is
+x = 1..17 and a goal is scored by *leaving* it (`processTurn`:
+`newX < 1 || newX > 17`). They were only ever worth 0 zone points
+(`pointsForPosition` returns 0 for x in 1, 2, 16, 17), which is what made
+them look like an end zone.
+
+The tint now belongs to a **decorative column outside the field** at each
+end, and the last playable column is plain turf again -- so what the picture
+shows is a green last-non-scoring position followed by an end zone.
+
+**No game mechanics changed.** The grid went from 17 to 19 columns, both of
+them non-playable; `PITCH_COL_OFFSET = 1` shifts every cell and marker one
+column right so x = 1..17 lands on grid columns 2..18. Scoring, kickoffs,
+`pointsForPosition` and the ATK table are all untouched. Adding a genuinely
+playable 18th column would have rebalanced the whole game, which the request
+did not ask for.
+
+Three things worth keeping:
+
+- **Which end belongs to whom.** Home drives left (`dir = -1`) and scores off
+  the LEFT edge, so the left end zone is the one home attacks into -- which
+  is the side the old tinted column already marked in home's colour. The name
+  and tint follow that existing association rather than inventing a new one.
+- **The goal line is load-bearing, not decoration.** A team whose region
+  colour is green (Lily Valley) tints its end zone to almost exactly the turf,
+  and without the 2px chalk rule on the end zone's inner edge the boundary
+  simply disappears. The 45-degree chalk hatch does the same job at a glance.
+- **The team names run vertically** (`writing-mode: vertical-rl`), mirrored so
+  each reads up its own side: the home name is additionally rotated 180
+  degrees. The longest real name (18 chars) needs ~145px against the 294px of
+  a seven-row column, so nothing truncates.
+
+**The cards/log column paid for the width** (per explicit request): `.layout`
+went `0.85 / 1.65 / 1fr` to `0.85 / 1.85 / 0.85fr`. That is not just
+compensation -- each playing cell came out *slightly larger* than before
+(42.4px vs 41.5px at a 1600px viewport), and the cards panel still fits its
+six buttons with no overflow at 366px.
+
+**The score banner gained a divider between the two scores** (per explicit
+request). `.sb-axis` is the same colour as the block it crosses, so in the
+score column it was invisible -- the two numbers sat stacked with nothing
+between them. `.sb-axis.score-cell::after` draws a real rule, inset by the
+block's own 16px padding so it sits between the numbers rather than running
+edge to edge into the separators.
+
+Verified via Playwright against the real page: 19 grid tracks, 119 playable
+cells at grid columns 2-18, zero tinted playable cells, both end-zone names
+rendered without overflow, the ball marker centred on its own cell (which is
+what a wrong offset would break), a 124px divider, and a full match still
+plays with the Results CSV at 21 columns, all four tabs rendering and zero
+`pageerror` events.
+
 **Still unplaced:** the **DEX #** and raw **PF/PA** exist in the roster but
 appear nowhere on the banner -- they were not on the old scoreboard either.
 
@@ -2478,6 +2647,23 @@ CSV is unaffected, re-parsing clears the column, and Auto-Play Week fills
 it 2/2 with no page errors.
 
 ## Auto-Play Week snapshots (deckfield.html)
+
+Every game is fully simulated once, silently, and `decideAutoPlayTier()` then
+decides what to DO with that already-decided result -- full play-out,
+second-half play-out, or a straight flush. The conditions themselves are
+written out in the design comment above that function in `deckfield.html`;
+this file only records changes to them.
+
+**Tier 2's thresholds were tightened 2026-09-13 (per explicit request):**
+"a top-48 team loses" became **a top-32 team loses**, and the close-spread
+test went from **under 2** to **under 1**. Tier 1 (both teams top 32, or a
+shutout) and the rest of tier 2 are unchanged.
+
+Worth knowing while reading that function: **`SPREAD_VALUE` is already a
+magnitude** -- `computeSpread()` returns `Math.abs()` of its own signed
+result with `SPREAD_TEAM` naming the favourite -- so the `Math.abs()` around
+it was always redundant. The close-spread test now reads it directly; the
+`bigFavoriteFizzle` test still wraps it, harmlessly.
 
 **`simulateFullyWithHistory()` no longer clones the log per turn, fixed
 2026-09-03.** Every turn's snapshot was `structuredClone(game)`, and
