@@ -346,7 +346,17 @@ def _round_file_stems(year=2026):
             if kind in ("R", "L"):
                 event = f"{kind.lower()}{slot[1]}"
             elif kind in ("RDS", "PA"):
-                event = f"{kind.lower()}-{slot[1].lower()}-{slot[2]}"
+                # slot[2] (cup_round) is None for the two-legged mutual
+                # stages (RDS SF/Final, PA QF/SF/Final) -- those slots
+                # repeat as (kind, bracket, None) across the week's Tue/Thu,
+                # so the leg number has to come from mutual_leg_number()
+                # (week/day), not the slot tuple, or the stem literally
+                # reads "-None".
+                round_part = (
+                    slot[2] if slot[2] is not None
+                    else mutual_leg_number(slot, week["week"], day)
+                )
+                event = f"{kind.lower()}-{slot[1].lower()}-{round_part}"
             elif kind == "RT":
                 event = f"rt-{slot[1]}"
             else:
@@ -2231,7 +2241,7 @@ def rds_cup_real_results(season):
         JOIN teams ta ON ta.team_id = g.team_a
         JOIN teams tb ON tb.team_id = g.team_b
         WHERE g.season = ? AND g.cup_name IN ('Ribbon', 'Dream', 'Star')
-              AND g.cup_bracket IS NOT NULL AND g.cup_round IS NOT NULL
+              AND g.cup_bracket IN ('Draw', 'Process') AND g.cup_round IS NOT NULL
         ORDER BY g.cup_round
     """, (season,)).fetchall()
     conn.close()
@@ -3136,7 +3146,8 @@ def pa_cup_real_results(season):
         FROM games g
         JOIN teams ta ON ta.team_id = g.team_a
         JOIN teams tb ON tb.team_id = g.team_b
-        WHERE g.season = ? AND g.cup_name = 'PA' AND g.cup_bracket IS NOT NULL AND g.cup_round IS NOT NULL
+        WHERE g.season = ? AND g.cup_name = 'PA' AND g.cup_bracket IN ('Draw', 'Process')
+              AND g.cup_round IS NOT NULL
         ORDER BY g.cup_round
     """, (season,)).fetchall()
     conn.close()
@@ -3297,7 +3308,14 @@ def rank_elo_history(season):
             rank_checkpoints.append({"label": lbl, "abs_round": r})
             i += 1
             continue
-        kind, bracket, cup_round = event
+        # RDS SF/Final and PA QF/SF/Final legs key on (kind, bracket, week,
+        # day) -- see _schedule_event_key -- not (kind, bracket, cup_round),
+        # so they don't have a cup_round to unpack. Harmless here: the SC
+        # merge below only ever applies within the historical portion
+        # (abs_round <= historical_cutoff), and every mutual-leg round is
+        # well past that, so cup_round is never actually needed for them.
+        kind, bracket = event[0], event[1]
+        cup_round = event[2] if len(event) == 3 else None
         merged = False
         if r <= historical_cutoff and i + 1 < len(rounds):
             next_r = rounds[i + 1]
