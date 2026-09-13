@@ -263,6 +263,26 @@ Worth noting what did NOT move on that regenerate: `PA_ROUND_PAIRINGS` and
 been played (Draw plays Tue, Process Thu). `RT_DATA` and `SCHEDULE_DATA`
 held still too, since round 42 was a cup round and neither depends on one.
 
+Round 43 (PA Cup Process round 5, week 16 Thu) was ingested 2026-09-13 as
+`results/2026-w16-thu-pa-process-5.csv`; `results/` now runs 12-43 (32
+files) and the database reports **2284 games through round 43**. Proved
+faithful the same way before ingesting: a wipe-and-rebuild from the
+workbook plus all 31 existing CSVs in round order reproduced 2268 games,
+and regenerating against it left **27 of 28** dashboard constants
+byte-identical to main's committed copy -- `TEAMS_EXPORT_TSV` the only
+difference, by design. `export-results --from 43 --to 43` then reported the
+new file already matching byte for byte.
+
+This round is the other half of round 42's pair, and the regenerate shows
+it: **`PA_ROUND_PAIRINGS` and `PA_SWAP_LOG` moved this time**, because
+round 6's pairing needs BOTH brackets through round 5 and Process round 5
+is what completed that. The PA tab now carries Rounds 1-6 in both brackets
+and the Conflict Resolution Log accumulates 10/14/7/8/3/4 across rounds
+1-6 -- round 6 logging entries is expected, not a leak past the scope:
+`PA_REGION_CHECK_LAST_ROUND = 6` and "up until round 6" is read inclusive.
+`RT_DATA` and `SCHEDULE_DATA` held still again (a cup round touches
+neither), as did every RDS constant.
+
 Rounds 28-31 (PA Process round 3, R8, L8, L9) were added on main by a
 separate session while the Qualification tab was being built on a branch,
 so the branch had to pick them up before merging. `results/` now runs
