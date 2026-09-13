@@ -226,6 +226,18 @@
     width: 76px;
     white-space: nowrap;
   }
+  /* Two-legged ties print one row per leg plus an aggregate row, so each
+     row has to say which leg it is -- the two teams swap ends between
+     legs, and without the label the second row looks like a typo. */
+  .sb-leg {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    opacity: 0.7;
+    margin-right: 4px;
+  }
+  .sb-agg td { border-top: 1px solid var(--border); }
+  .sb-agg .sb-leg { opacity: 1; color: var(--accent); }
   .sb-winner {
     background: rgba(111,207,151,0.16);
     color: var(--grade-good);
@@ -465,7 +477,7 @@
         </div>
       </div>
     </div>
-    <div class="meta-note">Each round's pairings are generated as soon as the round before it is complete, so the newest section is the next one to be played. Draw: higher (better) seed hosts. Process: lower (worse) seed hosts. After round 5 both brackets converge on the <strong>Mutual Stage</strong> above: 4 distinct finalists means a Draw semifinal and a Process semifinal; if one team reached the final two on <em>both</em> sides it byes straight to the final and the other two play the lone semifinal. Semifinal and final are two-legged &mdash; the worse seed hosts leg 1, the better seed hosts leg 2 &mdash; and the pairing is shown in leg-2 orientation. Each cup has its own Mutual Stage block, shown above this bracket as soon as that cup&rsquo;s round 5 is complete in both brackets.</div>
+    <div class="meta-note">Each round's pairings are generated as soon as the round before it is complete, so the newest section is the next one to be played. Draw: higher (better) seed hosts. Process: lower (worse) seed hosts. After round 5 both brackets converge on the <strong>Mutual Stage</strong> above: 4 distinct finalists means a Draw semifinal and a Process semifinal; if one team reached the final two on <em>both</em> sides it byes straight to the final and the other two play the lone semifinal. Semifinal and final are two-legged &mdash; the worse seed hosts leg 1, the better seed hosts leg 2 &mdash; so each leg gets its own row, in that leg&rsquo;s own orientation, with the combined <strong>AGG</strong> line beneath deciding the tie (an exact aggregate tie goes to the better seed). Each cup has its own Mutual Stage block, shown above this bracket as soon as that cup&rsquo;s round 5 is complete in both brackets.</div>
   </section>
 
   <section id="panel-pacup" class="panel">
@@ -1184,28 +1196,55 @@ const RDS_MUTUAL_STAGE = {"Ribbon": {"note": "Canalave City reached the final tw
 // The shared semifinal/final both brackets feed into, so it belongs to
 // neither Draw nor Process and gets its own full-width section rather than
 // being duplicated into both bracket tables.
-function rdsMutualRowHtml(g, results, label) {
+// A two-legged tie renders ONE ROW PER LEG plus an aggregate row beneath
+// them. Both legs used to share a single row, which coloured every leg
+// winner's name -- so a tie split 1-1 showed BOTH teams as the winner of
+// the matchup. Only the aggregate decides a tie, so only the aggregate row
+// colours anybody as having won it.
+function rdsMutualTieRows(g, results) {
   const legs = (results || []).filter(r => r.winner === g.home || r.winner === g.away
                                         || r.loser === g.home || r.loser === g.away);
-  const score = legs.length
-    ? legs.map(r => {
-        // Score column reads away-home, like every other RDS row
-        // (rdsRound1RowHtml) -- winner_score/loser_score has to be resolved
-        // onto the away/home side that actually won, not printed as-is,
-        // or the score reads backwards whenever the home side lost.
-        const homeWon = r.winner === g.home;
-        const homeScore = homeWon ? r.winner_score : r.loser_score;
-        const awayScore = homeWon ? r.loser_score : r.winner_score;
-        return `L${r.leg} ${awayScore}&ndash;${homeScore}`;
-      }).join(' / ')
-    : '&ndash;';
-  const winners = new Set(legs.map(r => r.winner));
-  const nm = (n) => winners.has(n) ? winnerNameHtml(n) : escQ(n);
-  return `<tr>
-    <td class="sb-away"><span class="sb-rank">#${g.away_seed}</span> ${nm(g.away)}</td>
-    <td class="sb-score">${score}</td>
-    <td class="sb-home">${nm(g.home)} <span class="sb-rank">#${g.home_seed}</span></td>
-  </tr>`;
+  const byLeg = new Map(legs.map(r => [r.leg, r]));
+  // leg_results stores winner/loser, not home/away, so a team's score has
+  // to be resolved by name -- printing winner_score as the home score reads
+  // backwards in every game the home side lost.
+  const scoreOf = (r, team) => r.winner === team ? r.winner_score : r.loser_score;
+
+  let html = [1, 2].map(leg => {
+    // The stored pairing is leg-2 orientation (better seed home). Leg 1 is
+    // hosted by the WORSE seed, i.e. the same pair flipped -- exactly what
+    // _rds_leg_orientation() does in the engine.
+    const flip = leg === 1;
+    const home = flip ? g.away : g.home, homeSeed = flip ? g.away_seed : g.home_seed;
+    const away = flip ? g.home : g.away, awaySeed = flip ? g.home_seed : g.away_seed;
+    const r = byLeg.get(leg);
+    const score = r ? `${scoreOf(r, away)}&ndash;${scoreOf(r, home)}` : '&ndash;';
+    const nm = (n) => (r && r.winner === n) ? winnerNameHtml(n) : escQ(n);
+    return `<tr>
+      <td class="sb-away"><span class="sb-rank">#${awaySeed}</span> ${nm(away)}</td>
+      <td class="sb-score"><span class="sb-leg">L${leg}</span>${score}</td>
+      <td class="sb-home">${nm(home)} <span class="sb-rank">#${homeSeed}</span></td>
+    </tr>`;
+  }).join('');
+
+  // Only once BOTH legs are in: after one leg the aggregate would just
+  // repeat that leg's score under a heading claiming to have settled the tie.
+  if (byLeg.has(1) && byLeg.has(2)) {
+    const total = (team) => scoreOf(byLeg.get(1), team) + scoreOf(byLeg.get(2), team);
+    const homeTot = total(g.home), awayTot = total(g.away);
+    // An exact aggregate tie goes to the better (lower-numbered) seed --
+    // the same seed authority that decides hosting, matching
+    // _rds_mutual_tie_winner() in the engine.
+    const winner = homeTot !== awayTot ? (homeTot > awayTot ? g.home : g.away)
+                                       : (g.home_seed <= g.away_seed ? g.home : g.away);
+    const nm = (n) => n === winner ? winnerNameHtml(n) : escQ(n);
+    html += `<tr class="sb-agg">
+      <td class="sb-away"><span class="sb-rank">#${g.away_seed}</span> ${nm(g.away)}</td>
+      <td class="sb-score"><span class="sb-leg">AGG</span>${awayTot}&ndash;${homeTot}</td>
+      <td class="sb-home">${nm(g.home)} <span class="sb-rank">#${g.home_seed}</span></td>
+    </tr>`;
+  }
+  return html;
 }
 function renderRdsMutual() {
   const section = document.getElementById('rds-mutual-section');
@@ -1218,13 +1257,13 @@ function renderRdsMutual() {
   if (!d) { section.hidden = true; tbody.innerHTML = ''; return; }
   section.hidden = false;
   let html = `<tr><td colspan="3" class="sb-round">${rdsCup} Cup &mdash; Semifinal</td></tr>`;
-  html += d.semifinal.map(g => rdsMutualRowHtml(g, d.results.SF, 'SF')).join('');
+  html += d.semifinal.map(g => rdsMutualTieRows(g, d.results.SF)).join('');
   if (d.bye) {
     html += `<tr><td colspan="3" class="qual-sub" style="padding:4px 10px">${winnerNameHtml(d.bye)} byes to the final</td></tr>`;
   }
   html += `<tr><td colspan="3" class="sb-round">${rdsCup} Cup &mdash; Final</td></tr>`;
   html += d.final
-    ? rdsMutualRowHtml(d.final, d.results.Final, 'Final')
+    ? rdsMutualTieRows(d.final, d.results.Final)
     : '<tr><td colspan="3" class="qual-sub" style="padding:4px 10px">Awaiting the semifinal.</td></tr>';
   html += `<tr><td colspan="3" class="qual-sub" style="padding:4px 10px">${escQ(d.note)}</td></tr>`;
   tbody.innerHTML = html;
