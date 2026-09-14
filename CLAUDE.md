@@ -721,6 +721,50 @@ is no semifinal to conclude).
 `team_round_ratings` and is folded into the TOT the Rankings tab shows, but no
 tab breaks it out on its own.
 
+### Cup-title accolades (2026-09-14, per explicit instruction)
+
+Winning a cup earns an accolade -- `Ribbon S9`, `Dream S9`, `Star S9` -- and
+it is **derived from the results, not stored**. That is not a stylistic
+choice: `teams.accolades` is workbook history written by `migrate_accolades()`
+and **nothing in the engine ever writes to it**, so a row updated by hand
+would be erased by the next `migrate` (`init_db()` drops every table). Merging
+at export time is what makes the title survive a rebuild.
+
+`cup_champions(season)` and `tournament_bonus_points()` both read the **same**
+`_cup_stages()` walk, so the accolade and the +30 can never disagree about who
+won a cup. Ribbon -> Canalave City, Dream -> Cocona Village, Star -> Casseroya
+Lake.
+
+**Placement follows the convention the real data already keeps**, verified
+across all 44 teams that have any accolade: a **region-named** entry (the
+Regional Tournament -- `Lily Valley S3`, `Vertress S1, S2 S3, S4 S8`) is
+**always the last entry**, with zero exceptions, and three teams have none at
+all. So `merge_accolades()` inserts before the first region-named entry, or
+appends when there is none. Canalave City reads:
+
+```
+World Champion S6; World Finalist S7; Swiss S8; Ribbon S9; Lily Valley S6, S7, S8
+```
+
+**A repeated title groups its seasons rather than repeating the entry**
+(`Ribbon S8` + S9 -> `Ribbon S8, S9`), matching how the stored data already
+writes a repeated accolade, and the merge is **idempotent** -- a team that
+already carries `Ribbon S9` does not gain a second copy. Neither case can
+arise this season; both will next season, which is when a bug there would be
+expensive to find.
+
+Only the **winner** is accoladed. Runners-up keep their +15 and nothing else:
+Mesagoza still reads `Terastal S8` alone.
+
+Verified: seven merge cases directly (no accolades, regional-only, no regional
+entry, multi-entry, two titles in one season, a repeat grouping, and
+idempotency); regenerating moves **only `TEAMS_EXPORT_TSV`**, since accolades
+reach nothing but the roster export; and Playwright reads all five rows off
+the real banner at 1920/1600/1400/1240px. Canalave City is now the row-count
+record-holder at **5**, which fits -- 98px of list in a 110px cell -- and the
+longest single entry is still Castelia City's 25-character one the column was
+already sized for.
+
 ## Regional/League pod schedule
 
 16 teams per region/division split into 4 pods of 4 (2×2: UL/UR/LL/LR),
