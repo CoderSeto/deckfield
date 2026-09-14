@@ -1,0 +1,4 @@
+round,game_type,team_a,team_b,result_a,pf_a,pa_a,raw_goal_a,raw_goal_b,spread_a,interest,dscr_a,dscr_b,elo_a_after,elo_b_after,home,ex_a,ex_b,cup_name,cup_bracket,cup_round
+49,S,55,126,3,43,42,6.20,3.45,18.3194,86.70,50.4,29.1,2328,2092,A,1,1,Dream,Final,2
+49,S,160,151,0,8,37,3.50,4.13,0.7761,102.88,0.0,182.1,2161,2352,A,0,2,Star,Final,2
+49,S,33,40,3,50,30,5.13,5.60,5.0317,101.29,101.3,21.5,2495,2356,A,3,0,Ribbon,Final,2

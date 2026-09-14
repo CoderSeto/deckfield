@@ -184,6 +184,8 @@ def build_calendar():
     conn = get_connection()
     next_info = next_matchday(SEASON)
     next_event = next_info["event"] if next_info else None
+    next_week = next_info["week"] if next_info else None
+    next_day = next_info["day"] if next_info else None
 
     def label_for(slot, day):
         kind = slot[0]
@@ -194,10 +196,11 @@ def build_calendar():
         _, bracket, cup_round = slot
         if cup_round is not None:
             return f"{kind} {bracket} {cup_round}"
-        if bracket == "Final" and kind == "PA":
-            n = {"Tue": 1, "Thu": 2, "Weekend": 3}[day]
-            return f"PA Final {n}"
-        return f"{kind} {bracket}"
+        # A two-legged/Bo3 stage occupies the same tuple on more than one
+        # day, so the leg number is the only thing telling the two rows
+        # apart -- without it the calendar prints the same label twice.
+        n = {"Tue": 1, "Thu": 2, "Weekend": 3}[day]
+        return f"{kind} {bracket} leg {n}"
 
     def played(abs_round):
         return conn.execute(
@@ -212,10 +215,17 @@ def build_calendar():
             if slot is None:
                 entry[day] = None
                 continue
-            abs_round = abs_round_for_event(slot)
+            # week/day are load-bearing for a two-legged slot: the tuple alone
+            # resolves to the FIRST occurrence, so both legs came out as leg
+            # 1's round -- which also made leg 2 test the wrong round for
+            # "played" and report a finished matchday as pending.
+            abs_round = abs_round_for_event(slot, week["week"], day)
             entry[day] = {
                 "label": label_for(slot, day), "played": played(abs_round),
-                "abs_round": abs_round, "is_next": (slot == next_event),
+                "abs_round": abs_round,
+                # Same reason: comparing the tuple alone marks BOTH legs next.
+                "is_next": (slot == next_event and week["week"] == next_week
+                            and day == next_day),
             }
         calendar.append(entry)
     conn.close()

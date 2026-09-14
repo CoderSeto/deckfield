@@ -283,6 +283,49 @@ and the Conflict Resolution Log accumulates 10/14/7/8/3/4 across rounds
 `RT_DATA` and `SCHEDULE_DATA` held still again (a cup round touches
 neither), as did every RDS constant.
 
+Round 49 (RDS Final **leg 2**, week 18 Thu) was ingested 2026-09-14 as
+`results/2026-w18-thu-rds-final-2.csv`. `results/` now runs 12-49 with no gaps
+(38 files) and a clean rebuild reports **2610 games through round 49**.
+
+The uploaded CSV differed from the engine's canonical form only in decimal
+padding (`6.2` vs `6.20`, `0` vs `0.0`) and a trailing newline -- every value
+identical -- so `export-results --force` rewrote it to the canonical bytes;
+all 38 files now report "already matches".
+
+**Check `origin/main` before concluding a round has not been played -- the
+second time this has bitten, 2026-09-14.** `next-matchday` said round 44 and a
+clean rebuild had nothing for 44-48, so this session reported those five
+matchdays as unplayed and told the user the champion bonus could not be
+awarded for want of Final leg 1. The user pushed back, and they were right:
+**a separate session had already committed rounds 44-48 to main** (PRs #89-#93,
+including `2026-w18-tue-rds-final-1.csv`) *after* this branch's base commit.
+The rebuild was faithful to the branch; the branch was simply behind.
+
+The rounds 28-31 entry above records the same thing happening once before, and
+its closing advice -- "worth repeating whenever a branch has to absorb rounds
+added elsewhere" -- is now a standing check, not a nicety. **A local rebuild
+proves what `results/` contains, never what has been played.** Before
+reporting any round as missing, `git fetch origin main` and diff
+`results/`; a branch open for more than an hour can easily be behind five
+matchdays. The tell was there to be read: `next-matchday` pointing five slots
+back while the user hands you a round from further ahead is far more likely to
+mean the branch is stale than that the schedule was skipped.
+
+Rebased onto the new main (only `deckfield_dashboard.html` conflicted -- both
+sides had regenerated it, and since every constant in it is derived the
+resolution is to rebuild and regenerate rather than pick a side), rebuilt from
+the workbook plus all 38 CSVs, and the finals then resolved:
+
+| cup | aggregate | champion (+30) | runner-up (+15) |
+|---|---|---|---|
+| Ribbon | 103-61 | Canalave City | Snowpoint City |
+| Dream | **81-80** | Cocona Village | Nimbasa City |
+| Star | 80-33 | Casseroya Lake | Mesagoza |
+
+Dream's is the 1-1 leg split the dashboard's AGG row exists for: Cocona
+Village won leg 1 39-37, Nimbasa City won leg 2 43-42, and the aggregate goes
+to Cocona Village by a single point.
+
 Rounds 28-31 (PA Process round 3, R8, L8, L9) were added on main by a
 separate session while the Qualification tab was being built on a branch,
 so the branch had to pick them up before merging. `results/` now runs
@@ -600,6 +643,83 @@ items."
   window is matchdays 1–8 (`blend_stat`/`blend_weights`).
 - **STARTING_ELO = 1800.0** — confirmed value, matters only for a team's
   very first game ever (relevant if new teams are ever added).
+
+## Tournament bonus points (2026-09-14, per explicit instruction)
+
+A cup run awards EX points that feed **TOT**. They live in their own bucket,
+`tb` -- the "extra category" option the instruction offered -- rather than
+being folded into `b`, the per-game EX sum. `tournament_bonus_points()` is the
+whole of it.
+
+**Cumulative totals, and the timing is part of the rule, not an
+implementation detail:**
+
+| stage | RDS (Ribbon/Dream/Star) | PA |
+|---|---|---|
+| semifinalists, once both brackets finish their last round | -- | **30** |
+| finalists, **at the end of the semifinals** | **15** | **45** |
+| winner, at the end of the final | **30** | **60** |
+
+`TOURNAMENT_BONUS` stores each tier as the **increment** collected at that
+stage, so the table above is the running total. The finalists collect when the
+SEMIFINAL concludes -- not when the final is played -- which is what makes
+this more than a post-hoc payout: the points are in TOT for every round in
+between, and OVR recomputes with them.
+
+**Recomputed from real results every time, never stored**, the same discipline
+as fatigue: a corrected cup game re-earns or un-earns the bonus instead of
+leaving a stale credit, and a rule introduced mid-season applies to cups
+already decided -- exactly how this one arrived ("make sure that the 30 and 15
+are both given in full to each pair of cup finalists").
+
+**Every award is gated on the round of the game that SETTLED it**, not on the
+cup being resolvable from today's database. Without that, a team's state at
+round 45 would collect a bonus settled at round 49 and every historical row
+would gain it retroactively the moment the final was played. Verified: nothing
+at round 39 (SF leg 1 only), six teams at +15 from round 40 on.
+
+**One mechanism serves both cups.** `_mutual_stage_survivors()` asks which
+members of a field are still standing after a bracket, working off real games
+alone -- no model of the shared stage, which is what lets **PA's tiers exist
+before PA's shared stage is built**. It handles a bye for free (a team that
+plays no tie survives) and is self-gating: a half-played semifinal leaves
+THREE teams standing, and every caller checks for exactly two.
+
+`_rds_mutual_tie_winner` is reused for PA despite its name -- it is generic
+over cup+bracket and returns None the moment a leg is missing. PA's seed
+lookup (`_pa_seed_lookup`) takes each team's **better** seed across the two
+brackets, matching this file's convention everywhere else.
+
+**Where it does and does not reach.** The instruction was "the EX category
+that contributes to the TOT (not the EX category in the OVR calculation)", and
+that boundary is exact: the OVR's EX component reads `team_seasons.ex`, a
+different column entirely, which nothing here touches. **But TOT is not inert
+in OVR** -- `cups = normalize(buckets["tot"], tot_vals)` IS the OVR's Cups
+component, and TOT is one of RLStr's seven z-scores. So OVR moves, necessarily
+and by the rule's own terms. Measured against the pre-bonus engine at round
+43, across all 160 teams:
+
+- `ex_norm` moved on **0** teams, as did `b`, `rp`, `lp`, `sp`, `p` and `f`.
+- `tot` moved on exactly **6** -- the six finalists.
+- `cups`, `sos` and `eye` moved on 158, `ovr` and `rlstr_own` on 160, because
+  normalizing TOT re-scales everyone.
+
+`_points_buckets` takes the bonus as an argument, and **both** its call sites
+pass it: `compute_round_ratings` and `_strength_raw_inputs`. The second is
+easy to miss and would have had RLStr z-scoring a different TOT than the
+Rankings tab displays.
+
+**Verified synthetically for PA**, since round 8 is weeks away -- six shapes on
+a scratch database: R8 only (30 each to four), semifinals done (finalists 45,
+losers still 30), final done (winner 60 / runner-up 45 / losers 30), a
+half-played semifinal (correctly still 30 only), a bye where one team came
+through both brackets (bye team 45 alongside the SF winner), and the
+two-distinct case with no semifinal at all (both 45 immediately, since there
+is no semifinal to conclude).
+
+**Not displayed separately yet.** `tb` is a real column on
+`team_round_ratings` and is folded into the TOT the Rankings tab shows, but no
+tab breaks it out on its own.
 
 ## Regional/League pod schedule
 
@@ -1647,6 +1767,24 @@ caller wanted) and threading `info["week"]`/`info["day"]` through
 SF/Final ("mutual stage -- not modeled/played yet"), which was correct
 while nothing could be played but would have stalled `next_matchday()` on
 week 15 forever. It now counts real games at that leg.
+
+**The dashboard's own calendar had the same bug one layer up, found and fixed
+2026-09-14.** `build_calendar()` called `abs_round_for_event(slot)` without
+week/day -- the exact fallback the entry above warns about -- so **both** legs
+of every two-legged slot printed leg 1's round. Week 15 showed the RDS
+semifinal as 39/39 rather than 39/40, and week 18 the final as 48/48.
+
+That was not cosmetic. The `played` flag tests that round number, so leg 2
+asked whether leg 1 had been played: ingesting round 49 (RDS Final leg 2) left
+the calendar reporting it as pending, and `CALENDAR_DATA` regenerated
+byte-identical, which is what made it visible at all. `is_next` had the
+matching flaw -- comparing the slot tuple alone marks BOTH legs as next.
+
+Fixed by passing `week["week"]` and `day` through, and by comparing
+`next_matchday()`'s own week and day for `is_next`. The leg number also went
+into the label (`RDS Final leg 1` / `leg 2`), since the tuple alone printed
+the same text twice -- the PA Final branch already numbered its three slots
+this way and the rest of them did not.
 
 **The header subtitle was a seventh instance of the same staleness bug —
 one layer below the guard, found and fixed 2026-09-08.** `<div
