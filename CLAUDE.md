@@ -915,6 +915,64 @@ rounds 2-4 byte-identical), `PA_SWAP_LOG` and `TEAMS_EXPORT_TSV`; Playwright
 reads 42 rows off the rendered log — 10/14/7/8/3 across rounds 1-5 — with
 zero `pageerror` events.
 
+**The champions bracket was built in naive ascending order, fixed 2026-09-14
+(per explicit report).** Reported directly: round 6 should pair "the pathways
+that initially included #1 and #32 against the pathways that initially
+included #16 and #17." It did not -- it paired 1v32's pathway with 2v31's.
+
+Round 5 was built as `[[by_seed[k], by_seed[33 - k]] for k in range(1, 17)]`,
+and the advancement step meets **adjacent games**. So the list's order *is*
+the bracket, and ascending k encodes the wrong one. **This is the identical
+bug `_draw_round1_pairs` exists to prevent on the RDS side** (see the RDS Cup
+section: "the pairs are identical either way, but only the recursive order
+correctly encodes who meets whom in round 2+"), which had already been found
+once, by cross-checking real round-2 results. The two now share
+`_bracket_seed_pairs(size)`; `_draw_round1_pairs()` is `_bracket_seed_pairs(64)`.
+
+At 32 the opening order is `1v32, 16v17, 8v25, 9v24, 4v29, 13v20, ...`, so
+under chalk round 6 is 1v16 / 8v9 / 4v13 / 5v12, round 7 is 1v8 / 4v5, and
+round 8 is 1v4 / 2v3 -- each bracket then sending its two survivors to the
+mutual semifinal.
+
+**Round 5's PAIRS never changed, only their order** -- which matters, because
+round 5 was played (rounds 42 and 43). But the first cut of the fix DID change
+them, and the reason is worth keeping: `_pa_swap_champion_opponents` iterated
+`range(len(games))`, so resolving one game could change another's mover and
+**the list order was silently steering conflict resolution**. Reordering the
+list therefore picked different swaps, and the Draw's round 5 came out with
+two matchups that were never played. It now visits games in **ascending
+anchor-seed order**, which is independent of the list, reproduces the played
+round 5 exactly, and keeps the list order free to mean what it now means.
+Anchors never move during a pass, so the visit order is fixed up front.
+
+**Step 4 caught interactions and then did nothing about them -- fixed at the
+same time.** It was an inspection loop that only logged, so anything it found
+became a standing violation. Rule 5 permits a pairing to stand only when **no
+valid swap exists**, and a swap satisfying every rule *at once* can exist
+where the single-rule passes each ran out of options. Not hypothetical: the
+corrected bracket had the Process repeating the Draw's own round-6 Lumiose
+City vs Casseroya Lake, and exchanging identity seeds #27 and #26 clears it
+with zero violations of any rule left in either bracket. Step 4 is now a real
+resolution pass over all three rules together, still logging "stands" (once,
+not once per pass) when nothing works.
+
+Safe for played rounds by inspection, not assumption: rounds 2-5 produced **no
+final-confirmation entries at all**, so a pass that acts on them cannot change
+anything already played -- verified, along with rounds 2-4's log being
+byte-identical and round 5's three swaps being the same seeds for the same
+reasons (only their `row` numbers move, since a row is a position in the
+now-reordered list).
+
+Verified: the synthetic rounds 5-8 walk holds every invariant (16/8/4/2 games
+per bracket, zero same-region/same-division through round 6, region checks off
+past it, **zero cross-bracket repeats at every round** where the old code left
+one, round 8 yielding exactly two mutual-semifinal entrants per bracket, round
+9 raising); regenerating moves only `PA_ROUND_PAIRINGS`, `PA_SWAP_LOG` and
+`TEAMS_EXPORT_TSV`, with `DATA`, `PA_REAL_RESULTS`, `QUALIFICATION_DATA`,
+`RANK_ELO_HISTORY` and `STRENGTH_DATA` all byte-identical -- which is what
+proves this is structural only and no played result or rating moved. All 11
+tabs render with zero `pageerror` events.
+
 **Worth keeping in mind generally:** a deferral note and a rule read almost
 the same after a few months, especially when the deferral has a good reason
 attached. This one even carried its own expiry ("round 4 hasn't been

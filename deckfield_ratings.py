@@ -1388,21 +1388,33 @@ PROCESS_ROUND1_PAIRS = [
 ]
 
 
-def _draw_round1_pairs():
-    """
-    Standard single-elim seed placement (the classic recursive 'reflection'
-    method) rather than naive ascending K-vs-(65-K) order. The pairs
-    themselves are identical either way (round 1 matched real results
-    exactly under both), but only this ordering correctly encodes which
-    round-1 pairs meet in round 2 onward -- confirmed by tracing real Ribbon
-    Cup results (seed 3's actual round-2 opponent pair was exactly what this
-    ordering predicts; naive ascending order predicts something else).
+def _bracket_seed_pairs(size):
+    """Opening-round pairs of a `size`-seed single-elim bracket, in standard
+    seed-placement order (the classic recursive 'reflection' method) rather
+    than naive ascending K-vs-(size+1-K) order.
+
+    The PAIRS are identical either way -- it is the ORDER that carries the
+    bracket's structure, because every later round is built by meeting
+    adjacent games. Ascending order says the (1, size) game meets the
+    (2, size-1) game next; the real bracket says it meets (size/2,
+    size/2 + 1). At size 32: 1v32 meets 16v17, not 2v31.
+
+    Returns [(better_seed, worse_seed), ...], always better-seeded first.
     """
     order = [1]
-    while len(order) < 64:
+    while len(order) < size:
         n = len(order) * 2 + 1
         order = [x for s in order for x in (s, n - s)]
-    return [(order[i], order[i + 1]) for i in range(0, 64, 2)]
+    return [(order[i], order[i + 1]) for i in range(0, size, 2)]
+
+
+def _draw_round1_pairs():
+    """RDS Draw's 64-seed opening round. The ordering was confirmed against
+    real Ribbon Cup results: seed 3's actual round-2 opponent pair was
+    exactly what this predicts, and naive ascending order predicts something
+    else.
+    """
+    return _bracket_seed_pairs(64)
 
 
 def generate_cup_bracket(seed_to_team, bracket_type):
@@ -2628,6 +2640,13 @@ def _pa_swap_champion_opponents(games, seed_of, violates_fn):
     Candidates are restricted to the same half of THIS round's remaining
     field by seed, so no swap ever crosses the top/bottom-half boundary.
     Returns a log shaped like _pa_swap_survivors' (row is 1-indexed).
+
+    Games are VISITED in ascending anchor-seed order, not list order, and
+    that is load-bearing rather than tidiness. Resolving one game can change
+    another's mover, so the visit order decides the outcome -- and the list's
+    own order encodes the bracket (which game meets which next round), which
+    must not also be steering conflict resolution. Anchors never move during
+    the pass, so the order is fixed up front.
     """
     log = []
     field = sorted(seed_of[t] for g in games for t in g)
@@ -2635,7 +2654,7 @@ def _pa_swap_champion_opponents(games, seed_of, violates_fn):
     upper_half = set(field[half:])          # numerically higher == worse seeds
     lower_half = set(field[:half])
 
-    for i in range(len(games)):
+    for i in sorted(range(len(games)), key=lambda k: seed_of[games[k][0]]):
         anchor, mover = games[i]
         reason = violates_fn(anchor, mover)
         if reason is None:
@@ -2727,8 +2746,14 @@ def _pa_champions_walk(conn, up_to_round, team_region, team_division):
         champs = [(s4[idx][0], r1[idx]["row"][4]) for idx in range(32)]
         seed_of[bracket] = {team: seed for team, seed in champs}
         by_seed = {seed: team for team, seed in champs}
-        # Round 5: row-seed k vs row-seed 33-k, better seed first.
-        games[bracket] = [[by_seed[k], by_seed[33 - k]] for k in range(1, 17)]
+        # Round 5: row-seed k vs row-seed 33-k, better seed first -- but in
+        # standard bracket-placement ORDER, not ascending k. The pairs are the
+        # same either way; the order is what decides who meets whom in round
+        # 6, since the advancement step below meets adjacent games. Ascending
+        # order sent the 1v32 pathway to meet the 2v31 pathway; the bracket
+        # says it meets 16v17. Exactly the bug _draw_round1_pairs exists to
+        # avoid on the RDS side, which is why both now share one helper.
+        games[bracket] = [[by_seed[a], by_seed[b]] for a, b in _bracket_seed_pairs(32)]
 
     swap_log = list(ladder_log)
 
@@ -2769,20 +2794,40 @@ def _pa_champions_walk(conn, up_to_round, team_region, team_division):
 
         # 4. Confirm the finished state against all three rules together --
         #    step 3 can reintroduce a duplicate step 2 already fixed.
+        #
+        #    This is a real resolution pass, not an inspection. It used to
+        #    only log what it found, which quietly turned every interaction
+        #    it caught into a standing violation -- but rule 5 lets a pairing
+        #    stand only when NO valid swap exists, and a swap satisfying
+        #    every rule at once can exist where the single-rule passes above
+        #    each ran out of options. Real case at round 6: the Process
+        #    repeated the Draw's own Lumiose City vs Casseroya Lake, and
+        #    exchanging identity seeds #27 and #26 clears it with zero
+        #    violations of any rule left in either bracket.
         already = {(e['bracket'], e['row']) for e in round_log if e['swapped_seed'] is None}
-        draw_final = _pa_draw_pairs_through(conn, rnd)
-        draw_final.update(frozenset(g) for g in games['Draw'])
         for bracket in ('Draw', 'Process'):
-            for idx, (a, b) in enumerate(games[bracket]):
-                if (bracket, idx + 1) in already:
-                    continue
-                reason = region_division_violation(a, b) if do_region else None
-                if reason is None and bracket == 'Process' and frozenset([a, b]) in draw_final:
-                    reason = 'repeat matchup (Draw)'
-                if reason is not None:
-                    round_log.append({'row': idx + 1, 'swapped_seed': None, 'with_seed': None,
-                                      'bracket': bracket, 'round': rnd,
-                                      'reason': f'{reason} -- found during final confirmation, no swap attempted'})
+            draw_final = _pa_draw_pairs_through(conn, rnd)
+            draw_final.update(frozenset(g) for g in games['Draw'])
+
+            def all_rules(a, b, _seen=draw_final, _bracket=bracket):
+                if a is None or b is None:
+                    return None
+                if do_region:
+                    reason = region_division_violation(a, b)
+                    if reason is not None:
+                        return reason
+                if _bracket == 'Process' and frozenset([a, b]) in _seen:
+                    return 'repeat matchup (Draw)'
+                return None
+
+            for e in _pa_swap_champion_opponents(games[bracket], seed_of[bracket], all_rules):
+                if e['swapped_seed'] is None:
+                    # Rule 5: it stands. Say so once, not once per pass.
+                    if (bracket, e['row']) in already:
+                        continue
+                    e['reason'] = e['reason'].replace(
+                        'no valid swap available', 'no valid swap available at final confirmation')
+                round_log.append(dict(bracket=bracket, round=rnd, **e))
 
         swap_log.extend(round_log)
         if rnd == up_to_round:
