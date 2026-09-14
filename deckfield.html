@@ -93,16 +93,39 @@
        Score and time are minmax rather than plain px so the banner can still
        compress: with the minimums below it fits without overflowing down to a
        ~530px banner, which is what lets the scroll container go. */
-    grid-template-columns:minmax(60px,0.70fr) minmax(110px,1.624fr) minmax(96px,156px) minmax(112px,176px) minmax(150px,1.437fr);
+    grid-template-columns:minmax(170px,2.324fr) minmax(96px,156px) minmax(112px,176px) minmax(150px,1.437fr);
     grid-template-rows:1fr auto 1fr;
     background:var(--panel);border:1px solid var(--panel-line);border-radius:10px;
   }
   .scoreboard > *{min-width:0;}
   /* Placement is explicit: a cell that spans rows but names no column gets
      auto-placed into the first column that can hold it. */
-  .sb-c1{grid-column:1;} .sb-c2{grid-column:2;} .sb-c5{grid-column:5;}
+  .sb-c1{grid-column:1;} .sb-c4{grid-column:4;}
   .sb-r1{grid-row:1;} .sb-r3{grid-row:3;}
   .sb-cell{display:flex;flex-direction:column;min-width:0;padding:0 14px;}
+  /* Accolades and the identity block SHARE one column rather than holding a
+     fixed track each. The old split reserved ~200px for accolades whether a
+     team had five or none -- and 114 of 160 have none, with another 29
+     holding a single ~70px chip, so most fixtures spent most of that column
+     on nothing while fitTeamName() shrank the name next to it.
+     Here the accolades take only what they need and the identity block takes
+     the rest, so the width moves to whichever side has something to say. */
+  .sb-cell.sb-split{flex-direction:row;gap:14px;justify-content:flex-start;}
+  /* Row direction, so hugging the axis is now a CROSS-axis question: what was
+     justify-content on a column is align-items here. */
+  .sb-cell.away.sb-split{align-items:flex-end;}
+  .sb-cell.home.sb-split{align-items:flex-start;}
+  /* The accolades hold their content width and the identity block takes what
+     is left, so as the column narrows it is the NAME that gives way -- which
+     is right, because fitTeamName() exists to absorb exactly that, while an
+     ellipsised accolade loses text nothing else on the page shows. Measured
+     against the two-column layout on the widest fixture in the league: the
+     accolades no longer clip at ANY width (they used to from 1500px down),
+     at the cost of the name reading 25.9px instead of 29.9px at 1300px.
+     `flex-basis:0` on the identity block is what makes it the elastic side;
+     a shrink factor on the accolades would do nothing against it. */
+  .sb-split .acc-list{flex:0 0 auto;min-width:0;}
+  .sb-split .team-block{flex:1 1 0;min-width:0;display:flex;flex-direction:column;}
   .sb-cell.away{justify-content:flex-end;padding-top:8px;padding-bottom:4px;
     background:linear-gradient(0deg,var(--away-tint),rgba(0,0,0,0));}
   .sb-cell.home{justify-content:flex-start;padding-top:4px;padding-bottom:8px;
@@ -172,7 +195,7 @@
   .sb-cell.home .team-name{color:var(--home-bright);}
 
   .score-cell{
-    grid-column:3;display:flex;align-items:center;justify-content:center;
+    grid-column:2;display:flex;align-items:center;justify-content:center;
     padding:0 16px;background:var(--sb-inner);min-width:0;
   }
   .score-cell.away{align-items:flex-end;padding-top:8px;padding-bottom:13px;}
@@ -188,7 +211,7 @@
      weather is five stacked lines, and putting them in the shared axis ROW
      would grow that row and prise the halves apart in every other column. */
   .clock-box{
-    grid-column:4;grid-row:1 / 4;
+    grid-column:3;grid-row:1 / 4;
     display:flex;flex-direction:column;align-items:center;justify-content:space-between;
     padding:9px 10px;background:var(--sb-inner);min-width:0;
   }
@@ -692,16 +715,17 @@
     <div class="scoreboard-row">
     <div class="scoreboard">
 
-      <!-- accolades -->
-      <div class="sb-cell away sb-c1 sb-r1"><div class="acc-list" id="awayAccolades"></div></div>
-      <!-- records (outboard) / typing+ATK+EveryX (inboard) / name -->
-      <div class="sb-cell away sb-sep sb-c2 sb-r1">
-        <div class="team-records" id="awayRecords"></div>
-        <div class="team-mid" id="awayMid"></div>
-        <div class="team-name-row">
-          <span class="team-spread" id="awaySpread"></span>
-          <span class="team-rank" id="awayRankDisplay">#0</span>
-          <span class="team-name" id="scoreboardAwayLabel">Away</span>
+      <!-- accolades (left) + records / typing+ATK+EveryX / name (right), one box -->
+      <div class="sb-cell away sb-split sb-c1 sb-r1">
+        <div class="acc-list" id="awayAccolades"></div>
+        <div class="team-block">
+          <div class="team-records" id="awayRecords"></div>
+          <div class="team-mid" id="awayMid"></div>
+          <div class="team-name-row">
+            <span class="team-spread" id="awaySpread"></span>
+            <span class="team-rank" id="awayRankDisplay">#0</span>
+            <span class="team-name" id="scoreboardAwayLabel">Away</span>
+          </div>
         </div>
       </div>
       <!-- score -->
@@ -717,25 +741,26 @@
         <div class="weather-spread-note" id="weatherNote"></div>
       </div>
       <!-- stat strip -->
-      <div class="sb-cell away sb-sep stat-pad sb-c5 sb-r1"><div class="mini-stats" id="awayMiniStats"></div></div>
+      <div class="sb-cell away sb-sep stat-pad sb-c4 sb-r1"><div class="mini-stats" id="awayMiniStats"></div></div>
 
       <div class="sb-axis sb-c1"></div>
-      <div class="sb-axis sb-sep sb-c2"></div>
       <div class="sb-axis sb-sep score-cell"></div>
-      <div class="sb-axis sb-sep stat-pad sb-c5"></div>
+      <div class="sb-axis sb-sep stat-pad sb-c4"></div>
 
-      <div class="sb-cell home sb-c1 sb-r3"><div class="acc-list" id="homeAccolades"></div></div>
-      <div class="sb-cell home sb-sep sb-c2 sb-r3">
-        <div class="team-name-row">
-          <span class="team-spread" id="homeSpread"></span>
-          <span class="team-rank" id="homeRankDisplay">#0</span>
-          <span class="team-name" id="scoreboardHomeLabel">Home</span>
+      <div class="sb-cell home sb-split sb-c1 sb-r3">
+        <div class="acc-list" id="homeAccolades"></div>
+        <div class="team-block">
+          <div class="team-name-row">
+            <span class="team-spread" id="homeSpread"></span>
+            <span class="team-rank" id="homeRankDisplay">#0</span>
+            <span class="team-name" id="scoreboardHomeLabel">Home</span>
+          </div>
+          <div class="team-mid" id="homeMid"></div>
+          <div class="team-records" id="homeRecords"></div>
         </div>
-        <div class="team-mid" id="homeMid"></div>
-        <div class="team-records" id="homeRecords"></div>
       </div>
       <div class="score-cell home sb-sep sb-r3"><div class="score-num" id="homeScore">0</div></div>
-      <div class="sb-cell home sb-sep stat-pad sb-c5 sb-r3"><div class="mini-stats" id="homeMiniStats"></div></div>
+      <div class="sb-cell home sb-sep stat-pad sb-c4 sb-r3"><div class="mini-stats" id="homeMiniStats"></div></div>
 
     </div>
     </div>

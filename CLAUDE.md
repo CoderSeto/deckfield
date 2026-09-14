@@ -721,6 +721,88 @@ is no semifinal to conclude).
 `team_round_ratings` and is folded into the TOT the Rankings tab shows, but no
 tab breaks it out on its own.
 
+### Cup-title accolades (2026-09-14, per explicit instruction)
+
+Winning a cup earns an accolade -- `Ribbon S9`, `Dream S9`, `Star S9` -- and
+it is **derived from the results, not stored**. That is not a stylistic
+choice: `teams.accolades` is workbook history written by `migrate_accolades()`
+and **nothing in the engine ever writes to it**, so a row updated by hand
+would be erased by the next `migrate` (`init_db()` drops every table). Merging
+at export time is what makes the title survive a rebuild.
+
+`cup_champions(season)` and `tournament_bonus_points()` both read the **same**
+`_cup_stages()` walk, so the accolade and the +30 can never disagree about who
+won a cup. Ribbon -> Canalave City, Dream -> Cocona Village, Star -> Casseroya
+Lake.
+
+**One row per FAMILY, which is what caps the banner at four rows by
+construction, 2026-09-14 (per explicit request: "I like the four rows
+maximum").** Adding `Ribbon S9` took Canalave City to five rows, one past what
+the banner should carry. Every title in the data falls into exactly four
+families -- **World** (Champion / Finalist / WCS), **Division**, **Cup**
+(Swiss / Ribbon / Dream / Star / PA), **Region** (the Regional Tournament) --
+and the stored data already *orders* them that way, verified across all 44
+teams that hold any accolade: a region-named entry is the last one, without
+exception. Printing one row per family therefore reads the way the data was
+already written, and since there are only four families, no future season can
+produce a fifth row. Canalave City reads:
+
+```
+World Champion S6 · Finalist S7
+Swiss S8 · Ribbon S9
+Lily Valley S6, S7, S8
+```
+
+Nobody in the league now exceeds **three** rows (29 teams at 1, 12 at 2, 5 at
+3). The banner also came back to its normal 185px height -- Canalave's fifth
+row had been inflating it to 225px, taller than every other fixture.
+
+**The shared "World" prints once** and is stripped from anything after it in
+that row, because repeating it costs width the 200px column does not have.
+
+**Seasons are re-joined with real commas, which fixed a live bug.** The
+workbook wraps one accolade across lines, so Castelia City stored
+`Vertress S1, S2\nS3, S4\nS8` and the old whitespace-collapse rendered
+`Vertress S1, S2 S3, S4 S8` -- the newline had been doing a comma's job and
+two of the five seasons ran together. `_split_accolade()` parses the trailing
+run of S-numbers (so a title containing an S -- `Swiss`, `WCS` -- is never
+mistaken for one) and the list is rebuilt, giving `Vertress S1, S2, S3, S4, S8`.
+Season *ranges* (`S6-S8`) were offered and declined: every season stays listed.
+
+**The cost is width, and it is measured.** Grouping moves growth from the row
+axis to the width axis, which is the more fragile one -- a row that outgrows
+its column ellipsises. Canalave's World row is the widest in the league at
+**199px in a 200px box**, so nothing clips at 1600px and up, but the column is
+an fr track and narrows with the viewport: clipping now starts at **~1500px
+where it used to start at ~1300px**. Dropping the leading "World" entirely
+(`Champion S6 · Finalist S7`) measures 163px and would restore the old
+threshold; it was left in because the full title is what the request's own
+sample showed. All widths here are from the sandbox's fallback font, which is
+**wider** than the real one, so they are pessimistic.
+
+**A repeated title groups its seasons rather than repeating the entry**
+(`Ribbon S8` + S9 -> `Ribbon S8, S9`), matching how the stored data already
+writes a repeated accolade, and the merge is **idempotent** -- a team that
+already carries `Ribbon S9` does not gain a second copy. Neither case can
+arise this season; both will next season, which is when a bug there would be
+expensive to find. This is also why grouping holds: a new row appears only for
+a new TITLE, never for a repeat, and a team can hold at most eight distinct
+titles (the three regional cups are mutually exclusive -- Ribbon is
+Indigo/Silver/Delta/LilyValley, Dream is Vertress/Phoenix/Lanakila, Star is
+Kalosite/Dynamax/Terastal -- so only one is ever reachable).
+
+Only the **winner** is accoladed. Runners-up keep their +15 and nothing else:
+Mesagoza still reads `Terastal S8` alone.
+
+Verified: seven merge cases directly (no accolades, regional-only, no regional
+entry, multi-entry, two titles in one season, a repeat grouping, and
+idempotency); regenerating moves **only `TEAMS_EXPORT_TSV`**, since accolades
+reach nothing but the roster export; and Playwright reads all five rows off
+the real banner at 1920/1600/1400/1240px. Canalave City is now the row-count
+record-holder at **5**, which fits -- 98px of list in a 110px cell -- and the
+longest single entry is still Castelia City's 25-character one the column was
+already sized for.
+
 ## Regional/League pod schedule
 
 16 teams per region/division split into 4 pods of 4 (2×2: UL/UR/LL/LR),
@@ -2974,6 +3056,60 @@ do it. `buildFinalRecord` stored `ot` as a boolean, so the card could say
 callers share `finalTag`. Verified by forcing ties at the end of regulation and
 of each overtime: 1, 3 and 4 overtimes all render identically in the banner and
 on the card.
+
+**Accolades and the identity block now SHARE one column, 2026-09-14 (per
+explicit request).** The banner went from five tracks to four: what were
+columns 1 (accolades) and 2 (records / typing / name) are one `.sb-split`
+cell, accolades left and the identity block right, no divider between them.
+
+**The reservation was the problem.** A fixed accolade track holds its width
+whether a team has three rows or none -- and **114 of 160 teams have none**,
+with another 29 holding a single ~70px chip. So most fixtures spent ~200px on
+nothing while `fitTeamName()` shrank the name beside it. Now the accolades
+take only what they need:
+
+| fixture | accolades | identity block |
+|---|---|---|
+| Canalave City (3 rows, league's widest) | 199px | 517px |
+| any team with none (114 of them) | 0px | **716px**, up from 529 |
+
+**Measured against the two-column layout on the worst fixture**, at
+1920/1600/1500/1400/1300/1240/1000/800px: accolade rows **no longer clip at
+any width**, where they used to clip from 1500px down. The records line still
+wraps at 1400px and below -- **identical before and after**, so that one is
+pre-existing, not introduced. The cost is that the name reads 25.9px instead
+of 29.9px at 1300px.
+
+That trade is deliberate and is what the flex values encode: `flex-basis:0` on
+the identity block makes it the elastic side, so the accolades hold their
+content width and the NAME gives way. `fitTeamName()` exists to absorb exactly
+that, while an ellipsised accolade loses text nothing else on the page shows.
+A shrink factor on the accolades would do nothing against a `flex-basis:0`
+sibling -- the first cut set `flex:0 3 auto` believing it made the accolades
+yield first, and measurement showed it changed nothing.
+
+**The bug this introduced, and the general lesson: `grid-column` pinned by
+NUMBER does not survive a change in column count.** `.score-cell` was pinned
+to column 3 and `.clock-box` to column 4 for the five-track grid. Merging
+shifted everything right of the identity block one place left, so the clock
+landed **on top of the stat strip** -- both claiming column 4, rendering the
+clock face and "Bad Weather" straight through the stat values. Auto-placed
+cells re-flowed correctly on their own; only the two explicitly pinned ones
+broke. When a track count changes, grep `grid-column` before anything else.
+Worth a real check rather than a visual one: walk `.scoreboard`'s children and
+count sibling pairs whose rects intersect on BOTH axes -- that returns 0 now
+at every width, and would have caught this immediately.
+
+**Centring is unchanged**: the score/time pair still sits ~145px right of the
+banner's centre. That offset is `(accolades + name - stats) / 2`, and merging
+changes only how those two share their sum, not the sum itself -- so it was
+never going to move. Tracks are now `757.6 / 156 / 176 / 468.4`.
+
+Verified: zero overlapping cells and no page or banner scrollbar at
+1920/1600/1400/1240/1000/800/600px, accolades clipping only at 600px (already
+past the ~530px where the page gains a horizontal scrollbar by design), a full
+match played with the Results CSV still 21 columns, all four tabs rendering,
+and zero `pageerror` events.
 
 **Still unplaced:** the **DEX #** and raw **PF/PA** exist in the roster but
 appear nowhere on the banner -- they were not on the old scoreboard either.

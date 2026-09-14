@@ -18,6 +18,7 @@ import sqlite3
 import json
 import math
 import random
+import re
 import statistics
 from pathlib import Path
 from math import sqrt
@@ -1739,6 +1740,70 @@ def _mutual_stage_survivors(conn, season, cup, field, bracket, seed_lookup):
     return survivors
 
 
+CUP_KINDS = (("Ribbon", "RDS"), ("Dream", "RDS"), ("Star", "RDS"), ("PA", "PA"))
+
+
+def _cup_stages(conn, season):
+    """Yield (cup, kind, stage) for each cup, where `stage` names the teams at
+    every tier of the shared end stage and the round that SETTLED each one:
+    `field` (the mutual semifinal field), `finalists`, `champion`, each with
+    its own `*_round`.
+
+    One walk, so the bonus and the accolades can never disagree about who won
+    a cup. Callers apply their own round gate against the `*_round` values;
+    this function always reports what the database as a whole shows."""
+    for cup, kind in CUP_KINDS:
+        last = RDS_BRACKET_LAST_ROUND if kind == "RDS" else PA_BRACKET_LAST_ROUND
+        seed_lookup = _rds_seed_lookup(cup) if kind == "RDS" else _pa_seed_lookup(conn)
+
+        def last_round(bracket, cup_round=None, _cup=cup):
+            sql = ("SELECT MAX(round) r, COUNT(*) n FROM games "
+                   "WHERE season=? AND cup_name=? AND cup_bracket=?")
+            params = [season, _cup, bracket]
+            if cup_round is not None:
+                sql += " AND cup_round=?"
+                params.append(cup_round)
+            row = conn.execute(sql, params).fetchone()
+            return row["r"] if row["n"] else None
+
+        # The mutual semifinal field: each bracket's last-round winners,
+        # deduplicated. A team through on BOTH sides holds one slot, not two,
+        # which is why this field can be 4, 3 or 2 teams.
+        field, bracket_rounds = [], []
+        for bracket in ("Draw", "Process"):
+            winners = [(r["a"] if r["result_a"] in (2, 3) else r["b"]) for r in conn.execute("""
+                SELECT g.result_a, ta.name a, tb.name b FROM games g
+                JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
+                WHERE g.season=? AND g.cup_name=? AND g.cup_bracket=? AND g.cup_round=?
+            """, (season, cup, bracket, last)).fetchall()]
+            if len(winners) != 2:
+                field = None
+                break
+            bracket_rounds.append(last_round(bracket, last))
+            for team in winners:
+                if team not in field:
+                    field.append(team)
+        if not field:
+            continue
+
+        stage = {"field": field, "field_round": max(bracket_rounds),
+                 "finalists": None, "finalists_round": None,
+                 "champion": None, "champion_round": None}
+
+        # Finalists are settled by the semifinal -- except for a cup whose two
+        # brackets produced the same pair, which has no semifinal at all and is
+        # settled by the brackets themselves.
+        finalists = _mutual_stage_survivors(conn, season, cup, field, "SF", seed_lookup)
+        if finalists is not None and len(finalists) == 2:
+            stage["finalists"] = finalists
+            stage["finalists_round"] = last_round("SF") or stage["field_round"]
+            champion = _mutual_stage_survivors(conn, season, cup, finalists, "Final", seed_lookup)
+            if champion is not None and len(champion) == 1:
+                stage["champion"] = champion[0]
+                stage["champion_round"] = last_round("Final")
+        yield cup, kind, stage
+
+
 def tournament_bonus_points(season, through_round=None):
     """{team_id: bonus points} earned through cup runs as of `through_round`.
 
@@ -1774,64 +1839,126 @@ def tournament_bonus_points(season, through_round=None):
     def settled(rnd):
         return rnd is not None and (through_round is None or rnd <= through_round)
 
-    def bracket_winners(cup, bracket, cup_round):
-        return [(r["a"] if r["result_a"] in (2, 3) else r["b"]) for r in conn.execute("""
-            SELECT g.result_a, ta.name a, tb.name b FROM games g
-            JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
-            WHERE g.season=? AND g.cup_name=? AND g.cup_bracket=? AND g.cup_round=?
-        """, (season, cup, bracket, cup_round)).fetchall()]
-
     try:
-        cups = [("Ribbon", "RDS", RDS_BRACKET_LAST_ROUND),
-                ("Dream", "RDS", RDS_BRACKET_LAST_ROUND),
-                ("Star", "RDS", RDS_BRACKET_LAST_ROUND),
-                ("PA", "PA", PA_BRACKET_LAST_ROUND)]
-        for cup, kind, last in cups:
+        for cup, kind, stage in _cup_stages(conn, season):
             tiers = TOURNAMENT_BONUS[kind]
-            seed_lookup = _rds_seed_lookup(cup) if kind == "RDS" else _pa_seed_lookup(conn)
-
-            # The mutual semifinal field: each bracket's last-round winners,
-            # deduplicated. A team through on BOTH sides holds one slot, not
-            # two, which is why this field can be 4, 3 or 2 teams.
-            field, bracket_rounds = [], []
-            for bracket in ("Draw", "Process"):
-                winners = bracket_winners(cup, bracket, last)
-                if len(winners) != 2:
-                    field = None
-                    break
-                bracket_rounds.append(last_round(cup, bracket, last))
-                for team in winners:
-                    if team not in field:
-                        field.append(team)
-            if not field:
+            if not settled(stage["field_round"]):
                 continue
-
-            brackets_done = max(bracket_rounds)
-            if not settled(brackets_done):
-                continue
-            for team in field:
+            for team in stage["field"]:
                 award(team, tiers["semifinalist"])
-
-            # Finalists are settled by the semifinal -- except for a cup whose
-            # two brackets produced the same pair, which has no semifinal at
-            # all and is settled by the brackets themselves.
-            finalists = _mutual_stage_survivors(conn, season, cup, field, "SF", seed_lookup)
-            if finalists is None or len(finalists) != 2:
+            if stage["finalists"] is None or not settled(stage["finalists_round"]):
                 continue
-            sf_done = last_round(cup, "SF") or brackets_done
-            if not settled(sf_done):
-                continue
-            for team in finalists:
+            for team in stage["finalists"]:
                 award(team, tiers["finalist"])
-
-            champion = _mutual_stage_survivors(conn, season, cup, finalists, "Final", seed_lookup)
-            if champion is None or len(champion) != 1:
+            if stage["champion"] is None or not settled(stage["champion_round"]):
                 continue
-            if settled(last_round(cup, "Final")):
-                award(champion[0], tiers["winner"])
+            award(stage["champion"], tiers["winner"])
     finally:
         conn.close()
     return out
+
+
+def cup_champions(season, through_round=None):
+    """{cup_name: champion} for every cup whose final is decided. Same walk
+    the bonus uses, so the two can never disagree about who won."""
+    conn = get_connection()
+    try:
+        out = {}
+        for cup, _kind, stage in _cup_stages(conn, season):
+            r = stage["champion_round"]
+            if stage["champion"] and r is not None and (through_round is None or r <= through_round):
+                out[cup] = stage["champion"]
+        return out
+    finally:
+        conn.close()
+
+
+# Accolade FAMILIES, in the order the stored data already keeps them (World,
+# then Division, then the cups, then the Regional Tournament last -- verified
+# across all 44 teams that hold any). One displayed row per family is what
+# caps the banner at four rows BY CONSTRUCTION rather than by luck: there are
+# only four families, so no season's worth of new titles can add a fifth row.
+# A title that matches none of them gets its own row and would break that cap,
+# which is why _accolade_family names the unknown case rather than hiding it.
+ACCOLADE_FAMILY_ORDER = ("World", "Division", "Cup", "Region", "Other")
+_CUP_TITLES = {"Swiss", "Ribbon", "Dream", "Star", "PA"}
+
+
+def _split_accolade(entry):
+    """("World Champion", [6]) from "World Champion S6".
+
+    The season tags are the trailing run of S-numbers, so a title that itself
+    contains an S -- "Swiss", "WCS" -- is never mistaken for one."""
+    m = re.match(r"^(.*?)\s+((?:S\d+\b[,\s]*)+)$", entry)
+    if not m:
+        return entry, []
+    return m.group(1).strip(), [int(n) for n in re.findall(r"S(\d+)", m.group(2))]
+
+
+def _accolade_family(title, region_display):
+    if title.startswith("World ") or title == "WCS":
+        return "World"
+    if title.startswith("Division "):
+        return "Division"
+    if title in _CUP_TITLES:
+        return "Cup"
+    if title in region_display:
+        return "Region"
+    return "Other"
+
+
+def merge_accolades(stored, earned, season, region_display):
+    """The team's accolade list with this season's earned titles folded in,
+    grouped one row per family and returned "; "-separated -- which is exactly
+    what deckfield.html's renderAccolades() splits on, so a row here is a row
+    on the banner.
+
+    `stored` is the raw workbook text: distinct accolades separated by DOUBLE
+    newlines, single newlines being nothing but the spreadsheet cell wrapping
+    one accolade across lines. `earned` is a list of titles like "Ribbon".
+
+    Two things this normalises that the stored text gets wrong:
+
+    - **Seasons are re-joined with real commas.** A wrapped cell stored
+      "S1, S2\nS3, S4\nS8", and collapsing that whitespace produced
+      "Vertress S1, S2 S3, S4 S8" -- the newline was doing a comma's job, so
+      two of the five seasons ran together. Parsing the tags and rebuilding
+      the list fixes it at the source rather than per reader.
+    - **A title won more than once lists its seasons once**, so a repeat adds
+      a season to an existing entry instead of a whole new one.
+
+    Within the World family the shared leading "World" is printed once and
+    dropped from anything after it ("World Champion S6 - Finalist S7"), since
+    repeating it costs width the 200px column does not have."""
+    items = []
+    for entry in (stored or "").split("\n\n"):
+        entry = " ".join(entry.split())
+        if entry:
+            items.append(_split_accolade(entry))
+    items += [(title, [season]) for title in earned]
+
+    seasons_of, order = {}, []
+    for title, seasons in items:
+        if title not in seasons_of:
+            seasons_of[title] = []
+            order.append(title)
+        seasons_of[title] += seasons
+
+    buckets = {}
+    for title in order:
+        seasons = sorted(set(seasons_of[title]))
+        text = f"{title} " + ", ".join(f"S{n}" for n in seasons) if seasons else title
+        buckets.setdefault(_accolade_family(title, region_display), []).append(text)
+
+    rows = []
+    for family in ACCOLADE_FAMILY_ORDER:
+        parts = buckets.get(family)
+        if not parts:
+            continue
+        if family == "World" and parts[0].startswith("World "):
+            parts = parts[:1] + [re.sub(r"^World ", "", p) for p in parts[1:]]
+        rows.append(" \u00b7 ".join(parts))
+    return "; ".join(rows)
 
 
 def rds_mutual_stage_data(season):
@@ -3672,6 +3799,12 @@ def export_teams_for_deckfield(season):
     latest_round = conn.execute(
         "SELECT MAX(round) m FROM team_round_ratings WHERE season=?", (season,)
     ).fetchone()["m"]
+    # Titles won this season, keyed by team, to merge into the stored history.
+    earned = {}
+    for cup, champion in cup_champions(season, latest_round).items():
+        earned.setdefault(champion, []).append(cup)
+    region_display = {region_display_name(r["region"]) for r in
+                      conn.execute("SELECT DISTINCT region FROM teams").fetchall()}
     rows = conn.execute("""
         SELECT r.*, t.name, t.region, t.primary_type, t.accolades, t.team_id AS dex,
                ts.league_division
@@ -3725,10 +3858,12 @@ def export_teams_for_deckfield(season):
         teams_out.append({
             "rank": rank, "dex": r["dex"], "region": region_display_name(r["region"]), "name": r["name"],
             "division": r["league_division"],
-            "accolades": "; ".join(
-                " ".join(entry.split())
-                for entry in (r["accolades"] or "").split("\n\n") if entry.strip()
-            ),
+            # teams.accolades is workbook history and nothing writes to it, so
+            # a title won THIS season is derived from the results and merged in
+            # here rather than stored -- which also means it survives the next
+            # `migrate`, since that drops every table.
+            "accolades": merge_accolades(r["accolades"], earned.get(r["name"], []),
+                                         season, region_display),
             "fatigue": round(r["fatigue_after"], 1) if r["fatigue_after"] is not None else "",
             "climate": round(r["climate"], 2), "pf": round(r["pf_norm"], 2),
             "pa": round(r["pa_norm"], 2), "dscr": round(r["d_sqrt_raw"], 2),
