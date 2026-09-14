@@ -18,6 +18,7 @@ import sqlite3
 import json
 import math
 import random
+import re
 import statistics
 from pathlib import Path
 from math import sqrt
@@ -1872,36 +1873,92 @@ def cup_champions(season, through_round=None):
         conn.close()
 
 
+# Accolade FAMILIES, in the order the stored data already keeps them (World,
+# then Division, then the cups, then the Regional Tournament last -- verified
+# across all 44 teams that hold any). One displayed row per family is what
+# caps the banner at four rows BY CONSTRUCTION rather than by luck: there are
+# only four families, so no season's worth of new titles can add a fifth row.
+# A title that matches none of them gets its own row and would break that cap,
+# which is why _accolade_family names the unknown case rather than hiding it.
+ACCOLADE_FAMILY_ORDER = ("World", "Division", "Cup", "Region", "Other")
+_CUP_TITLES = {"Swiss", "Ribbon", "Dream", "Star", "PA"}
+
+
+def _split_accolade(entry):
+    """("World Champion", [6]) from "World Champion S6".
+
+    The season tags are the trailing run of S-numbers, so a title that itself
+    contains an S -- "Swiss", "WCS" -- is never mistaken for one."""
+    m = re.match(r"^(.*?)\s+((?:S\d+\b[,\s]*)+)$", entry)
+    if not m:
+        return entry, []
+    return m.group(1).strip(), [int(n) for n in re.findall(r"S(\d+)", m.group(2))]
+
+
+def _accolade_family(title, region_display):
+    if title.startswith("World ") or title == "WCS":
+        return "World"
+    if title.startswith("Division "):
+        return "Division"
+    if title in _CUP_TITLES:
+        return "Cup"
+    if title in region_display:
+        return "Region"
+    return "Other"
+
+
 def merge_accolades(stored, earned, season, region_display):
-    """The team's accolade list with this season's earned titles folded in.
+    """The team's accolade list with this season's earned titles folded in,
+    grouped one row per family and returned "; "-separated -- which is exactly
+    what deckfield.html's renderAccolades() splits on, so a row here is a row
+    on the banner.
 
     `stored` is the raw workbook text: distinct accolades separated by DOUBLE
     newlines, single newlines being nothing but the spreadsheet cell wrapping
     one accolade across lines. `earned` is a list of titles like "Ribbon".
 
-    Placement follows the convention the real data already keeps, verified
-    across all 44 teams that have any: a REGION-named accolade (the Regional
-    Tournament, e.g. "Lily Valley S3") is always the LAST entry, so an earned
-    title goes immediately before the first of those, or at the end when a
-    team has none.
+    Two things this normalises that the stored text gets wrong:
 
-    A title the team has won before is grouped into that entry rather than
-    repeated ("Ribbon S8" + S9 -> "Ribbon S8, S9"), matching how the stored
-    data already groups seasons for a repeated accolade."""
-    entries = [" ".join(entry.split())
-               for entry in (stored or "").split("\n\n") if entry.strip()]
-    tag = f"S{season}"
-    for title in earned:
-        existing = next((i for i, e in enumerate(entries)
-                         if e == title or e.startswith(title + " S")), None)
-        if existing is not None:
-            if tag not in entries[existing].split():
-                entries[existing] += f", {tag}"
+    - **Seasons are re-joined with real commas.** A wrapped cell stored
+      "S1, S2\nS3, S4\nS8", and collapsing that whitespace produced
+      "Vertress S1, S2 S3, S4 S8" -- the newline was doing a comma's job, so
+      two of the five seasons ran together. Parsing the tags and rebuilding
+      the list fixes it at the source rather than per reader.
+    - **A title won more than once lists its seasons once**, so a repeat adds
+      a season to an existing entry instead of a whole new one.
+
+    Within the World family the shared leading "World" is printed once and
+    dropped from anything after it ("World Champion S6 - Finalist S7"), since
+    repeating it costs width the 200px column does not have."""
+    items = []
+    for entry in (stored or "").split("\n\n"):
+        entry = " ".join(entry.split())
+        if entry:
+            items.append(_split_accolade(entry))
+    items += [(title, [season]) for title in earned]
+
+    seasons_of, order = {}, []
+    for title, seasons in items:
+        if title not in seasons_of:
+            seasons_of[title] = []
+            order.append(title)
+        seasons_of[title] += seasons
+
+    buckets = {}
+    for title in order:
+        seasons = sorted(set(seasons_of[title]))
+        text = f"{title} " + ", ".join(f"S{n}" for n in seasons) if seasons else title
+        buckets.setdefault(_accolade_family(title, region_display), []).append(text)
+
+    rows = []
+    for family in ACCOLADE_FAMILY_ORDER:
+        parts = buckets.get(family)
+        if not parts:
             continue
-        at = next((i for i, e in enumerate(entries)
-                   if any(e.startswith(g) for g in region_display)), len(entries))
-        entries.insert(at, f"{title} {tag}")
-    return "; ".join(entries)
+        if family == "World" and parts[0].startswith("World "):
+            parts = parts[:1] + [re.sub(r"^World ", "", p) for p in parts[1:]]
+        rows.append(" \u00b7 ".join(parts))
+    return "; ".join(rows)
 
 
 def rds_mutual_stage_data(season):
