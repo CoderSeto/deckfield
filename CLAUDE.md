@@ -284,27 +284,47 @@ and the Conflict Resolution Log accumulates 10/14/7/8/3/4 across rounds
 neither), as did every RDS constant.
 
 Round 49 (RDS Final **leg 2**, week 18 Thu) was ingested 2026-09-14 as
-`results/2026-w18-thu-rds-final-2.csv`; the database reports **2287 games**.
-Two things about this one are unlike every ingest above it:
-
-- **It is out of order.** `next-matchday` said round 44 (R11), and rounds
-  44-48 are genuinely unplayed. Per runbook step 3 the disagreement was
-  chased rather than papered over: round 49 is exactly what
-  `full_schedule_abs_round_mapping()` calls week 18 Thu, so the CSV's own
-  number is right and the earlier slots simply have not been played. Ingest
-  handles the gap (fatigue is rederived from host history), and
-  `next-matchday` still correctly points at 44.
-- **Leg 1 (round 48) is missing**, so no cup has an aggregate and **no
-  champion bonus can be awarded**. The six finalists hold their 15 from the
-  semifinal; the winner's extra 15 lands automatically the moment round 48
-  is ingested, since the whole thing is derived. This is the correct
-  behaviour, not a shortfall: `_rds_mutual_tie_winner` returns None with a
-  leg missing.
+`results/2026-w18-thu-rds-final-2.csv`. `results/` now runs 12-49 with no gaps
+(38 files) and a clean rebuild reports **2610 games through round 49**.
 
 The uploaded CSV differed from the engine's canonical form only in decimal
 padding (`6.2` vs `6.20`, `0` vs `0.0`) and a trailing newline -- every value
-identical -- so `export-results --force` rewrote it to the canonical bytes and
-the round trip is a no-op again.
+identical -- so `export-results --force` rewrote it to the canonical bytes;
+all 38 files now report "already matches".
+
+**Check `origin/main` before concluding a round has not been played -- the
+second time this has bitten, 2026-09-14.** `next-matchday` said round 44 and a
+clean rebuild had nothing for 44-48, so this session reported those five
+matchdays as unplayed and told the user the champion bonus could not be
+awarded for want of Final leg 1. The user pushed back, and they were right:
+**a separate session had already committed rounds 44-48 to main** (PRs #89-#93,
+including `2026-w18-tue-rds-final-1.csv`) *after* this branch's base commit.
+The rebuild was faithful to the branch; the branch was simply behind.
+
+The rounds 28-31 entry above records the same thing happening once before, and
+its closing advice -- "worth repeating whenever a branch has to absorb rounds
+added elsewhere" -- is now a standing check, not a nicety. **A local rebuild
+proves what `results/` contains, never what has been played.** Before
+reporting any round as missing, `git fetch origin main` and diff
+`results/`; a branch open for more than an hour can easily be behind five
+matchdays. The tell was there to be read: `next-matchday` pointing five slots
+back while the user hands you a round from further ahead is far more likely to
+mean the branch is stale than that the schedule was skipped.
+
+Rebased onto the new main (only `deckfield_dashboard.html` conflicted -- both
+sides had regenerated it, and since every constant in it is derived the
+resolution is to rebuild and regenerate rather than pick a side), rebuilt from
+the workbook plus all 38 CSVs, and the finals then resolved:
+
+| cup | aggregate | champion (+30) | runner-up (+15) |
+|---|---|---|---|
+| Ribbon | 103-61 | Canalave City | Snowpoint City |
+| Dream | **81-80** | Cocona Village | Nimbasa City |
+| Star | 80-33 | Casseroya Lake | Mesagoza |
+
+Dream's is the 1-1 leg split the dashboard's AGG row exists for: Cocona
+Village won leg 1 39-37, Nimbasa City won leg 2 43-42, and the aggregate goes
+to Cocona Village by a single point.
 
 Rounds 28-31 (PA Process round 3, R8, L8, L9) were added on main by a
 separate session while the Qualification tab was being built on a branch,
