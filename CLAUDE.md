@@ -3057,6 +3057,60 @@ callers share `finalTag`. Verified by forcing ties at the end of regulation and
 of each overtime: 1, 3 and 4 overtimes all render identically in the banner and
 on the card.
 
+**Accolades and the identity block now SHARE one column, 2026-09-14 (per
+explicit request).** The banner went from five tracks to four: what were
+columns 1 (accolades) and 2 (records / typing / name) are one `.sb-split`
+cell, accolades left and the identity block right, no divider between them.
+
+**The reservation was the problem.** A fixed accolade track holds its width
+whether a team has three rows or none -- and **114 of 160 teams have none**,
+with another 29 holding a single ~70px chip. So most fixtures spent ~200px on
+nothing while `fitTeamName()` shrank the name beside it. Now the accolades
+take only what they need:
+
+| fixture | accolades | identity block |
+|---|---|---|
+| Canalave City (3 rows, league's widest) | 199px | 517px |
+| any team with none (114 of them) | 0px | **716px**, up from 529 |
+
+**Measured against the two-column layout on the worst fixture**, at
+1920/1600/1500/1400/1300/1240/1000/800px: accolade rows **no longer clip at
+any width**, where they used to clip from 1500px down. The records line still
+wraps at 1400px and below -- **identical before and after**, so that one is
+pre-existing, not introduced. The cost is that the name reads 25.9px instead
+of 29.9px at 1300px.
+
+That trade is deliberate and is what the flex values encode: `flex-basis:0` on
+the identity block makes it the elastic side, so the accolades hold their
+content width and the NAME gives way. `fitTeamName()` exists to absorb exactly
+that, while an ellipsised accolade loses text nothing else on the page shows.
+A shrink factor on the accolades would do nothing against a `flex-basis:0`
+sibling -- the first cut set `flex:0 3 auto` believing it made the accolades
+yield first, and measurement showed it changed nothing.
+
+**The bug this introduced, and the general lesson: `grid-column` pinned by
+NUMBER does not survive a change in column count.** `.score-cell` was pinned
+to column 3 and `.clock-box` to column 4 for the five-track grid. Merging
+shifted everything right of the identity block one place left, so the clock
+landed **on top of the stat strip** -- both claiming column 4, rendering the
+clock face and "Bad Weather" straight through the stat values. Auto-placed
+cells re-flowed correctly on their own; only the two explicitly pinned ones
+broke. When a track count changes, grep `grid-column` before anything else.
+Worth a real check rather than a visual one: walk `.scoreboard`'s children and
+count sibling pairs whose rects intersect on BOTH axes -- that returns 0 now
+at every width, and would have caught this immediately.
+
+**Centring is unchanged**: the score/time pair still sits ~145px right of the
+banner's centre. That offset is `(accolades + name - stats) / 2`, and merging
+changes only how those two share their sum, not the sum itself -- so it was
+never going to move. Tracks are now `757.6 / 156 / 176 / 468.4`.
+
+Verified: zero overlapping cells and no page or banner scrollbar at
+1920/1600/1400/1240/1000/800/600px, accolades clipping only at 600px (already
+past the ~530px where the page gains a horizontal scrollbar by design), a full
+match played with the Results CSV still 21 columns, all four tabs rendering,
+and zero `pageerror` events.
+
 **Still unplaced:** the **DEX #** and raw **PF/PA** exist in the roster but
 appear nowhere on the banner -- they were not on the old scoreboard either.
 
