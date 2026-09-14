@@ -110,7 +110,7 @@ def init_db():
         team_id INTEGER NOT NULL,
         season INTEGER NOT NULL,
         round INTEGER NOT NULL,
-        rp REAL, lp REAL, sp REAL, p REAL, f REAL, b REAL, tot REAL,
+        rp REAL, lp REAL, sp REAL, p REAL, f REAL, b REAL, tb REAL, tot REAL,
         rw REAL, lw REAL,
         pf_norm REAL, pa_norm REAL, pdg REAL, sos REAL, sov REAL,
         dscr_comp REAL, eye REAL, elo_comp REAL, cups REAL, ex_norm REAL,
@@ -714,7 +714,7 @@ def _all_team_ids(conn, season):
 
 # --------------------------------------------------------- points & RW/LW --
 
-def _points_buckets(games, walkovers=None):
+def _points_buckets(games, walkovers=None, tournament_bonus=0.0):
     walkovers = walkovers or []
 
     def type_points(gtype):
@@ -737,15 +737,22 @@ def _points_buckets(games, walkovers=None):
     p  = type_points("P") * GAME_TYPE_POINT_MULTIPLIER["P"]
     f  = type_points("F") * GAME_TYPE_POINT_MULTIPLIER["F"]
     b  = sum(g["ex_bonus"] or 0 for g in games)
+    # Cup-run bonuses (see tournament_bonus_points) are their own bucket rather
+    # than being folded into `b`. They are EX points in the sense that they feed
+    # TOT, but they are NOT per-game EX and must never reach the OVR's own EX
+    # component -- that one reads team_seasons.ex, a different column entirely,
+    # so keeping them separate here makes the boundary visible instead of
+    # relying on nobody confusing the two.
+    tb = float(tournament_bonus or 0.0)
     # Both teams now bank their own EX Bonus every game (win or lose), unlike the
     # historical S9 data where only the winner ever got a (positive-biased) bonus --
     # so a team on a bad enough streak of negative EX components could otherwise
     # drag TOT below zero. Floor it at 0 the same way STARTING_TOT was always meant
     # to act as a floor.
-    tot = max(0.0, rp + lp + sp + p + f + b + STARTING_TOT)
+    tot = max(0.0, rp + lp + sp + p + f + b + tb + STARTING_TOT)
 
     return {
-        "rp": rp, "lp": lp, "sp": sp, "p": p, "f": f, "b": b, "tot": tot,
+        "rp": rp, "lp": lp, "sp": sp, "p": p, "f": f, "b": b, "tb": tb, "tot": tot,
         # games_played counts are real games ONLY -- walkovers don't count,
         # matching the sheet's own GAMES formula, which explicitly excludes them
         "regional_games": sum(1 for g in games if g["game_type"] == "R"),
@@ -863,12 +870,15 @@ def compute_round_ratings(season, round_num):
         (season, round_num - 1),
     ).fetchall()}
     regional_strength, league_strength = compute_strength_scores(season, round_num)
+    # Cup-run bonuses, settled as of this round -- one pass for the whole
+    # league rather than a lookup per team.
+    bonuses = tournament_bonus_points(season, round_num)
 
     raw = {}  # team_id -> dict of un-normalized per-team values
     for tid in team_ids:
         games = _team_game_rows(conn, season, tid, round_num)
         walkovers = _team_walkover_rows(conn, season, tid, round_num)
-        buckets = _points_buckets(games, walkovers)
+        buckets = _points_buckets(games, walkovers, bonuses.get(tid, 0.0))
         rw = compute_rw(games, buckets)
         lw = compute_lw(games, buckets, rw, team_seasons[tid]["league_division"])
 
@@ -988,7 +998,7 @@ def compute_round_ratings(season, round_num):
         fatigue_now = cumulative_fatigue(tid, season, round_num)
         results.append((
             tid, season, round_num,
-            b["rp"], b["lp"], b["sp"], b["p"], b["f"], b["b"], b["tot"],
+            b["rp"], b["lp"], b["sp"], b["p"], b["f"], b["b"], b["tb"], b["tot"],
             v["rw"], v["lw"], pf_norm, pa_norm, pdg, sos, sov, dscr_comp, eye,
             elo_comp, cups, ex_norm, ovr, grade, climate, playoff_score,
             v["pf"], v["pa"], v["d_sqrt"], v["rlstr"], fatigue_now,
@@ -996,10 +1006,10 @@ def compute_round_ratings(season, round_num):
 
     conn.executemany("""
         INSERT OR REPLACE INTO team_round_ratings
-        (team_id, season, round, rp, lp, sp, p, f, b, tot, rw, lw,
+        (team_id, season, round, rp, lp, sp, p, f, b, tb, tot, rw, lw,
          pf_norm, pa_norm, pdg, sos, sov, dscr_comp, eye, elo_comp, cups, ex_norm,
          ovr, grade, climate, playoff_score, pf_raw, pa_raw, d_sqrt_raw, rlstr_own, fatigue_after)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, results)
     conn.commit()
     conn.close()
@@ -1158,11 +1168,14 @@ def _strength_raw_inputs(conn, season, round_num):
         "SELECT team_id, ovr FROM team_round_ratings WHERE season = ? AND round = ?",
         (season, round_num - 1)).fetchall()}
 
+    # RLStr z-scores TOT, so it has to see the same TOT the Rankings tab does.
+    bonuses = tournament_bonus_points(season, round_num)
+
     out = {}
     for tid in team_ids:
         games = _team_game_rows(conn, season, tid, round_num)
         walkovers = _team_walkover_rows(conn, season, tid, round_num)
-        b = _points_buckets(games, walkovers)
+        b = _points_buckets(games, walkovers, bonuses.get(tid, 0.0))
         dscrs = [g["dscr"] for g in games if g["dscr"] is not None]
         d_sqrt = min(10.0, sqrt(max(sum(dscrs) / len(dscrs), 0))) if dscrs else 0.0
         gis = [g["interest_score"] for g in games if g["interest_score"] is not None]
@@ -1661,6 +1674,163 @@ def rds_mutual_games(season, bracket, leg):
         if pairs is None or any(p is None for p in pairs):
             return None
         out.extend(_rds_leg_orientation(h, a, leg) for h, a in pairs)
+    return out
+
+
+# ------------------------------------------- Tournament bonus points (TOT) --
+# A cup run awards EX points that feed TOT and nothing else. Each entry below
+# is the INCREMENT collected at that stage, so the cumulative totals are:
+#
+#   RDS (Ribbon / Dream / Star):  finalist 15,      winner 30
+#   PA:                           semifinalist 30,  finalist 45,  winner 60
+#
+# The stage names are also the timing, and that is the whole point of them:
+# the two finalists collect at the END OF THE SEMIFINALS -- not when the final
+# is played -- and the winner's extra slice at the end of the final. PA's
+# semifinalists collect as soon as both brackets finish round 8.
+TOURNAMENT_BONUS = {
+    "RDS": {"semifinalist": 0, "finalist": 15, "winner": 15},
+    "PA":  {"semifinalist": 30, "finalist": 15, "winner": 15},
+}
+
+
+def _pa_seed_lookup(conn):
+    """{team_name: best seed} across PA's two bracket seedings. A team holds a
+    different seed in Draw and Process, and this file's convention everywhere
+    else is that the better (lower-numbered) one is the team's seed."""
+    _, _, draw_seed_to_team, process_seed_to_team, _ = _pa_round1_games(conn)
+    best = {}
+    for mapping in (draw_seed_to_team, process_seed_to_team):
+        for seed, team in mapping.items():
+            if team in (None, "bye"):
+                continue
+            if team not in best or seed < best[team]:
+                best[team] = seed
+    return best
+
+
+def _mutual_stage_survivors(conn, season, cup, field, bracket, seed_lookup):
+    """Which members of `field` are still standing after `bracket` ('SF' or
+    'Final'), or None if any tie in it is unfinished.
+
+    Works off real games alone -- it needs no model of the shared stage, which
+    is what lets PA's tiers exist before PA's shared stage is built, and it
+    handles a bye for free: a team that plays no tie in this bracket simply
+    survives. It is also self-gating. A half-played semifinal leaves THREE
+    teams standing rather than two, and every caller checks the count, so a
+    partly-played stage can never look like a concluded one."""
+    ties = {}
+    for r in conn.execute("""
+        SELECT ta.name a, tb.name b FROM games g
+        JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
+        WHERE g.season=? AND g.cup_name=? AND g.cup_bracket=?
+    """, (season, cup, bracket)).fetchall():
+        ties[frozenset((r["a"], r["b"]))] = True
+    survivors = list(field)
+    for pair in ties:
+        a, b = sorted(pair)
+        # _rds_mutual_tie_winner is generic over cup+bracket despite its name,
+        # and returns None the moment a leg is missing.
+        winner = _rds_mutual_tie_winner(conn, season, cup, bracket, a, b, seed_lookup)
+        if winner is None:
+            return None
+        loser = b if winner == a else a
+        survivors = [t for t in survivors if t != loser]
+    return survivors
+
+
+def tournament_bonus_points(season, through_round=None):
+    """{team_id: bonus points} earned through cup runs as of `through_round`.
+
+    Recomputed from real results every time rather than stored, the same way
+    fatigue is: a corrected cup game re-earns or un-earns the bonus instead of
+    leaving a stale credit behind, and a rule introduced mid-season applies to
+    cups already decided -- which is exactly how this one arrived.
+
+    Every award is gated on the round of the game that SETTLED it, not merely
+    on the cup being resolvable from today's database. Without that, asking
+    for a team's state at round 45 would hand it a bonus settled at round 49,
+    and every historical row would collect it retroactively the moment the
+    final was played."""
+    conn = get_connection()
+    dex = {r["name"]: r["team_id"] for r in conn.execute(
+        "SELECT team_id, name FROM teams").fetchall()}
+    out = {}
+
+    def award(name, points):
+        if points and name in dex:
+            out[dex[name]] = out.get(dex[name], 0.0) + points
+
+    def last_round(cup, bracket, cup_round=None):
+        sql = ("SELECT MAX(round) r, COUNT(*) n FROM games "
+               "WHERE season=? AND cup_name=? AND cup_bracket=?")
+        params = [season, cup, bracket]
+        if cup_round is not None:
+            sql += " AND cup_round=?"
+            params.append(cup_round)
+        row = conn.execute(sql, params).fetchone()
+        return row["r"] if row["n"] else None
+
+    def settled(rnd):
+        return rnd is not None and (through_round is None or rnd <= through_round)
+
+    def bracket_winners(cup, bracket, cup_round):
+        return [(r["a"] if r["result_a"] in (2, 3) else r["b"]) for r in conn.execute("""
+            SELECT g.result_a, ta.name a, tb.name b FROM games g
+            JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
+            WHERE g.season=? AND g.cup_name=? AND g.cup_bracket=? AND g.cup_round=?
+        """, (season, cup, bracket, cup_round)).fetchall()]
+
+    try:
+        cups = [("Ribbon", "RDS", RDS_BRACKET_LAST_ROUND),
+                ("Dream", "RDS", RDS_BRACKET_LAST_ROUND),
+                ("Star", "RDS", RDS_BRACKET_LAST_ROUND),
+                ("PA", "PA", PA_BRACKET_LAST_ROUND)]
+        for cup, kind, last in cups:
+            tiers = TOURNAMENT_BONUS[kind]
+            seed_lookup = _rds_seed_lookup(cup) if kind == "RDS" else _pa_seed_lookup(conn)
+
+            # The mutual semifinal field: each bracket's last-round winners,
+            # deduplicated. A team through on BOTH sides holds one slot, not
+            # two, which is why this field can be 4, 3 or 2 teams.
+            field, bracket_rounds = [], []
+            for bracket in ("Draw", "Process"):
+                winners = bracket_winners(cup, bracket, last)
+                if len(winners) != 2:
+                    field = None
+                    break
+                bracket_rounds.append(last_round(cup, bracket, last))
+                for team in winners:
+                    if team not in field:
+                        field.append(team)
+            if not field:
+                continue
+
+            brackets_done = max(bracket_rounds)
+            if not settled(brackets_done):
+                continue
+            for team in field:
+                award(team, tiers["semifinalist"])
+
+            # Finalists are settled by the semifinal -- except for a cup whose
+            # two brackets produced the same pair, which has no semifinal at
+            # all and is settled by the brackets themselves.
+            finalists = _mutual_stage_survivors(conn, season, cup, field, "SF", seed_lookup)
+            if finalists is None or len(finalists) != 2:
+                continue
+            sf_done = last_round(cup, "SF") or brackets_done
+            if not settled(sf_done):
+                continue
+            for team in finalists:
+                award(team, tiers["finalist"])
+
+            champion = _mutual_stage_survivors(conn, season, cup, finalists, "Final", seed_lookup)
+            if champion is None or len(champion) != 1:
+                continue
+            if settled(last_round(cup, "Final")):
+                award(champion[0], tiers["winner"])
+    finally:
+        conn.close()
     return out
 
 
