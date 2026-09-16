@@ -1844,12 +1844,53 @@ The batch export reads **Game Type Finals, Format AGG (2-leg / Bo3)**, Cup
 bracket reach the dashboard only through Next Matchday, when week 27 arrives.
 A WC tab is the obvious next piece and has not been part of these requests.
 
-**One caveat about the draw's stability.** `wc_groups` reads the projected
-qualification field, which moves with every result -- so in principle a
-regenerate mid-group-stage could reshuffle groups under games already played.
-In practice the field is settled before week 27 (the regular season and the
-Regional Tournaments are what decide it), so this is a note rather than a
-mechanism; there is no freeze.
+### The field freezes at the conclusion of week 26 (2026-09-16, per explicit instruction)
+
+`wc_field_freeze_round(season)` returns the last week-26 round (**74**, RT9)
+once **every** slot of that week has been played, and `None` while it is not.
+`world_championship_field` uses it as the default for `round_num`, so the
+Qualification tab, the draw, the seeding and the whole bracket all inherit one
+pin without any of them knowing about it. An explicit `round_num` is still
+honoured -- the freeze only decides what "now" means.
+
+**Week 26 is exactly the point at which every input to the field is a PLAYED
+result rather than a projection**: the league and regional round robins finish
+in weeks 20/22, the RDS final in week 18, the PA final in week 23, and the
+Regional Tournaments in weeks 24-26. That is what makes it the right place to
+lock.
+
+**Nothing is stored.** The field stays a pure function of the results,
+recomputed every time, the same discipline as fatigue and the tournament bonus
+-- which is what makes the freeze survive a `migrate` (that drops every table)
+and makes a corrected week-26 game **re-settle** the field rather than leaving
+a stale snapshot behind.
+
+**Verified on a scratch database**, and the first attempt at the test was
+wrong in a way worth recording: RT games inserted by raw SQL leave
+`team_round_ratings` with **no rows at round 74**, and `_wc_team_meta` scopes
+strictly to `r.round = round_num`, so the field came back built from an empty
+meta and "moved" for a reason that had nothing to do with the freeze. Recompute
+before trusting a pinned-round read.
+
+Done properly: all 90 Regional Tournament games played and ratings recomputed,
+the field frozen at round 74, then **60 further games** ingested at rounds
+80/90 and `recompute_from_round(9, 74)` run over round 74 itself --
+**0 of 160** round-74 OVR rows moved and the 48-team field came back
+**identical**. Asking explicitly for round 90 returns a **different** field,
+which is what proves the pin does real work rather than being a no-op.
+
+`world_championship_overview` reports `field_frozen` / `field_frozen_at_round`
+and the WC tab's note says which state it is in, so a reader knows whether the
+groups in front of them are a projection or the final draw.
+
+**The one thing the freeze does NOT fix, and it matters before week 26
+arrives:** the Regional Tournament bids are still awarded on **chalk**
+(`regional_standings_seeds` seeds 1/2/3 as Champion/Runner-up/Semifinalist),
+never reading the real RT results. That is pre-existing and harmless while
+everything is openly a projection -- but freezing at week 26 would lock in a
+chalk answer for the one category whose real results land in exactly weeks
+24-26. Making those bids read the played RT bracket is the obvious follow-up,
+and there are ~21 rounds of runway to do it in.
 
 ### The World Championship tab (2026-09-16, per explicit request)
 
@@ -3741,11 +3782,11 @@ page errors on either path.
 
 - Dashboard regeneration isn't in the CLI yet — still manual script runs.
 - **The World Championship generates end to end** as of 2026-09-16 -- group
-  stage, Play-in, bracket and champion -- and has its own dashboard tab
-  (Groups / Play-in / Bracket). The draw still reads the PROJECTED
-  qualification field, so a regenerate mid-group-stage could in principle
-  reshuffle groups under games already played; the field settles before week
-  27 in practice, so there is no freeze mechanism.
+  stage, Play-in, bracket and champion -- with its own dashboard tab and a
+  field that **freezes at the conclusion of week 26**. The open piece is that
+  the Regional Tournament bids are still awarded on chalk rather than on the
+  real RT bracket, which the freeze makes permanent at exactly the week those
+  results land (see that section).
 - Round numbering: the *historical* R1-R5/L1-L2 mapping is confirmed
   against real Archive data; everything from PA Draw round 1 onward uses
   `abs_round_for_event()`'s sequential assignment, which is only "confirmed

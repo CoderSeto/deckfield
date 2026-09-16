@@ -5167,10 +5167,15 @@ def world_championship_overview(season, round_num=None):
         for row in rows:
             row["dex"] = dex.get(row["name"])
 
+    frozen_at = wc_field_freeze_round(season) if round_num is None else None
     out = {
         "seeded": seeded, "groups": tables,
         "group_matchdays": WC_GROUP_MATCHDAYS, "group_matchdays_played": played_mds,
         "group_stage_complete": complete,
+        # The draw inherits the field's freeze for free -- wc_seeded_field ->
+        # world_championship_field(season, None) -- so this only has to REPORT
+        # it, never re-derive it.
+        "field_frozen": frozen_at is not None, "field_frozen_at_round": frozen_at,
         "playin": None, "bracket_seeds": None, "eliminated": [],
         "bracket": {}, "champion": None,
     }
@@ -5249,6 +5254,44 @@ def world_championship_overview(season, round_num=None):
     return out
 
 
+# The field FREEZES at the conclusion of week 26, per explicit instruction --
+# the last Regional Tournament matchday (RT9). That week is exactly the point
+# at which every input to the field has been PLAYED rather than projected:
+# the league and regional round robins finish in weeks 20/22, the RDS final in
+# week 18, the PA final in week 23, and the Regional Tournaments in weeks
+# 24-26. After it, the draw the World Championship plays to must not move
+# again, however the ratings drift.
+WC_FIELD_FREEZE_WEEK = 26
+
+
+def wc_field_freeze_round(season):
+    """The absolute round the World Championship field is pinned to, or None
+    while it is still live.
+
+    Returns the last week-26 round once EVERY slot of that week has been
+    played. Nothing is stored: the field stays a pure function of the
+    results, recomputed every time, exactly as fatigue and the tournament
+    bonus are. That is what makes the freeze survive a `migrate` (which
+    drops every table) and makes a corrected week-26 game re-settle the
+    field rather than leaving a stale snapshot behind."""
+    week = next((w for w in WEEKLY_SCHEDULE if w["week"] == WC_FIELD_FREEZE_WEEK), None)
+    if week is None:
+        return None
+    conn = get_connection()
+    try:
+        rounds = []
+        for day in ("Tue", "Thu", "Weekend"):
+            slot = week[day]
+            if slot is None:
+                continue
+            if not _event_is_played(conn, season, slot, week["week"], day):
+                return None
+            rounds.append(abs_round_for_event(slot, week["week"], day))
+    finally:
+        conn.close()
+    return max(rounds) if rounds else None
+
+
 def world_championship_field(season, round_num=None):
     """The 48-team World Championship field as it currently projects.
 
@@ -5266,9 +5309,15 @@ def world_championship_field(season, round_num=None):
     every bid that could not be filled is reported in `passed_to_at_large`
     with the team that would have taken it and where that team is already
     in -- so a redundant bid is visible rather than silently absorbed."""
+    # An explicit round_num is always honoured -- the freeze only decides what
+    # "now" means for the default. Once week 26 has concluded, "now" is
+    # permanently that week, so every caller that asks for the current field
+    # (the Qualification tab, the draw, the seeding) gets the same answer
+    # forever without any of them having to know about the freeze.
+    frozen_at = wc_field_freeze_round(season) if round_num is None else None
     conn = get_connection()
     if round_num is None:
-        round_num = conn.execute(
+        round_num = frozen_at or conn.execute(
             "SELECT MAX(round) m FROM team_round_ratings WHERE season=?", (season,)
         ).fetchone()["m"]
 
@@ -5376,6 +5425,8 @@ def world_championship_field(season, round_num=None):
     return {
         "field_size": WC_FIELD_SIZE,
         "as_of_round": round_num,
+        "frozen": frozen_at is not None,
+        "frozen_at_round": frozen_at,
         "invites": invites,
         "allocation": allocation,
         "counts": counts,
