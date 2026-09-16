@@ -464,7 +464,6 @@ STATIC_CONSTS = {
     "REGION_ORDER": "fixed display order of the 10 regions",
     "ROUND_LABELS": "static label strings",
     "RT_MD_LABELS": "static label strings",
-    "SCHEDULE_DEFAULTS": "static form defaults for the Schedule paste boxes",
 }
 
 

@@ -1882,6 +1882,48 @@ re-running leaves it unchanged). The lesson extends the earlier one: the
 guard covers *constants*, so anything derived that lives outside a `const`
 — page text, a title, a hardcoded count — is still on its own.
 
+**`SCHEDULE_DEFAULTS` was an eighth instance -- this one sitting INSIDE the
+manifest, listed as static, found and fixed 2026-09-16 (per explicit
+request: make the Schedule tab default to the most recently completed
+round).** `const SCHEDULE_DEFAULTS = {"regional": 5, "league": 2}` set which
+round the Schedule tab opens on, and its `STATIC_CONSTS` entry read "static
+form defaults for the Schedule paste boxes" -- wrong twice over: it has
+nothing to do with the paste boxes, and 5/2 were simply the latest completed
+rounds on the day it was written. The tab opened on **R5/L2 with R12/L13
+played**, stale by 7 and 11 rounds.
+
+**The guard could not catch this one, and that is the lesson.**
+`_check_const_manifest()` enforces that every constant is *classified*, not
+that the classification is *true* -- a wrong "static" entry is indistinguishable
+from a right one, and the reason string is the only evidence either way. The
+seventh instance escaped by living outside a `const`; this one escaped by
+living inside the manifest with a plausible sentence next to it. **When a
+STATIC_CONSTS reason mentions a specific number or a round, treat it as
+derived until proven otherwise.**
+
+Fixed by **deleting the constant** rather than adding a builder for it.
+`latestCompletedRound(mode)` walks `SCHEDULE_DATA` -- the data the tab already
+renders -- for the highest round whose games all carry a score, so the default
+and the scores on screen cannot disagree, and no regenerate is needed to keep
+it current. That is also why this stayed a renderer-only change and
+`regenerate_dashboard.py` was deliberately NOT re-run (the same call as the
+Standings rank-column and `rdsMutualTieRows` entries); the only edit there was
+removing the now-dead manifest line.
+
+Two behaviours worth keeping: a **part-played** round is not "completed", so
+the default falls to the last complete one (R/L ingest a whole matchday at a
+time, so this cannot arise today -- it is there so a half-ingested state
+degrades sensibly rather than snapping to round 1), and the **mode toggle**
+still clears the selection before repopulating, so switching Regional/League
+re-defaults to that mode's own latest instead of carrying a round across.
+
+Verified via Playwright: Regional opens on Round 12 and League on Round 13,
+both with all 80 games scored; a manual selection still holds; switching back
+re-defaults; all 11 tabs load with zero `pageerror` events. The four edge paths
+were exercised by mutating `SCHEDULE_DATA` in the page -- a part-played R12
+yields 11, no complete round at all yields the highest partial, no scores
+anywhere yields 1, and an unknown mode yields 1.
+
 **Conflict log named the wrong seeds as swapped, found and fixed
 2026-08-07, same day.** Once the round 2-4 conflict log above was
 actually visible, real round-2 entries read e.g. "Swapped seed #96 &harr;
