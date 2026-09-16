@@ -2487,17 +2487,19 @@ def _event_is_played(conn, season, slot, week=None, day=None):
 
     if kind == "WC":
         _, stage, matchday = slot
-        # Same shape as the PA check. Note this deliberately asks only whether
-        # real games exist for the slot -- it does NOT depend on the field,
-        # the group draw or the bracket being modelled, so next_matchday()
-        # advances correctly the moment a WC matchday's results are ingested,
-        # even though _games_for_event can't generate that matchday yet.
+        # Same shape as the PA check: real games for this slot mean played.
         n = conn.execute(
             "SELECT COUNT(*) c FROM games WHERE season=? AND cup_name='WC' "
             "AND cup_bracket=? AND cup_round=?",
             (season, stage, matchday),
         ).fetchone()["c"]
-        return n > 0
+        if n > 0:
+            return True
+        # A best-of-three's LEG 3 is the one slot that can be complete with
+        # zero games: if every tie in the stage was taken 2-0, there is no
+        # decider to play. Counting games alone would leave next_matchday()
+        # stalled forever on a weekend nobody turns up for.
+        return _wc_bracket_leg_settled(conn, season, stage, matchday)
 
     return False
 
@@ -3321,17 +3323,9 @@ def _games_for_event(season, event, week=None, day=None):
         if stage == "Play-in":
             games = wc_playin_games(season, matchday)
             return [(name_to_dex[h], name_to_dex[a]) for h, a in games]
-        # Everything through the Play-in is determined, so seeds 1-16 are
-        # known -- but the bracket itself still needs two rules that have
-        # not been given: which seeds MEET in the R16, and who hosts each
-        # of a best-of-three's three legs. Raising is the same deliberate
-        # choice PA's mutual stage makes one branch up: a guess here would
-        # be indistinguishable from a rule once it was generating real
-        # matchups.
-        raise NotImplementedError(
-            f"World Championship {stage} {matchday} isn't modeled yet: the R16 "
-            "pairing of seeds 1-16 and the best-of-three hosting pattern still "
-            "need defining.")
+        # matchday carries the LEG (1-3) for a bracket stage.
+        games = wc_bracket_games(season, stage, matchday)
+        return [(name_to_dex[h], name_to_dex[a]) for h, a in games]
 
     conn.close()
     raise ValueError(f"Unknown event kind: {kind}")
@@ -4922,6 +4916,179 @@ def wc_bracket_seeds(season, round_num=None):
                 seeds[WC_PLACE_SEED_BASE[place] + slot] = name
     conn.close()
     return seeds, eliminated
+
+
+# The knockout bracket: four weeks, each one tie per pairing played as a
+# best-of-three across Tue/Thu/Weekend.
+WC_BRACKET_STAGES = ("R16", "QF", "SF", "Final")
+WC_BRACKET_LEGS = 3
+
+
+def _wc_leg_hosts(better, worse, aggregate_leader=None):
+    """[(home, away)] for legs 1, 2, 3 of one best-of-three tie.
+
+    **Better seed hosts leg 1, worse seed hosts leg 2**, per explicit
+    instruction -- which is the REVERSE of the Regional Tournament / RDS
+    two-legged convention (`_rds_leg_orientation`: worse seed leg 1, better
+    seed leg 2). Do not "fix" one to match the other; they are different
+    rules for different tournaments.
+
+    Leg 3 is hosted by **whichever team leads on aggregate after the first
+    two games**, which is a property of the results rather than of the
+    seeds -- so the caller supplies it. `aggregate_leader` None means the
+    first two legs are not both in yet, and leg 3's host is unknowable."""
+    legs = [(better, worse), (worse, better)]
+    if aggregate_leader is not None:
+        other = worse if aggregate_leader == better else better
+        legs.append((aggregate_leader, other))
+    return legs
+
+
+def _wc_two_leg_totals(conn, season, stage, team_a, team_b):
+    """(a_total, b_total) across legs 1 and 2 of a bracket tie, or None if
+    either leg is missing. Scores are resolved per team by name, not by
+    home/away: `games` stores pf/pa from team_a's side only, so reading the
+    stored column blindly is backwards for every game the home side lost."""
+    totals = [0, 0]
+    a_id = conn.execute("SELECT team_id FROM teams WHERE name=?", (team_a,)).fetchone()["team_id"]
+    for leg in (1, 2):
+        r = conn.execute("""
+            SELECT g.pf_a, g.pa_a, g.team_a FROM games g
+            JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
+            WHERE g.season=? AND g.cup_name='WC' AND g.cup_bracket=? AND g.cup_round=?
+            AND ((ta.name=? AND tb.name=?) OR (ta.name=? AND tb.name=?))
+        """, (season, stage, leg, team_a, team_b, team_b, team_a)).fetchone()
+        if r is None:
+            return None
+        totals[0] += r["pf_a"] if r["team_a"] == a_id else r["pa_a"]
+        totals[1] += r["pa_a"] if r["team_a"] == a_id else r["pf_a"]
+    return tuple(totals)
+
+
+def _wc_aggregate_leader(conn, season, stage, better, worse):
+    """Who leads on aggregate after two legs, or None if both legs are not
+    in. An exact aggregate tie goes to the **better seed** -- the one
+    reading chosen rather than given, matching `_rds_mutual_tie_winner`,
+    which resolves the same standoff the same way rather than falling back
+    on whichever team happens to be stored first."""
+    totals = _wc_two_leg_totals(conn, season, stage, better, worse)
+    if totals is None:
+        return None
+    return better if totals[0] >= totals[1] else worse
+
+
+def _wc_tie_winner(conn, season, stage, better, worse):
+    """Winner of a best-of-three bracket tie, or None if undecided.
+
+    The tie is decided by GAMES won, not aggregate: taking both of the
+    first two legs ends it there and leg 3 is never played. Aggregate only
+    ever decides who HOSTS leg 3 (see `_wc_leg_hosts`)."""
+    w1 = _real_bracket_winner(conn, "WC", stage, 1, better, worse)
+    w2 = _real_bracket_winner(conn, "WC", stage, 2, better, worse)
+    if w1 is None or w2 is None:
+        return None
+    if w1 == w2:
+        return w1
+    return _real_bracket_winner(conn, "WC", stage, 3, better, worse)
+
+
+def _wc_bracket_ties(season, stage, round_num=None):
+    """[(better, worse)] -- every tie of one bracket stage, in bracket
+    order, or None if the stage cannot be resolved yet.
+
+    The R16 field comes from the Play-in's seeds 1-16 laid out by
+    `_bracket_seed_pairs(16)`, the engine's canonical recursive
+    seed-placement order -- so 1v16 meets 8v9 next, not 2v15. **The list's
+    ORDER is the bracket**: every later stage is built by meeting adjacent
+    games, which is exactly the bug `_bracket_seed_pairs` exists to prevent
+    and which this codebase has already hit twice."""
+    if stage not in WC_BRACKET_STAGES:
+        raise ValueError(f"Unknown World Championship bracket stage: {stage}")
+    seeds, _elim = wc_bracket_seeds(season, round_num)
+    if seeds is None:
+        return None
+    seed_of = {name: seed for seed, name in seeds.items()}
+    ties = [(seeds[a], seeds[b]) for a, b in _bracket_seed_pairs(WC_BRACKET_SIZE)]
+
+    conn = get_connection()
+    for prior in WC_BRACKET_STAGES[:WC_BRACKET_STAGES.index(stage)]:
+        winners = [_wc_tie_winner(conn, season, prior, better, worse)
+                   for better, worse in ties]
+        if any(w is None for w in winners):
+            conn.close()
+            return None
+        # Adjacent games meet, which is what makes the list order the bracket.
+        ties = [tuple(sorted((winners[i], winners[i + 1]), key=lambda n: seed_of[n]))
+                for i in range(0, len(winners), 2)]
+    conn.close()
+    return ties
+
+
+def wc_bracket_games(season, stage, leg, round_num=None):
+    """[(home_name, away_name)] for one leg of one bracket stage.
+
+    Legs 1 and 2 cover every tie. **Leg 3 covers only the ties still level
+    at one game each** -- a tie taken 2-0 is already over, so it has no
+    third game. That means leg 3 can legitimately be an EMPTY list when
+    every tie was settled in two, which `_event_is_played` has to treat as
+    a complete matchday rather than an unplayed one, or `next_matchday()`
+    would stall on a weekend nobody plays."""
+    if leg not in (1, 2, 3):
+        raise ValueError(f"World Championship {stage} leg must be 1-3, got {leg}")
+    ties = _wc_bracket_ties(season, stage, round_num)
+    if ties is None:
+        raise ValueError(
+            f"World Championship {stage}: the stage that feeds it isn't complete yet.")
+    conn = get_connection()
+    games = []
+    for better, worse in ties:
+        if leg < 3:
+            games.append(_wc_leg_hosts(better, worse)[leg - 1])
+            continue
+        w1 = _real_bracket_winner(conn, "WC", stage, 1, better, worse)
+        w2 = _real_bracket_winner(conn, "WC", stage, 2, better, worse)
+        if w1 is None or w2 is None:
+            conn.close()
+            raise ValueError(
+                f"World Championship {stage} leg 3: legs 1-2 aren't complete yet.")
+        if w1 == w2:
+            continue                       # settled 2-0, no third game
+        leader = _wc_aggregate_leader(conn, season, stage, better, worse)
+        games.append(_wc_leg_hosts(better, worse, leader)[2])
+    conn.close()
+    return games
+
+
+def _wc_bracket_leg_settled(conn, season, stage, leg):
+    """True when a bracket leg needs no (more) games. Only leg 3 can be
+    settled without being played -- see wc_bracket_games."""
+    if leg != 3:
+        return False
+    try:
+        ties = _wc_bracket_ties(season, stage)
+    except ValueError:
+        return False
+    if ties is None:
+        return False
+    for better, worse in ties:
+        w1 = _real_bracket_winner(conn, "WC", stage, 1, better, worse)
+        w2 = _real_bracket_winner(conn, "WC", stage, 2, better, worse)
+        if w1 is None or w2 is None:
+            return False
+        if w1 != w2:
+            return False                   # a decider is still owed
+    return True
+
+
+def wc_champion(season, round_num=None):
+    """The World Championship winner, or None until the final is decided."""
+    ties = _wc_bracket_ties(season, "Final", round_num)
+    if not ties:
+        return None
+    conn = get_connection()
+    winner = _wc_tie_winner(conn, season, "Final", *ties[0])
+    conn.close()
+    return winner
 
 
 def world_championship_field(season, round_num=None):

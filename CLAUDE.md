@@ -520,8 +520,9 @@ copy of the PA Cup tab instead of play order.
 **What's actually reachable** via `_games_for_event()`: Regional/League any
 round (via the pod schedule), RDS Cup rounds 1-5 (resolving through real
 prior-round winners where needed — round 3+ isn't a placeholder, it's
-generated live), PA Cup rounds 1-8 (same), and RDS's mutual semifinal/final
-(wired 2026-09-11). **PA's mutual semifinal/final** raise
+generated live), PA Cup rounds 1-8 (same), RDS's mutual semifinal/final
+(wired 2026-09-11), and the **whole World Championship** — group stage,
+Play-in and bracket (wired 2026-09-16). **PA's mutual semifinal/final** raise
 `NotImplementedError` deliberately — not modeled yet, see "Known open
 items."
 
@@ -1768,25 +1769,80 @@ on both its matchdays; only the four knockout weeks are Bo3. Now `single =
 stage in ("Group", "Play-in")`, verified against the real export: Group MD3
 (24 games), Play-in MD1 (9) and MD2 (6) all read **Single Game**.
 
-### What is still NOT modeled: the bracket
+### The knockout bracket (2026-09-16, per explicit instruction)
 
-Seeds 1-16 are now known, but `_games_for_event` still raises for `R16` / `QF`
-/ `SF` / `Final` because two rules have not been given:
+Four weeks, each one round of ties played as a **best-of-three across
+Tue/Thu/Weekend**. With this the whole World Championship generates end to
+end -- group stage, Play-in, bracket, champion.
 
-- **which seeds MEET in the R16.** `_bracket_seed_pairs(16)` is sitting right
-  there and is the engine's canonical recursive seed-placement order (shared by
-  RDS Draw round 1 and the PA champions bracket), which would give
-  1v16 / 8v9 / 4v13 / 5v12 / 2v15 / 7v10 / 3v14 / 6v11 -- but that is an
-  inference, and this file records twice what happens when a plausible bracket
-  order is assumed rather than given.
-- **who hosts each of a best-of-three's three legs.** The RDS/RT convention is
-  worse seed leg 1, better seed leg 2; a third leg has no precedent here.
+**The R16 uses `_bracket_seed_pairs(16)`**, the engine's canonical recursive
+seed-placement order (shared with RDS Draw round 1 and the PA champions
+bracket): `1v16 / 8v9 / 4v13 / 5v12 / 2v15 / 7v10 / 3v14 / 6v11`. **The
+list's ORDER is the bracket** -- every later stage is built by meeting
+adjacent games, so under chalk the QF is 1v8 / 4v5 / 2v7 / 3v6 and **#1 can
+only meet #2 in the final**. Naive ascending order would have them meet in
+the quarterfinal instead; that exact mistake is what `_bracket_seed_pairs`
+exists to prevent, and this file records it happening twice (RDS round 1,
+then the PA champions bracket).
 
-Raising is the same deliberate choice PA's mutual stage makes one branch up.
+**Hosting is the REVERSE of the Regional Tournament / RDS convention, and
+that is deliberate:**
+
+| leg | host |
+|---|---|
+| 1 | **better** seed |
+| 2 | **worse** seed |
+| 3 | whichever team **leads on aggregate** after the first two |
+
+`_rds_leg_orientation` is worse-seed-leg-1 / better-seed-leg-2. `_wc_leg_hosts`
+is the opposite way round. **Do not "fix" one to match the other** -- they are
+different rules for different tournaments, and the comment on each says so.
+Home advantage stacks toward the better seed here: it opens at home and also
+hosts leg 3 whenever it is ahead.
+
+**Leg 3's host is a property of the RESULTS, not the seeds**, which is why
+`_wc_leg_hosts` takes the leader as an argument rather than deriving it. An
+exact aggregate tie goes to the **better seed** -- the one reading chosen
+rather than given, matching `_rds_mutual_tie_winner`, which resolves the same
+standoff the same way.
+
+**The tie is decided by GAMES won, not aggregate.** Taking both of the first
+two legs ends it there. Aggregate only ever decides who hosts leg 3.
+
+**Leg 3 can legitimately have ZERO games, and that needed handling in the
+played-check.** A tie taken 2-0 owes no decider, so if every tie in a stage
+was swept, that week's Weekend has nothing to play. Counting games alone would
+leave `next_matchday()` **stalled forever on a matchday nobody turns up for**
+-- so `_event_is_played` falls through to `_wc_bracket_leg_settled`, which
+returns True only when every tie in the stage is already 2-0. This is not
+hypothetical: it fired on the Final in the first synthetic walk and on a
+mid-bracket SF in another seed.
+
+**Verified by full synthetic walks** on top of the group + Play-in scratch
+database, across six random seeds -- each running all four stages, 8/4/2/1
+ties, with every invariant asserted rather than eyeballed:
+
+- the R16 field equals `_bracket_seed_pairs(16)` exactly, by seed;
+- leg 1 seats the better seed at home in every game, leg 2 the worse seed;
+- leg 3 contains **exactly** the ties that split 1-1 -- no more, no fewer --
+  and each is hosted by that tie's real aggregate leader;
+- a stage with no deciders reads as a complete matchday (seed 4 had an empty
+  SF leg 3, seeds 1/3/5/6 an empty Final leg 3);
+- the champion is one of the two finalists, and a Play-in qualifier can win it
+  (seed 13, Cocona Village, in three of the six runs).
+
+Edge cases driven directly rather than waited for: an **engineered exact
+aggregate tie** (60-60 across two legs) hosts leg 3 with the better seed; a
+**2-0 sweep** resolves with no third game; and the gates hold -- QF/SF/Final
+all raise before the R16 is complete, and leg 3 raises while any tie in the
+stage still has legs 1-2 outstanding.
+
+The batch export reads **Game Type Finals, Format AGG (2-leg / Bo3)**, Cup
+`WC`/stage/leg, 8 games for an R16 leg.
 
 **Not displayed on its own tab.** Groups, tables, the Play-in ladder and the
-bracket reach the dashboard only through Next Matchday, when week 27 arrives. A
-WC tab is the obvious next piece and has not been part of these requests.
+bracket reach the dashboard only through Next Matchday, when week 27 arrives.
+A WC tab is the obvious next piece and has not been part of these requests.
 
 **One caveat about the draw's stability.** `wc_groups` reads the projected
 qualification field, which moves with every result -- so in principle a
@@ -3587,11 +3643,10 @@ page errors on either path.
 ## Known open items
 
 - Dashboard regeneration isn't in the CLI yet — still manual script runs.
-- **The World Championship's R16 bracket is undefined** (see that section):
-  which of seeds 1-16 meet, and who hosts each leg of a best-of-three. The
-  group stage and the Play-in both generate and export, so seeds 1-16 are
-  known; `R16`/`QF`/`SF`/`Final` still raise. A WC tab on the dashboard does
-  not exist yet either -- the stage surfaces only through Next Matchday.
+- **The World Championship generates end to end** as of 2026-09-16 -- group
+  stage, Play-in, bracket and champion. What it does NOT have is a dashboard
+  tab: groups, tables, the Play-in ladder and the bracket surface only through
+  Next Matchday. That is the obvious next piece.
 - Round numbering: the *historical* R1-R5/L1-L2 mapping is confirmed
   against real Archive data; everything from PA Draw round 1 onward uses
   `abs_round_for_event()`'s sequential assignment, which is only "confirmed
