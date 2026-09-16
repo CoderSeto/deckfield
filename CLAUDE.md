@@ -1587,10 +1587,13 @@ shifted.
 
 The structure, as given: 6 groups of 8 play a **single round robin** with the
 **higher seed always hosting**, which is 7 matchdays -- two full weeks plus one
-Tuesday. The top two of each group (12) go straight through; the six
-third-placed teams contest the leftover Thursday and Weekend for the last four
-spots, making 16. The bracket is then four weeks, each a **best-of-three
-spanning the whole week**.
+Tuesday. The top two of each group (12) go straight through and the six
+third-placed teams contest the last four spots, making 16. The bracket is then
+four weeks, each a **best-of-three spanning the whole week**.
+
+The leftover Thursday and Weekend are the **Play-in**, and it turns out all
+three place-subsets play it at once rather than only the third-placed teams --
+it is what seeds the whole bracket. See "The Play-in" below.
 
 **Event tuples are `("WC", stage, n)`** -- stage in `Group` / `Play-in` /
 `R16` / `QF` / `SF` / `Final`, with `n` an explicit matchday or leg number.
@@ -1699,27 +1702,98 @@ than when the game type happens to be `Cup`. A non-cup game leaves all three
 blank exactly as before, so no existing export changes. The three field labels
 also stopped claiming "(Cup games only)".
 
-### What is still NOT modeled: the Play-in and the bracket
+### The Play-in (2026-09-16, per explicit instruction)
 
-`_games_for_event` generates `("WC","Group",1-7)` and raises
-`NotImplementedError` for every other WC stage. **The Play-in format is
-explicitly still undecided** -- how six third-placed teams contest four spots
-over two matchdays -- and the bracket depends on it twice over: which four
-teams come through, and a seeding rule for the resulting 16 that has not been
-given either. Raising is the same deliberate choice PA's mutual stage makes one
-branch up; a guess would be indistinguishable from a rule the moment it started
-generating real matchups, which is exactly how the PA round-1 pairing bug got
-as far as real results being entered against it.
+**It is not only about the last four spots** -- the first read of "the
+third-place teams will compete for the remaining four spots" made it sound
+like a six-team mini-tournament. In fact **all three place-subsets play it
+simultaneously**, so the Play-in is what seeds the entire 16-team bracket:
+group winners contest seeds **1-6**, runners-up **7-12**, and the third-placed
+teams **13-16** with two eliminated. Nine games on the Thursday, six on the
+Weekend.
 
-`export_matchday_batches` builds a real batch for a group matchday (Game Type
-**Finals**, Format **Single Game**, Cup Name **WC**, Cup Bracket **Group**, Cup
-Round the matchday) and inherits the raise for everything else. Its knockout
-branch already passes `stage != "Group"` as `agg`, so a best-of-three week will
-come out as AGG the moment the bracket resolves.
+**Ranking inside a subset is points, then initial seed** -- points on the
+CSV's own scale (3 win, 2 OT win, 1 OT loss, 0 loss). `_wc_group_points` reads
+each side from its own perspective: `games` stores only team_a's result and
+team B's is `3 - result_a`, which is what keeps an OT pair reading 2/1 instead
+of collapsing to a plain win/loss.
 
-**Not displayed on its own tab.** The group draw reaches the dashboard only
-through Next Matchday, when week 27 arrives. A WC tab (groups, tables,
-bracket) is the obvious next piece and was not part of this request.
+**That same rule is used to decide 1st/2nd/3rd INSIDE a group, and that is the
+one reading chosen rather than given.** The instruction stated it for ranking
+the six teams within a subset, but finishing order inside a group needs a rule
+too. Using the same one keeps the group table and the subset table from
+disagreeing about which of two tied teams is ahead. Note it is deliberately
+**not** `_standings_order` (W-L, then head-to-head, then DSCR) -- that is the
+Regional/League rule and was never named for the World Championship.
+
+**The ladder, identical in all three subsets** (`_wc_playin_subset`). Matchday
+1 is `2 at 1`, `4 at 3`, `6 at 5`, better rank hosting:
+
+| place | decided by | hosting |
+|---|---|---|
+| 1 | winner of (2 at 1) | -- settled on MD1 |
+| 2 / 3 | winner / loser of **loser(2@1) hosts winner(4@3)** | given explicitly |
+| 4 / 5 | winner / loser of **loser(4@3) hosts winner(6@5)** | given explicitly |
+| 6 | loser of (6 at 5) | -- settled on MD1 |
+
+**MD2 hosting is given, not derived from rank**: the LOSER of the earlier game
+hosts the winner of the next one down. Worth keeping, because "better rank
+hosts" is the MD1 rule and would quietly produce the opposite seating here.
+
+**Only what the places are WORTH differs between subsets**, which is what lets
+one function serve all three: `WC_PLACE_SEED_BASE` is `{1: 0, 2: 6, 3: 12}` and
+the seed is `base + place` -- except that the third subset's places **5 and 6
+are eliminations**, not seeds 17 and 18. Those are exactly the two the rule
+names (the loser of its `6 at 5`, and the loser of the game between that game's
+winner and the loser of `4 at 3`), and they are what takes 18 down to 16.
+
+**Verified by a full synthetic walk** on a scratch database -- 7 group
+matchdays plus both Play-in matchdays, 183 games:
+
+- every group ordered by points then seed, ties resolving on seed in both
+  directions (13/13 split by seeds 24/48, 8/8/8 by 1/12/37);
+- MD1 produces **9** games, each subset pairing 2@1 / 4@3 / 6@5 with the better
+  rank home; MD2 produces **6**, each matching the explicit hosting rule;
+- the 16 seeds are distinct, the 2 eliminated overlap none of them, and
+  together they account for **all 18** Play-in teams;
+- every placement rule checked individually against the real MD1/MD2 winners,
+  for all three subsets;
+- **gating holds at each step**: the Play-in raises with no group games, group
+  standings read `None` at 6 of 7 matchdays, MD2 raises before MD1 is played,
+  and `wc_bracket_seeds` returns `None` until MD2 is complete.
+
+**The AGG bug this exposed.** `export_matchday_batches` set Format from
+`stage != "Group"`, which made the Play-in a best-of-three. It is a single game
+on both its matchdays; only the four knockout weeks are Bo3. Now `single =
+stage in ("Group", "Play-in")`, verified against the real export: Group MD3
+(24 games), Play-in MD1 (9) and MD2 (6) all read **Single Game**.
+
+### What is still NOT modeled: the bracket
+
+Seeds 1-16 are now known, but `_games_for_event` still raises for `R16` / `QF`
+/ `SF` / `Final` because two rules have not been given:
+
+- **which seeds MEET in the R16.** `_bracket_seed_pairs(16)` is sitting right
+  there and is the engine's canonical recursive seed-placement order (shared by
+  RDS Draw round 1 and the PA champions bracket), which would give
+  1v16 / 8v9 / 4v13 / 5v12 / 2v15 / 7v10 / 3v14 / 6v11 -- but that is an
+  inference, and this file records twice what happens when a plausible bracket
+  order is assumed rather than given.
+- **who hosts each of a best-of-three's three legs.** The RDS/RT convention is
+  worse seed leg 1, better seed leg 2; a third leg has no precedent here.
+
+Raising is the same deliberate choice PA's mutual stage makes one branch up.
+
+**Not displayed on its own tab.** Groups, tables, the Play-in ladder and the
+bracket reach the dashboard only through Next Matchday, when week 27 arrives. A
+WC tab is the obvious next piece and has not been part of these requests.
+
+**One caveat about the draw's stability.** `wc_groups` reads the projected
+qualification field, which moves with every result -- so in principle a
+regenerate mid-group-stage could reshuffle groups under games already played.
+In practice the field is settled before week 27 (the regular season and the
+Regional Tournaments are what decide it), so this is a note rather than a
+mechanism; there is no freeze.
 
 ### Everything else that had to learn about WC
 
@@ -3513,11 +3587,11 @@ page errors on either path.
 ## Known open items
 
 - Dashboard regeneration isn't in the CLI yet — still manual script runs.
-- **The World Championship's Play-in format is undefined** (see that
-  section). The group stage generates and exports; the Play-in, and therefore
-  the R16/QF/SF/Final bracket that depends on it, still raise. A WC tab on the
-  dashboard does not exist yet either -- the draw surfaces only through Next
-  Matchday.
+- **The World Championship's R16 bracket is undefined** (see that section):
+  which of seeds 1-16 meet, and who hosts each leg of a best-of-three. The
+  group stage and the Play-in both generate and export, so seeds 1-16 are
+  known; `R16`/`QF`/`SF`/`Final` still raise. A WC tab on the dashboard does
+  not exist yet either -- the stage surfaces only through Next Matchday.
 - Round numbering: the *historical* R1-R5/L1-L2 mapping is confirmed
   against real Archive data; everything from PA Draw round 1 onward uses
   `abs_round_for_event()`'s sequential assignment, which is only "confirmed

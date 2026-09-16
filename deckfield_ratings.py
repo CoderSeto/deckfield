@@ -3318,19 +3318,20 @@ def _games_for_event(season, event, week=None, day=None):
         if stage == "Group":
             games = wc_group_games(season, matchday)
             return [(name_to_dex[h], name_to_dex[a]) for h, a in games]
-        # The group stage is fully determined (snake draw, higher seed
-        # hosts), but the Play-in is not: how six third-placed teams
-        # contest four spots over its two matchdays has not been given.
-        # The bracket then depends on which four come through it AND on a
-        # seeding rule for the 16 that has not been given either, so R16
-        # onward is unsettled for the same reason. Raising is the same
-        # deliberate choice PA's mutual stage makes one branch up: a guess
-        # here would be indistinguishable from a rule once it was
-        # generating real matchups.
+        if stage == "Play-in":
+            games = wc_playin_games(season, matchday)
+            return [(name_to_dex[h], name_to_dex[a]) for h, a in games]
+        # Everything through the Play-in is determined, so seeds 1-16 are
+        # known -- but the bracket itself still needs two rules that have
+        # not been given: which seeds MEET in the R16, and who hosts each
+        # of a best-of-three's three legs. Raising is the same deliberate
+        # choice PA's mutual stage makes one branch up: a guess here would
+        # be indistinguishable from a rule once it was generating real
+        # matchups.
         raise NotImplementedError(
-            f"World Championship {stage} {matchday} isn't modeled yet: the Play-in "
-            "format (six third-placed teams for four spots) still needs defining, "
-            "and the bracket's seeding follows from it.")
+            f"World Championship {stage} {matchday} isn't modeled yet: the R16 "
+            "pairing of seeds 1-16 and the best-of-three hosting pattern still "
+            "need defining.")
 
     conn.close()
     raise ValueError(f"Unknown event kind: {kind}")
@@ -3510,11 +3511,13 @@ def export_matchday_batches(season, event=None):
         games = _games_for_event(season, event, info.get("week"), info.get("day"))
         # Game Type is Finals for EVERY World Championship game, per explicit
         # instruction -- so the group stage carries the same x12 multiplier as
-        # the final. Format is a single game in the group stage; every
-        # knockout stage is a best-of-three, which the AGG format covers.
-        label = (f"WC Group MD{matchday}" if stage == "Group"
+        # the final. Format follows the stage: the group stage and the Play-in
+        # are single games, and only the four knockout weeks are a
+        # best-of-three, which the AGG format covers.
+        single = stage in ("Group", "Play-in")
+        label = (f"WC {stage} MD{matchday}" if single
                  else f"WC {stage} leg {matchday}")
-        batch = build_batch(label, "Finals", stage != "Group",
+        batch = build_batch(label, "Finals", not single,
                             "WC", stage, matchday, games)
         conn.close()
         return info, [batch]
@@ -4718,6 +4721,207 @@ def wc_group_games(season, matchday, round_num=None):
             else:
                 games.append((name_j, name_i))
     return games
+
+
+# The Play-in occupies the leftover Thursday and Weekend of week 29 and is
+# NOT only about the last four spots -- all three place-subsets play it, so
+# it is what seeds the whole 16-team bracket. Group winners contest seeds
+# 1-6, runners-up 7-12, and the third-placed teams 13-16 with two knocked out.
+WC_PLAYIN_MATCHDAYS = 2
+WC_BRACKET_SIZE = 16
+# Seed offset per finishing place in a group. Place 1 -> seeds 1-6, place 2
+# -> 7-12, place 3 -> 13-16 (its 5th and 6th are eliminations, not seeds).
+WC_PLACE_SEED_BASE = {1: 0, 2: 6, 3: 12}
+WC_PLACE_SUBSETS = (1, 2, 3)
+
+
+def _wc_group_points(conn, season):
+    """{team_name: points} across World Championship GROUP games only.
+
+    Points are the CSV's own `result` scale -- 3 win, 2 OT win, 1 OT loss,
+    0 loss -- read from each side's own perspective. `games` stores only
+    team_a's result, and team B's is `3 - result_a` (see the schema notes
+    in CLAUDE.md), which is what makes an OT win/loss pair read 2/1 rather
+    than collapsing to a win/loss."""
+    points = {}
+    rows = conn.execute("""
+        SELECT g.result_a, ta.name a_name, tb.name b_name FROM games g
+        JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
+        WHERE g.season=? AND g.cup_name='WC' AND g.cup_bracket='Group'
+    """, (season,)).fetchall()
+    for r in rows:
+        points[r["a_name"]] = points.get(r["a_name"], 0) + r["result_a"]
+        points[r["b_name"]] = points.get(r["b_name"], 0) + (3 - r["result_a"])
+    return points
+
+
+def _wc_group_stage_complete(conn, season):
+    """True once every one of the 7 group matchdays has its full 24 games."""
+    per_md = WC_GROUP_COUNT * (WC_GROUP_SIZE // 2)
+    for md in range(1, WC_GROUP_MATCHDAYS + 1):
+        n = conn.execute(
+            "SELECT COUNT(*) c FROM games WHERE season=? AND cup_name='WC' "
+            "AND cup_bracket='Group' AND cup_round=?", (season, md),
+        ).fetchone()["c"]
+        if n < per_md:
+            return False
+    return True
+
+
+def wc_group_standings(season, round_num=None):
+    """{group_label: [{place, name, seed, points}]} -- each group ordered by
+    **points, then initial seed**, the ranking rule given for the World
+    Championship. Returns None until all 7 group matchdays are complete.
+
+    That tiebreak is the one reading chosen rather than given: the rule was
+    stated for ranking the six teams WITHIN a place-subset, and deciding who
+    finishes 1st/2nd/3rd inside a group needs a rule too. Using the same one
+    keeps the group table and the subset table consistent; the alternative
+    would have the two disagree about which of two tied teams is ahead. Note
+    this is deliberately NOT `_standings_order` (W-L, then head-to-head, then
+    DSCR), which is the Regional/League rule and was never named here."""
+    conn = get_connection()
+    if not _wc_group_stage_complete(conn, season):
+        conn.close()
+        return None
+    points = _wc_group_points(conn, season)
+    conn.close()
+    groups = wc_groups(season, round_num)
+    out = {}
+    for label in WC_GROUP_LABELS:
+        ordered = sorted(groups[label], key=lambda sn: (-points.get(sn[1], 0), sn[0]))
+        out[label] = [{"place": i + 1, "name": name, "seed": seed,
+                       "points": points.get(name, 0)}
+                      for i, (seed, name) in enumerate(ordered)]
+    return out
+
+
+def wc_place_subsets(season, round_num=None):
+    """{place: [name, ...]} -- the six group winners, the six runners-up and
+    the six third-placed teams, each ranked 1-6 by the same points-then-seed
+    rule. Returns None until the group stage is complete.
+
+    These three lists are the Play-in's inputs: index 0 is that subset's
+    rank 1, and every "2 at 1" below reads off these positions."""
+    standings = wc_group_standings(season, round_num)
+    if standings is None:
+        return None
+    points = {row["name"]: row["points"] for g in standings.values() for row in g}
+    seeds = {row["name"]: row["seed"] for g in standings.values() for row in g}
+    subsets = {}
+    for place in WC_PLACE_SUBSETS:
+        members = [g[place - 1]["name"] for g in standings.values()]
+        subsets[place] = sorted(members, key=lambda n: (-points[n], seeds[n]))
+    return subsets
+
+
+# Play-in matchday 1, as (home rank, away rank) within a subset: "2 at 1,
+# 4 at 3, 6 at 5" -- the better-ranked side hosts.
+WC_PLAYIN_MD1_PAIRS = ((1, 2), (3, 4), (5, 6))
+
+
+def _wc_playin_subset(conn, season, ranked):
+    """Resolve one place-subset's Play-in from real results.
+
+    `ranked` is that subset's six teams, best first. Returns
+    {"md1": [(home, away) x3], "md2": [(home, away) x2] or None,
+     "places": {1..6: name} for however much is settled}.
+
+    The shape is identical for all three subsets -- only what the places
+    are WORTH differs (seeds 1-6 / 7-12, or 13-16 plus two eliminations),
+    which is applied by the caller. Placement:
+
+        1 = winner of (2 at 1)                     -- settled on matchday 1
+        2 / 3 = winner / loser of [loser(2@1) hosts winner(4@3)]
+        4 / 5 = winner / loser of [loser(4@3) hosts winner(6@5)]
+        6 = loser of (6 at 5)                      -- settled on matchday 1
+    """
+    md1 = [(ranked[h - 1], ranked[a - 1]) for h, a in WC_PLAYIN_MD1_PAIRS]
+
+    def settle(home, away, matchday):
+        winner = _real_bracket_winner(conn, "WC", "Play-in", matchday, home, away)
+        if winner is None:
+            return None, None
+        return winner, (away if winner == home else home)
+
+    result = {"md1": md1, "md2": None, "places": {}}
+    wa, la = settle(*md1[0], 1)
+    wb, lb = settle(*md1[1], 1)
+    wc_, lc = settle(*md1[2], 1)
+    if wa is not None:
+        result["places"][1] = wa
+    if lc is not None:
+        result["places"][6] = lc
+    if None in (la, wb, lb, wc_):
+        return result
+
+    # Hosting on matchday 2 is given explicitly, not derived from rank: the
+    # LOSER of the earlier game hosts the winner of the next one down.
+    md2 = [(la, wb), (lb, wc_)]
+    result["md2"] = md2
+    wd, ld = settle(*md2[0], 2)
+    we, le = settle(*md2[1], 2)
+    if wd is not None:
+        result["places"][2], result["places"][3] = wd, ld
+    if we is not None:
+        result["places"][4], result["places"][5] = we, le
+    return result
+
+
+def wc_playin_games(season, matchday, round_num=None):
+    """[(home_name, away_name)] -- one Play-in matchday across all three
+    place-subsets: 9 games on matchday 1 (three per subset), 6 on matchday 2
+    (two per subset, the other two places having been settled already)."""
+    if matchday not in (1, 2):
+        raise ValueError(f"World Championship Play-in matchday must be 1 or 2, got {matchday}")
+    subsets = wc_place_subsets(season, round_num)
+    if subsets is None:
+        raise ValueError(
+            "World Championship Play-in: the group stage isn't complete yet.")
+    conn = get_connection()
+    games = []
+    for place in WC_PLACE_SUBSETS:
+        res = _wc_playin_subset(conn, season, subsets[place])
+        if matchday == 1:
+            games.extend(res["md1"])
+        elif res["md2"] is None:
+            conn.close()
+            raise ValueError(
+                "World Championship Play-in matchday 2: matchday 1 isn't complete yet.")
+        else:
+            games.extend(res["md2"])
+    conn.close()
+    return games
+
+
+def wc_bracket_seeds(season, round_num=None):
+    """({seed: name} for 1-16, [eliminated names]) once the Play-in is
+    complete, else (None, []).
+
+    Seeds run place-subset by place-subset: the group winners take 1-6, the
+    runners-up 7-12, and the third-placed teams 13-16. The third subset is
+    the only one that does not seed all six -- per the rule, the loser of its
+    "6 at 5" and the loser of the game between that game's winner and the
+    loser of "4 at 3" are **eliminated**, which is exactly its places 5 and
+    6 and is what takes 18 teams down to 16."""
+    subsets = wc_place_subsets(season, round_num)
+    if subsets is None:
+        return None, []
+    conn = get_connection()
+    seeds, eliminated = {}, []
+    for place in WC_PLACE_SUBSETS:
+        res = _wc_playin_subset(conn, season, subsets[place])
+        places = res["places"]
+        if len(places) < len(subsets[place]):
+            conn.close()
+            return None, []
+        for slot, name in places.items():
+            if place == 3 and slot in (5, 6):
+                eliminated.append(name)
+            else:
+                seeds[WC_PLACE_SEED_BASE[place] + slot] = name
+    conn.close()
+    return seeds, eliminated
 
 
 def world_championship_field(season, round_num=None):
