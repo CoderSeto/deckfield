@@ -520,8 +520,9 @@ copy of the PA Cup tab instead of play order.
 **What's actually reachable** via `_games_for_event()`: Regional/League any
 round (via the pod schedule), RDS Cup rounds 1-5 (resolving through real
 prior-round winners where needed — round 3+ isn't a placeholder, it's
-generated live), PA Cup rounds 1-8 (same), and RDS's mutual semifinal/final
-(wired 2026-09-11). **PA's mutual semifinal/final** raise
+generated live), PA Cup rounds 1-8 (same), RDS's mutual semifinal/final
+(wired 2026-09-11), and the **whole World Championship** — group stage,
+Play-in and bracket (wired 2026-09-16). **PA's mutual semifinal/final** raise
 `NotImplementedError` deliberately — not modeled yet, see "Known open
 items."
 
@@ -1567,6 +1568,457 @@ Eterna/Mossui/Celestic never played each other and should resolve by DSCR).
   `cup_name`/`cup_bracket` the way RDS/PA do).
 - Calendar: weeks 24-26, `("RT", matchday)` events, confirmed placement.
 
+## World Championship (weeks 27-33, added 2026-09-16)
+
+The calendar now runs past the Regional Tournament into the World
+Championship whose 48-team field the Qualification tab projects. Seven new
+weeks, 21 slots, **absolute rounds 75-95**. Every pre-existing abs_round is
+unchanged (RT9 is still 74) -- the new weeks append, so nothing downstream
+shifted.
+
+| week | Tue | Thu | Weekend |
+|---|---|---|---|
+| 27 | WC Group MD1 (75) | MD2 (76) | MD3 (77) |
+| 28 | MD4 (78) | MD5 (79) | MD6 (80) |
+| 29 | MD7 (81) | WC Play-in MD1 (82) | Play-in MD2 (83) |
+| 30 | WC R16 leg 1 (84) | leg 2 (85) | leg 3 (86) |
+| 31 | WC QF leg 1 (87) | leg 2 (88) | leg 3 (89) |
+| 32 | WC SF leg 1 (90) | leg 2 (91) | leg 3 (92) |
+| 33 | WC Final leg 1 (93) | leg 2 (94) | leg 3 (95) |
+
+The structure, as given: 6 groups of 8 play a **single round robin** with the
+**higher seed always hosting**, which is 7 matchdays -- two full weeks plus one
+Tuesday. The top two of each group (12) go straight through and the six
+third-placed teams contest the last four spots, making 16. The bracket is then
+four weeks, each a **best-of-three spanning the whole week**.
+
+The leftover Thursday and Weekend are the **Play-in**, and it turns out all
+three place-subsets play it at once rather than only the third-placed teams --
+it is what seeds the whole bracket. See "The Play-in" below.
+
+**Event tuples are `("WC", stage, n)`** -- stage in `Group` / `Play-in` /
+`R16` / `QF` / `SF` / `Final`, with `n` an explicit matchday or leg number.
+That numbering is deliberate and follows PA's own best-of-three Final rather
+than RDS SF/Final's `None`: **with a number in the tuple, `_schedule_event_key`
+is unique on the tuple alone**, so none of the week/day leg-resolution
+machinery (`mutual_leg_number`, `abs_round_for_event`'s week/day parameters)
+is involved and each leg gets its own absolute round for free. That whole
+mechanism is the source of two bugs already recorded in this file (the
+`_schedule_event_key` leg-numbering bug and `build_calendar`'s copy of it);
+not needing it is worth more than tuple symmetry with RDS.
+
+### The played-check, and the two query collisions it exposed
+
+`_event_is_played`'s WC branch counts `cup_name='WC' AND cup_bracket=stage AND
+cup_round=n` -- the same shape as PA's. It deliberately asks **only whether
+real games exist**, so it depends on nothing about the field, the draw or the
+bracket: `next_matchday()` will advance correctly the moment a WC matchday's
+results are ingested, even though `_games_for_event` cannot generate that
+matchday (below).
+
+Two pre-existing queries were **not** specific enough to survive a second
+tournament and were tightened. Both were verified to be real collisions by
+running the old SQL against a scratch database carrying one synthetic WC row:
+
+- **RT** counted `game_type='P' AND cup_round=?` with no `cup_name` filter. RT
+  matchdays are 1-9 and WC group matchdays are 1-7, so a WC group game entered
+  as Playoffs would have reported **RT1 as played** (confirmed: the old query
+  returned 1 row). RT games carry no `cup_name` at all -- they are tagged by
+  `host_region` + `cup_round` -- so `AND cup_name IS NULL` is the exact fix.
+- **RDS SF/Final** counted `cup_bracket=? AND cup_round=?` with no `cup_name`
+  filter, and `SF`/`Final` are **not unique bracket names** -- the WC's own
+  semifinal and final weeks use them, with leg numbers in the same 1-3 range.
+  A WC SF leg 1 game would have reported **RDS SF leg 1 as played** (confirmed
+  the same way). Narrowed to `cup_name IN ('Ribbon','Dream','Star')`.
+
+The general point: a `cup_bracket`/`cup_round` pair is only unique **within a
+cup**. Every other query in the engine already filtered on `cup_name`; these
+three lived in `_event_is_played` and were the exceptions.
+
+### The group stage (2026-09-16, per explicit instruction)
+
+**Seeding is the field re-ranked 1-48 by current OVR rank**, per explicit
+answer, NOT the order bids were awarded. `world_championship_field` lists its
+invites in the tournament's own award order (divisions, PA, RDS, the Regional
+Tournaments, at-large), which is a **category** order and says nothing about
+strength -- the Qualification tab's `#` column is that order. `wc_seeded_field`
+sorts by the tab's **Rank** column instead, so seed 1 is the best-ranked team
+in the field whichever bid it came in on (Casseroya Lake today, rank 1; seed 48
+is Cinnabar Island at rank 66).
+
+**The draw is a snake** (`wc_groups`): seeds 1-6 across A-F, seeds 7-12 back
+F-A, and so on for all eight passes. The reversal on odd passes IS the snake --
+a straight deal would put seeds 1-8 in one group. It comes out perfectly
+balanced: **every group's seed-sum is exactly 196**, and each group takes
+exactly one seed from each pass of six.
+
+```
+A: 1 12 13 24 25 36 37 48      D:  4  9 16 21 28 33 40 45
+B: 2 11 14 23 26 35 38 47      E:  5  8 17 20 29 32 41 44
+C: 3 10 15 22 27 34 39 46      F:  6  7 18 19 30 31 42 43
+```
+
+**Single round robin over 7 matchdays**, by the circle method
+(`_round_robin_rounds`, generic over any even field): index 0 is fixed and the
+rest rotate. Verified rather than assumed -- all **168** intra-group pairs meet
+exactly once, every team plays exactly once per matchday, and there are zero
+cross-group games.
+
+**Higher (lower-numbered) seed always hosts**, so a group's own seed order
+fixes home/away entirely and the round robin only decides who meets whom.
+**Worth knowing what that means at the extremes**: a group's top seed hosts all
+7 of its games and its bottom seed hosts none (verified: 7/6/5/4/3/2/1/0 down
+group A). That falls straight out of the rule as given -- seed order within a
+group is total, so there is no matchday on which the better seed is ever away.
+It is not an artefact of the pairing, and reversing some legs would be
+inventing a rule.
+
+**The draw moves with every result**, because the field does -- the
+qualification field is a projection until the season ends, so regenerate it
+rather than treating a printed group table as settled (the same standing
+warning the allocation ranking carries).
+
+### Game type: every WC game is Finals (`F`)
+
+Per explicit instruction, **including the group stage** -- so every World
+Championship game carries `GAME_TYPE_POINT_MULTIPLIER["F"] = 12`, the largest
+there is. `deckfield.html`'s Game Type dropdown already had `Finals`, and
+`GAME_TYPE_LETTER` already mapped it to `F`, so nothing needed adding there.
+
+**That combination exposed a real bug in `deckfield.html`, fixed the same
+day.** `buildResultsRow` gated the three cup columns on
+`const isCup = (GAME_TYPE === 'Cup')`, so a game tagged `cup_name='WC'` but
+typed `Finals` exported **blank** `cup_name`/`cup_bracket`/`cup_round`. Those
+three are exactly what `_event_is_played` reads to tell a played WC matchday
+from an unplayed one, so `next_matchday()` would have **looped on WC Group MD1
+forever** -- the precise failure this file already warns about under "Adding
+new game results" ("would loop on the same event forever").
+
+Not hypothetical, and not reasoned from the code: demonstrated on a scratch
+database by ingesting the same played row both ways. Stripped of its tag, MD1
+reads unplayed; tagged, it reads played and MD2 stays pending.
+
+The fix is `hasCupTag` -- export the cup tag whenever it is **set**, rather
+than when the game type happens to be `Cup`. A non-cup game leaves all three
+blank exactly as before, so no existing export changes. The three field labels
+also stopped claiming "(Cup games only)".
+
+### The Play-in (2026-09-16, per explicit instruction)
+
+**It is not only about the last four spots** -- the first read of "the
+third-place teams will compete for the remaining four spots" made it sound
+like a six-team mini-tournament. In fact **all three place-subsets play it
+simultaneously**, so the Play-in is what seeds the entire 16-team bracket:
+group winners contest seeds **1-6**, runners-up **7-12**, and the third-placed
+teams **13-16** with two eliminated. Nine games on the Thursday, six on the
+Weekend.
+
+**Ranking inside a subset is points, then initial seed** -- points on the
+CSV's own scale (3 win, 2 OT win, 1 OT loss, 0 loss). `_wc_group_points` reads
+each side from its own perspective: `games` stores only team_a's result and
+team B's is `3 - result_a`, which is what keeps an OT pair reading 2/1 instead
+of collapsing to a plain win/loss.
+
+**That same rule is used to decide 1st/2nd/3rd INSIDE a group, and that is the
+one reading chosen rather than given.** The instruction stated it for ranking
+the six teams within a subset, but finishing order inside a group needs a rule
+too. Using the same one keeps the group table and the subset table from
+disagreeing about which of two tied teams is ahead. Note it is deliberately
+**not** `_standings_order` (W-L, then head-to-head, then DSCR) -- that is the
+Regional/League rule and was never named for the World Championship.
+
+**The ladder, identical in all three subsets** (`_wc_playin_subset`). Matchday
+1 is `2 at 1`, `4 at 3`, `6 at 5`, better rank hosting:
+
+| place | decided by | hosting |
+|---|---|---|
+| 1 | winner of (2 at 1) | -- settled on MD1 |
+| 2 / 3 | winner / loser of **loser(2@1) hosts winner(4@3)** | given explicitly |
+| 4 / 5 | winner / loser of **loser(4@3) hosts winner(6@5)** | given explicitly |
+| 6 | loser of (6 at 5) | -- settled on MD1 |
+
+**MD2 hosting is given, not derived from rank**: the LOSER of the earlier game
+hosts the winner of the next one down. Worth keeping, because "better rank
+hosts" is the MD1 rule and would quietly produce the opposite seating here.
+
+**Only what the places are WORTH differs between subsets**, which is what lets
+one function serve all three: `WC_PLACE_SEED_BASE` is `{1: 0, 2: 6, 3: 12}` and
+the seed is `base + place` -- except that the third subset's places **5 and 6
+are eliminations**, not seeds 17 and 18. Those are exactly the two the rule
+names (the loser of its `6 at 5`, and the loser of the game between that game's
+winner and the loser of `4 at 3`), and they are what takes 18 down to 16.
+
+**Verified by a full synthetic walk** on a scratch database -- 7 group
+matchdays plus both Play-in matchdays, 183 games:
+
+- every group ordered by points then seed, ties resolving on seed in both
+  directions (13/13 split by seeds 24/48, 8/8/8 by 1/12/37);
+- MD1 produces **9** games, each subset pairing 2@1 / 4@3 / 6@5 with the better
+  rank home; MD2 produces **6**, each matching the explicit hosting rule;
+- the 16 seeds are distinct, the 2 eliminated overlap none of them, and
+  together they account for **all 18** Play-in teams;
+- every placement rule checked individually against the real MD1/MD2 winners,
+  for all three subsets;
+- **gating holds at each step**: the Play-in raises with no group games, group
+  standings read `None` at 6 of 7 matchdays, MD2 raises before MD1 is played,
+  and `wc_bracket_seeds` returns `None` until MD2 is complete.
+
+**The AGG bug this exposed.** `export_matchday_batches` set Format from
+`stage != "Group"`, which made the Play-in a best-of-three. It is a single game
+on both its matchdays; only the four knockout weeks are Bo3. Now `single =
+stage in ("Group", "Play-in")`, verified against the real export: Group MD3
+(24 games), Play-in MD1 (9) and MD2 (6) all read **Single Game**.
+
+### The knockout bracket (2026-09-16, per explicit instruction)
+
+Four weeks, each one round of ties played as a **best-of-three across
+Tue/Thu/Weekend**. With this the whole World Championship generates end to
+end -- group stage, Play-in, bracket, champion.
+
+**The R16 uses `_bracket_seed_pairs(16)`**, the engine's canonical recursive
+seed-placement order (shared with RDS Draw round 1 and the PA champions
+bracket): `1v16 / 8v9 / 4v13 / 5v12 / 2v15 / 7v10 / 3v14 / 6v11`. **The
+list's ORDER is the bracket** -- every later stage is built by meeting
+adjacent games, so under chalk the QF is 1v8 / 4v5 / 2v7 / 3v6 and **#1 can
+only meet #2 in the final**. Naive ascending order would have them meet in
+the quarterfinal instead; that exact mistake is what `_bracket_seed_pairs`
+exists to prevent, and this file records it happening twice (RDS round 1,
+then the PA champions bracket).
+
+**Hosting is the REVERSE of the Regional Tournament / RDS convention, and
+that is deliberate:**
+
+| leg | host |
+|---|---|
+| 1 | **better** seed |
+| 2 | **worse** seed |
+| 3 | whichever team **leads on aggregate** after the first two |
+
+`_rds_leg_orientation` is worse-seed-leg-1 / better-seed-leg-2. `_wc_leg_hosts`
+is the opposite way round. **Do not "fix" one to match the other** -- they are
+different rules for different tournaments, and the comment on each says so.
+Home advantage stacks toward the better seed here: it opens at home and also
+hosts leg 3 whenever it is ahead.
+
+**Leg 3's host is a property of the RESULTS, not the seeds**, which is why
+`_wc_leg_hosts` takes the leader as an argument rather than deriving it. An
+exact aggregate tie goes to the **better seed** -- the one reading chosen
+rather than given, matching `_rds_mutual_tie_winner`, which resolves the same
+standoff the same way.
+
+**The tie is decided by GAMES won, not aggregate.** Taking both of the first
+two legs ends it there. Aggregate only ever decides who hosts leg 3.
+
+**Leg 3 can legitimately have ZERO games, and that needed handling in the
+played-check.** A tie taken 2-0 owes no decider, so if every tie in a stage
+was swept, that week's Weekend has nothing to play. Counting games alone would
+leave `next_matchday()` **stalled forever on a matchday nobody turns up for**
+-- so `_event_is_played` falls through to `_wc_bracket_leg_settled`, which
+returns True only when every tie in the stage is already 2-0. This is not
+hypothetical: it fired on the Final in the first synthetic walk and on a
+mid-bracket SF in another seed.
+
+**Verified by full synthetic walks** on top of the group + Play-in scratch
+database, across six random seeds -- each running all four stages, 8/4/2/1
+ties, with every invariant asserted rather than eyeballed:
+
+- the R16 field equals `_bracket_seed_pairs(16)` exactly, by seed;
+- leg 1 seats the better seed at home in every game, leg 2 the worse seed;
+- leg 3 contains **exactly** the ties that split 1-1 -- no more, no fewer --
+  and each is hosted by that tie's real aggregate leader;
+- a stage with no deciders reads as a complete matchday (seed 4 had an empty
+  SF leg 3, seeds 1/3/5/6 an empty Final leg 3);
+- the champion is one of the two finalists, and a Play-in qualifier can win it
+  (seed 13, Cocona Village, in three of the six runs).
+
+Edge cases driven directly rather than waited for: an **engineered exact
+aggregate tie** (60-60 across two legs) hosts leg 3 with the better seed; a
+**2-0 sweep** resolves with no third game; and the gates hold -- QF/SF/Final
+all raise before the R16 is complete, and leg 3 raises while any tie in the
+stage still has legs 1-2 outstanding.
+
+The batch export reads **Game Type Finals, Format AGG (2-leg / Bo3)**, Cup
+`WC`/stage/leg, 8 games for an R16 leg.
+
+**Not displayed on its own tab.** Groups, tables, the Play-in ladder and the
+bracket reach the dashboard only through Next Matchday, when week 27 arrives.
+A WC tab is the obvious next piece and has not been part of these requests.
+
+### The field freezes at the conclusion of week 26 (2026-09-16, per explicit instruction)
+
+`wc_field_freeze_round(season)` returns the last week-26 round (**74**, RT9)
+once **every** slot of that week has been played, and `None` while it is not.
+`world_championship_field` uses it as the default for `round_num`, so the
+Qualification tab, the draw, the seeding and the whole bracket all inherit one
+pin without any of them knowing about it. An explicit `round_num` is still
+honoured -- the freeze only decides what "now" means.
+
+**Week 26 is exactly the point at which every input to the field is a PLAYED
+result rather than a projection**: the league and regional round robins finish
+in weeks 20/22, the RDS final in week 18, the PA final in week 23, and the
+Regional Tournaments in weeks 24-26. That is what makes it the right place to
+lock.
+
+**Nothing is stored.** The field stays a pure function of the results,
+recomputed every time, the same discipline as fatigue and the tournament bonus
+-- which is what makes the freeze survive a `migrate` (that drops every table)
+and makes a corrected week-26 game **re-settle** the field rather than leaving
+a stale snapshot behind.
+
+**Verified on a scratch database**, and the first attempt at the test was
+wrong in a way worth recording: RT games inserted by raw SQL leave
+`team_round_ratings` with **no rows at round 74**, and `_wc_team_meta` scopes
+strictly to `r.round = round_num`, so the field came back built from an empty
+meta and "moved" for a reason that had nothing to do with the freeze. Recompute
+before trusting a pinned-round read.
+
+Done properly: all 90 Regional Tournament games played and ratings recomputed,
+the field frozen at round 74, then **60 further games** ingested at rounds
+80/90 and `recompute_from_round(9, 74)` run over round 74 itself --
+**0 of 160** round-74 OVR rows moved and the 48-team field came back
+**identical**. Asking explicitly for round 90 returns a **different** field,
+which is what proves the pin does real work rather than being a no-op.
+
+`world_championship_overview` reports `field_frozen` / `field_frozen_at_round`
+and the WC tab's note says which state it is in, so a reader knows whether the
+groups in front of them are a projection or the final draw.
+
+**The one thing the freeze does NOT fix, and it matters before week 26
+arrives:** the Regional Tournament bids are still awarded on **chalk**
+(`regional_standings_seeds` seeds 1/2/3 as Champion/Runner-up/Semifinalist),
+never reading the real RT results. That is pre-existing and harmless while
+everything is openly a projection -- but freezing at week 26 would lock in a
+chalk answer for the one category whose real results land in exactly weeks
+24-26. Making those bids read the played RT bracket is the obvious follow-up,
+and there are ~21 rounds of runway to do it in.
+
+### The World Championship tab (2026-09-16, per explicit request)
+
+`WC_DATA` (derived, in the manifest) + a `#panel-wc` with three sub-views
+behind one `group-toggle`, the same pattern the RDS Cup tab uses: **Groups /
+Play-in / Bracket**.
+
+**The engine computes it all in one pass and the JS only draws it.**
+`world_championship_overview(season)` returns the draw, the group tables, the
+Play-in ladder and the bracket together -- the same split the Qualification tab
+already uses, so the page can never disagree with `next_matchday()` about who
+plays whom. It builds in **0.3s**, which matters because the naive shape
+(`wc_seeded_field` -> `wc_groups` -> `wc_place_subsets` -> `wc_bracket_seeds`,
+each re-deriving the projected 48-team field) would have recomputed
+`world_championship_field` five times over.
+
+**Every section degrades instead of failing**, which is the whole reason the
+tab is usable today with nothing played: the groups are always present (the
+draw exists before a ball is kicked), the Play-in appears once the group stage
+completes, each bracket stage appears once the one before it resolves, and
+`champion` stays None until the final is won. The two empty states say what
+they are waiting for rather than rendering blank.
+
+**`wc_group_tables` was split out of `wc_group_standings` so the tab can show a
+LIVE table mid-stage.** `wc_group_standings` is gated on all 7 matchdays,
+correctly -- a partial table must never seed the Play-in. But the tab wants to
+show the table as it stands at matchday 3. Rather than write a second ordering
+(the JS/Python-port drift this file keeps warning about), the ordering moved
+into `wc_group_tables`, which always answers, and `wc_group_standings` became
+the gated wrapper. One implementation, two callers, only one of them allowed
+to act on it.
+
+`_wc_group_points` became `_wc_group_records`, which also carries W-L: a result
+of 2 or 3 is a win, so an **OT win counts in the W column and an OT loss in the
+L column** -- which is why a group table can show 4-3 against 13 points and
+2-5 against 8, and neither is a typo.
+
+**Scores resolve by NAME, not by printing the stored pf/pa as the home side's**
+(`_wc_game_result`). `games` keeps them from team_a's perspective only, so the
+naive read is backwards in every game the home team lost -- the same trap the
+RDS mutual-stage renderer had to fix once already.
+
+Three details worth keeping:
+
+- **Group boxes carry the qualification cut as dividers**, accent after place 2
+  (straight through) and a plain rule after place 3 (into the Play-in), the
+  same device Regional Standings uses for its seed-4/seed-8 bye breakpoints.
+- **A tie taken 2-0 shows two legs, not three**, and says
+  `(2-0, no decider)` outright so it does not read as missing data.
+- **`.wc-grid`, not `.schedule-columns`.** That class is a NON-wrapping flex
+  row sized for the two or three columns RDS/PA use; the R16 lays out **eight**
+  ties at once and pushed the page sideways at 1600px. `.wc-grid` is an
+  auto-fit wrapping grid, so the R16 packs into rows.
+
+**The sub-1400px horizontal scroll is pre-existing, not this tab's.** Measured
+against the committed HEAD at 1600/1400/1240/1000px: Standings, Rankings, RDS
+and Qualification all scroll from 1400px down on **main** too, and the WC tab
+behaves identically. At 1600px and up nothing scrolls, including the full
+bracket.
+
+Verified against a **fully played synthetic tournament** (the group + Play-in +
+bracket scratch database), not just the empty real one: 6 group boxes of 8 with
+records and points, dividers on places 2 and 3, the Play-in's three blocks with
+real scores and the third-place block reading `seeds 13-16, 2 eliminated`, all
+four bracket stages at 8/4/2/1 ties, the Final's three legs in their true
+orientations with the champion banner, and 6 ties marked as swept. All 11 tabs
+and every sub-view at 1920/1600/1400/1240/1000px, zero `pageerror` events on
+either file.
+
+**One bug caught by rendering the played state** rather than the empty one: the
+Play-in header printed `seeds 13-18` for the third-place block, from
+`seed_base + 6`. That subset only seeds FOUR of its six. `wcSeedRange` now
+reads the range off the real slots and names the eliminations.
+
+### The Rank/Elo History tab folded into Rankings (2026-09-16, per explicit request)
+
+The standalone `Rank/Elo History` tab is gone. Rankings now carries three
+sub-views behind a `group-toggle` -- **Rankings / Rank History / Elo History**
+-- matching the RDS Cup tab's mini-tabs. The nav is 11 tabs either way, since
+World Championship took the freed slot.
+
+The history markup moved into `#panel-rankings` as `#rankings-view-history`,
+and `#rankings-view-rankings` wraps the search box and the rankings table. The
+toggle hides one and shows the other; `historyMode` still drives
+`renderHistory()` unchanged, so the two history views differ only in which mode
+they select. `#history-mode-toggle` (Team Rank / Elo Rating) is gone -- those
+two buttons ARE the two sub-tabs now.
+
+**A test of mine failed here and the code was right.** The check asserted the
+Rank and Elo views show different column headers; they do not. Per the
+Rank/Elo History section above, **every cup round from abs_round 12 on reuses
+the same `S` label in both views**, and columns run newest-first -- so the
+newest headers are identical by design and only the OLDEST differ (`S8 End`
+vs `R1`). The real signal is the values: ranks are 1-160, Elo is ~1800-2600.
+The test now asserts that, plus the oldest-column difference. Worth
+remembering the next time these two views look suspiciously alike.
+
+### Everything else that had to learn about WC
+
+- **`_round_file_stems`** -- `"WC"` joined `("RDS", "PA")` in the
+  bracket+round branch, giving `2026-w27-tue-wc-group-1` and friends. All 95
+  stems are unique.
+- **`build_calendar`'s `label_for`** (`regenerate_dashboard.py`) -- Group and
+  Play-in number their own **matchdays** (`WC Group MD4`); every knockout stage
+  is one best-of-three, so there the number is a **leg** (`WC R16 leg 2`). The
+  calendar renderer itself needed no change; it is generic over labels.
+- **`rank_elo_history`'s `plain_label`** -- returns `WC Group 1` etc. rather
+  than falling through to the sequential `S`/`SC` numbering, which is for
+  RDS/PA cup rounds only.
+- **`deckfield.html`'s Schedule dropdowns** -- Cup Name gained `WC`; Cup
+  Bracket gained `Group`, `Play-in`, `R16`, `QF` (`SF` and `Final` were
+  already there for RDS). Without these the games could not be recorded at
+  all, the same gap the RDS SF/Final entry above had to fix.
+
+**Verified**: all 42 `results/` CSVs still round-trip byte-identically
+(`export-results` reports "already matches" for every one); regenerating
+against a clean wipe-and-rebuild (workbook + all 42 CSVs, 2786 games through
+round 53) left **23 of 25 constants byte-identical** to main's committed
+dashboard, the only differences being `CALENDAR_DATA` (the intended change)
+and `TEAMS_EXPORT_TSV` (random Secondary Type, by design) -- which is what
+proves this is calendar-only and no rating, seeding or pairing moved. Within
+`CALENDAR_DATA` all 25 pre-existing weeks are byte-identical and the seven new
+ones are purely appended. `next_matchday()` still returns week 20 Tue / PA Draw
+7. Playwright reads all 32 calendar rows with the new weeks marked
+`cal-pending`, all 11 dashboard tabs and all 4 `deckfield.html` tabs render,
+and every new Cup Name/Cup Bracket combination is settable -- zero `pageerror`
+events on either page.
+
 ## Region colors & Region Climate (confirmed against DECKFIELD's real code)
 
 `REGION_COLORS` (bright/dark hex per region) matches DECKFIELD's own
@@ -1636,12 +2088,13 @@ rows.
 ## Dashboard
 
 Currently a **static HTML snapshot** — one big file with data embedded as
-inline `const X = {...}` JSON blocks. Tabs: Rankings, Standings, RL
-Strength, Schedule, RDS Cup, PA Cup, Next Matchday (matchup table +
-copy-paste boxes for DECKFIELD's Schedule/Teams/Region Climate inputs),
-Calendar (full 26-week schedule, played/next/pending status), Regional
-Playoffs (all 10 regions shown at once in a grid, no dropdown), Rank/Elo
-History (below).
+inline `const X = {...}` JSON blocks. Tabs: Rankings (with Rank History and
+Elo History as sub-views -- see below), Standings, RL Strength, Schedule,
+RDS Cup, PA Cup, Next Matchday (matchup table + copy-paste boxes for
+DECKFIELD's Schedule/Teams/Region Climate inputs), Calendar (the full
+33-week schedule, played/next/pending status), Regional Playoffs (all 10
+regions at once in a grid, no dropdown), Qualification, and World
+Championship (Groups / Play-in / Bracket).
 
 **Per explicit instruction, the dashboard must always be regenerated
 whenever new results are added.** `regenerate_dashboard.py` (added
@@ -3328,6 +3781,12 @@ page errors on either path.
 ## Known open items
 
 - Dashboard regeneration isn't in the CLI yet — still manual script runs.
+- **The World Championship generates end to end** as of 2026-09-16 -- group
+  stage, Play-in, bracket and champion -- with its own dashboard tab and a
+  field that **freezes at the conclusion of week 26**. The open piece is that
+  the Regional Tournament bids are still awarded on chalk rather than on the
+  real RT bracket, which the freeze makes permanent at exactly the week those
+  results land (see that section).
 - Round numbering: the *historical* R1-R5/L1-L2 mapping is confirmed
   against real Archive data; everything from PA Draw round 1 onward uses
   `abs_round_for_event()`'s sequential assignment, which is only "confirmed

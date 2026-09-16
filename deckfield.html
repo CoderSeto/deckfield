@@ -1016,25 +1016,32 @@
         <label>Factor Multiplier
           <input type="number" id="schedFactorMult" min="1" max="2" step="0.01" value="1">
         </label>
-        <label>Cup Name (Cup games only)
+        <label>Cup Name (Cup / WC games)
           <select id="schedCupName">
             <option value="">—</option>
             <option>Ribbon</option>
             <option>Dream</option>
             <option>Star</option>
             <option>PA</option>
+            <option>WC</option>
           </select>
         </label>
-        <label>Cup Bracket (Cup games only)
+        <label>Cup Bracket (Cup / WC games)
           <select id="schedCupBracket">
             <option value="">—</option>
             <option>Draw</option>
             <option>Process</option>
             <option>SF</option>
             <option>Final</option>
+            <!-- World Championship stages. SF/Final above are shared with it;
+                 these are the ones it does not have in common with RDS/PA. -->
+            <option>Group</option>
+            <option>Play-in</option>
+            <option>R16</option>
+            <option>QF</option>
           </select>
         </label>
-        <label>Cup Round # (Cup games only)
+        <label>Cup Round # (Cup / WC games)
           <input type="number" id="schedCupRound" min="1">
         </label>
       </div>
@@ -3625,7 +3632,13 @@
     const homeIsFavorite = (SPREAD_TEAM === 'home');
     const spreadHome = homeIsFavorite ? SPREAD_VALUE : -SPREAD_VALUE;
 
-    const isCup = (GAME_TYPE === 'Cup');
+    // The cup tag is exported whenever it is SET, not only when Game Type is
+    // 'Cup'. The World Championship is tagged cup_name='WC' but its Game Type
+    // is 'Finals' (x12 points), and gating on the game type dropped all three
+    // columns for it -- which the engine's next_matchday() reads to tell a
+    // played matchday from an unplayed one, so it would have looped on the
+    // same WC matchday forever. A non-cup game leaves these blank as before.
+    const hasCupTag = !!(CUP_NAME || CUP_BRACKET || CUP_ROUND_NUM !== '');
 
     return [
       CURRENT_ROUND_NUM,
@@ -3646,9 +3659,9 @@
       'A',
       exHome,
       exAway,
-      isCup ? CUP_NAME : '',
-      isCup ? CUP_BRACKET : '',
-      isCup ? CUP_ROUND_NUM : ''
+      hasCupTag ? CUP_NAME : '',
+      hasCupTag ? CUP_BRACKET : '',
+      hasCupTag ? CUP_ROUND_NUM : ''
     ];
   }
 
