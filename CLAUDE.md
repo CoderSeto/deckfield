@@ -1851,6 +1851,102 @@ In practice the field is settled before week 27 (the regular season and the
 Regional Tournaments are what decide it), so this is a note rather than a
 mechanism; there is no freeze.
 
+### The World Championship tab (2026-09-16, per explicit request)
+
+`WC_DATA` (derived, in the manifest) + a `#panel-wc` with three sub-views
+behind one `group-toggle`, the same pattern the RDS Cup tab uses: **Groups /
+Play-in / Bracket**.
+
+**The engine computes it all in one pass and the JS only draws it.**
+`world_championship_overview(season)` returns the draw, the group tables, the
+Play-in ladder and the bracket together -- the same split the Qualification tab
+already uses, so the page can never disagree with `next_matchday()` about who
+plays whom. It builds in **0.3s**, which matters because the naive shape
+(`wc_seeded_field` -> `wc_groups` -> `wc_place_subsets` -> `wc_bracket_seeds`,
+each re-deriving the projected 48-team field) would have recomputed
+`world_championship_field` five times over.
+
+**Every section degrades instead of failing**, which is the whole reason the
+tab is usable today with nothing played: the groups are always present (the
+draw exists before a ball is kicked), the Play-in appears once the group stage
+completes, each bracket stage appears once the one before it resolves, and
+`champion` stays None until the final is won. The two empty states say what
+they are waiting for rather than rendering blank.
+
+**`wc_group_tables` was split out of `wc_group_standings` so the tab can show a
+LIVE table mid-stage.** `wc_group_standings` is gated on all 7 matchdays,
+correctly -- a partial table must never seed the Play-in. But the tab wants to
+show the table as it stands at matchday 3. Rather than write a second ordering
+(the JS/Python-port drift this file keeps warning about), the ordering moved
+into `wc_group_tables`, which always answers, and `wc_group_standings` became
+the gated wrapper. One implementation, two callers, only one of them allowed
+to act on it.
+
+`_wc_group_points` became `_wc_group_records`, which also carries W-L: a result
+of 2 or 3 is a win, so an **OT win counts in the W column and an OT loss in the
+L column** -- which is why a group table can show 4-3 against 13 points and
+2-5 against 8, and neither is a typo.
+
+**Scores resolve by NAME, not by printing the stored pf/pa as the home side's**
+(`_wc_game_result`). `games` keeps them from team_a's perspective only, so the
+naive read is backwards in every game the home team lost -- the same trap the
+RDS mutual-stage renderer had to fix once already.
+
+Three details worth keeping:
+
+- **Group boxes carry the qualification cut as dividers**, accent after place 2
+  (straight through) and a plain rule after place 3 (into the Play-in), the
+  same device Regional Standings uses for its seed-4/seed-8 bye breakpoints.
+- **A tie taken 2-0 shows two legs, not three**, and says
+  `(2-0, no decider)` outright so it does not read as missing data.
+- **`.wc-grid`, not `.schedule-columns`.** That class is a NON-wrapping flex
+  row sized for the two or three columns RDS/PA use; the R16 lays out **eight**
+  ties at once and pushed the page sideways at 1600px. `.wc-grid` is an
+  auto-fit wrapping grid, so the R16 packs into rows.
+
+**The sub-1400px horizontal scroll is pre-existing, not this tab's.** Measured
+against the committed HEAD at 1600/1400/1240/1000px: Standings, Rankings, RDS
+and Qualification all scroll from 1400px down on **main** too, and the WC tab
+behaves identically. At 1600px and up nothing scrolls, including the full
+bracket.
+
+Verified against a **fully played synthetic tournament** (the group + Play-in +
+bracket scratch database), not just the empty real one: 6 group boxes of 8 with
+records and points, dividers on places 2 and 3, the Play-in's three blocks with
+real scores and the third-place block reading `seeds 13-16, 2 eliminated`, all
+four bracket stages at 8/4/2/1 ties, the Final's three legs in their true
+orientations with the champion banner, and 6 ties marked as swept. All 11 tabs
+and every sub-view at 1920/1600/1400/1240/1000px, zero `pageerror` events on
+either file.
+
+**One bug caught by rendering the played state** rather than the empty one: the
+Play-in header printed `seeds 13-18` for the third-place block, from
+`seed_base + 6`. That subset only seeds FOUR of its six. `wcSeedRange` now
+reads the range off the real slots and names the eliminations.
+
+### The Rank/Elo History tab folded into Rankings (2026-09-16, per explicit request)
+
+The standalone `Rank/Elo History` tab is gone. Rankings now carries three
+sub-views behind a `group-toggle` -- **Rankings / Rank History / Elo History**
+-- matching the RDS Cup tab's mini-tabs. The nav is 11 tabs either way, since
+World Championship took the freed slot.
+
+The history markup moved into `#panel-rankings` as `#rankings-view-history`,
+and `#rankings-view-rankings` wraps the search box and the rankings table. The
+toggle hides one and shows the other; `historyMode` still drives
+`renderHistory()` unchanged, so the two history views differ only in which mode
+they select. `#history-mode-toggle` (Team Rank / Elo Rating) is gone -- those
+two buttons ARE the two sub-tabs now.
+
+**A test of mine failed here and the code was right.** The check asserted the
+Rank and Elo views show different column headers; they do not. Per the
+Rank/Elo History section above, **every cup round from abs_round 12 on reuses
+the same `S` label in both views**, and columns run newest-first -- so the
+newest headers are identical by design and only the OLDEST differ (`S8 End`
+vs `R1`). The real signal is the values: ranks are 1-160, Elo is ~1800-2600.
+The test now asserts that, plus the oldest-column difference. Worth
+remembering the next time these two views look suspiciously alike.
+
 ### Everything else that had to learn about WC
 
 - **`_round_file_stems`** -- `"WC"` joined `("RDS", "PA")` in the
@@ -1951,12 +2047,13 @@ rows.
 ## Dashboard
 
 Currently a **static HTML snapshot** — one big file with data embedded as
-inline `const X = {...}` JSON blocks. Tabs: Rankings, Standings, RL
-Strength, Schedule, RDS Cup, PA Cup, Next Matchday (matchup table +
-copy-paste boxes for DECKFIELD's Schedule/Teams/Region Climate inputs),
-Calendar (full 26-week schedule, played/next/pending status), Regional
-Playoffs (all 10 regions shown at once in a grid, no dropdown), Rank/Elo
-History (below).
+inline `const X = {...}` JSON blocks. Tabs: Rankings (with Rank History and
+Elo History as sub-views -- see below), Standings, RL Strength, Schedule,
+RDS Cup, PA Cup, Next Matchday (matchup table + copy-paste boxes for
+DECKFIELD's Schedule/Teams/Region Climate inputs), Calendar (the full
+33-week schedule, played/next/pending status), Regional Playoffs (all 10
+regions at once in a grid, no dropdown), Qualification, and World
+Championship (Groups / Play-in / Bracket).
 
 **Per explicit instruction, the dashboard must always be regenerated
 whenever new results are added.** `regenerate_dashboard.py` (added
@@ -3644,9 +3741,11 @@ page errors on either path.
 
 - Dashboard regeneration isn't in the CLI yet — still manual script runs.
 - **The World Championship generates end to end** as of 2026-09-16 -- group
-  stage, Play-in, bracket and champion. What it does NOT have is a dashboard
-  tab: groups, tables, the Play-in ladder and the bracket surface only through
-  Next Matchday. That is the obvious next piece.
+  stage, Play-in, bracket and champion -- and has its own dashboard tab
+  (Groups / Play-in / Bracket). The draw still reads the PROJECTED
+  qualification field, so a regenerate mid-group-stage could in principle
+  reshuffle groups under games already played; the field settles before week
+  27 in practice, so there is no freeze mechanism.
 - Round numbering: the *historical* R1-R5/L1-L2 mapping is confirmed
   against real Archive data; everything from PA Draw round 1 onward uses
   `abs_round_for_event()`'s sequential assignment, which is only "confirmed

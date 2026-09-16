@@ -46,6 +46,7 @@ from deckfield_ratings import (
     rds_cup_real_results, rds_cup_round_pairings,
     regional_standings_seeds, regional_tournament_games, REGION_COLORS,
     world_championship_field, rds_mutual_stage_data, home_away_records,
+    world_championship_overview,
 )
 
 SEASON = 9
@@ -456,7 +457,7 @@ DERIVED_CONSTS = {
     "RANK_ELO_HISTORY", "CUP_REAL_RESULTS", "RDS_ROUND_PAIRINGS",
     "PA_CUP_DATA", "PA_REAL_RESULTS", "PA_ROUND_PAIRINGS", "PA_SWAP_LOG",
     "STRENGTH_DATA", "RT_DATA", "TEAMS_EXPORT_TSV", "QUALIFICATION_DATA",
-    "RDS_MUTUAL_STAGE",
+    "RDS_MUTUAL_STAGE", "WC_DATA",
 }
 
 # STATIC: genuinely fixed, with the reason it can never go stale. Anything
@@ -507,6 +508,18 @@ def build_qualification():
     the live regional strength multiplier, and every bid resolves through
     current standings, so this changes with every result added."""
     return world_championship_field(SEASON)
+
+
+def build_wc():
+    """WC_DATA -- the World Championship tab: the snake draw, live group
+    tables, the Play-in ladder and the knockout bracket.
+
+    Every part of it is derived. The draw itself re-reads the projected
+    qualification field, which moves with every result, and the tables,
+    ladder and bracket all resolve through real games -- so this is exactly
+    the kind of constant that goes stale the moment it is baked in once
+    (see RT_DATA's entry in CLAUDE.md for the sixth time that happened)."""
+    return world_championship_overview(SEASON)
 
 
 def _replace_subtitle(content):
@@ -577,6 +590,7 @@ def main():
     content = _replace_const(content, "STRENGTH_DATA", build_strength_data())
     content = _replace_const(content, "RT_DATA", build_rt_data())
     content = _replace_const(content, "QUALIFICATION_DATA", build_qualification())
+    content = _replace_const(content, "WC_DATA", build_wc())
 
     teams_out, tsv = export_teams_for_deckfield(SEASON)
     pattern = re.compile(r'const TEAMS_EXPORT_TSV = "(?:[^"\\]|\\.)*";\n')
@@ -588,7 +602,7 @@ def main():
         f.write(content)
     print(f"Regenerated DATA, NEXT_MATCHDAY_DATA, CALENDAR_DATA, SCHEDULE_DATA, RANK_ELO_HISTORY, "
           f"CUP_REAL_RESULTS, RDS_ROUND_PAIRINGS, PA_CUP_DATA, PA_REAL_RESULTS, PA_ROUND_PAIRINGS, "
-          f"PA_SWAP_LOG, STRENGTH_DATA, RT_DATA, QUALIFICATION_DATA, RDS_MUTUAL_STAGE, TEAMS_EXPORT_TSV, header subtitle "
+          f"PA_SWAP_LOG, STRENGTH_DATA, RT_DATA, QUALIFICATION_DATA, RDS_MUTUAL_STAGE, WC_DATA, TEAMS_EXPORT_TSV, header subtitle "
           f"in {DASHBOARD_PATH}")
 
 

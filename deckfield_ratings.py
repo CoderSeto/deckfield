@@ -4729,24 +4729,34 @@ WC_PLACE_SEED_BASE = {1: 0, 2: 6, 3: 12}
 WC_PLACE_SUBSETS = (1, 2, 3)
 
 
-def _wc_group_points(conn, season):
-    """{team_name: points} across World Championship GROUP games only.
+def _wc_group_records(conn, season):
+    """{team_name: {"points", "w", "l", "played"}} across World Championship
+    GROUP games only.
 
     Points are the CSV's own `result` scale -- 3 win, 2 OT win, 1 OT loss,
     0 loss -- read from each side's own perspective. `games` stores only
     team_a's result, and team B's is `3 - result_a` (see the schema notes
     in CLAUDE.md), which is what makes an OT win/loss pair read 2/1 rather
-    than collapsing to a win/loss."""
-    points = {}
+    than collapsing to a win/loss. A result of 2 or 3 is a win, so an OT
+    win counts in the W column and an OT loss in the L column."""
+    rec = {}
     rows = conn.execute("""
         SELECT g.result_a, ta.name a_name, tb.name b_name FROM games g
         JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
         WHERE g.season=? AND g.cup_name='WC' AND g.cup_bracket='Group'
     """, (season,)).fetchall()
     for r in rows:
-        points[r["a_name"]] = points.get(r["a_name"], 0) + r["result_a"]
-        points[r["b_name"]] = points.get(r["b_name"], 0) + (3 - r["result_a"])
-    return points
+        for name, pts in ((r["a_name"], r["result_a"]), (r["b_name"], 3 - r["result_a"])):
+            e = rec.setdefault(name, {"points": 0, "w": 0, "l": 0, "played": 0})
+            e["points"] += pts
+            e["w" if pts >= 2 else "l"] += 1
+            e["played"] += 1
+    return rec
+
+
+def _wc_group_points(conn, season):
+    """{team_name: points} -- the ranking key alone. See _wc_group_records."""
+    return {n: e["points"] for n, e in _wc_group_records(conn, season).items()}
 
 
 def _wc_group_stage_complete(conn, season):
@@ -4762,10 +4772,36 @@ def _wc_group_stage_complete(conn, season):
     return True
 
 
+def wc_group_tables(season, round_num=None):
+    """{group_label: [{place, name, seed, points, w, l, played}]} -- each
+    group ordered by **points, then initial seed**, WHENEVER asked, however
+    few matchdays have been played.
+
+    This is the display form. `wc_group_standings` is the same thing behind
+    a completeness gate, and everything that decides real qualification goes
+    through that one instead -- so the tab can show a live table mid-stage
+    without anything downstream ever acting on a partial one."""
+    conn = get_connection()
+    rec = _wc_group_records(conn, season)
+    conn.close()
+    blank = {"points": 0, "w": 0, "l": 0, "played": 0}
+    groups = wc_groups(season, round_num)
+    out = {}
+    for label in WC_GROUP_LABELS:
+        ordered = sorted(groups[label],
+                         key=lambda sn: (-rec.get(sn[1], blank)["points"], sn[0]))
+        out[label] = [{"place": i + 1, "name": name, "seed": seed,
+                       **rec.get(name, blank)}
+                      for i, (seed, name) in enumerate(ordered)]
+    return out
+
+
 def wc_group_standings(season, round_num=None):
-    """{group_label: [{place, name, seed, points}]} -- each group ordered by
-    **points, then initial seed**, the ranking rule given for the World
-    Championship. Returns None until all 7 group matchdays are complete.
+    """{group_label: [{place, name, seed, points, w, l, played}]} -- each
+    group ordered by **points, then initial seed**, the ranking rule given
+    for the World Championship. Returns None until all 7 group matchdays
+    are complete, which is what keeps a partial table from ever seeding
+    the Play-in.
 
     That tiebreak is the one reading chosen rather than given: the rule was
     stated for ranking the six teams WITHIN a place-subset, and deciding who
@@ -4775,19 +4811,9 @@ def wc_group_standings(season, round_num=None):
     this is deliberately NOT `_standings_order` (W-L, then head-to-head, then
     DSCR), which is the Regional/League rule and was never named here."""
     conn = get_connection()
-    if not _wc_group_stage_complete(conn, season):
-        conn.close()
-        return None
-    points = _wc_group_points(conn, season)
+    complete = _wc_group_stage_complete(conn, season)
     conn.close()
-    groups = wc_groups(season, round_num)
-    out = {}
-    for label in WC_GROUP_LABELS:
-        ordered = sorted(groups[label], key=lambda sn: (-points.get(sn[1], 0), sn[0]))
-        out[label] = [{"place": i + 1, "name": name, "seed": seed,
-                       "points": points.get(name, 0)}
-                      for i, (seed, name) in enumerate(ordered)]
-    return out
+    return wc_group_tables(season, round_num) if complete else None
 
 
 def wc_place_subsets(season, round_num=None):
@@ -5089,6 +5115,138 @@ def wc_champion(season, round_num=None):
     winner = _wc_tie_winner(conn, season, "Final", *ties[0])
     conn.close()
     return winner
+
+
+def _wc_game_result(conn, season, stage, rnd, home, away):
+    """{"home_score", "away_score", "winner"} for one real WC game, or None.
+
+    Scores are resolved by NAME, not by printing the stored pf/pa as the
+    home side's: `games` keeps them from team_a's perspective only, so the
+    naive read is backwards in every game the home team lost. Same trap the
+    RDS mutual-stage renderer had to fix once already."""
+    r = conn.execute("""
+        SELECT g.pf_a, g.pa_a, g.result_a, ta.name a_name, tb.name b_name FROM games g
+        JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
+        WHERE g.season=? AND g.cup_name='WC' AND g.cup_bracket=? AND g.cup_round=?
+        AND ((ta.name=? AND tb.name=?) OR (ta.name=? AND tb.name=?))
+    """, (season, stage, rnd, home, away, away, home)).fetchone()
+    if r is None:
+        return None
+    a_won = r["result_a"] in (2, 3)
+    winner = r["a_name"] if a_won else r["b_name"]
+    if r["a_name"] == home:
+        return {"home_score": r["pf_a"], "away_score": r["pa_a"], "winner": winner}
+    return {"home_score": r["pa_a"], "away_score": r["pf_a"], "winner": winner}
+
+
+def world_championship_overview(season, round_num=None):
+    """Everything the World Championship tab draws, computed once.
+
+    The engine decides the whole tournament and the JS only renders it, the
+    same split the Qualification tab already uses -- so the page can never
+    disagree with `next_matchday()` about who is playing whom.
+
+    Every section degrades rather than failing: the groups are always
+    present (the draw exists before a ball is kicked), the Play-in appears
+    once the group stage completes, each bracket stage appears once the one
+    before it resolves, and `champion` stays None until the final is won."""
+    conn = get_connection()
+    dex = {r["name"]: r["team_id"] for r in conn.execute("SELECT team_id, name FROM teams")}
+    complete = _wc_group_stage_complete(conn, season)
+    played_mds = sum(
+        1 for md in range(1, WC_GROUP_MATCHDAYS + 1)
+        if conn.execute(
+            "SELECT COUNT(*) c FROM games WHERE season=? AND cup_name='WC' "
+            "AND cup_bracket='Group' AND cup_round=?", (season, md)).fetchone()["c"] > 0
+    )
+
+    seeded = [{"seed": sd, "name": n, "rank": rk, "dex": dex.get(n)}
+              for sd, n, rk in wc_seeded_field(season, round_num)]
+    tables = wc_group_tables(season, round_num)
+    for rows in tables.values():
+        for row in rows:
+            row["dex"] = dex.get(row["name"])
+
+    out = {
+        "seeded": seeded, "groups": tables,
+        "group_matchdays": WC_GROUP_MATCHDAYS, "group_matchdays_played": played_mds,
+        "group_stage_complete": complete,
+        "playin": None, "bracket_seeds": None, "eliminated": [],
+        "bracket": {}, "champion": None,
+    }
+
+    subsets = wc_place_subsets(season, round_num)
+    if subsets is None:
+        conn.close()
+        return out
+
+    # ---- Play-in: one block per place-subset, all three sharing a ladder --
+    SUBSET_LABEL = {1: "Group winners", 2: "Runners-up", 3: "Third place"}
+    playin = {}
+    for place, ranked in subsets.items():
+        res = _wc_playin_subset(conn, season, ranked)
+
+        def leg_rows(pairs, md):
+            return [{"home": h, "away": a, "home_dex": dex.get(h), "away_dex": dex.get(a),
+                     "result": _wc_game_result(conn, season, "Play-in", md, h, a)}
+                    for h, a in pairs]
+
+        base = WC_PLACE_SEED_BASE[place]
+        places = []
+        for slot in range(1, len(ranked) + 1):
+            name = res["places"].get(slot)
+            out_of_it = place == 3 and slot in (5, 6)
+            places.append({"slot": slot, "name": name, "dex": dex.get(name),
+                           "seed": None if out_of_it else base + slot,
+                           "eliminated": out_of_it})
+        playin[str(place)] = {
+            "label": SUBSET_LABEL[place], "seed_base": base,
+            "ranked": [{"rank": i + 1, "name": n, "dex": dex.get(n)}
+                       for i, n in enumerate(ranked)],
+            "md1": leg_rows(res["md1"], 1),
+            "md2": leg_rows(res["md2"], 2) if res["md2"] else None,
+            "places": places,
+        }
+    out["playin"] = playin
+
+    seeds, eliminated = wc_bracket_seeds(season, round_num)
+    out["eliminated"] = [{"name": n, "dex": dex.get(n)} for n in eliminated]
+    if seeds is None:
+        conn.close()
+        return out
+    out["bracket_seeds"] = {str(k): {"name": v, "dex": dex.get(v)} for k, v in seeds.items()}
+    seed_of = {name: seed for seed, name in seeds.items()}
+
+    # ---- Bracket: each stage appears only once it resolves ---------------
+    for stage in WC_BRACKET_STAGES:
+        ties = _wc_bracket_ties(season, stage, round_num)
+        if ties is None:
+            break
+        stage_ties = []
+        for better, worse in ties:
+            leader = _wc_aggregate_leader(conn, season, stage, better, worse)
+            hosts = _wc_leg_hosts(better, worse, leader)
+            w1 = _real_bracket_winner(conn, "WC", stage, 1, better, worse)
+            w2 = _real_bracket_winner(conn, "WC", stage, 2, better, worse)
+            legs = []
+            for i, (h, a) in enumerate(hosts, start=1):
+                # Leg 3 exists only while the tie is still level at 1-1.
+                if i == 3 and (w1 is None or w2 is None or w1 == w2):
+                    break
+                legs.append({"leg": i, "home": h, "away": a,
+                             "home_dex": dex.get(h), "away_dex": dex.get(a),
+                             "result": _wc_game_result(conn, season, stage, i, h, a)})
+            stage_ties.append({
+                "better": better, "worse": worse,
+                "better_seed": seed_of[better], "worse_seed": seed_of[worse],
+                "better_dex": dex.get(better), "worse_dex": dex.get(worse),
+                "legs": legs, "swept": bool(w1 and w2 and w1 == w2),
+                "winner": _wc_tie_winner(conn, season, stage, better, worse),
+            })
+        out["bracket"][stage] = stage_ties
+    conn.close()
+    out["champion"] = wc_champion(season, round_num)
+    return out
 
 
 def world_championship_field(season, round_num=None):
