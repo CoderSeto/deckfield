@@ -1567,6 +1567,129 @@ Eterna/Mossui/Celestic never played each other and should resolve by DSCR).
   `cup_name`/`cup_bracket` the way RDS/PA do).
 - Calendar: weeks 24-26, `("RT", matchday)` events, confirmed placement.
 
+## World Championship (weeks 27-33, added 2026-09-16)
+
+The calendar now runs past the Regional Tournament into the World
+Championship whose 48-team field the Qualification tab projects. Seven new
+weeks, 21 slots, **absolute rounds 75-95**. Every pre-existing abs_round is
+unchanged (RT9 is still 74) -- the new weeks append, so nothing downstream
+shifted.
+
+| week | Tue | Thu | Weekend |
+|---|---|---|---|
+| 27 | WC Group MD1 (75) | MD2 (76) | MD3 (77) |
+| 28 | MD4 (78) | MD5 (79) | MD6 (80) |
+| 29 | MD7 (81) | WC Play-in MD1 (82) | Play-in MD2 (83) |
+| 30 | WC R16 leg 1 (84) | leg 2 (85) | leg 3 (86) |
+| 31 | WC QF leg 1 (87) | leg 2 (88) | leg 3 (89) |
+| 32 | WC SF leg 1 (90) | leg 2 (91) | leg 3 (92) |
+| 33 | WC Final leg 1 (93) | leg 2 (94) | leg 3 (95) |
+
+The structure, as given: 6 groups of 8 play a **single round robin** with the
+**higher seed always hosting**, which is 7 matchdays -- two full weeks plus one
+Tuesday. The top two of each group (12) go straight through; the six
+third-placed teams contest the leftover Thursday and Weekend for the last four
+spots, making 16. The bracket is then four weeks, each a **best-of-three
+spanning the whole week**.
+
+**Event tuples are `("WC", stage, n)`** -- stage in `Group` / `Play-in` /
+`R16` / `QF` / `SF` / `Final`, with `n` an explicit matchday or leg number.
+That numbering is deliberate and follows PA's own best-of-three Final rather
+than RDS SF/Final's `None`: **with a number in the tuple, `_schedule_event_key`
+is unique on the tuple alone**, so none of the week/day leg-resolution
+machinery (`mutual_leg_number`, `abs_round_for_event`'s week/day parameters)
+is involved and each leg gets its own absolute round for free. That whole
+mechanism is the source of two bugs already recorded in this file (the
+`_schedule_event_key` leg-numbering bug and `build_calendar`'s copy of it);
+not needing it is worth more than tuple symmetry with RDS.
+
+### The played-check, and the two query collisions it exposed
+
+`_event_is_played`'s WC branch counts `cup_name='WC' AND cup_bracket=stage AND
+cup_round=n` -- the same shape as PA's. It deliberately asks **only whether
+real games exist**, so it depends on nothing about the field, the draw or the
+bracket: `next_matchday()` will advance correctly the moment a WC matchday's
+results are ingested, even though `_games_for_event` cannot generate that
+matchday (below).
+
+Two pre-existing queries were **not** specific enough to survive a second
+tournament and were tightened. Both were verified to be real collisions by
+running the old SQL against a scratch database carrying one synthetic WC row:
+
+- **RT** counted `game_type='P' AND cup_round=?` with no `cup_name` filter. RT
+  matchdays are 1-9 and WC group matchdays are 1-7, so a WC group game entered
+  as Playoffs would have reported **RT1 as played** (confirmed: the old query
+  returned 1 row). RT games carry no `cup_name` at all -- they are tagged by
+  `host_region` + `cup_round` -- so `AND cup_name IS NULL` is the exact fix.
+- **RDS SF/Final** counted `cup_bracket=? AND cup_round=?` with no `cup_name`
+  filter, and `SF`/`Final` are **not unique bracket names** -- the WC's own
+  semifinal and final weeks use them, with leg numbers in the same 1-3 range.
+  A WC SF leg 1 game would have reported **RDS SF leg 1 as played** (confirmed
+  the same way). Narrowed to `cup_name IN ('Ribbon','Dream','Star')`.
+
+The general point: a `cup_bracket`/`cup_round` pair is only unique **within a
+cup**. Every other query in the engine already filtered on `cup_name`; these
+three lived in `_event_is_played` and were the exceptions.
+
+### What is NOT modeled: the draw and the Play-in
+
+`_games_for_event` raises `NotImplementedError` for every WC slot, the same
+deliberate choice PA's mutual stage makes one branch up. Two rules the engine
+would need to produce actual games **have not been given and are not derivable
+from anything here**:
+
+- **how the 48-team field is drawn into 6 groups of 8** (snake from the
+  qualification seeding? region-protected? something else), and
+- **how the six third-placed teams contest four spots over the Play-in's two
+  matchdays.** Six into four across two days has several plausible readings
+  and none follows from the rest of the rules.
+
+The bracket's own seeding -- which of the 16 meets which in the R16 -- follows
+from those two, so it is unsettled for the same reason. A guess here would be
+indistinguishable from a rule the moment it started generating real matchups,
+which is exactly how the PA round-1 pairing bug got as far as real results
+being entered against it.
+
+`export_matchday_batches` calls `_games_for_event` for a WC slot before doing
+anything else, so it fails with the engine's own "not modeled yet" message
+rather than `Unknown event kind`.
+
+### Everything else that had to learn about WC
+
+- **`_round_file_stems`** -- `"WC"` joined `("RDS", "PA")` in the
+  bracket+round branch, giving `2026-w29-thu-wc-play-in-1` and friends. All 95
+  stems are unique.
+- **`build_calendar`'s `label_for`** (`regenerate_dashboard.py`) -- Group and
+  Play-in number their own **matchdays** (`WC Group MD4`); every knockout stage
+  is one best-of-three, so there the number is a **leg** (`WC R16 leg 2`). The
+  calendar renderer itself needed no change; it is generic over labels.
+- **`rank_elo_history`'s `plain_label`** -- returns `WC Group 1` etc. rather
+  than falling through to the sequential `S`/`SC` numbering, which is for
+  RDS/PA cup rounds only.
+- **`deckfield.html`'s Schedule dropdowns** -- Cup Name gained `WC`; Cup
+  Bracket gained `Group`, `Play-in`, `R16`, `QF` (`SF` and `Final` were
+  already there for RDS). Without these the games could not be recorded at
+  all, the same gap the RDS SF/Final entry above had to fix.
+
+**Game type is left to whoever enters the CSV.** Nothing here picks one, and
+the played-check does not read it -- `P` and `F` carry different point
+multipliers (`GAME_TYPE_POINT_MULTIPLIER`), which is a ratings decision, not a
+calendar one.
+
+**Verified**: all 42 `results/` CSVs still round-trip byte-identically
+(`export-results` reports "already matches" for every one); regenerating
+against a clean wipe-and-rebuild (workbook + all 42 CSVs, 2786 games through
+round 53) left **23 of 25 constants byte-identical** to main's committed
+dashboard, the only differences being `CALENDAR_DATA` (the intended change)
+and `TEAMS_EXPORT_TSV` (random Secondary Type, by design) -- which is what
+proves this is calendar-only and no rating, seeding or pairing moved. Within
+`CALENDAR_DATA` all 25 pre-existing weeks are byte-identical and the seven new
+ones are purely appended. `next_matchday()` still returns week 20 Tue / PA Draw
+7. Playwright reads all 32 calendar rows with the new weeks marked
+`cal-pending`, all 11 dashboard tabs and all 4 `deckfield.html` tabs render,
+and every new Cup Name/Cup Bracket combination is settable -- zero `pageerror`
+events on either page.
+
 ## Region colors & Region Climate (confirmed against DECKFIELD's real code)
 
 `REGION_COLORS` (bright/dark hex per region) matches DECKFIELD's own
@@ -3328,6 +3451,10 @@ page errors on either path.
 ## Known open items
 
 - Dashboard regeneration isn't in the CLI yet — still manual script runs.
+- **The World Championship's group draw and Play-in format are undefined**
+  (see that section). The calendar carries all 21 of its slots and the
+  played-check works, but `_games_for_event` raises for every one of them, so
+  no WC matchday can be exported until those two rules are given.
 - Round numbering: the *historical* R1-R5/L1-L2 mapping is confirmed
   against real Archive data; everything from PA Draw round 1 onward uses
   `abs_round_for_event()`'s sequential assignment, which is only "confirmed

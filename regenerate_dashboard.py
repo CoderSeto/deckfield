@@ -193,6 +193,14 @@ def build_calendar():
             return f"{kind}{slot[1]}"
         if kind == "RT":
             return f"RT{slot[1]}"
+        if kind == "WC":
+            _, stage, n = slot
+            # Group and Play-in number their own separate matchdays; every
+            # knockout stage is one best-of-three across a week, so there the
+            # number is a leg of a single tie.
+            if stage in ("Group", "Play-in"):
+                return f"WC {stage} MD{n}"
+            return f"WC {stage} leg {n}"
         _, bracket, cup_round = slot
         if cup_round is not None:
             return f"{kind} {bracket} {cup_round}"

@@ -352,7 +352,7 @@ def _round_file_stems(year=2026):
             kind = slot[0]
             if kind in ("R", "L"):
                 event = f"{kind.lower()}{slot[1]}"
-            elif kind in ("RDS", "PA"):
+            elif kind in ("RDS", "PA", "WC"):
                 # slot[2] (cup_round) is None for the two-legged mutual
                 # stages (RDS SF/Final, PA QF/SF/Final) -- those slots
                 # repeat as (kind, bracket, None) across the week's Tue/Thu,
@@ -2392,6 +2392,27 @@ WEEKLY_SCHEDULE = [
     {"week": 24, "Tue": ("RT", 1), "Thu": ("RT", 2), "Weekend": ("RT", 3)},
     {"week": 25, "Tue": ("RT", 4), "Thu": ("RT", 5), "Weekend": ("RT", 6)},
     {"week": 26, "Tue": ("RT", 7), "Thu": ("RT", 8), "Weekend": ("RT", 9)},
+    # ---------------------------------------------------- World Championship --
+    # The 48-team field the Qualification tab projects (world_championship_field).
+    # Six groups of 8 play a single round robin -- 7 matchdays, which is two full
+    # weeks plus one Tuesday -- with the higher seed always hosting. The top two
+    # of each group (12 teams) go straight into the bracket; the six third-placed
+    # teams contest the leftover Thursday and Weekend of that third week for the
+    # last four spots, making 16. The bracket is then four weeks, each a
+    # best-of-three spanning the whole week (Tue/Thu/Weekend).
+    #
+    # Every WC slot carries an explicit leg/matchday number rather than the
+    # None that RDS SF/Final use, following PA's own best-of-three Final: with
+    # a number in the tuple, _schedule_event_key is unique on the tuple alone,
+    # so none of the week/day leg-resolution machinery (mutual_leg_number) is
+    # involved and each leg gets its own absolute round for free.
+    {"week": 27, "Tue": ("WC", "Group", 1), "Thu": ("WC", "Group", 2), "Weekend": ("WC", "Group", 3)},
+    {"week": 28, "Tue": ("WC", "Group", 4), "Thu": ("WC", "Group", 5), "Weekend": ("WC", "Group", 6)},
+    {"week": 29, "Tue": ("WC", "Group", 7), "Thu": ("WC", "Play-in", 1), "Weekend": ("WC", "Play-in", 2)},
+    {"week": 30, "Tue": ("WC", "R16", 1), "Thu": ("WC", "R16", 2), "Weekend": ("WC", "R16", 3)},
+    {"week": 31, "Tue": ("WC", "QF", 1), "Thu": ("WC", "QF", 2), "Weekend": ("WC", "QF", 3)},
+    {"week": 32, "Tue": ("WC", "SF", 1), "Thu": ("WC", "SF", 2), "Weekend": ("WC", "SF", 3)},
+    {"week": 33, "Tue": ("WC", "Final", 1), "Thu": ("WC", "Final", 2), "Weekend": ("WC", "Final", 3)},
 ]
 
 # Confirmed Regional/League round -> absolute `games.round` mapping (from
@@ -2422,8 +2443,13 @@ def _event_is_played(conn, season, slot, week=None, day=None):
 
     if kind == "RT":
         _, matchday = slot
+        # RT games are tagged by host_region + cup_round and carry NO cup_name
+        # (unlike RDS/PA). The cup_name filter is what keeps this from also
+        # counting a World Championship matchday, which reuses the same small
+        # cup_round numbers and may well be entered as game_type 'P' too.
         n = conn.execute(
-            "SELECT COUNT(*) c FROM games WHERE season=? AND game_type='P' AND cup_round=?",
+            "SELECT COUNT(*) c FROM games WHERE season=? AND game_type='P' "
+            "AND cup_round=? AND cup_name IS NULL",
             (season, matchday),
         ).fetchone()["c"]
         return n > 0
@@ -2434,8 +2460,12 @@ def _event_is_played(conn, season, slot, week=None, day=None):
             # Two-legged: cup_round stores the LEG (1 or 2), not a bracket
             # round, so each leg is checked independently.
             leg = mutual_leg_number(slot, week, day)
+            # Filtered to the three RDS cups: 'SF'/'Final' are not unique
+            # bracket names -- the World Championship's own semifinal and
+            # final weeks use them too, with leg numbers in the same 1-3 range.
             n = conn.execute(
-                "SELECT COUNT(*) c FROM games WHERE season=? AND cup_bracket=? AND cup_round=?",
+                "SELECT COUNT(*) c FROM games WHERE season=? AND cup_bracket=? "
+                "AND cup_round=? AND cup_name IN ('Ribbon','Dream','Star')",
                 (season, bracket, leg),
             ).fetchone()["c"]
             return n > 0
@@ -2452,6 +2482,20 @@ def _event_is_played(conn, season, slot, week=None, day=None):
         n = conn.execute(
             "SELECT COUNT(*) c FROM games WHERE cup_name='PA' AND cup_bracket=? AND cup_round=?",
             (bracket, cup_round),
+        ).fetchone()["c"]
+        return n > 0
+
+    if kind == "WC":
+        _, stage, matchday = slot
+        # Same shape as the PA check. Note this deliberately asks only whether
+        # real games exist for the slot -- it does NOT depend on the field,
+        # the group draw or the bracket being modelled, so next_matchday()
+        # advances correctly the moment a WC matchday's results are ingested,
+        # even though _games_for_event can't generate that matchday yet.
+        n = conn.execute(
+            "SELECT COUNT(*) c FROM games WHERE season=? AND cup_name='WC' "
+            "AND cup_bracket=? AND cup_round=?",
+            (season, stage, matchday),
         ).fetchone()["c"]
         return n > 0
 
@@ -3268,6 +3312,23 @@ def _games_for_event(season, event, week=None, day=None):
             raise ValueError(f"PA {bracket} round {cup_round}: a prior round isn't complete yet.")
         return [(name_to_dex[h], name_to_dex[a]) for h, a in games]
 
+    if kind == "WC":
+        conn.close()
+        # The calendar knows the World Championship's SHAPE (see
+        # WEEKLY_SCHEDULE), but two rules it needs to produce actual games
+        # have not been given and are not derivable from anything here:
+        #   * how the 48-team field is drawn into 6 groups of 8, and
+        #   * how the six third-placed teams contest four spots over the
+        #     Play-in's two matchdays.
+        # The bracket's own seeding (which of the 16 meets which) follows
+        # from those, so it is unsettled for the same reason. Raising is
+        # the same deliberate choice PA's mutual stage makes one branch up:
+        # a guess here would be indistinguishable from a rule once it was
+        # generating real matchups.
+        raise NotImplementedError(
+            f"World Championship {event[1]} {event[2]} isn't modeled yet: the group "
+            "draw and the Play-in format still need defining.")
+
     conn.close()
     raise ValueError(f"Unknown event kind: {kind}")
 
@@ -3439,6 +3500,19 @@ def export_matchday_batches(season, event=None):
         batch = build_batch(label, "Cup", agg, "PA", bracket, cup_round if cup_round is not None else "", games)
         conn.close()
         return info, [batch]
+
+    if kind == "WC":
+        conn.close()
+        # Raises today -- this exists so the batch export fails with the
+        # engine's own "not modeled yet" message instead of falling through
+        # to the R/L code below and dying on a tuple unpack.
+        _games_for_event(season, event, info.get("week"), info.get("day"))
+        # Unreachable while the above raises. If WC games ever become
+        # generable, this still needs a Game Type and a Format decided for
+        # it (Format is AGG for a best-of-three, Single Game for a group
+        # matchday) -- so fail loudly rather than guess.
+        raise NotImplementedError(
+            "World Championship batch export needs a Game Type and Format decided.")
 
     if kind == "RT":
         _, matchday = event
@@ -3668,6 +3742,11 @@ def rank_elo_history(season):
             return f"{kind}{event[1]}"
         if kind == "RT":
             return f"RT{event[1]}"
+        if kind == "WC":
+            # The World Championship is not an RDS/PA cup round, so it gets a
+            # real label rather than falling into the sequential 'S'/'SC'
+            # numbering those share.
+            return f"WC {event[1]} {event[2]}"
         return None  # RDS/PA cup events get sequential 'S'/'SC' labels below
 
     elo_checkpoints = []
