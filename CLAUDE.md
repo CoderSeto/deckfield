@@ -1631,33 +1631,100 @@ The general point: a `cup_bracket`/`cup_round` pair is only unique **within a
 cup**. Every other query in the engine already filtered on `cup_name`; these
 three lived in `_event_is_played` and were the exceptions.
 
-### What is NOT modeled: the draw and the Play-in
+### The group stage (2026-09-16, per explicit instruction)
 
-`_games_for_event` raises `NotImplementedError` for every WC slot, the same
-deliberate choice PA's mutual stage makes one branch up. Two rules the engine
-would need to produce actual games **have not been given and are not derivable
-from anything here**:
+**Seeding is the field re-ranked 1-48 by current OVR rank**, per explicit
+answer, NOT the order bids were awarded. `world_championship_field` lists its
+invites in the tournament's own award order (divisions, PA, RDS, the Regional
+Tournaments, at-large), which is a **category** order and says nothing about
+strength -- the Qualification tab's `#` column is that order. `wc_seeded_field`
+sorts by the tab's **Rank** column instead, so seed 1 is the best-ranked team
+in the field whichever bid it came in on (Casseroya Lake today, rank 1; seed 48
+is Cinnabar Island at rank 66).
 
-- **how the 48-team field is drawn into 6 groups of 8** (snake from the
-  qualification seeding? region-protected? something else), and
-- **how the six third-placed teams contest four spots over the Play-in's two
-  matchdays.** Six into four across two days has several plausible readings
-  and none follows from the rest of the rules.
+**The draw is a snake** (`wc_groups`): seeds 1-6 across A-F, seeds 7-12 back
+F-A, and so on for all eight passes. The reversal on odd passes IS the snake --
+a straight deal would put seeds 1-8 in one group. It comes out perfectly
+balanced: **every group's seed-sum is exactly 196**, and each group takes
+exactly one seed from each pass of six.
 
-The bracket's own seeding -- which of the 16 meets which in the R16 -- follows
-from those two, so it is unsettled for the same reason. A guess here would be
-indistinguishable from a rule the moment it started generating real matchups,
-which is exactly how the PA round-1 pairing bug got as far as real results
-being entered against it.
+```
+A: 1 12 13 24 25 36 37 48      D:  4  9 16 21 28 33 40 45
+B: 2 11 14 23 26 35 38 47      E:  5  8 17 20 29 32 41 44
+C: 3 10 15 22 27 34 39 46      F:  6  7 18 19 30 31 42 43
+```
 
-`export_matchday_batches` calls `_games_for_event` for a WC slot before doing
-anything else, so it fails with the engine's own "not modeled yet" message
-rather than `Unknown event kind`.
+**Single round robin over 7 matchdays**, by the circle method
+(`_round_robin_rounds`, generic over any even field): index 0 is fixed and the
+rest rotate. Verified rather than assumed -- all **168** intra-group pairs meet
+exactly once, every team plays exactly once per matchday, and there are zero
+cross-group games.
+
+**Higher (lower-numbered) seed always hosts**, so a group's own seed order
+fixes home/away entirely and the round robin only decides who meets whom.
+**Worth knowing what that means at the extremes**: a group's top seed hosts all
+7 of its games and its bottom seed hosts none (verified: 7/6/5/4/3/2/1/0 down
+group A). That falls straight out of the rule as given -- seed order within a
+group is total, so there is no matchday on which the better seed is ever away.
+It is not an artefact of the pairing, and reversing some legs would be
+inventing a rule.
+
+**The draw moves with every result**, because the field does -- the
+qualification field is a projection until the season ends, so regenerate it
+rather than treating a printed group table as settled (the same standing
+warning the allocation ranking carries).
+
+### Game type: every WC game is Finals (`F`)
+
+Per explicit instruction, **including the group stage** -- so every World
+Championship game carries `GAME_TYPE_POINT_MULTIPLIER["F"] = 12`, the largest
+there is. `deckfield.html`'s Game Type dropdown already had `Finals`, and
+`GAME_TYPE_LETTER` already mapped it to `F`, so nothing needed adding there.
+
+**That combination exposed a real bug in `deckfield.html`, fixed the same
+day.** `buildResultsRow` gated the three cup columns on
+`const isCup = (GAME_TYPE === 'Cup')`, so a game tagged `cup_name='WC'` but
+typed `Finals` exported **blank** `cup_name`/`cup_bracket`/`cup_round`. Those
+three are exactly what `_event_is_played` reads to tell a played WC matchday
+from an unplayed one, so `next_matchday()` would have **looped on WC Group MD1
+forever** -- the precise failure this file already warns about under "Adding
+new game results" ("would loop on the same event forever").
+
+Not hypothetical, and not reasoned from the code: demonstrated on a scratch
+database by ingesting the same played row both ways. Stripped of its tag, MD1
+reads unplayed; tagged, it reads played and MD2 stays pending.
+
+The fix is `hasCupTag` -- export the cup tag whenever it is **set**, rather
+than when the game type happens to be `Cup`. A non-cup game leaves all three
+blank exactly as before, so no existing export changes. The three field labels
+also stopped claiming "(Cup games only)".
+
+### What is still NOT modeled: the Play-in and the bracket
+
+`_games_for_event` generates `("WC","Group",1-7)` and raises
+`NotImplementedError` for every other WC stage. **The Play-in format is
+explicitly still undecided** -- how six third-placed teams contest four spots
+over two matchdays -- and the bracket depends on it twice over: which four
+teams come through, and a seeding rule for the resulting 16 that has not been
+given either. Raising is the same deliberate choice PA's mutual stage makes one
+branch up; a guess would be indistinguishable from a rule the moment it started
+generating real matchups, which is exactly how the PA round-1 pairing bug got
+as far as real results being entered against it.
+
+`export_matchday_batches` builds a real batch for a group matchday (Game Type
+**Finals**, Format **Single Game**, Cup Name **WC**, Cup Bracket **Group**, Cup
+Round the matchday) and inherits the raise for everything else. Its knockout
+branch already passes `stage != "Group"` as `agg`, so a best-of-three week will
+come out as AGG the moment the bracket resolves.
+
+**Not displayed on its own tab.** The group draw reaches the dashboard only
+through Next Matchday, when week 27 arrives. A WC tab (groups, tables,
+bracket) is the obvious next piece and was not part of this request.
 
 ### Everything else that had to learn about WC
 
 - **`_round_file_stems`** -- `"WC"` joined `("RDS", "PA")` in the
-  bracket+round branch, giving `2026-w29-thu-wc-play-in-1` and friends. All 95
+  bracket+round branch, giving `2026-w27-tue-wc-group-1` and friends. All 95
   stems are unique.
 - **`build_calendar`'s `label_for`** (`regenerate_dashboard.py`) -- Group and
   Play-in number their own **matchdays** (`WC Group MD4`); every knockout stage
@@ -1670,11 +1737,6 @@ rather than `Unknown event kind`.
   Bracket gained `Group`, `Play-in`, `R16`, `QF` (`SF` and `Final` were
   already there for RDS). Without these the games could not be recorded at
   all, the same gap the RDS SF/Final entry above had to fix.
-
-**Game type is left to whoever enters the CSV.** Nothing here picks one, and
-the played-check does not read it -- `P` and `F` carry different point
-multipliers (`GAME_TYPE_POINT_MULTIPLIER`), which is a ratings decision, not a
-calendar one.
 
 **Verified**: all 42 `results/` CSVs still round-trip byte-identically
 (`export-results` reports "already matches" for every one); regenerating
@@ -3451,10 +3513,11 @@ page errors on either path.
 ## Known open items
 
 - Dashboard regeneration isn't in the CLI yet — still manual script runs.
-- **The World Championship's group draw and Play-in format are undefined**
-  (see that section). The calendar carries all 21 of its slots and the
-  played-check works, but `_games_for_event` raises for every one of them, so
-  no WC matchday can be exported until those two rules are given.
+- **The World Championship's Play-in format is undefined** (see that
+  section). The group stage generates and exports; the Play-in, and therefore
+  the R16/QF/SF/Final bracket that depends on it, still raise. A WC tab on the
+  dashboard does not exist yet either -- the draw surfaces only through Next
+  Matchday.
 - Round numbering: the *historical* R1-R5/L1-L2 mapping is confirmed
   against real Archive data; everything from PA Draw round 1 onward uses
   `abs_round_for_event()`'s sequential assignment, which is only "confirmed

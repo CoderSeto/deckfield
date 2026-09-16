@@ -3313,21 +3313,24 @@ def _games_for_event(season, event, week=None, day=None):
         return [(name_to_dex[h], name_to_dex[a]) for h, a in games]
 
     if kind == "WC":
+        _, stage, matchday = event
         conn.close()
-        # The calendar knows the World Championship's SHAPE (see
-        # WEEKLY_SCHEDULE), but two rules it needs to produce actual games
-        # have not been given and are not derivable from anything here:
-        #   * how the 48-team field is drawn into 6 groups of 8, and
-        #   * how the six third-placed teams contest four spots over the
-        #     Play-in's two matchdays.
-        # The bracket's own seeding (which of the 16 meets which) follows
-        # from those, so it is unsettled for the same reason. Raising is
-        # the same deliberate choice PA's mutual stage makes one branch up:
-        # a guess here would be indistinguishable from a rule once it was
+        if stage == "Group":
+            games = wc_group_games(season, matchday)
+            return [(name_to_dex[h], name_to_dex[a]) for h, a in games]
+        # The group stage is fully determined (snake draw, higher seed
+        # hosts), but the Play-in is not: how six third-placed teams
+        # contest four spots over its two matchdays has not been given.
+        # The bracket then depends on which four come through it AND on a
+        # seeding rule for the 16 that has not been given either, so R16
+        # onward is unsettled for the same reason. Raising is the same
+        # deliberate choice PA's mutual stage makes one branch up: a guess
+        # here would be indistinguishable from a rule once it was
         # generating real matchups.
         raise NotImplementedError(
-            f"World Championship {event[1]} {event[2]} isn't modeled yet: the group "
-            "draw and the Play-in format still need defining.")
+            f"World Championship {stage} {matchday} isn't modeled yet: the Play-in "
+            "format (six third-placed teams for four spots) still needs defining, "
+            "and the bracket's seeding follows from it.")
 
     conn.close()
     raise ValueError(f"Unknown event kind: {kind}")
@@ -3502,17 +3505,19 @@ def export_matchday_batches(season, event=None):
         return info, [batch]
 
     if kind == "WC":
+        _, stage, matchday = event
+        # Raises for every stage past the group -- see _games_for_event.
+        games = _games_for_event(season, event, info.get("week"), info.get("day"))
+        # Game Type is Finals for EVERY World Championship game, per explicit
+        # instruction -- so the group stage carries the same x12 multiplier as
+        # the final. Format is a single game in the group stage; every
+        # knockout stage is a best-of-three, which the AGG format covers.
+        label = (f"WC Group MD{matchday}" if stage == "Group"
+                 else f"WC {stage} leg {matchday}")
+        batch = build_batch(label, "Finals", stage != "Group",
+                            "WC", stage, matchday, games)
         conn.close()
-        # Raises today -- this exists so the batch export fails with the
-        # engine's own "not modeled yet" message instead of falling through
-        # to the R/L code below and dying on a tuple unpack.
-        _games_for_event(season, event, info.get("week"), info.get("day"))
-        # Unreachable while the above raises. If WC games ever become
-        # generable, this still needs a Game Type and a Format decided for
-        # it (Format is AGG for a best-of-three, Single Game for a group
-        # matchday) -- so fail loudly rather than guess.
-        raise NotImplementedError(
-            "World Championship batch export needs a Game Type and Format decided.")
+        return info, [batch]
 
     if kind == "RT":
         _, matchday = event
@@ -4620,6 +4625,99 @@ def _wc_cup_projection(conn, season, rank_of):
         "rds_losing_sf": _dedupe([n for _, n in sorted(rds_losing_sf)]),
         "rds_by_cup": rds_by_cup,
     }
+
+
+# --------------------------------------------- World Championship draw ----
+# The 48-team field plays 6 groups of 8 (a single round robin over 7
+# matchdays, higher seed hosting), the top two of each group going through
+# to a 16-team bracket alongside four teams out of a play-in among the six
+# third-placed sides.  See the World Championship section of CLAUDE.md.
+
+WC_GROUP_COUNT = 6
+WC_GROUP_SIZE = 8
+WC_GROUP_LABELS = "ABCDEF"
+WC_GROUP_MATCHDAYS = 7
+# Every World Championship game is Finals (`F`), per explicit instruction --
+# the ×12 point multiplier, the largest there is.
+WC_GAME_TYPE = "F"
+
+
+def wc_seeded_field(season, round_num=None):
+    """[(seed, name, rank)] -- the World Championship field seeded 1-48.
+
+    Seeding is the field re-ranked by **current OVR rank**, per explicit
+    instruction, NOT the order bids were awarded: `world_championship_field`
+    lists its invites in the tournament's own award order (divisions, PA,
+    RDS, the Regional Tournaments, at-large), which is a category order and
+    says nothing about strength.  Seed 1 is therefore the best-ranked team
+    in the field, whichever bid it came in on.
+
+    This moves with every result, exactly as the field itself does -- the
+    field is a projection until the season ends, so the draw below is too."""
+    field = world_championship_field(season, round_num)
+    ranked = sorted(field["invites"], key=lambda r: r["rank"])
+    return [(i + 1, r["name"], r["rank"]) for i, r in enumerate(ranked)]
+
+
+def wc_groups(season, round_num=None):
+    """{group_label: [(seed, name), ...]} -- the field snaked into 6 groups
+    of 8, each group's list in its own seed order (best first).
+
+    Snake, per explicit instruction: seeds 1-6 go across A-F, seeds 7-12
+    come back F-A, and so on for all eight passes.  That is what keeps the
+    groups balanced -- a straight deal would put seeds 1-8 together."""
+    seeded = wc_seeded_field(season, round_num)
+    groups = {label: [] for label in WC_GROUP_LABELS}
+    for seed, name, _rank in seeded:
+        row, col = divmod(seed - 1, WC_GROUP_COUNT)
+        # Odd passes run backwards -- that reversal IS the snake.
+        if row % 2:
+            col = WC_GROUP_COUNT - 1 - col
+        groups[WC_GROUP_LABELS[col]].append((seed, name))
+    return groups
+
+
+def _round_robin_rounds(n):
+    """[[(i, j), ...], ...] -- a single round robin over n (even) indices as
+    n-1 rounds of n/2 pairs, by the circle method: index 0 is fixed and the
+    rest rotate.  Every pair meets exactly once and every index appears
+    exactly once per round."""
+    if n % 2:
+        raise ValueError(f"round robin needs an even field, got {n}")
+    rotating = list(range(1, n))
+    rounds = []
+    for _ in range(n - 1):
+        arrangement = [0] + rotating
+        rounds.append([(arrangement[i], arrangement[n - 1 - i]) for i in range(n // 2)])
+        rotating = rotating[1:] + rotating[:1]
+    return rounds
+
+
+def wc_group_games(season, matchday, round_num=None):
+    """[(home_name, away_name)] -- one World Championship group matchday,
+    all six groups, 24 games.
+
+    **The higher (lower-numbered) seed always hosts**, per explicit
+    instruction, so a group's own seed order fixes home/away entirely and
+    the round robin below only decides who meets whom.  Note what that
+    means at the extremes: a group's top seed hosts all seven of its games
+    and its bottom seed hosts none.  That is the rule as given, not an
+    artefact of the pairing."""
+    if not 1 <= matchday <= WC_GROUP_MATCHDAYS:
+        raise ValueError(
+            f"World Championship group matchday must be 1-{WC_GROUP_MATCHDAYS}, got {matchday}")
+    groups = wc_groups(season, round_num)
+    schedule = _round_robin_rounds(WC_GROUP_SIZE)[matchday - 1]
+    games = []
+    for label in WC_GROUP_LABELS:
+        members = groups[label]
+        for i, j in schedule:
+            (seed_i, name_i), (seed_j, name_j) = members[i], members[j]
+            if seed_i < seed_j:
+                games.append((name_i, name_j))
+            else:
+                games.append((name_j, name_i))
+    return games
 
 
 def world_championship_field(season, round_num=None):
