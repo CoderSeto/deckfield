@@ -2954,6 +2954,50 @@ unscored (still upcoming); the Conflict Resolution Log shows all 24
 entries (10 from round 1, 14 from round 2 — matching the count already
 confirmed in the 2026-08-07 conflict-log entry above).
 
+**PA round 8 never rendered, found and fixed 2026-09-17 (per explicit
+report: "Round 8 did not populate in the PA Cup at the conclusion of round
+7").** The engine was right and had been all along -- `PA_ROUND_PAIRINGS`
+carried a correct round 8 (2 games per bracket, the four round-7 winners),
+and `build_pa_cup()` loops `range(2, PA_BRACKET_LAST_ROUND + 1)`, so it
+picked up the new round automatically. **`renderPaCup()` was the only thing
+still counting to 7**: `for (let rnd = 2; rnd <= 7; rnd++)`.
+
+That literal dates from when the bracket really did end at round 7. Dropping
+the mutual quarterfinal (2026-09-12) moved `PA_BRACKET_LAST_ROUND` 7 -> 8 and
+updated every engine-side bound, but a hardcoded number in the renderer is
+invisible to that kind of change -- it does not error, it just silently stops
+drawing. The bug therefore lay dormant for five days and only surfaced the
+moment round 7 was actually played and a round 8 existed to draw.
+
+**The fix takes the bound from the data instead of a literal**, via a shared
+`maxRoundKey(obj)`. Both render loops already `break` on a missing or empty
+round, so the ceiling was never doing real work -- it could only ever cut the
+loop short. **`renderRdsCup()` got the same treatment**: its `rnd <= 5` is
+correct today (`_rds_cup_round_pairings` never resolves round 6) but is the
+identical latent trap, and this exact bug has now been paid for once.
+
+`maxRoundKey` is declared below `renderRdsCup` and called from it, which
+works on hoisting -- a `function` declaration, deliberately, not a `const`
+arrow.
+
+**Verified as additive, not just plausible**, by rendering `origin/main`'s
+dashboard and the patched one and diffing every row of both cup tabs: all
+three RDS cups come out **byte-identical**, and PA gains exactly three rows
+per bracket -- the `Round 8` header and its two games -- with every
+pre-existing row still present. PA now reads 32/32/32/32/16/8/4/2, round 8
+drawn unscored (it is abs_round 57/58 and the season is at 55), and round 8's
+field is exactly the four round-7 winners in each bracket. All 11 tabs render
+with zero `pageerror` events.
+
+Renderer-only, so `regenerate_dashboard.py` was deliberately **not** re-run --
+the constants on main were already correct; only the drawing was wrong.
+
+**The general lesson, and it is the same one the `STATIC_CONSTS` entry
+teaches one layer up:** a number written into code is a claim about the data
+that nothing re-checks. When a structural constant moves, `grep` for the old
+value as a literal -- `PA_BRACKET_LAST_ROUND` was updated everywhere it was
+*named* and missed the one place it was *spelled out*.
+
 ## deckfield.html EX Bonus panel
 
 **The headline stated the differential and now states both banked totals,
