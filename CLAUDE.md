@@ -2856,6 +2856,61 @@ the seed-4/seed-8 region dividers are applied per-`<td>` (see the divider
 entry above), so a new column that omitted it would have left a visible
 gap in the line.
 
+**Standings boxes were CLIPPING their last column, fixed 2026-09-17 (per
+explicit report, second time: "this misalignment of the Division 4 table is
+still occurring", with a screenshot).** A first attempt (`613fc24`, 2026-09-16)
+put `min-width:42px` on the P/R column to stop it drifting between boxes. It
+could not work: P/R's *natural* width is 43.7px (`RRR`), 51.2px (`PPPP`) or
+53px (`RRRR`), so a 42px **minimum never binds on any box** -- it was below
+every real width it was meant to equalise.
+
+**Two separate faults, and the reported one was never the P/R column.**
+Measured rather than eyeballed:
+
+- **The table overflows its box and is silently CLIPPED.** `table{width:100%}`
+  with auto layout still honours min-content, and `.mini-standings` is
+  `overflow:hidden` -- so a table wider than its grid track loses its
+  right-hand columns with no scrollbar to say so. At a 372px track the
+  division tables wanted **437px**: Division 4 was **65px** over and lost its
+  whole `DSCR (LG)` column. **All 10 boxes clipped, in both modes, at every
+  viewport width tested** -- this was never Division-4-only, that box was just
+  the worst.
+- **No two boxes shared a column layout** (10 distinct layouts across 10
+  boxes), because each box is its own `<table>` sizing off its own content.
+
+**The fat is in the HEADERS, not the data** -- `DSCR (Lg)` held 73px for a
+2-3 digit number, `League` 61px for `12-3`. Worth knowing before anyone tries
+to save width by trimming the numbers.
+
+The fix is three rules, and the middle one is the subtle part:
+
+- `#standings-grid` takes `minmax(440px, 1fr)` instead of the shared
+  `minmax(300px)`. Standings carries two more columns than the other
+  `.standings-grid` users. 440px is the **smallest** minimum that clips
+  nothing at 1920/1600/1500/1400/1240/1000/800/600.
+- Team gets `width:160px` as a **hint with no `min-width`**, so it holds one
+  width at normal viewports (which is what aligns the boxes) and can still
+  give the space back when a track is tight, instead of clipping. **Fixing it
+  with `min-width` reintroduced clipping** at 1500px and 1000px -- the table
+  loses all elasticity. And `max-width:0`, the usual "this column truncates"
+  trick, is wrong here: it collapses the column and ellipsised **all 160
+  names** even at a 501px track.
+- P/R moves 42px -> 56px, above the widest natural width, so it finally does
+  the equalising the first attempt intended.
+
+**Scoped to `#standings-grid`**, because `.mini-standings` is reused by the
+Regional Playoffs, Qualification and World Championship panels -- the old
+unscoped rule leaked into all of them.
+
+Verified: **0 clipped boxes and 0 ellipsised names** at all eight widths in
+both modes; all 10 boxes reduced to one shared column layout (two, differing
+by 0.1px of rounding); and a per-panel geometry diff against `origin/main`
+shows **only `#panel-standings` moved** -- `rt`, `qual` and `wc` are
+identical, which is what proves the scoping holds. Zero `pageerror` events.
+The cost is **3 boxes per row instead of 4** at 1920px. All widths here come
+from the sandbox's fallback font, which is wider than Barlow Condensed, so
+they are pessimistic.
+
 **`CUP_REAL_RESULTS`/`RDS_ROUND2`/`RDS_ROUND3` (RDS Cup tab) were the same
 kind of silent gap as `PA_CUP_DATA`/`SCHEDULE_DATA`, found and fixed
 2026-08-08.** Reported directly: RDS Cup round 3 (Draw = abs_round 15,
