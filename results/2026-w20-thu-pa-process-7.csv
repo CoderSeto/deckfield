@@ -1,0 +1,5 @@
+round,game_type,team_a,team_b,result_a,pf_a,pa_a,raw_goal_a,raw_goal_b,spread_a,interest,dscr_a,dscr_b,elo_a_after,elo_b_after,home,ex_a,ex_b,cup_name,cup_bracket,cup_round
+55,S,156,100,3,46,39,5.50,3.50,9.2397,82.28,37.5,32.5,2184,2000,A,3,0,PA,Process,7
+55,S,57,33,0,31,58,3.22,5.00,-7.0611,90.66,18.4,107.8,2021,2513,A,0,3,PA,Process,7
+55,S,37,40,0,15,87,5.00,5.14,-6.5142,93.99,2.2,310.7,1975,2353,A,0,6,PA,Process,7
+55,S,73,123,0,28,41,4.60,4.11,3.1102,100.93,11.8,84.3,2127,2269,A,0,3,PA,Process,7
