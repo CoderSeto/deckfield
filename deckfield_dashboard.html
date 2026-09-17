@@ -1101,13 +1101,13 @@ function renderRdsCup() {
       { label: 'Round 1', rows: round1Entries.map(e => rdsRound1RowHtml(e, round1WinnerSet, round1ScoreByTeam)).join('') },
     ];
 
-    // Rounds 2-5: bracketPairings[rnd] only exists once the round before it
+    // Rounds 2-N: bracketPairings[rnd] only exists once the round before it
     // is complete, so this naturally covers every round already played
     // (rendered with real results/coloring) plus exactly one round ahead
     // (rendered as a structural preview, no scores yet) -- stop after the
     // first round that hasn't been played, since only one preview round is
     // ever shown at a time.
-    for (let rnd = 2; rnd <= 5; rnd++) {
+    for (let rnd = 2; rnd <= maxRoundKey(bracketPairings); rnd++) {
       const entries = bracketPairings[String(rnd)];
       if (!entries) break;
       const roundResults = bracketResults[String(rnd)] || [];
@@ -1175,6 +1175,17 @@ function pacupPreviewRowHtml(e) {
     </tr>
   `;
 }
+// Highest round number present in a {round: ...} map, so a render loop's
+// upper bound comes from the data it is drawing rather than a literal. A
+// hardcoded bound silently stops rendering the moment the bracket grows:
+// PA's said 7, and when the mutual quarterfinal was dropped and round 8
+// became a real bracket round, the engine emitted round 8 and this file
+// never drew it. Both loops already break on a missing round, so this only
+// ever removes the ceiling.
+function maxRoundKey(obj) {
+  const ks = Object.keys(obj || {}).map(Number).filter(n => !isNaN(n));
+  return ks.length ? Math.max(...ks) : 1;
+}
 function renderPaCup() {
   ['Draw', 'Process'].forEach(bracket => {
     const tbody = document.querySelector(bracket === 'Draw' ? '#pacup-draw-table tbody' : '#pacup-process-table tbody');
@@ -1191,7 +1202,8 @@ function renderPaCup() {
       { label: 'Round 1', rows: round1Entries.map(e => pacupRowHtml(e, round1WinnerSet, round1ScoreByTeam)).join('') },
     ];
 
-    // Rounds 2-7: PA_ROUND_PAIRINGS[rnd] only exists once both brackets
+    // Rounds 2-N (N = the last bracket round the engine emitted):
+    // PA_ROUND_PAIRINGS[rnd] only exists once both brackets
     // finish the round before it, so this covers every round already
     // played by EITHER bracket plus exactly one round ahead -- whether a
     // given round counts as "played" for THIS bracket is decided
@@ -1199,7 +1211,7 @@ function renderPaCup() {
     // played in lockstep (Draw always plays before Process each PA
     // matchday). Stop after the first round this bracket hasn't played
     // yet, since only one preview round is ever shown at a time.
-    for (let rnd = 2; rnd <= 7; rnd++) {
+    for (let rnd = 2; rnd <= maxRoundKey(PA_ROUND_PAIRINGS); rnd++) {
       const roundPairing = PA_ROUND_PAIRINGS[String(rnd)];
       if (!roundPairing) break;
       const entries = roundPairing[bracket];
