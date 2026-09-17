@@ -1,0 +1,5 @@
+round,game_type,team_a,team_b,result_a,pf_a,pa_a,raw_goal_a,raw_goal_b,spread_a,interest,dscr_a,dscr_b,elo_a_after,elo_b_after,home,ex_a,ex_b,cup_name,cup_bracket,cup_round
+54,S,132,100,3,53,29,4.33,3.13,7.8642,82.20,79.3,7.3,2295,2007,A,2,0,PA,Draw,7
+54,S,151,127,3,42,35,4.14,4.13,8.7175,91.37,33.1,56.2,2309,2044,A,1,0,PA,Draw,7
+54,S,40,83,3,64,26,5.00,4.00,12.8630,90.10,115.9,13.8,2334,2020,A,4,0,PA,Draw,7
+54,S,28,156,0,14,31,3.50,3.71,-2.8151,94.92,12.7,101.2,2050,2177,A,0,1,PA,Draw,7
