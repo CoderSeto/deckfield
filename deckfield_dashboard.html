@@ -170,8 +170,25 @@
   .cal-week-special { color: var(--accent); font-style: italic; }
   .promo-marker { color: var(--grade-good); font-weight: 700; }
   .releg-marker { color: var(--grade-bad); font-weight: 700; }
-  .mini-standings th.num:first-child,
-  .mini-standings td.num:first-child { width: 42px; min-width: 42px; }
+  /* Standings column widths. Each division/region box is its own <table> with
+     auto layout, so without these every box sizes its columns off its OWN
+     content and no two boxes line up -- and the table can grow past the box,
+     which .mini-standings{overflow:hidden} then CLIPS silently rather than
+     scrolling. Both were happening: all 10 boxes clipped, Division 4 worst at
+     65px, losing its whole DSCR column.
+     P/R is sized for the widest marker that exists (PPPP/RRRR) so it stops
+     drifting between boxes; Team takes a width HINT with no min-width, so it
+     holds one width at normal viewports (aligning every box) and can still
+     give the space back when the track is tight instead of clipping.
+     Scoped to #standings-grid: .mini-standings is reused by the Regional
+     Playoffs, Qualification and World Championship panels. */
+  #standings-grid .mini-standings th.num:first-child,
+  #standings-grid .mini-standings td.num:first-child { width: 56px; min-width: 56px; }
+  #standings-grid .mini-standings th.left,
+  #standings-grid .mini-standings td.team-name {
+    width: 160px; max-width: 160px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
   .rds-bracket-title {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
@@ -268,6 +285,11 @@
     gap: 14px;
     align-items: start;
   }
+  /* The Standings boxes carry two more columns than the other .standings-grid
+     users and need a wider track: at minmax(300px) the division tables wanted
+     437px in a 372px track. 440px is the smallest minimum that clips nothing
+     at 1920/1600/1500/1400/1240/1000/800/600. */
+  #standings-grid { grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); }
   .mini-standings {
     background: var(--surface);
     border: 1px solid var(--border);
