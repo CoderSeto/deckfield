@@ -1697,17 +1697,66 @@ def rds_mutual_games(season, bracket, leg):
 
 
 def pa_mutual_games(season, bracket, leg):
-    """[(home, away)] for one leg of PA's mutual semifinal, or None if
-    either bracket hasn't finished round 8. The same two-legged tie as RDS's
-    (worse seed hosts leg 1, better seed leg 2); only the seeding differs
-    (see _mutual_seed_lookup). The final is a best-of-three over week 23,
-    whose hosting has not been given, so it is deliberately not generated."""
-    if bracket != "SF":
-        raise NotImplementedError("PA's best-of-three final isn't modeled yet.")
-    pairs = rds_mutual_semifinal_pairs(season, "PA")
-    if pairs is None:
+    """[(home, away)] for one leg of PA's mutual semifinal ('SF') or one game
+    of its final ('Final'), or None if the stage feeding it isn't decided.
+
+    The semifinal is the same two-legged tie as RDS's (worse seed hosts leg
+    1, better seed leg 2); only the seeding differs (see _mutual_seed_lookup).
+
+    The final is a **best of three** over week 23, hosted per explicit
+    instruction exactly as the World Championship's knockout ties are
+    (`_wc_leg_hosts`): the better seed hosts game 1, the worse seed game 2,
+    and game 3 goes to whoever leads on aggregate after two. A final taken
+    2-0 has no game 3, so leg 3 is then an EMPTY list rather than None --
+    `_event_is_played` treats that as a complete matchday."""
+    if bracket == "SF":
+        pairs = rds_mutual_semifinal_pairs(season, "PA")
+        if pairs is None:
+            return None
+        return [_rds_leg_orientation(h, a, leg) for h, a in pairs]
+    if bracket != "Final" or leg not in (1, 2, 3):
+        raise ValueError(f"PA mutual {bracket} game {leg}: not a PA end-stage game.")
+    pair = rds_mutual_final_pair(season, "PA")      # (better, worse)
+    if pair is None:
         return None
-    return [_rds_leg_orientation(h, a, leg) for h, a in pairs]
+    better, worse = pair
+    if leg < 3:
+        return [_wc_leg_hosts(better, worse)[leg - 1]]
+    conn = get_connection()
+    try:
+        w1 = _real_bracket_winner(conn, "PA", "Final", 1, better, worse)
+        w2 = _real_bracket_winner(conn, "PA", "Final", 2, better, worse)
+        if w1 is None or w2 is None:
+            return None
+        if w1 == w2:
+            return []                               # won 2-0, no decider
+        leader = _wc_aggregate_leader(conn, season, "Final", better, worse, cup="PA")
+        return [_wc_leg_hosts(better, worse, leader)[2]]
+    finally:
+        conn.close()
+
+
+def pa_final_series(season):
+    """The PA final as the tab draws it: each game's hosts and result, and the
+    series winner once decided. None until the semifinal settles the pair."""
+    pair = rds_mutual_final_pair(season, "PA")
+    if pair is None:
+        return None
+    better, worse = pair
+    conn = get_connection()
+    try:
+        w1 = _real_bracket_winner(conn, "PA", "Final", 1, better, worse)
+        w2 = _real_bracket_winner(conn, "PA", "Final", 2, better, worse)
+        leader = (_wc_aggregate_leader(conn, season, "Final", better, worse, cup="PA")
+                  if w1 and w2 and w1 != w2 else None)
+        legs = []
+        for i, (h, a) in enumerate(_wc_leg_hosts(better, worse, leader), start=1):
+            legs.append({"leg": i, "home": h, "away": a,
+                         "result": _wc_game_result(conn, season, "Final", i, h, a, cup="PA")})
+        return {"legs": legs, "swept": bool(w1 and w2 and w1 == w2),
+                "winner": _wc_tie_winner(conn, season, "Final", better, worse, cup="PA")}
+    finally:
+        conn.close()
 
 
 # ------------------------------------------- Tournament bonus points (TOT) --
@@ -1829,7 +1878,13 @@ def _cup_stages(conn, season):
         if finalists is not None and len(finalists) == 2:
             stage["finalists"] = finalists
             stage["finalists_round"] = last_round("SF") or stage["field_round"]
-            champion = _mutual_stage_survivors(conn, season, cup, finalists, "Final", seed_lookup)
+            if kind == "PA":
+                # A best of three decided on GAMES won, not a two-leg aggregate.
+                better, worse = sorted(finalists, key=lambda t: seed_lookup.get(t, 999))
+                winner = _wc_tie_winner(conn, season, "Final", better, worse, cup="PA")
+                champion = [winner] if winner else None
+            else:
+                champion = _mutual_stage_survivors(conn, season, cup, finalists, "Final", seed_lookup)
             if champion is not None and len(champion) == 1:
                 stage["champion"] = champion[0]
                 stage["champion_round"] = last_round("Final")
@@ -1996,7 +2051,10 @@ def merge_accolades(stored, earned, season, region_display):
 def pa_mutual_stage_data(season):
     """PA's entry in the same shape as rds_mutual_stage_data -- {"PA": {...}}
     once both brackets finish round 8, else {}."""
-    return rds_mutual_stage_data(season, cups=("PA",))
+    data = rds_mutual_stage_data(season, cups=("PA",))
+    if "PA" in data:
+        data["PA"]["final_series"] = pa_final_series(season)
+    return data
 
 
 def rds_mutual_stage_data(season, cups=("Ribbon", "Dream", "Star")):
@@ -2524,6 +2582,16 @@ def _event_is_played(conn, season, slot, week=None, day=None):
                 (season, leg),
             ).fetchone()["c"]
             return n > 0
+        if bracket == "Final":
+            n = conn.execute(
+                "SELECT COUNT(*) c FROM games WHERE season=? AND cup_name='PA' "
+                "AND cup_bracket='Final' AND cup_round=?",
+                (season, cup_round),
+            ).fetchone()["c"]
+            if n > 0:
+                return True
+            # A final taken 2-0 owes no game 3 -- same as a WC bracket leg 3.
+            return cup_round == 3 and pa_mutual_games(season, "Final", 3) == []
         n = conn.execute(
             "SELECT COUNT(*) c FROM games WHERE cup_name='PA' AND cup_bracket=? AND cup_round=?",
             (bracket, cup_round),
@@ -3351,17 +3419,14 @@ def _games_for_event(season, event, week=None, day=None):
 
     if kind == "PA":
         _, bracket, cup_round = event
-        if bracket == "SF":
+        if bracket in ("SF", "Final"):
             conn.close()
-            leg = mutual_leg_number(event, week, day)
+            # SF: two legs sharing one slot tuple; Final: game number in the tuple.
+            leg = mutual_leg_number(event, week, day) if bracket == "SF" else cup_round
             games = pa_mutual_games(season, bracket, leg)
             if games is None:
-                raise ValueError(
-                    f"PA mutual SF leg {leg}: both brackets must finish round {PA_BRACKET_LAST_ROUND} first.")
+                raise ValueError(f"PA mutual {bracket} game {leg}: the stage that feeds it isn't complete yet.")
             return [(name_to_dex[h], name_to_dex[a]) for h, a in games]
-        if bracket == "Final":
-            conn.close()
-            raise NotImplementedError("PA's best-of-three final isn't modeled yet.")
         games = _pa_round_games(conn, bracket, cup_round)
         conn.close()
         if games is None:
@@ -3550,7 +3615,9 @@ def export_matchday_batches(season, event=None):
         # cup_round carries the LEG for the two-legged semifinal, exactly as
         # for RDS's, so the results CSV files leg 1 and leg 2 separately.
         leg = mutual_leg_number(event, info.get("week"), info.get("day")) if cup_round is None else None
-        label = f"PA {bracket} R{cup_round}" if cup_round is not None else f"PA {bracket} leg {leg}"
+        label = (f"PA {bracket} leg {leg}" if cup_round is None
+                 else f"PA Final game {cup_round}" if bracket == "Final"
+                 else f"PA {bracket} R{cup_round}")
         games = _games_for_event(season, event, info.get("week"), info.get("day"))
         batch = build_batch(label, "Cup", agg, "PA", bracket, cup_round if cup_round is not None else leg, games)
         conn.close()
@@ -5027,7 +5094,7 @@ def _wc_leg_hosts(better, worse, aggregate_leader=None):
     return legs
 
 
-def _wc_two_leg_totals(conn, season, stage, team_a, team_b):
+def _wc_two_leg_totals(conn, season, stage, team_a, team_b, cup="WC"):
     """(a_total, b_total) across legs 1 and 2 of a bracket tie, or None if
     either leg is missing. Scores are resolved per team by name, not by
     home/away: `games` stores pf/pa from team_a's side only, so reading the
@@ -5038,9 +5105,9 @@ def _wc_two_leg_totals(conn, season, stage, team_a, team_b):
         r = conn.execute("""
             SELECT g.pf_a, g.pa_a, g.team_a FROM games g
             JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
-            WHERE g.season=? AND g.cup_name='WC' AND g.cup_bracket=? AND g.cup_round=?
+            WHERE g.season=? AND g.cup_name=? AND g.cup_bracket=? AND g.cup_round=?
             AND ((ta.name=? AND tb.name=?) OR (ta.name=? AND tb.name=?))
-        """, (season, stage, leg, team_a, team_b, team_b, team_a)).fetchone()
+        """, (season, cup, stage, leg, team_a, team_b, team_b, team_a)).fetchone()
         if r is None:
             return None
         totals[0] += r["pf_a"] if r["team_a"] == a_id else r["pa_a"]
@@ -5048,31 +5115,32 @@ def _wc_two_leg_totals(conn, season, stage, team_a, team_b):
     return tuple(totals)
 
 
-def _wc_aggregate_leader(conn, season, stage, better, worse):
+def _wc_aggregate_leader(conn, season, stage, better, worse, cup="WC"):
     """Who leads on aggregate after two legs, or None if both legs are not
     in. An exact aggregate tie goes to the **better seed** -- the one
     reading chosen rather than given, matching `_rds_mutual_tie_winner`,
     which resolves the same standoff the same way rather than falling back
     on whichever team happens to be stored first."""
-    totals = _wc_two_leg_totals(conn, season, stage, better, worse)
+    totals = _wc_two_leg_totals(conn, season, stage, better, worse, cup)
     if totals is None:
         return None
     return better if totals[0] >= totals[1] else worse
 
 
-def _wc_tie_winner(conn, season, stage, better, worse):
+def _wc_tie_winner(conn, season, stage, better, worse, cup="WC"):
     """Winner of a best-of-three bracket tie, or None if undecided.
 
     The tie is decided by GAMES won, not aggregate: taking both of the
     first two legs ends it there and leg 3 is never played. Aggregate only
-    ever decides who HOSTS leg 3 (see `_wc_leg_hosts`)."""
-    w1 = _real_bracket_winner(conn, "WC", stage, 1, better, worse)
-    w2 = _real_bracket_winner(conn, "WC", stage, 2, better, worse)
+    ever decides who HOSTS leg 3 (see `_wc_leg_hosts`). `cup` lets PA's
+    best-of-three final, which follows the same rule, share this."""
+    w1 = _real_bracket_winner(conn, cup, stage, 1, better, worse)
+    w2 = _real_bracket_winner(conn, cup, stage, 2, better, worse)
     if w1 is None or w2 is None:
         return None
     if w1 == w2:
         return w1
-    return _real_bracket_winner(conn, "WC", stage, 3, better, worse)
+    return _real_bracket_winner(conn, cup, stage, 3, better, worse)
 
 
 def _wc_bracket_ties(season, stage, round_num=None):
@@ -5174,7 +5242,7 @@ def wc_champion(season, round_num=None):
     return winner
 
 
-def _wc_game_result(conn, season, stage, rnd, home, away):
+def _wc_game_result(conn, season, stage, rnd, home, away, cup="WC"):
     """{"home_score", "away_score", "winner"} for one real WC game, or None.
 
     Scores are resolved by NAME, not by printing the stored pf/pa as the
@@ -5184,9 +5252,9 @@ def _wc_game_result(conn, season, stage, rnd, home, away):
     r = conn.execute("""
         SELECT g.pf_a, g.pa_a, g.result_a, ta.name a_name, tb.name b_name FROM games g
         JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
-        WHERE g.season=? AND g.cup_name='WC' AND g.cup_bracket=? AND g.cup_round=?
+        WHERE g.season=? AND g.cup_name=? AND g.cup_bracket=? AND g.cup_round=?
         AND ((ta.name=? AND tb.name=?) OR (ta.name=? AND tb.name=?))
-    """, (season, stage, rnd, home, away, away, home)).fetchone()
+    """, (season, cup, stage, rnd, home, away, away, home)).fetchone()
     if r is None:
         return None
     a_won = r["result_a"] in (2, 3)

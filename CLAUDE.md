@@ -1076,6 +1076,35 @@ all three cups; and a scratch-database walk (R14, SF leg 1, SF leg 2) took
 `next_matchday()` Tue -> Thu -> R15, resolved the final pair, and paid the PA
 bonus tiers at the right rounds (finalists 45 only from round 61).
 
+**PA final, wired 2026-09-23 (per explicit instruction): "The higher seed
+hosts game 1, the lower seed hosts game two, and game three is hosted by the
+team who is leading on aggregate score after two games."** That is exactly the
+World Championship knockout rule, so it reuses that code rather than copying
+it: `_wc_leg_hosts`, `_wc_aggregate_leader`, `_wc_tie_winner`,
+`_wc_two_leg_totals` and `_wc_game_result` gained a `cup="WC"` parameter (WC
+callers unchanged), and `pa_mutual_games(season, "Final", n)` builds on them.
+Same consequences as the WC: the series is decided on **games won**, aggregate
+only picks game 3's host (an exact tie goes to the better seed), and a 2-0
+series owes no game 3 -- leg 3 is then an empty list, and `_event_is_played`
+treats it as complete so `next_matchday()` moves on to RT1 instead of
+stalling. Stored as `cup_bracket='Final'`, `cup_round` = game number (1-3),
+abs_rounds 63/64/65.
+
+**It also fixed a latent champion bug.** `_cup_stages` decided every cup's
+champion with `_mutual_stage_survivors`, i.e. a two-leg AGGREGATE -- right for
+RDS, wrong for PA's best of three (a team winning games 1 and 3 by a point
+each could lose the "title" on a blowout in game 2). PA's champion now comes
+from `_wc_tie_winner(..., cup="PA")`, so the +15 winner bonus and the
+accolade follow the series.
+
+The PA tab draws the final as G1/G2/G3 rows plus a WON line
+(`bo3SeriesRows`), with `pa_final_series()` supplying every host. Verified on
+scratch databases through R14, both SF legs, R15 and the final, both ways: a
+2-0 sweep (no game 3, next matchday RT1) and a 1-1 series where the worse seed
+led on aggregate 88-60 and correctly hosted game 3. Champion and bonus agreed
+in both (PA winner +60, finalist +45). Real regenerate moved only
+`PA_MUTUAL_STAGE` (a new null `final_series`) and `TEAMS_EXPORT_TSV`.
+
 **The deferral was read as the rule, corrected 2026-09-12.** The
 conflict-resolution rules scope themselves by **round 6** (steps 1 and 3,
 same-region/same-division) and by **the mutual semifinal** (step 2, a
@@ -3941,12 +3970,9 @@ page errors on either path.
   `abs_round_for_event()`'s sequential assignment, which is only "confirmed
   right" in the sense that it's internally consistent, not independently
   cross-checked against a second source the way the historical portion was.
-- **RDS Cup's mutual semifinal/final is wired as of 2026-09-11**, and **PA's
-  mutual semifinal as of 2026-09-23** (see "PA mutual semifinal" in the PA Cup
-  section). **PA's best-of-three final is not** -- `_games_for_event` raises
-  `NotImplementedError` for `("PA","Final",n)` deliberately, because nobody has
-  said who hosts which of its three games. The finalists themselves already
-  resolve (`rds_mutual_final_pair(season, "PA")`) and show on the PA tab.
+- **Both cups' end stages are fully wired**: RDS's semifinal/final as of
+  2026-09-11, PA's semifinal and best-of-three final as of 2026-09-23 (see "PA
+  mutual semifinal" and "PA final" in the PA Cup section).
 - DECKFIELD's Results tab now exports directly in the `add-results` CSV
   format (comma-separated, header row, `CSV_GAME_FIELDS` order + `ex_a`/
   `ex_b`/`cup_name`/`cup_bracket`/`cup_round`) instead of the old
