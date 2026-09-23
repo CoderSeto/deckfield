@@ -2941,6 +2941,26 @@ The cost is **3 boxes per row instead of 4** at 1920px. All widths here come
 from the sandbox's fallback font, which is wider than Barlow Condensed, so
 they are pessimistic.
 
+**Back to four boxes across, 2026-09-23 (per explicit request: "I liked it
+better when the Regional and League Standings were four across").** The fix
+above bought its zero-clipping by widening the track to 440px, which dropped
+the grid to three per row. Four across in the 1536px panel means ~372px per
+box, so the tables were slimmed to fit rather than the track widened -- the
+fat was always headers and padding, not data:
+
+- headers `Regional`/`League` -> **`W-L`** and `DSCR (Reg)`/`DSCR (Lg)` ->
+  **`DSCR`**, each keeping its full meaning in a `title`;
+- cell padding 8px -> 5px each side (scoped to `#standings-grid`);
+- P/R 56px -> 46px, still wider than `RRRR` at the new padding; Team hint
+  160px -> 140px, still a hint with no `min-width`;
+- track `minmax(440px)` -> `minmax(360px)`.
+
+Division tables need 365px at natural width (from 468px), regions 318px.
+Measured at 1920/1600/1500/1400/1240/1000/800/600 in both modes: **four per
+row at 1600px and up**, 0 clipped boxes and 0 ellipsised names everywhere, and
+still one shared column layout (two, differing by 1px of rounding). Renderer
+only; the regenerate was not re-run for it.
+
 **`CUP_REAL_RESULTS`/`RDS_ROUND2`/`RDS_ROUND3` (RDS Cup tab) were the same
 kind of silent gap as `PA_CUP_DATA`/`SCHEDULE_DATA`, found and fixed
 2026-08-08.** Reported directly: RDS Cup round 3 (Draw = abs_round 15,

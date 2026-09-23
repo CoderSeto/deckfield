@@ -183,10 +183,10 @@
      Scoped to #standings-grid: .mini-standings is reused by the Regional
      Playoffs, Qualification and World Championship panels. */
   #standings-grid .mini-standings th.num:first-child,
-  #standings-grid .mini-standings td.num:first-child { width: 56px; min-width: 56px; }
+  #standings-grid .mini-standings td.num:first-child { width: 46px; min-width: 46px; }
   #standings-grid .mini-standings th.left,
   #standings-grid .mini-standings td.team-name {
-    width: 160px; max-width: 160px;
+    width: 140px; max-width: 140px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .rds-bracket-title {
@@ -289,7 +289,9 @@
      users and need a wider track: at minmax(300px) the division tables wanted
      437px in a 372px track. 440px is the smallest minimum that clips nothing
      at 1920/1600/1500/1400/1240/1000/800/600. */
-  #standings-grid { grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); }
+  #standings-grid { grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); }
+  #standings-grid .mini-standings thead th,
+  #standings-grid .mini-standings tbody td { padding-left: 5px; padding-right: 5px; }
   .mini-standings {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -864,8 +866,12 @@ function standingsDividerStyle(mode, groupVal, i) {
 function renderStandings() {
   const key = standingsMode === 'region' ? 'region' : 'division';
   const gameType = standingsMode === 'region' ? 'R' : 'L';
-  const recordLabel = standingsMode === 'region' ? 'Regional' : 'League';
-  const tbLabel = standingsMode === 'region' ? 'DSCR (Reg)' : 'DSCR (Lg)';
+  // Short headers keep four boxes across the panel; the full names live in
+  // each header's title.
+  const recordLabel = 'W-L';
+  const recordTitle = standingsMode === 'region' ? 'Regional record' : 'League record';
+  const tbLabel = 'DSCR';
+  const tbTitle = standingsMode === 'region' ? 'DSCR in Regional games' : 'DSCR in League games';
 
   const grid = document.getElementById('standings-grid');
   grid.innerHTML = groupsFor(standingsMode).map(groupVal => {
@@ -917,9 +923,9 @@ function renderStandings() {
               <th>#</th>
               <th class="num" title="Overall ranking by OVR across all 160 teams">Rank</th>
               <th class="left">Team</th>
-              <th class="num">${recordLabel}</th>
+              <th class="num" title="${recordTitle}">${recordLabel}</th>
               <th class="num">H2H</th>
-              <th class="num">${tbLabel}</th>
+              <th class="num" title="${tbTitle}">${tbLabel}</th>
             </tr>
           </thead>
           <tbody>${rowsHtml}</tbody>
