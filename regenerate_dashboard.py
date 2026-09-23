@@ -45,7 +45,7 @@ from deckfield_ratings import (
     compute_strength_breakdown, generate_pod_schedule,
     rds_cup_real_results, rds_cup_round_pairings,
     regional_standings_seeds, regional_tournament_games, REGION_COLORS,
-    world_championship_field, rds_mutual_stage_data, home_away_records,
+    world_championship_field, rds_mutual_stage_data, pa_mutual_stage_data, home_away_records,
     world_championship_overview,
 )
 
@@ -457,7 +457,7 @@ DERIVED_CONSTS = {
     "RANK_ELO_HISTORY", "CUP_REAL_RESULTS", "RDS_ROUND_PAIRINGS",
     "PA_CUP_DATA", "PA_REAL_RESULTS", "PA_ROUND_PAIRINGS", "PA_SWAP_LOG",
     "STRENGTH_DATA", "RT_DATA", "TEAMS_EXPORT_TSV", "QUALIFICATION_DATA",
-    "RDS_MUTUAL_STAGE", "WC_DATA",
+    "RDS_MUTUAL_STAGE", "PA_MUTUAL_STAGE", "WC_DATA",
 }
 
 # STATIC: genuinely fixed, with the reason it can never go stale. Anything
@@ -584,6 +584,9 @@ def main():
     content = _replace_const(content, "PA_REAL_RESULTS", pa_real_results)
     content = _replace_const(content, "PA_ROUND_PAIRINGS", pa_pairings)
     content = _replace_const(content, "PA_SWAP_LOG", pa_swap_log, is_array=True)
+    # PA's shared semifinal/final, once both brackets finish round 8 -- the
+    # same shape as RDS_MUTUAL_STAGE, keyed "PA", and empty until then.
+    content = _replace_const(content, "PA_MUTUAL_STAGE", pa_mutual_stage_data(SEASON))
 
     content = _replace_subtitle(content)
 
@@ -602,7 +605,7 @@ def main():
         f.write(content)
     print(f"Regenerated DATA, NEXT_MATCHDAY_DATA, CALENDAR_DATA, SCHEDULE_DATA, RANK_ELO_HISTORY, "
           f"CUP_REAL_RESULTS, RDS_ROUND_PAIRINGS, PA_CUP_DATA, PA_REAL_RESULTS, PA_ROUND_PAIRINGS, "
-          f"PA_SWAP_LOG, STRENGTH_DATA, RT_DATA, QUALIFICATION_DATA, RDS_MUTUAL_STAGE, WC_DATA, TEAMS_EXPORT_TSV, header subtitle "
+          f"PA_SWAP_LOG, STRENGTH_DATA, RT_DATA, QUALIFICATION_DATA, RDS_MUTUAL_STAGE, PA_MUTUAL_STAGE, WC_DATA, TEAMS_EXPORT_TSV, header subtitle "
           f"in {DASHBOARD_PATH}")
 
 

@@ -1554,12 +1554,15 @@ PA_REGION_CHECK_LAST_ROUND = 6
 
 def _rds_bracket_survivors(conn, season, cup, bracket):
     """The two teams that won this cup+bracket's last round, or None if
-    that round isn't complete."""
+    that round isn't complete. Generic over the four cups despite its name:
+    PA's last bracket round is 8 rather than 5, and that is the only
+    difference."""
+    last = PA_BRACKET_LAST_ROUND if cup == "PA" else RDS_BRACKET_LAST_ROUND
     rows = conn.execute("""
         SELECT g.result_a, ta.name a_name, tb.name b_name FROM games g
         JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
         WHERE g.season=? AND g.cup_name=? AND g.cup_bracket=? AND g.cup_round=?
-    """, (season, cup, bracket, RDS_BRACKET_LAST_ROUND)).fetchall()
+    """, (season, cup, bracket, last)).fetchall()
     if len(rows) != 2:
         return None
     return [(r["a_name"] if r["result_a"] in (2, 3) else r["b_name"]) for r in rows]
@@ -1572,17 +1575,32 @@ def _rds_seed_lookup(cup):
         return {v: int(k) for k, v in json.load(f)[cup].items()}
 
 
+def _mutual_seed_lookup(cup):
+    """{team_name: seed} deciding hosting in a cup's shared end stage. The
+    RDS cups share one seeding across both brackets; a PA team holds a
+    different seed in Draw and Process, and takes its BETTER one -- the same
+    reading _pa_seed_lookup gives the tournament bonus and qualification."""
+    if cup != "PA":
+        return _rds_seed_lookup(cup)
+    conn = get_connection()
+    try:
+        return _pa_seed_lookup(conn)
+    finally:
+        conn.close()
+
+
 def rds_mutual_stage(season, cup):
-    """resolve_mutual_stage() applied to this cup's real round-5 winners, or
-    None if either bracket hasn't finished. Adds the cup and both brackets'
-    finalists to what resolve_mutual_stage returns."""
+    """resolve_mutual_stage() applied to this cup's real last-round winners
+    (round 5 for RDS, round 8 for PA), or None if either bracket hasn't
+    finished. Adds the cup and both brackets' finalists to what
+    resolve_mutual_stage returns."""
     conn = get_connection()
     draw = _rds_bracket_survivors(conn, season, cup, "Draw")
     process = _rds_bracket_survivors(conn, season, cup, "Process")
     conn.close()
     if draw is None or process is None:
         return None
-    stage = dict(resolve_mutual_stage(draw, process, _rds_seed_lookup(cup)))
+    stage = dict(resolve_mutual_stage(draw, process, _mutual_seed_lookup(cup)))
     stage.update(cup=cup, draw_finalists=draw, process_finalists=process)
     return stage
 
@@ -1641,7 +1659,7 @@ def rds_mutual_final_pair(season, cup):
     stage = rds_mutual_stage(season, cup)
     if stage is None:
         return None
-    seed_lookup = _rds_seed_lookup(cup)
+    seed_lookup = _mutual_seed_lookup(cup)
     if not stage["semifinal"]:
         f = stage["final"]                      # same pair both sides: no semifinal
         return (f["home"], f["away"])
@@ -1676,6 +1694,20 @@ def rds_mutual_games(season, bracket, leg):
             return None
         out.extend(_rds_leg_orientation(h, a, leg) for h, a in pairs)
     return out
+
+
+def pa_mutual_games(season, bracket, leg):
+    """[(home, away)] for one leg of PA's mutual semifinal, or None if
+    either bracket hasn't finished round 8. The same two-legged tie as RDS's
+    (worse seed hosts leg 1, better seed leg 2); only the seeding differs
+    (see _mutual_seed_lookup). The final is a best-of-three over week 23,
+    whose hosting has not been given, so it is deliberately not generated."""
+    if bracket != "SF":
+        raise NotImplementedError("PA's best-of-three final isn't modeled yet.")
+    pairs = rds_mutual_semifinal_pairs(season, "PA")
+    if pairs is None:
+        return None
+    return [_rds_leg_orientation(h, a, leg) for h, a in pairs]
 
 
 # ------------------------------------------- Tournament bonus points (TOT) --
@@ -1961,7 +1993,13 @@ def merge_accolades(stored, earned, season, region_display):
     return "; ".join(rows)
 
 
-def rds_mutual_stage_data(season):
+def pa_mutual_stage_data(season):
+    """PA's entry in the same shape as rds_mutual_stage_data -- {"PA": {...}}
+    once both brackets finish round 8, else {}."""
+    return rds_mutual_stage_data(season, cups=("PA",))
+
+
+def rds_mutual_stage_data(season, cups=("Ribbon", "Dream", "Star")):
     """{cup: {...}} for the dashboard's Mutual Stage section: the shared
     semifinal/final each cup reaches once both its brackets finish round 5.
 
@@ -1994,11 +2032,11 @@ def rds_mutual_stage_data(season):
         return out
 
     data = {}
-    for cup in ("Ribbon", "Dream", "Star"):
+    for cup in cups:
         stage = rds_mutual_stage(season, cup)
         if stage is None:
             continue
-        seed_lookup = _rds_seed_lookup(cup)
+        seed_lookup = _mutual_seed_lookup(cup)
 
         def pair(home, away):
             return {"home": home, "away": away,
@@ -2477,8 +2515,15 @@ def _event_is_played(conn, season, slot, week=None, day=None):
 
     if kind == "PA":
         _, bracket, cup_round = slot
-        if bracket in ("SF", "Final") or cup_round is None:
-            return False  # not modeled/played yet
+        if bracket == "SF":
+            # Two-legged, like RDS's: cup_round stores the LEG.
+            leg = mutual_leg_number(slot, week, day)
+            n = conn.execute(
+                "SELECT COUNT(*) c FROM games WHERE season=? AND cup_name='PA' "
+                "AND cup_bracket='SF' AND cup_round=?",
+                (season, leg),
+            ).fetchone()["c"]
+            return n > 0
         n = conn.execute(
             "SELECT COUNT(*) c FROM games WHERE cup_name='PA' AND cup_bracket=? AND cup_round=?",
             (bracket, cup_round),
@@ -3249,9 +3294,10 @@ def _pa_round_games(conn, bracket, target_round):
 def _games_for_event(season, event, week=None, day=None):
     """Returns a list of (home_team_id, away_team_id) for a weekly-schedule
     event. Regional/League rounds use the pod schedule; RDS Cup rounds 1-5,
-    its mutual semifinal/final, and PA Cup rounds 1-7 all resolve through
-    real prior results. week/day identify which leg of a two-legged mutual
-    tie is being asked for (PA's mutual stages are still unmodelled)."""
+    its mutual semifinal/final, PA Cup rounds 1-8 and PA's mutual semifinal
+    all resolve through real prior results. week/day identify which leg of a
+    two-legged mutual tie is being asked for (PA's best-of-three final is
+    still unmodelled)."""
     kind = event[0]
     conn = get_connection()
     name_to_dex = {r["name"]: r["team_id"] for r in conn.execute("SELECT team_id, name FROM teams").fetchall()}
@@ -3305,9 +3351,17 @@ def _games_for_event(season, event, week=None, day=None):
 
     if kind == "PA":
         _, bracket, cup_round = event
-        if bracket in ("SF", "Final") or cup_round is None:
+        if bracket == "SF":
             conn.close()
-            raise NotImplementedError("PA's mutual semifinal/final isn't modeled yet.")
+            leg = mutual_leg_number(event, week, day)
+            games = pa_mutual_games(season, bracket, leg)
+            if games is None:
+                raise ValueError(
+                    f"PA mutual SF leg {leg}: both brackets must finish round {PA_BRACKET_LAST_ROUND} first.")
+            return [(name_to_dex[h], name_to_dex[a]) for h, a in games]
+        if bracket == "Final":
+            conn.close()
+            raise NotImplementedError("PA's best-of-three final isn't modeled yet.")
         games = _pa_round_games(conn, bracket, cup_round)
         conn.close()
         if games is None:
@@ -3492,10 +3546,13 @@ def export_matchday_batches(season, event=None):
 
     if kind == "PA":
         _, bracket, cup_round = event
-        label = f"PA {bracket} R{cup_round}" if cup_round is not None else f"PA {bracket}"
         agg = bracket in ("SF", "Final") or cup_round is None
+        # cup_round carries the LEG for the two-legged semifinal, exactly as
+        # for RDS's, so the results CSV files leg 1 and leg 2 separately.
+        leg = mutual_leg_number(event, info.get("week"), info.get("day")) if cup_round is None else None
+        label = f"PA {bracket} R{cup_round}" if cup_round is not None else f"PA {bracket} leg {leg}"
         games = _games_for_event(season, event, info.get("week"), info.get("day"))
-        batch = build_batch(label, "Cup", agg, "PA", bracket, cup_round if cup_round is not None else "", games)
+        batch = build_batch(label, "Cup", agg, "PA", bracket, cup_round if cup_round is not None else leg, games)
         conn.close()
         return info, [batch]
 
