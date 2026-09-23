@@ -4008,6 +4008,8 @@ def export_teams_for_deckfield(season):
     earned = {}
     for cup, champion in cup_champions(season, latest_round).items():
         earned.setdefault(champion, []).append(cup)
+    # Per explicit instruction: Canalave City earned Division One this season.
+    earned.setdefault("Canalave City", []).append("Division One")
     region_display = {region_display_name(r["region"]) for r in
                       conn.execute("SELECT DISTINCT region FROM teams").fetchall()}
     rows = conn.execute("""
