@@ -1,0 +1,3 @@
+round,game_type,team_a,team_b,result_a,pf_a,pa_a,raw_goal_a,raw_goal_b,spread_a,interest,dscr_a,dscr_b,elo_a_after,elo_b_after,home,ex_a,ex_b,cup_name,cup_bracket,cup_round
+58,S,40,123,0,44,57,5.67,5.30,5.6863,103.53,16.3,102.9,2330,2314,A,1,5,PA,Process,8
+58,S,156,33,3,42,29,3.80,3.00,-1.2757,105.80,105.9,17.6,2224,2475,A,4,0,PA,Process,8
