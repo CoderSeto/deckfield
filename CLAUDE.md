@@ -1046,6 +1046,36 @@ for *i* = 1..32:
     (the real matchday-export consumer) was confirmed working end to end
     against the synthetic walk's round 3 data.
 
+**PA mutual semifinal, wired 2026-09-23 (per explicit report: "R8 of the PA
+Cup is complete, but the mutual semifinal pairings did not populate").** Round 8
+was in the database and correct; the stage after it had simply never been
+built -- `_event_is_played` returned False for it unconditionally and
+`_games_for_event` raised. It is the RDS machinery reused, not a copy:
+`_rds_bracket_survivors` now reads round 8 for `cup == "PA"`, and
+`_mutual_seed_lookup(cup)` is the one place the two cups differ (RDS: the
+shared cup seeding; PA: `_pa_seed_lookup`, each team's **better** of its Draw
+and Process seeds -- the reading the bonus and qualification already use, and
+the one reading chosen rather than given). With those two, `rds_mutual_stage`,
+`rds_mutual_semifinal_pairs`, `rds_mutual_final_pair` and
+`rds_mutual_stage_data` all serve PA unchanged. `pa_mutual_games` is the thin
+entry point. Same two-legged convention: worse seed hosts leg 1 (abs_round
+60), better seed leg 2 (61); `cup_bracket='SF'`, `cup_round` = the leg, and
+the batch export now puts the leg in Cup Round # (it wrote a blank before).
+
+The seed choice does not bite on the real field: Snowpoint City #6 vs
+Casseroya Lake #81 (Draw pair) and Pueltown #12 vs Cabo Poco #90 (Process
+pair) order the same way whether you read best seeds or the seeds of the
+bracket each pair came through.
+
+The PA tab gained its own Mutual Stage block (`PA_MUTUAL_STAGE`, derived, in
+the manifest), drawn by the same `renderMutualStage()` the RDS tab now calls.
+The final renders as a bare pairing, not two legs + AGG, since it is a best of
+three. Verified: regenerating moved only `PA_MUTUAL_STAGE` (new) and
+`TEAMS_EXPORT_TSV`; the RDS Mutual Stage markup is byte-identical to main's for
+all three cups; and a scratch-database walk (R14, SF leg 1, SF leg 2) took
+`next_matchday()` Tue -> Thu -> R15, resolved the final pair, and paid the PA
+bonus tiers at the right rounds (finalists 45 only from round 61).
+
 **The deferral was read as the rule, corrected 2026-09-12.** The
 conflict-resolution rules scope themselves by **round 6** (steps 1 and 3,
 same-region/same-division) and by **the mutual semifinal** (step 2, a
@@ -2911,6 +2941,26 @@ The cost is **3 boxes per row instead of 4** at 1920px. All widths here come
 from the sandbox's fallback font, which is wider than Barlow Condensed, so
 they are pessimistic.
 
+**Back to four boxes across, 2026-09-23 (per explicit request: "I liked it
+better when the Regional and League Standings were four across").** The fix
+above bought its zero-clipping by widening the track to 440px, which dropped
+the grid to three per row. Four across in the 1536px panel means ~372px per
+box, so the tables were slimmed to fit rather than the track widened -- the
+fat was always headers and padding, not data:
+
+- headers `Regional`/`League` -> **`W-L`** and `DSCR (Reg)`/`DSCR (Lg)` ->
+  **`DSCR`**, each keeping its full meaning in a `title`;
+- cell padding 8px -> 5px each side (scoped to `#standings-grid`);
+- P/R 56px -> 46px, still wider than `RRRR` at the new padding; Team hint
+  160px -> 140px, still a hint with no `min-width`;
+- track `minmax(440px)` -> `minmax(360px)`.
+
+Division tables need 365px at natural width (from 468px), regions 318px.
+Measured at 1920/1600/1500/1400/1240/1000/800/600 in both modes: **four per
+row at 1600px and up**, 0 clipped boxes and 0 ellipsised names everywhere, and
+still one shared column layout (two, differing by 1px of rounding). Renderer
+only; the regenerate was not re-run for it.
+
 **`CUP_REAL_RESULTS`/`RDS_ROUND2`/`RDS_ROUND3` (RDS Cup tab) were the same
 kind of silent gap as `PA_CUP_DATA`/`SCHEDULE_DATA`, found and fixed
 2026-08-08.** Reported directly: RDS Cup round 3 (Draw = abs_round 15,
@@ -3891,17 +3941,12 @@ page errors on either path.
   `abs_round_for_event()`'s sequential assignment, which is only "confirmed
   right" in the sense that it's internally consistent, not independently
   cross-checked against a second source the way the historical portion was.
-- **RDS Cup's mutual semifinal/final is wired as of 2026-09-11** (see the
-  RDS Cup section). **PA Cup's mutual semifinal/final is not** —
-  `_games_for_event` still raises `NotImplementedError` for it
-  deliberately rather than guessing. Since the quarterfinal was dropped
-  (2026-09-12, above), PA's end stage is now structurally **identical** to
-  RDS's — 2 per bracket, same duplicate-handling, two-legged SF then the
-  final — so `rds_mutual_stage()` / `resolve_mutual_stage()` /
-  `_rds_leg_orientation()` are not just a template but very nearly the
-  implementation; the differences left are PA's seeding source (a team
-  holds a different seed in each bracket, so "better seed" needs deciding)
-  and its best-of-three final (week 23's three slots, not two legs).
+- **RDS Cup's mutual semifinal/final is wired as of 2026-09-11**, and **PA's
+  mutual semifinal as of 2026-09-23** (see "PA mutual semifinal" in the PA Cup
+  section). **PA's best-of-three final is not** -- `_games_for_event` raises
+  `NotImplementedError` for `("PA","Final",n)` deliberately, because nobody has
+  said who hosts which of its three games. The finalists themselves already
+  resolve (`rds_mutual_final_pair(season, "PA")`) and show on the PA tab.
 - DECKFIELD's Results tab now exports directly in the `add-results` CSV
   format (comma-separated, header row, `CSV_GAME_FIELDS` order + `ex_a`/
   `ex_b`/`cup_name`/`cup_bracket`/`cup_round`) instead of the old
