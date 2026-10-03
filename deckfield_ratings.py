@@ -2543,10 +2543,11 @@ def _event_is_played(conn, season, slot, week=None, day=None):
         # (unlike RDS/PA). The cup_name filter is what keeps this from also
         # counting a World Championship matchday, which reuses the same small
         # cup_round numbers and may well be entered as game_type 'P' too.
+        clause, params = _rt_matchday_clause(matchday)
         n = conn.execute(
-            "SELECT COUNT(*) c FROM games WHERE season=? AND game_type='P' "
-            "AND cup_round=? AND cup_name IS NULL",
-            (season, matchday),
+            "SELECT COUNT(*) c FROM games g WHERE g.season=? AND g.game_type='P' "
+            f"AND g.cup_name IS NULL AND {clause}",
+            [season, *params],
         ).fetchone()["c"]
         return n > 0
 
@@ -3645,7 +3646,10 @@ def export_matchday_batches(season, event=None):
         label = f"RT{matchday}"
         agg = matchday != 1
         games = _games_for_event(season, event, info.get("week"), info.get("day"))
-        batch = build_batch(label, "Playoffs", agg, "", "", "", games)
+        # Cup Round # MUST carry the matchday: it is how the engine tells RT1
+        # from RT2 (RT games have no cup_name). It used to be blank, so an RT
+        # matchday's exported results carried no matchday at all.
+        batch = build_batch(label, "Playoffs", agg, "", "", matchday, games)
         conn.close()
         return info, [batch]
 
@@ -4326,45 +4330,68 @@ def division_standings_seeds(season, division):
     return {i + 1: id_to_name[tid] for i, tid in enumerate(ordered)}
 
 
+def _rt_matchday_clause(md):
+    """SQL fragment + params selecting Regional Tournament matchday `md`.
+
+    An RT game is identified by cup_round = its matchday (RT games carry no
+    cup_name; they are tagged by host_region + cup_round). A row that arrived
+    WITHOUT that tag -- which is exactly what DECKFIELD exported before the
+    RT batch row started carrying Cup Round # -- is still recognised by its
+    absolute round, which is unique to that matchday. Without this fallback
+    an untagged RT1 left next_matchday() stuck on RT1 forever and RT2 never
+    generated (reproduced on a scratch database, 2026-10-03)."""
+    return ("(g.cup_round=? OR (g.cup_round IS NULL AND g.round=?))",
+            [md, abs_round_for_event(("RT", md))])
+
+
+def _rt_game_row(conn, season, region, md, team_a, team_b):
+    """The real RT game between two teams on matchday `md`, or None."""
+    clause, params = _rt_matchday_clause(md)
+    return conn.execute(f"""
+        SELECT g.result_a, g.pf_a, g.pa_a, g.team_a, ta.name a_name, tb.name b_name FROM games g
+        JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
+        WHERE g.season=? AND g.game_type='P' AND g.cup_name IS NULL AND g.host_region=?
+        AND {clause}
+        AND ((ta.name=? AND tb.name=?) OR (ta.name=? AND tb.name=?))
+    """, [season, region, *params, team_a, team_b, team_b, team_a]).fetchone()
+
+
 def _rt_real_winner(conn, season, region, md, team_a, team_b):
     """Winner of a specific real Regional Tournament game (single game for
     MD1, or one leg for two-legged rounds -- md here means one specific
     matchday, e.g. 2 or 3, not the MD2/3 pair)."""
-    row = conn.execute("""
-        SELECT g.result_a, ta.name a_name, tb.name b_name FROM games g
-        JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
-        WHERE g.season=? AND g.game_type='P' AND g.host_region=?
-        AND g.cup_round=?
-        AND ((ta.name=? AND tb.name=?) OR (ta.name=? AND tb.name=?))
-    """, (season, region, md, team_a, team_b, team_b, team_a)).fetchone()
+    row = _rt_game_row(conn, season, region, md, team_a, team_b)
     if row is None:
         return None
-    won_by_a = row["result_a"] in (2, 3)
-    return row["a_name"] if won_by_a else row["b_name"]
+    return row["a_name"] if row["result_a"] in (2, 3) else row["b_name"]
+
+
+def rt_game_result(season, region, md, home, away):
+    """{"home_score", "away_score", "winner"} for one played RT game, or None.
+    Scores resolved by NAME -- `games` stores pf/pa from team_a's side only."""
+    conn = get_connection()
+    try:
+        r = _rt_game_row(conn, season, region, md, home, away)
+    finally:
+        conn.close()
+    if r is None:
+        return None
+    winner = r["a_name"] if r["result_a"] in (2, 3) else r["b_name"]
+    if r["a_name"] == home:
+        return {"home_score": r["pf_a"], "away_score": r["pa_a"], "winner": winner}
+    return {"home_score": r["pa_a"], "away_score": r["pf_a"], "winner": winner}
 
 
 def _rt_tie_winner(conn, season, region, md_leg1, md_leg2, team_a, team_b):
     """Combined-score winner of a two-legged tie, or None if either leg
-    hasn't been played yet."""
-    r1 = conn.execute("""
-        SELECT g.pf_a, g.pa_a, g.team_a FROM games g
-        JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
-        WHERE g.season=? AND g.game_type='P' AND g.host_region=? AND g.cup_round=?
-        AND ((ta.name=? AND tb.name=?) OR (ta.name=? AND tb.name=?))
-    """, (season, region, md_leg1, team_a, team_b, team_b, team_a)).fetchone()
-    r2 = conn.execute("""
-        SELECT g.pf_a, g.pa_a, g.team_a FROM games g
-        JOIN teams ta ON ta.team_id=g.team_a JOIN teams tb ON tb.team_id=g.team_b
-        WHERE g.season=? AND g.game_type='P' AND g.host_region=? AND g.cup_round=?
-        AND ((ta.name=? AND tb.name=?) OR (ta.name=? AND tb.name=?))
-    """, (season, region, md_leg2, team_a, team_b, team_b, team_a)).fetchone()
+    hasn't been played yet. An exact aggregate tie goes to `team_a` -- every
+    caller passes leg 1's HOME side, which is the worse seed."""
+    r1 = _rt_game_row(conn, season, region, md_leg1, team_a, team_b)
+    r2 = _rt_game_row(conn, season, region, md_leg2, team_a, team_b)
     if r1 is None or r2 is None:
         return None
-    conn2 = conn
-    a_id = conn2.execute("SELECT team_id FROM teams WHERE name=?", (team_a,)).fetchone()["team_id"]
-    a_total = 0
-    for r in (r1, r2):
-        a_total += r["pf_a"] if r["team_a"] == a_id else r["pa_a"]
+    a_id = conn.execute("SELECT team_id FROM teams WHERE name=?", (team_a,)).fetchone()["team_id"]
+    a_total = sum(r["pf_a"] if r["team_a"] == a_id else r["pa_a"] for r in (r1, r2))
     b_total = sum(r["pf_a"] if r["team_a"] != a_id else r["pa_a"] for r in (r1, r2))
     return team_a if a_total >= b_total else team_b
 

@@ -1627,6 +1627,62 @@ Eterna/Mossui/Celestic never played each other and should resolve by DSCR).
   `cup_name`/`cup_bracket` the way RDS/PA do).
 - Calendar: weeks 24-26, `("RT", matchday)` events, confirmed placement.
 
+### RT results were invisible to the engine, fixed 2026-10-03 (per explicit request)
+
+Raised directly: RT games "should be classified as Playoff games ... they
+should not add to the Regional Rankings, and I wanted to make sure that R2
+would populate after R1 is complete, and so on."
+
+**The classification was already right; the matchday tag was not.** The RT
+batch row exported Game Type `Playoffs` (-> `P`) but a **blank Cup Round #**,
+so every RT result reached the engine with `cup_round` NULL -- and RT games
+are found by `host_region` + `cup_round` (they carry no `cup_name`).
+Reproduced on a scratch database through the real `add-results` path: RT1
+ingested untagged left `next_matchday()` on **RT1 forever** and
+`regional_tournament_games(..., 2)` returned None in every region. Tagged,
+it advanced to RT2 immediately. Two fixes:
+
+- `export_matchday_batches` writes the **matchday into Cup Round #** for RT
+  batches. Verified in `deckfield.html` itself: the pasted row fills Cup
+  Round # = 1 and the Results CSV row reads `...,P,...,,,1`.
+- `_rt_matchday_clause(md)` makes every RT lookup (`_rt_game_row`, and
+  through it `_rt_real_winner` / `_rt_tie_winner` / `rt_game_result`, plus
+  `_event_is_played`) also accept an **untagged `P` row at that matchday's
+  absolute round** -- so a hand-set batch that forgets the tag still works.
+  The lookups also now require `cup_name IS NULL`, as `_event_is_played`
+  already did.
+
+**"Should not add to the Regional Rankings" was verified, not assumed.**
+After a full synthetic RT1-RT9 (odd matchdays ingested untagged, even
+tagged): Regional W-L and Regional DSCR identical for all 160 teams, RT
+seeding identical in all 10 regions. What a `P` game DOES move, by
+design: the P/F record, TOT (x8 points), OVR, Elo, and RW/LW via their
+`playoff_finals_wins x 0.005` term (+0.5 per win). Asked explicitly
+whether that RW/LW term should go; the answer was **leave it** -- "Regional
+Rankings" meant the standings.
+
+The same walk checked every bracket rule in all 10 regions with zero
+violations (MD1 better seed hosts; MD2-9 worse seed hosts leg 1, legs swap;
+each round's entrants are exactly the prior round's real winners; SF lane
+pairing 4v1 / 2v3), 40/40/40/40/40/20/20/10/10 games, and `next_matchday()`
+moving RT1 -> ... -> RT9 -> WC Group MD1.
+
+**The Regional Playoffs tab could not show a result at all** -- `rtRowHtml`
+printed a dash unconditionally and `RT_DATA` carried no scores, so RT1 would
+have kept reading as unplayed after it was played. `build_rt_data` now
+attaches each game's `result` (scores resolved by name) and, on leg 2
+(MD3/5/7/9), an `agg` once both legs are in; the tab colours winners and
+draws an AGG row. **Played, a box's widest row needs ~459px** (Terastal:
+Glaseado Mountain vs Blueberry Terarium with an AGG score) against the
+shared ~372px four-across track, so every box clipped; shrinking type only
+got it to ~439px. `#rt-grid` now has its own `minmax(470px)` track -- three
+across at 1600px+ -- and 0 boxes clip at 1920-600px in either state. The
+horizontal page scroll at 800-1400px is pre-existing (same on main).
+
+**Open, flagged rather than changed:** `_rt_tie_winner` gives an exact
+aggregate tie to `team_a`, which every caller passes as leg 1's HOST -- the
+**worse** seed. RDS and WC give it to the better seed.
+
 ## World Championship (weeks 27-33, added 2026-09-16)
 
 The calendar now runs past the Regional Tournament into the World
