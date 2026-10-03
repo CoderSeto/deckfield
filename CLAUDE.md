@@ -1689,12 +1689,21 @@ level: every MD4 entrant was the higher seed of its tie.
 ### RT Factor Modifier (2026-10-03, per explicit instruction)
 
 "The higher seed in each RT game should receive a modifier equal to the
-difference of RW between them and their opponent divided by: Rounds 1-3, 2;
-Round 4, 4; Round 5, 8." It lands in DECKFIELD's per-game **Adv** (Factor
-Modifier) column, which `export_matchday_batches` and
+difference of [Regional Points] between them and their opponent divided by:
+Rounds 1-3, 2; Round 4, 4; Round 5, 8." It lands in DECKFIELD's per-game
+**Adv** (Factor Modifier) column, which `export_matchday_batches` and
 `export_matchday_for_deckfield` now fill for RT matchdays only
 (`rt_factor_modifiers`, `_rt_adv_by_dex`); every other event still leaves it
 blank.
+
+**It is Regional Points (`rp`, the TOT component), NOT RW.** The instruction
+first said "RW" and was corrected the same day ("don't use RW for the
+advantage, that would be ridiculous"); the first cut shipped on RW and was
+replaced. RW is a ratio with decimals and grows +0.5 per playoff win; RP is
+whole Regional result points (3/2/1/0) plus one per League win, and is
+**frozen for the whole tournament** -- RT games are Playoffs, so nothing in
+the RT moves it. Verified: 0 of 160 teams' RP changed between round 65 and
+RT9, so each tie's two legs carry the same modifier with opposite signs.
 
 - **"Round" is the tournament round**, not the matchday:
   `RT_ROUND_OF_MATCHDAY` maps MD1 -> 1, MD2/3 -> 2, MD4/5 -> 3, MD6/7 -> 4
@@ -1703,18 +1712,17 @@ blank.
 - **Sign.** DECKFIELD adds Adv to a spread where positive favours HOME, so
   the higher seed's value is positive when it hosts and **negated** when it is
   away -- every leg 1 from MD2 on, where the worse seed hosts.
-- **Signed by RW, not clamped.** It is higher-seed RW minus opponent RW, so
-  a higher seed with the lower RW gets a negative modifier (3 of RT1's 40).
-- **RW is each team's latest stored value** at export time, so it moves
-  between legs (a playoff win adds 0.5 to RW).
-- Scale: RT1 runs -5.6 to +29.83, median 9.5 -- large next to typical
-  spreads, which is the rule as given.
+- **Signed, not clamped.** Higher-seed RP minus opponent RP, so a higher seed
+  with fewer Regional Points gets a negative modifier (3 of RT1's 40 -- seeding
+  is W-L/H2H/DSCR, while RP also carries the League-win bonus).
+- Scale: RT1 runs -3 to +17, median 5.5. Pyrite Town (#9, RP 34) hosting
+  Boyleland (#16, RP 0) is +17.0.
 
 Verified: a full synthetic RT1-RT9 recomputed every game's Adv by hand
-(divisor, sign, RW) with 0 mismatches; `deckfield.html` loaded the real RT1
-paste and its spread panel read `+ Factor Modifier (Adv) 29.833` for
-Boyleland @ Pyrite Town ((59.67 - 0.0) / 2); the dashboard's Next Matchday
-table gained an Adv column shown only when a batch carries one.
+(divisor, sign, RP) with 0 mismatches; `deckfield.html` loaded the real RT1
+paste and its spread panel read `+ Factor Modifier (Adv) 17.000`; the
+dashboard's Next Matchday table shows the Adv column only when a batch
+carries one.
 
 ## World Championship (weeks 27-33, added 2026-09-16)
 

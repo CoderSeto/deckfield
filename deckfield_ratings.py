@@ -3483,7 +3483,7 @@ def export_matchday_for_deckfield(season, event=None):
     own parseSchedulePaste, which splits on '\\t'), one row per game,
     "away_rank\\thome_rank\\tadv" (adv is DECKFIELD's spread-modifier field:
     blank for every event except the Regional Tournament, where it carries
-    the RW-based Factor Modifier from rt_factor_modifiers), with a
+    the Regional Points-based Factor Modifier from rt_factor_modifiers), with a
     header row matching DECKFIELD's SCHEDULE_COLUMNS exactly since its
     importer defaults to expecting one. If `event` isn't given, uses
     next_matchday(). Returns (event_info, csv_text). event_info includes
@@ -4434,7 +4434,8 @@ def _rt_tie_winner(conn, season, region, md_leg1, md_leg2, team_a, team_b, bette
 
 # The Factor Modifier (DECKFIELD's per-game "Adv") for a Regional Tournament
 # game, per explicit instruction 2026-10-03: the HIGHER seed receives the
-# difference in RW between itself and its opponent, divided by a per-round
+# difference in Regional Points (RP, the TOT component) between itself and its
+# opponent, divided by a per-round
 # divisor. "Round" is the tournament's own round, not the matchday: round 1 is
 # MD1, round 2 is MD2/3, round 3 MD4/5, round 4 (semifinal) MD6/7 and round 5
 # (final) MD8/9.
@@ -4447,15 +4448,20 @@ def rt_factor_modifiers(season, region, matchday, games):
 
     `adv` is on DECKFIELD's spread axis, where positive favours HOME: the
     higher seed's modifier is added as-is when it hosts and negated when it is
-    away. It is signed by RW, not clamped -- a higher seed with the LOWER RW
-    gets a negative modifier, since "the difference of RW between them and
-    their opponent" is higher-seed RW minus opponent RW. RW is each team's
-    latest stored value, i.e. as of the matchday being exported."""
+    away.
+
+    The difference is in **RP -- Regional Points**, the regional bucket that
+    is summed into TOT (Regional results 3/2/1/0 plus one per League win), per
+    explicit correction 2026-10-03; the first cut used RW, which was wrong.
+    Signed, not clamped: a higher seed with FEWER Regional Points gets a
+    negative modifier. RP only moves on Regional and League games, and RT
+    games are Playoffs, so it is fixed for the whole tournament -- reading the
+    latest stored value gives the same answer on every matchday."""
     seed_of = {n: s for s, n in regional_standings_seeds(season, region).items()}
     divisor = RT_FACTOR_DIVISOR[RT_ROUND_OF_MATCHDAY[matchday]]
     conn = get_connection()
-    rw = {r["name"]: r["rw"] for r in conn.execute("""
-        SELECT t.name, r.rw FROM team_round_ratings r JOIN teams t ON t.team_id = r.team_id
+    rp = {r["name"]: r["rp"] for r in conn.execute("""
+        SELECT t.name, r.rp FROM team_round_ratings r JOIN teams t ON t.team_id = r.team_id
         WHERE r.season = ? AND t.region = ?
           AND r.round = (SELECT MAX(round) FROM team_round_ratings WHERE season = ?)
     """, (season, region, season)).fetchall()}
@@ -4463,7 +4469,7 @@ def rt_factor_modifiers(season, region, matchday, games):
     out = {}
     for home, away in games:
         higher, lower = (home, away) if seed_of[home] < seed_of[away] else (away, home)
-        mod = round((rw[higher] - rw[lower]) / divisor, 4)
+        mod = round((rp[higher] - rp[lower]) / divisor, 4)
         out[(home, away)] = mod if higher == home else -mod
     return out
 
