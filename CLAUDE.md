@@ -1707,8 +1707,16 @@ RT9, so each tie's two legs carry the same modifier with opposite signs.
 
 - **"Round" is the tournament round**, not the matchday:
   `RT_ROUND_OF_MATCHDAY` maps MD1 -> 1, MD2/3 -> 2, MD4/5 -> 3, MD6/7 -> 4
-  (semifinal), MD8/9 -> 5 (final); `RT_FACTOR_DIVISOR` is 2/2/2/4/8. Read
-  as matchdays the rule would leave MD6-9 undefined.
+  (semifinal), MD8/9 -> 5 (final). Read as matchdays the original rule
+  would have left MD6-9 undefined.
+- **Divisors are 4/4/8/12/16** (`RT_FACTOR_DIVISOR`), chosen 2026-10-03.
+  The instruction began as 2/2/2/4/8; it was compared against 3/6/9, 4/8/12,
+  2/4/4/8/8, 3/6/6/9/9 and 4/8/8/12/12 using the real (frozen) RP gaps --
+  RT1's actual pairings, the chalk path for rounds 2-5, and every
+  structurally possible pairing -- set against this season's played spreads
+  (median |spread| 5.2, p90 12.4). 4/4/8/12/16 was picked: typical modifier
+  2.75 / 2.25 / 1.1 / 0.5 / 0.4 by round, no round able to exceed 9.75, and
+  the only schedule where every round from 2 on is strictly smaller.
 - **Sign.** DECKFIELD adds Adv to a spread where positive favours HOME, so
   the higher seed's value is positive when it hosts and **negated** when it is
   away -- every leg 1 from MD2 on, where the worse seed hosts.
@@ -1719,12 +1727,12 @@ RT9, so each tie's two legs carry the same modifier with opposite signs.
   `rt_factor_modifiers` and written `17.000` by `_fmt_adv`, so the stored
   value, the paste and the dashboard agree. It matters for any odd divisor.
 - **Negative values for the higher seed are intended** -- confirmed explicitly.
-- Scale: RT1 runs -3 to +17, median 5.5. Pyrite Town (#9, RP 34) hosting
-  Boyleland (#16, RP 0) is +17.0.
+- Scale: RT1 runs -1.5 to +8.5. Pyrite Town (#9, RP 34) hosting
+  Boyleland (#16, RP 0) is 34 / 4 = +8.500.
 
 Verified: a full synthetic RT1-RT9 recomputed every game's Adv by hand
 (divisor, sign, RP) with 0 mismatches; `deckfield.html` loaded the real RT1
-paste and its spread panel read `+ Factor Modifier (Adv) 17.000`; the
+paste and its spread panel read `+ Factor Modifier (Adv) 8.500`; the
 dashboard's Next Matchday table shows the Adv column only when a batch
 carries one.
 

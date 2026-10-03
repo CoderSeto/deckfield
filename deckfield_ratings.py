@@ -4441,7 +4441,10 @@ def _rt_tie_winner(conn, season, region, md_leg1, md_leg2, team_a, team_b, bette
 # MD1, round 2 is MD2/3, round 3 MD4/5, round 4 (semifinal) MD6/7 and round 5
 # (final) MD8/9.
 RT_ROUND_OF_MATCHDAY = {1: 1, 2: 2, 3: 2, 4: 3, 5: 3, 6: 4, 7: 4, 8: 5, 9: 5}
-RT_FACTOR_DIVISOR = {1: 2, 2: 2, 3: 2, 4: 4, 5: 8}
+# Divisors per tournament round: 4/4/8/12/16, chosen 2026-10-03 after comparing
+# 2/2/2/4/8 (the original instruction) against several alternatives -- a smooth
+# taper, the modifier shrinking every round from the round-2 entry on.
+RT_FACTOR_DIVISOR = {1: 4, 2: 4, 3: 8, 4: 12, 5: 16}
 
 
 def rt_factor_modifiers(season, region, matchday, games):
