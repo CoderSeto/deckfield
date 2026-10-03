@@ -3451,13 +3451,39 @@ def _games_for_event(season, event, week=None, day=None):
     raise ValueError(f"Unknown event kind: {kind}")
 
 
+def _fmt_adv(value):
+    """DECKFIELD's Adv cell: blank when there is no modifier (it reads blank
+    as 0), otherwise the value at 4 decimals, matching the spread's own."""
+    return "" if value is None else f"{value:.4f}"
+
+
+def _rt_adv_by_dex(season, matchday, games):
+    """{(home_dex, away_dex): adv} for a whole RT matchday (all regions).
+    Both teams of an RT game share a region, so the home team's names it."""
+    conn = get_connection()
+    rows = conn.execute("SELECT team_id, name, region FROM teams").fetchall()
+    conn.close()
+    name = {r["team_id"]: r["name"] for r in rows}
+    region = {r["team_id"]: r["region"] for r in rows}
+    by_region = {}
+    for h, a in games:
+        by_region.setdefault(region[h], []).append((h, a))
+    out = {}
+    for reg, pairs in by_region.items():
+        mods = rt_factor_modifiers(season, reg, matchday, [(name[h], name[a]) for h, a in pairs])
+        for h, a in pairs:
+            out[(h, a)] = mods[(name[h], name[a])]
+    return out
+
+
 def export_matchday_for_deckfield(season, event=None):
     """
     Returns the next (or a specified) matchday's games in DECKFIELD's
     Schedule-tab paste format: tab-separated (confirmed against DECKFIELD's
     own parseSchedulePaste, which splits on '\\t'), one row per game,
-    "away_rank\\thome_rank\\tadv" (adv is left blank -- it's DECKFIELD's own
-    spread-modifier field, not something this engine computes), with a
+    "away_rank\\thome_rank\\tadv" (adv is DECKFIELD's spread-modifier field:
+    blank for every event except the Regional Tournament, where it carries
+    the RW-based Factor Modifier from rt_factor_modifiers), with a
     header row matching DECKFIELD's SCHEDULE_COLUMNS exactly since its
     importer defaults to expecting one. If `event` isn't given, uses
     next_matchday(). Returns (event_info, csv_text). event_info includes
@@ -3479,8 +3505,9 @@ def export_matchday_for_deckfield(season, event=None):
     # order (e.g. PA Cup's ladder-row order) -- sort each game by its
     # lowest-ranked (highest rank number) team, descending.
     games = sorted(games, key=lambda hg: max(ranks[hg[0]], ranks[hg[1]]), reverse=True)
+    adv = _rt_adv_by_dex(season, event[1], games) if event[0] == "RT" else {}
     lines = ["Away Team Rank\tHome Team Rank\tAdv"]
-    lines += [f"{ranks[away]}\t{ranks[home]}\t" for home, away in games]
+    lines += [f"{ranks[away]}\t{ranks[home]}\t{_fmt_adv(adv.get((home, away)))}" for home, away in games]
     return info, "\n".join(lines)
 
 
@@ -3554,17 +3581,20 @@ def export_matchday_batches(season, event=None):
     dex_to_name = {v: k for k, v in name_to_dex.items()}
     ranks = current_rank_lookup(season)
 
-    def build_batch(label, game_type, agg, cup_name, cup_bracket, cup_round, games, cup_per_game=None):
+    def build_batch(label, game_type, agg, cup_name, cup_bracket, cup_round, games, cup_per_game=None,
+                    adv_per_game=None):
         games = sorted(games, key=lambda hg: max(ranks[hg[0]], ranks[hg[1]]), reverse=True)
+        adv_per_game = adv_per_game or {}
+        adv = lambda hg: _fmt_adv(adv_per_game.get(hg))
         settings_row = _batch_settings_row(game_type, agg, weekend, label, info["abs_round"],
                                             "" if cup_per_game else cup_name, cup_bracket, cup_round)
         if cup_per_game:
             matchup_lines = ["Away Team Rank\tHome Team Rank\tAdv\tCup Name\tCup Bracket"]
-            matchup_lines += [f"{ranks[away]}\t{ranks[home]}\t\t{cup_per_game[(home, away)]}\t{cup_bracket}"
+            matchup_lines += [f"{ranks[away]}\t{ranks[home]}\t{adv((home, away))}\t{cup_per_game[(home, away)]}\t{cup_bracket}"
                                for home, away in games]
         else:
             matchup_lines = ["Away Team Rank\tHome Team Rank\tAdv"]
-            matchup_lines += [f"{ranks[away]}\t{ranks[home]}\t" for home, away in games]
+            matchup_lines += [f"{ranks[away]}\t{ranks[home]}\t{adv((home, away))}" for home, away in games]
         return {
             "label": label,
             "settings_tsv": _BATCH_SETTINGS_HEADER + "\n" + settings_row,
@@ -3573,6 +3603,7 @@ def export_matchday_batches(season, event=None):
                 "away_rank": ranks[away], "away_name": dex_to_name[away],
                 "home_rank": ranks[home], "home_name": dex_to_name[home],
                 **({"cup": cup_per_game[(home, away)]} if cup_per_game else {}),
+                **({"adv": adv_per_game[(home, away)]} if (home, away) in adv_per_game else {}),
             } for home, away in games],
         }
 
@@ -3646,10 +3677,11 @@ def export_matchday_batches(season, event=None):
         label = f"RT{matchday}"
         agg = matchday != 1
         games = _games_for_event(season, event, info.get("week"), info.get("day"))
+        adv_per_game = _rt_adv_by_dex(season, matchday, games)
         # Cup Round # MUST carry the matchday: it is how the engine tells RT1
         # from RT2 (RT games have no cup_name). It used to be blank, so an RT
         # matchday's exported results carried no matchday at all.
-        batch = build_batch(label, "Playoffs", agg, "", "", matchday, games)
+        batch = build_batch(label, "Playoffs", agg, "", "", matchday, games, adv_per_game=adv_per_game)
         conn.close()
         return info, [batch]
 
@@ -4382,10 +4414,12 @@ def rt_game_result(season, region, md, home, away):
     return {"home_score": r["pa_a"], "away_score": r["pf_a"], "winner": winner}
 
 
-def _rt_tie_winner(conn, season, region, md_leg1, md_leg2, team_a, team_b):
+def _rt_tie_winner(conn, season, region, md_leg1, md_leg2, team_a, team_b, better):
     """Combined-score winner of a two-legged tie, or None if either leg
-    hasn't been played yet. An exact aggregate tie goes to `team_a` -- every
-    caller passes leg 1's HOME side, which is the worse seed."""
+    hasn't been played yet. An exact aggregate tie goes to `better`, the
+    higher (lower-numbered) seed -- per explicit instruction 2026-10-03,
+    matching RDS and the WC. It used to go to `team_a`, which every caller
+    passed as leg 1's HOST: the worse seed."""
     r1 = _rt_game_row(conn, season, region, md_leg1, team_a, team_b)
     r2 = _rt_game_row(conn, season, region, md_leg2, team_a, team_b)
     if r1 is None or r2 is None:
@@ -4393,7 +4427,45 @@ def _rt_tie_winner(conn, season, region, md_leg1, md_leg2, team_a, team_b):
     a_id = conn.execute("SELECT team_id FROM teams WHERE name=?", (team_a,)).fetchone()["team_id"]
     a_total = sum(r["pf_a"] if r["team_a"] == a_id else r["pa_a"] for r in (r1, r2))
     b_total = sum(r["pf_a"] if r["team_a"] != a_id else r["pa_a"] for r in (r1, r2))
-    return team_a if a_total >= b_total else team_b
+    if a_total != b_total:
+        return team_a if a_total > b_total else team_b
+    return better
+
+
+# The Factor Modifier (DECKFIELD's per-game "Adv") for a Regional Tournament
+# game, per explicit instruction 2026-10-03: the HIGHER seed receives the
+# difference in RW between itself and its opponent, divided by a per-round
+# divisor. "Round" is the tournament's own round, not the matchday: round 1 is
+# MD1, round 2 is MD2/3, round 3 MD4/5, round 4 (semifinal) MD6/7 and round 5
+# (final) MD8/9.
+RT_ROUND_OF_MATCHDAY = {1: 1, 2: 2, 3: 2, 4: 3, 5: 3, 6: 4, 7: 4, 8: 5, 9: 5}
+RT_FACTOR_DIVISOR = {1: 2, 2: 2, 3: 2, 4: 4, 5: 8}
+
+
+def rt_factor_modifiers(season, region, matchday, games):
+    """{(home, away): adv} for one region's games on one RT matchday.
+
+    `adv` is on DECKFIELD's spread axis, where positive favours HOME: the
+    higher seed's modifier is added as-is when it hosts and negated when it is
+    away. It is signed by RW, not clamped -- a higher seed with the LOWER RW
+    gets a negative modifier, since "the difference of RW between them and
+    their opponent" is higher-seed RW minus opponent RW. RW is each team's
+    latest stored value, i.e. as of the matchday being exported."""
+    seed_of = {n: s for s, n in regional_standings_seeds(season, region).items()}
+    divisor = RT_FACTOR_DIVISOR[RT_ROUND_OF_MATCHDAY[matchday]]
+    conn = get_connection()
+    rw = {r["name"]: r["rw"] for r in conn.execute("""
+        SELECT t.name, r.rw FROM team_round_ratings r JOIN teams t ON t.team_id = r.team_id
+        WHERE r.season = ? AND t.region = ?
+          AND r.round = (SELECT MAX(round) FROM team_round_ratings WHERE season = ?)
+    """, (season, region, season)).fetchall()}
+    conn.close()
+    out = {}
+    for home, away in games:
+        higher, lower = (home, away) if seed_of[home] < seed_of[away] else (away, home)
+        mod = round((rw[higher] - rw[lower]) / divisor, 4)
+        out[(home, away)] = mod if higher == home else -mod
+    return out
 
 
 def regional_tournament_games(season, region, matchday):
@@ -4401,6 +4473,7 @@ def regional_tournament_games(season, region, matchday):
     (1-9), resolved through real results for every prior matchday. Returns
     None if a prior matchday isn't complete yet."""
     seeds = regional_standings_seeds(season, region)
+    seeds_of_name = {n: s for s, n in seeds.items()}
     conn = get_connection()
 
     def host_pair(seed_a, seed_b):
@@ -4442,7 +4515,8 @@ def regional_tournament_games(season, region, matchday):
             return leg2_games
         winners = []
         for (h1, a1) in leg1_games:
-            w = _rt_tie_winner(conn, season, region, leg1_md, leg2_md, h1, a1)
+            better = h1 if seeds_of_name[h1] < seeds_of_name[a1] else a1
+            w = _rt_tie_winner(conn, season, region, leg1_md, leg2_md, h1, a1, better)
             if w is None:
                 return None
             winners.append(w)
@@ -4487,7 +4561,8 @@ def regional_tournament_games(season, region, matchday):
 
     sf_winners = []
     for (h1, a1) in sf_leg1:
-        w = _rt_tie_winner(conn, season, region, 6, 7, h1, a1)
+        better = h1 if seeds_of_name[h1] < seeds_of_name[a1] else a1
+        w = _rt_tie_winner(conn, season, region, 6, 7, h1, a1, better)
         if w is None:
             conn.close()
             return None

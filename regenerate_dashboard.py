@@ -416,10 +416,11 @@ def build_rt_data():
                     if leg1:
                         h = entry["result"]["home_score"] + leg1["away_score"]
                         a = entry["result"]["away_score"] + leg1["home_score"]
-                        # An exact tie goes to leg 1's host (the worse seed),
-                        # matching _rt_tie_winner, which decides who advances.
+                        # An exact tie goes to the higher seed, matching
+                        # _rt_tie_winner, which decides who advances.
+                        better = home if seed_of[home] < seed_of[away] else away
                         entry["agg"] = {"home": h, "away": a,
-                                        "winner": home if h > a else away}
+                                        "winner": home if h > a else away if a > h else better}
                 entries.append(entry)
             rounds[str(md)] = entries
         rt[region] = rounds
