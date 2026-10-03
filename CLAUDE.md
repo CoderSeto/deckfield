@@ -3241,6 +3241,65 @@ that nothing re-checks. When a structural constant moves, `grep` for the old
 value as a literal -- `PA_BRACKET_LAST_ROUND` was updated everywhere it was
 *named* and missed the one place it was *spelled out*.
 
+## The Matchday Pack: one paste in, one file out (2026-10-03, per explicit request)
+
+Asked for a "one-stop-shop" for the per-matchday copy/paste. Before: four
+separate copy/pastes (Team Roster, Batch Settings, Matchups, Region Climate),
+each with its own Parse/Apply click, then Load First Match -- ~13 actions
+across two tabs, with nothing stopping a stale roster being mixed with new
+matchups. Then a results file named `deckfield_results.csv` to rename.
+
+**Dashboard -> game: one button, one paste.** The Next Matchday tab's
+**Copy Matchday Pack** (`buildMatchdayPack`) bundles all four as plain text:
+
+```
+#DECKFIELD MATCHDAY PACK v1
+#MATCHDAY<TAB>label=RT1<TAB>round=66<TAB>week=24<TAB>day=Tue<TAB>games=40<TAB>teams=160<TAB>file=2026-w24-tue-rt-1.csv
+#ROSTER / #BATCH SETTINGS / #MATCHUPS / #REGION CLIMATE   (each followed by its TSV)
+#END
+```
+
+Each section is byte-for-byte what its individual box holds; Region Climate is
+read from its box **at copy time**, so a Reroll is respected. `file=` is
+`_round_file_stems()[abs_round] + ".csv"`, carried in `NEXT_MATCHDAY_DATA`
+as `results_file`. `#END` exists so a truncated paste is detected.
+
+`deckfield.html`'s **Import Matchday Pack** (top of the Schedule tab,
+`importMatchdayPack`) **drives the four existing importers through their own
+buttons** rather than parsing anything itself -- so a pack import is exactly
+the four manual pastes and cannot drift from them. Each step is checked before
+the next (160 teams, Round # equals the pack's round, every matchup resolved
+to roster teams, climate loaded) and the first failure stops the import and
+names its section. It never touches Starting Timeslot / Games per Timeslot /
+Factor Multiplier. The individual paste boxes on both sides still work.
+**The reader and writer must stay in step** -- `buildMatchdayPack` in the
+dashboard, `parseMatchdayPack` in the game.
+
+**Game -> engine: Download or Copy, both checked.** After a pack import the
+Results tab shows a live **matchday check** (`matchdayCheck`): N of M played,
+plus anything not played, recorded twice, from another round, not on this
+matchday, or missing the batch's Cup Round #. **Download** names the file with
+the pack's `file=` and **Copy** copies the same text; both `confirm()` before
+exporting a log that doesn't check out, listing what's missing. A manual Parse
+Matchups clears the pack (`MATCHDAY_PACK = null`), since the log could no
+longer be checked against it.
+
+**A replayed match now REPLACES its results row** instead of appending a
+second one (same round + home + away). Two rows for one game would
+double-insert it on `add-results`; this was live before, unnoticed because the
+Final Scores card already overwrote on replay.
+
+Verified end to end in Chromium with real clipboard access: the dashboard
+button wrote a 19 KB pack whose climate matched the box on screen; one paste +
+Import loaded 160 teams / 40 matchups / 10 climates and the first match; 40x
+Sim Game + Load Next Match took the check from 39/40 (Download asked first,
+naming the missing game) to "40 of 40 played -- complete"; replaying game 1
+left 40 rows; the download arrived as `2026-w24-tue-rt-1.csv` and Copy matched
+it exactly. That file went through the real `add-results` on a scratch
+database, `next_matchday()` moved to RT2, and `export-results --from 66 --to 66`
+reported it **already up to date** -- byte-identical under the engine's own
+name. Bad pastes ("not a pack", no `#END`) are refused with a message.
+
 ## deckfield.html EX Bonus panel
 
 **The headline stated the differential and now states both banked totals,

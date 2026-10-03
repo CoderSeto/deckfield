@@ -172,9 +172,14 @@ def build_next_matchday():
     if info is None:
         return None
     b = batches[0]
+    from deckfield_ratings import _round_file_stems
     return {
         "week": info["week"], "day": info["day"], "event_label": b["label"],
         "abs_round": info["abs_round"],
+        # The engine's own filename for this matchday's results (the same one
+        # export-results writes), carried into the Matchday Pack so
+        # deckfield.html can download the CSV already named for results/.
+        "results_file": _round_file_stems()[info["abs_round"]] + ".csv",
         "batch": {"label": b["label"], "settings_tsv": b["settings_tsv"],
                   "matchups_tsv": b["matchups_tsv"], "games": b["games"]},
     }
