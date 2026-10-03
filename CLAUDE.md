@@ -1715,6 +1715,10 @@ RT9, so each tie's two legs carry the same modifier with opposite signs.
 - **Signed, not clamped.** Higher-seed RP minus opponent RP, so a higher seed
   with fewer Regional Points gets a negative modifier (3 of RT1's 40 -- seeding
   is W-L/H2H/DSCR, while RP also carries the League-win bonus).
+- **Always three decimals** (per explicit instruction): rounded to 3 in
+  `rt_factor_modifiers` and written `17.000` by `_fmt_adv`, so the stored
+  value, the paste and the dashboard agree. It matters for any odd divisor.
+- **Negative values for the higher seed are intended** -- confirmed explicitly.
 - Scale: RT1 runs -3 to +17, median 5.5. Pyrite Town (#9, RP 34) hosting
   Boyleland (#16, RP 0) is +17.0.
 

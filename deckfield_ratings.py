@@ -3453,8 +3453,9 @@ def _games_for_event(season, event, week=None, day=None):
 
 def _fmt_adv(value):
     """DECKFIELD's Adv cell: blank when there is no modifier (it reads blank
-    as 0), otherwise the value at 4 decimals, matching the spread's own."""
-    return "" if value is None else f"{value:.4f}"
+    as 0), otherwise ALWAYS three decimals (per explicit instruction) --
+    `17.000`, never `17` or `17.0`."""
+    return "" if value is None else f"{value:.3f}"
 
 
 def _rt_adv_by_dex(season, matchday, games):
@@ -4469,7 +4470,9 @@ def rt_factor_modifiers(season, region, matchday, games):
     out = {}
     for home, away in games:
         higher, lower = (home, away) if seed_of[home] < seed_of[away] else (away, home)
-        mod = round((rp[higher] - rp[lower]) / divisor, 4)
+        # Always three decimals (per explicit instruction) -- rounded here so
+        # the stored value, the export and the dashboard can never disagree.
+        mod = round((rp[higher] - rp[lower]) / divisor, 3)
         out[(home, away)] = mod if higher == home else -mod
     return out
 
