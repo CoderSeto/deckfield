@@ -952,6 +952,24 @@
   </div>
 
   <div class="tab-content" id="scheduleTab">
+    <div class="roster-panel" style="margin-bottom:16px;">
+      <div class="log-title">Import Matchday Pack</div>
+      <p class="roster-help">
+        Paste the <strong>Matchday Pack</strong> from deckfield_dashboard.html's Next Matchday tab
+        and click Import. It fills in the Teams roster, Batch Settings, Matchups and Region
+        Climate below in one go, checks each of them, and loads the first match. Set Starting
+        Timeslot, Games per Timeslot and Factor Multiplier first if you want anything other than
+        their current values &mdash; the pack never sets those. The Results tab then checks the
+        matchday as you play it and names the download for the ratings engine.
+      </p>
+      <textarea id="packPasteBox" class="paste-box" rows="4" placeholder="Paste the Matchday Pack here..."></textarea>
+      <div class="roster-controls">
+        <button id="packImportBtn">Import Matchday Pack</button>
+        <button id="packClearBtn">Clear</button>
+      </div>
+      <div class="roster-status" id="packStatus"></div>
+    </div>
+
     <div class="roster-panel">
       <div class="log-title">Schedule Batch Settings</div>
       <p class="roster-help">
@@ -1121,7 +1139,12 @@
         Bracket/Round #) on the Schedule tab before playing so it comes through filled in.
         Download it as a .csv file and run
         <code>deckfield add-results &lt;file&gt;</code> on it directly.
+        After an <strong>Import Matchday Pack</strong>, the line below checks the log against
+        that matchday (every game played once, right round, right cup tag), Download names the
+        file the way the engine's <code>results/</code> folder expects, and both Download and
+        Copy ask before exporting a log that doesn't check out.
       </p>
+      <div class="roster-status" id="resultsCheck"></div>
       <div class="roster-controls">
         <button id="resultsDownloadBtn">Download CSV</button>
         <button id="resultsCopyBtn">Copy All to Clipboard</button>
@@ -3048,6 +3071,12 @@
   const SCHEDULE_COLUMNS = ['Away Team Rank', 'Home Team Rank', 'Adv'];
   const SCHEDULE_COLUMNS_WITH_CUP = SCHEDULE_COLUMNS.concat(['Cup Name', 'Cup Bracket']);
   let SCHEDULE = [];
+  // The matchday an imported Matchday Pack described ({label, round, week, day,
+  // games, teams, file}), or null. Set only by importMatchdayPack(); a manual
+  // Parse Matchups clears it, since the log can no longer be checked against
+  // a pack the schedule no longer comes from.
+  let MATCHDAY_PACK = null;
+  let packImporting = false;
   let nextMatchIndex = 0; // which SCHEDULE entry "Load Next Match" will load
   let currentMatchIndex = null; // which SCHEDULE entry is currently loaded into `game`
 
@@ -3089,6 +3118,7 @@
   }
 
   document.getElementById('schedParseBtn').addEventListener('click', () => {
+    if (!packImporting) MATCHDAY_PACK = null;
     const text = document.getElementById('schedPasteBox').value;
     const hasHeader = document.getElementById('schedHasHeader').checked;
     const rows = parseSchedulePaste(text, hasHeader);
@@ -3304,6 +3334,152 @@
   }
 
   document.getElementById('loadMatchBtn').addEventListener('click', () => loadScheduledMatch(0));
+
+  // ---------- Matchday Pack importer ----------
+  // Reads the one-block pack the dashboard's "Copy Matchday Pack" builds
+  // (buildMatchdayPack there is the writer; the two must stay in step) and
+  // drives the four existing importers with it, through their own buttons --
+  // so a pack import is exactly the four manual pastes, never a second
+  // parsing path that could drift from them. Each step is checked before the
+  // next runs, and the first failure stops the import and names its section.
+  const PACK_HEADER = '#DECKFIELD MATCHDAY PACK v1';
+  const PACK_SECTIONS = ['#ROSTER', '#BATCH SETTINGS', '#MATCHUPS', '#REGION CLIMATE'];
+
+  function parseMatchdayPack(text){
+    const lines = text.replace(/\r\n?/g, '\n').split('\n');
+    while (lines.length && lines[0].trim() === '') lines.shift();
+    if (!lines.length || lines[0].trim() !== PACK_HEADER){
+      throw new Error("This isn't a Matchday Pack — copy it with the dashboard's Copy Matchday Pack button.");
+    }
+    const metaLine = (lines[1] || '').split('\t');
+    if (metaLine[0] !== '#MATCHDAY') throw new Error('The pack is missing its #MATCHDAY line.');
+    const meta = {};
+    metaLine.slice(1).forEach(kv => {
+      const i = kv.indexOf('=');
+      if (i > 0) meta[kv.slice(0, i)] = kv.slice(i + 1);
+    });
+    const sections = {};
+    let current = null, ended = false;
+    for (const line of lines.slice(2)){
+      const marker = line.trim();
+      if (marker === '#END'){ ended = true; break; }
+      if (PACK_SECTIONS.includes(marker)){ current = marker; sections[current] = []; continue; }
+      if (current) sections[current].push(line);
+    }
+    if (!ended) throw new Error('The pack is cut off (no #END line) — copy it again.');
+    for (const name of PACK_SECTIONS){
+      if (!sections[name] || !sections[name].join('').trim()){
+        throw new Error(`The pack has no ${name.slice(1).toLowerCase()} section.`);
+      }
+    }
+    meta.round = parseInt(meta.round, 10);
+    meta.games = parseInt(meta.games, 10);
+    meta.teams = parseInt(meta.teams, 10);
+    return {meta, sections: Object.fromEntries(PACK_SECTIONS.map(n => [n, sections[n].join('\n')]))};
+  }
+
+  function importMatchdayPack(){
+    const statusEl = document.getElementById('packStatus');
+    const fail = (msg) => {
+      statusEl.textContent = '⚠ ' + msg;
+      statusEl.className = 'roster-status warn';
+    };
+    let pack;
+    try { pack = parseMatchdayPack(document.getElementById('packPasteBox').value); }
+    catch (e) { return fail(e.message); }
+    const {meta, sections} = pack;
+
+    // 1. Roster
+    document.getElementById('rosterHasHeader').checked = true;
+    document.getElementById('rosterPasteBox').value = sections['#ROSTER'];
+    document.getElementById('rosterParseBtn').click();
+    if (document.getElementById('rosterStatus').classList.contains('warn') || TEAM_ROSTER.length !== meta.teams){
+      return fail(`Roster: expected ${meta.teams} teams, parsed ${TEAM_ROSTER.length}. `
+        + document.getElementById('rosterStatus').textContent);
+    }
+    // 2. Batch Settings
+    document.getElementById('schedSettingsHasHeader').checked = true;
+    document.getElementById('schedSettingsPasteBox').value = sections['#BATCH SETTINGS'];
+    document.getElementById('schedSettingsApplyBtn').click();
+    if (document.getElementById('schedSettingsStatus').classList.contains('warn')
+        || parseInt(document.getElementById('schedRoundNum').value, 10) !== meta.round){
+      return fail('Batch Settings: ' + document.getElementById('schedSettingsStatus').textContent);
+    }
+    // 3. Matchups
+    document.getElementById('schedHasHeader').checked = true;
+    document.getElementById('schedPasteBox').value = sections['#MATCHUPS'];
+    packImporting = true;
+    try { document.getElementById('schedParseBtn').click(); } finally { packImporting = false; }
+    const unresolved = SCHEDULE.filter(m => !m.homeName || !m.awayName).length;
+    if (SCHEDULE.length !== meta.games || unresolved){
+      return fail(`Matchups: expected ${meta.games}, parsed ${SCHEDULE.length}`
+        + (unresolved ? `, ${unresolved} with a rank not in the roster` : '') + '.');
+    }
+    // 4. Region Climate
+    document.getElementById('climateHasHeader').checked = true;
+    document.getElementById('climatePasteBox').value = sections['#REGION CLIMATE'];
+    document.getElementById('climateParseBtn').click();
+    if (document.getElementById('climateStatus').classList.contains('warn')){
+      return fail('Region Climate: ' + document.getElementById('climateStatus').textContent);
+    }
+
+    MATCHDAY_PACK = meta;
+    loadScheduledMatch(0);
+    renderResultsTab();
+    statusEl.textContent = `Loaded ${meta.label} (round ${meta.round}, week ${meta.week} ${meta.day}): `
+      + `${TEAM_ROSTER.length} teams, ${SCHEDULE.length} matchups, Region Climate — first match is on the Field.`;
+    statusEl.className = 'roster-status ok';
+  }
+
+  document.getElementById('packImportBtn').addEventListener('click', importMatchdayPack);
+  document.getElementById('packClearBtn').addEventListener('click', () => {
+    document.getElementById('packPasteBox').value = '';
+    document.getElementById('packStatus').textContent = '';
+  });
+
+  // ---------- Matchday check (Results tab) ----------
+  // Compares the results log with the imported pack's matchday: every
+  // scheduled game present exactly once, at the pack's round, carrying the
+  // cup tag the batch set. Returns null when no pack is loaded.
+  function matchdayCheck(){
+    if (!MATCHDAY_PACK) return null;
+    const round = String(MATCHDAY_PACK.round);
+    const dexOf = rank => String((findTeamByRank(rank) || {})['DEX #'] || '');
+    const expected = new Map();
+    SCHEDULE.forEach(m => expected.set(`${dexOf(m.homeRank)}-${dexOf(m.awayRank)}`, `${m.awayName} @ ${m.homeName}`));
+    const wantCupRound = SCHEDULE.length ? String(SCHEDULE[0].cupRoundNum) : '';
+    const seen = new Map();
+    let wrongRound = 0, extra = 0, untagged = 0;
+    for (const row of RESULTS_LOG){
+      const key = `${row[2]}-${row[3]}`;
+      if (String(row[0]) !== round){ wrongRound++; continue; }
+      if (!expected.has(key)){ extra++; continue; }
+      seen.set(key, (seen.get(key) || 0) + 1);
+      if (wantCupRound !== '' && String(row[20]) !== wantCupRound) untagged++;
+    }
+    const missing = [...expected.keys()].filter(k => !seen.has(k));
+    const dupes = [...seen.values()].filter(n => n > 1).length;
+    const problems = [];
+    if (missing.length) problems.push(`${missing.length} not played yet`);
+    if (dupes) problems.push(`${dupes} recorded twice`);
+    if (wrongRound) problems.push(`${wrongRound} row(s) from another round`);
+    if (extra) problems.push(`${extra} row(s) not on this matchday`);
+    if (untagged) problems.push(`${untagged} row(s) without Cup Round # ${wantCupRound}`);
+    const head = `${MATCHDAY_PACK.label} (round ${round}): ${seen.size} of ${expected.size} played`;
+    return {
+      ok: problems.length === 0,
+      text: problems.length ? `${head} — ${problems.join(', ')}.` : `${head} — complete and ready to send.`,
+      missing: missing.map(k => expected.get(k)),
+    };
+  }
+
+  // Asks before exporting a log that doesn't check out; true = go ahead.
+  function confirmMatchdayExport(action){
+    const check = matchdayCheck();
+    if (!check || check.ok) return true;
+    const sample = check.missing.slice(0, 5).join('\n  ');
+    return window.confirm(`${check.text}${sample ? `\n\nNot played:\n  ${sample}${check.missing.length > 5 ? '\n  …' : ''}` : ''}\n\n${action} anyway?`);
+  }
   document.getElementById('nextMatchBtn').addEventListener('click', () => loadScheduledMatch(nextMatchIndex));
 
   document.getElementById('schedTable').addEventListener('click', (event) => {
@@ -3676,12 +3852,23 @@
 
     const csvLines = [RESULTS_COLUMNS.join(',')].concat(RESULTS_LOG.map(row => row.join(',')));
     document.getElementById('resultsTsvBox').value = csvLines.join('\n');
+
+    const checkEl = document.getElementById('resultsCheck');
+    const check = matchdayCheck();
+    checkEl.textContent = check ? check.text : '';
+    checkEl.className = 'roster-status' + (check ? (check.ok ? ' ok' : ' warn') : '');
   }
 
   function recordResultIfNeeded(){
     if (!game.gameOver || game.resultsRecorded) return;
     game.resultsRecorded = true;
-    RESULTS_LOG.push(buildResultsRow(game));
+    // A replayed match REPLACES its earlier row (same round, same home and
+    // away) rather than adding a second one: a game is played once per round,
+    // and two rows would double-insert it on add-results.
+    const row = buildResultsRow(game);
+    const prior = RESULTS_LOG.findIndex(r => String(r[0]) === String(row[0])
+      && String(r[2]) === String(row[2]) && String(r[3]) === String(row[3]));
+    if (prior >= 0) RESULTS_LOG[prior] = row; else RESULTS_LOG.push(row);
     renderResultsTab();
     recordFinalScore(game);
   }
@@ -3693,17 +3880,19 @@
       statusEl.className = 'roster-status warn';
       return;
     }
+    if (!confirmMatchdayExport('Download')) return;
+    const filename = MATCHDAY_PACK ? MATCHDAY_PACK.file : 'deckfield_results.csv';
     const csvText = document.getElementById('resultsTsvBox').value;
     const blob = new Blob([csvText], {type: 'text/csv'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'deckfield_results.csv';
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    statusEl.textContent = `Downloaded ${RESULTS_LOG.length} row${RESULTS_LOG.length === 1 ? '' : 's'} as deckfield_results.csv.`;
+    statusEl.textContent = `Downloaded ${RESULTS_LOG.length} row${RESULTS_LOG.length === 1 ? '' : 's'} as ${filename}.`;
     statusEl.className = 'roster-status ok';
   });
 
@@ -3715,6 +3904,7 @@
       statusEl.className = 'roster-status warn';
       return;
     }
+    if (!confirmMatchdayExport('Copy')) return;
     box.select();
     navigator.clipboard.writeText(box.value).then(() => {
       statusEl.textContent = `Copied ${RESULTS_LOG.length} row${RESULTS_LOG.length === 1 ? '' : 's'} to the clipboard.`;

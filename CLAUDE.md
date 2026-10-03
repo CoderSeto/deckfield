@@ -1627,6 +1627,115 @@ Eterna/Mossui/Celestic never played each other and should resolve by DSCR).
   `cup_name`/`cup_bracket` the way RDS/PA do).
 - Calendar: weeks 24-26, `("RT", matchday)` events, confirmed placement.
 
+### RT results were invisible to the engine, fixed 2026-10-03 (per explicit request)
+
+Raised directly: RT games "should be classified as Playoff games ... they
+should not add to the Regional Rankings, and I wanted to make sure that R2
+would populate after R1 is complete, and so on."
+
+**The classification was already right; the matchday tag was not.** The RT
+batch row exported Game Type `Playoffs` (-> `P`) but a **blank Cup Round #**,
+so every RT result reached the engine with `cup_round` NULL -- and RT games
+are found by `host_region` + `cup_round` (they carry no `cup_name`).
+Reproduced on a scratch database through the real `add-results` path: RT1
+ingested untagged left `next_matchday()` on **RT1 forever** and
+`regional_tournament_games(..., 2)` returned None in every region. Tagged,
+it advanced to RT2 immediately. Two fixes:
+
+- `export_matchday_batches` writes the **matchday into Cup Round #** for RT
+  batches. Verified in `deckfield.html` itself: the pasted row fills Cup
+  Round # = 1 and the Results CSV row reads `...,P,...,,,1`.
+- `_rt_matchday_clause(md)` makes every RT lookup (`_rt_game_row`, and
+  through it `_rt_real_winner` / `_rt_tie_winner` / `rt_game_result`, plus
+  `_event_is_played`) also accept an **untagged `P` row at that matchday's
+  absolute round** -- so a hand-set batch that forgets the tag still works.
+  The lookups also now require `cup_name IS NULL`, as `_event_is_played`
+  already did.
+
+**"Should not add to the Regional Rankings" was verified, not assumed.**
+After a full synthetic RT1-RT9 (odd matchdays ingested untagged, even
+tagged): Regional W-L and Regional DSCR identical for all 160 teams, RT
+seeding identical in all 10 regions. What a `P` game DOES move, by
+design: the P/F record, TOT (x8 points), OVR, Elo, and RW/LW via their
+`playoff_finals_wins x 0.005` term (+0.5 per win). Asked explicitly
+whether that RW/LW term should go; the answer was **leave it** -- "Regional
+Rankings" meant the standings.
+
+The same walk checked every bracket rule in all 10 regions with zero
+violations (MD1 better seed hosts; MD2-9 worse seed hosts leg 1, legs swap;
+each round's entrants are exactly the prior round's real winners; SF lane
+pairing 4v1 / 2v3), 40/40/40/40/40/20/20/10/10 games, and `next_matchday()`
+moving RT1 -> ... -> RT9 -> WC Group MD1.
+
+**The Regional Playoffs tab could not show a result at all** -- `rtRowHtml`
+printed a dash unconditionally and `RT_DATA` carried no scores, so RT1 would
+have kept reading as unplayed after it was played. `build_rt_data` now
+attaches each game's `result` (scores resolved by name) and, on leg 2
+(MD3/5/7/9), an `agg` once both legs are in; the tab colours winners and
+draws an AGG row. **Played, a box's widest row needs ~459px** (Terastal:
+Glaseado Mountain vs Blueberry Terarium with an AGG score) against the
+shared ~372px four-across track, so every box clipped; shrinking type only
+got it to ~439px. `#rt-grid` now has its own `minmax(470px)` track -- three
+across at 1600px+ -- and 0 boxes clip at 1920-600px in either state. The
+horizontal page scroll at 800-1400px is pre-existing (same on main).
+
+**An exact aggregate tie goes to the higher seed** (per explicit instruction,
+2026-10-03). `_rt_tie_winner` used to return `team_a`, which every caller
+passed as leg 1's HOST -- the **worse** seed; it now takes the better seed as
+an argument, matching RDS and the WC. `build_rt_data`'s AGG row uses the same
+rule. Verified by mirroring every MD2/3 leg so all 40 ties finished exactly
+level: every MD4 entrant was the higher seed of its tie.
+
+### RT Factor Modifier (2026-10-03, per explicit instruction)
+
+"The higher seed in each RT game should receive a modifier equal to the
+difference of [Regional Points] between them and their opponent divided by:
+Rounds 1-3, 2; Round 4, 4; Round 5, 8." It lands in DECKFIELD's per-game
+**Adv** (Factor Modifier) column, which `export_matchday_batches` and
+`export_matchday_for_deckfield` now fill for RT matchdays only
+(`rt_factor_modifiers`, `_rt_adv_by_dex`); every other event still leaves it
+blank.
+
+**It is Regional Points (`rp`, the TOT component), NOT RW.** The instruction
+first said "RW" and was corrected the same day ("don't use RW for the
+advantage, that would be ridiculous"); the first cut shipped on RW and was
+replaced. RW is a ratio with decimals and grows +0.5 per playoff win; RP is
+whole Regional result points (3/2/1/0) plus one per League win, and is
+**frozen for the whole tournament** -- RT games are Playoffs, so nothing in
+the RT moves it. Verified: 0 of 160 teams' RP changed between round 65 and
+RT9, so each tie's two legs carry the same modifier with opposite signs.
+
+- **"Round" is the tournament round**, not the matchday:
+  `RT_ROUND_OF_MATCHDAY` maps MD1 -> 1, MD2/3 -> 2, MD4/5 -> 3, MD6/7 -> 4
+  (semifinal), MD8/9 -> 5 (final). Read as matchdays the original rule
+  would have left MD6-9 undefined.
+- **Divisors are 4/4/8/12/16** (`RT_FACTOR_DIVISOR`), chosen 2026-10-03.
+  The instruction began as 2/2/2/4/8; it was compared against 3/6/9, 4/8/12,
+  2/4/4/8/8, 3/6/6/9/9 and 4/8/8/12/12 using the real (frozen) RP gaps --
+  RT1's actual pairings, the chalk path for rounds 2-5, and every
+  structurally possible pairing -- set against this season's played spreads
+  (median |spread| 5.2, p90 12.4). 4/4/8/12/16 was picked: typical modifier
+  2.75 / 2.25 / 1.1 / 0.5 / 0.4 by round, no round able to exceed 9.75, and
+  the only schedule where every round from 2 on is strictly smaller.
+- **Sign.** DECKFIELD adds Adv to a spread where positive favours HOME, so
+  the higher seed's value is positive when it hosts and **negated** when it is
+  away -- every leg 1 from MD2 on, where the worse seed hosts.
+- **Signed, not clamped.** Higher-seed RP minus opponent RP, so a higher seed
+  with fewer Regional Points gets a negative modifier (3 of RT1's 40 -- seeding
+  is W-L/H2H/DSCR, while RP also carries the League-win bonus).
+- **Always three decimals** (per explicit instruction): rounded to 3 in
+  `rt_factor_modifiers` and written `17.000` by `_fmt_adv`, so the stored
+  value, the paste and the dashboard agree. It matters for any odd divisor.
+- **Negative values for the higher seed are intended** -- confirmed explicitly.
+- Scale: RT1 runs -1.5 to +8.5. Pyrite Town (#9, RP 34) hosting
+  Boyleland (#16, RP 0) is 34 / 4 = +8.500.
+
+Verified: a full synthetic RT1-RT9 recomputed every game's Adv by hand
+(divisor, sign, RP) with 0 mismatches; `deckfield.html` loaded the real RT1
+paste and its spread panel read `+ Factor Modifier (Adv) 8.500`; the
+dashboard's Next Matchday table shows the Adv column only when a batch
+carries one.
+
 ## World Championship (weeks 27-33, added 2026-09-16)
 
 The calendar now runs past the Regional Tournament into the World
@@ -3131,6 +3240,65 @@ teaches one layer up:** a number written into code is a claim about the data
 that nothing re-checks. When a structural constant moves, `grep` for the old
 value as a literal -- `PA_BRACKET_LAST_ROUND` was updated everywhere it was
 *named* and missed the one place it was *spelled out*.
+
+## The Matchday Pack: one paste in, one file out (2026-10-03, per explicit request)
+
+Asked for a "one-stop-shop" for the per-matchday copy/paste. Before: four
+separate copy/pastes (Team Roster, Batch Settings, Matchups, Region Climate),
+each with its own Parse/Apply click, then Load First Match -- ~13 actions
+across two tabs, with nothing stopping a stale roster being mixed with new
+matchups. Then a results file named `deckfield_results.csv` to rename.
+
+**Dashboard -> game: one button, one paste.** The Next Matchday tab's
+**Copy Matchday Pack** (`buildMatchdayPack`) bundles all four as plain text:
+
+```
+#DECKFIELD MATCHDAY PACK v1
+#MATCHDAY<TAB>label=RT1<TAB>round=66<TAB>week=24<TAB>day=Tue<TAB>games=40<TAB>teams=160<TAB>file=2026-w24-tue-rt-1.csv
+#ROSTER / #BATCH SETTINGS / #MATCHUPS / #REGION CLIMATE   (each followed by its TSV)
+#END
+```
+
+Each section is byte-for-byte what its individual box holds; Region Climate is
+read from its box **at copy time**, so a Reroll is respected. `file=` is
+`_round_file_stems()[abs_round] + ".csv"`, carried in `NEXT_MATCHDAY_DATA`
+as `results_file`. `#END` exists so a truncated paste is detected.
+
+`deckfield.html`'s **Import Matchday Pack** (top of the Schedule tab,
+`importMatchdayPack`) **drives the four existing importers through their own
+buttons** rather than parsing anything itself -- so a pack import is exactly
+the four manual pastes and cannot drift from them. Each step is checked before
+the next (160 teams, Round # equals the pack's round, every matchup resolved
+to roster teams, climate loaded) and the first failure stops the import and
+names its section. It never touches Starting Timeslot / Games per Timeslot /
+Factor Multiplier. The individual paste boxes on both sides still work.
+**The reader and writer must stay in step** -- `buildMatchdayPack` in the
+dashboard, `parseMatchdayPack` in the game.
+
+**Game -> engine: Download or Copy, both checked.** After a pack import the
+Results tab shows a live **matchday check** (`matchdayCheck`): N of M played,
+plus anything not played, recorded twice, from another round, not on this
+matchday, or missing the batch's Cup Round #. **Download** names the file with
+the pack's `file=` and **Copy** copies the same text; both `confirm()` before
+exporting a log that doesn't check out, listing what's missing. A manual Parse
+Matchups clears the pack (`MATCHDAY_PACK = null`), since the log could no
+longer be checked against it.
+
+**A replayed match now REPLACES its results row** instead of appending a
+second one (same round + home + away). Two rows for one game would
+double-insert it on `add-results`; this was live before, unnoticed because the
+Final Scores card already overwrote on replay.
+
+Verified end to end in Chromium with real clipboard access: the dashboard
+button wrote a 19 KB pack whose climate matched the box on screen; one paste +
+Import loaded 160 teams / 40 matchups / 10 climates and the first match; 40x
+Sim Game + Load Next Match took the check from 39/40 (Download asked first,
+naming the missing game) to "40 of 40 played -- complete"; replaying game 1
+left 40 rows; the download arrived as `2026-w24-tue-rt-1.csv` and Copy matched
+it exactly. That file went through the real `add-results` on a scratch
+database, `next_matchday()` moved to RT2, and `export-results --from 66 --to 66`
+reported it **already up to date** -- byte-identical under the engine's own
+name. Bad pastes ("not a pack", no `#END`) are refused with a message.
 
 ## deckfield.html EX Bonus panel
 

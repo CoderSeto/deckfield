@@ -44,7 +44,7 @@ from deckfield_ratings import (
     pa_cup_real_results, pa_cup_round_preview, pa_cup_round1_seeding,
     compute_strength_breakdown, generate_pod_schedule,
     rds_cup_real_results, rds_cup_round_pairings,
-    regional_standings_seeds, regional_tournament_games, REGION_COLORS,
+    regional_standings_seeds, regional_tournament_games, rt_game_result, REGION_COLORS,
     world_championship_field, rds_mutual_stage_data, pa_mutual_stage_data, home_away_records,
     world_championship_overview,
 )
@@ -172,9 +172,14 @@ def build_next_matchday():
     if info is None:
         return None
     b = batches[0]
+    from deckfield_ratings import _round_file_stems
     return {
         "week": info["week"], "day": info["day"], "event_label": b["label"],
         "abs_round": info["abs_round"],
+        # The engine's own filename for this matchday's results (the same one
+        # export-results writes), carried into the Matchday Pack so
+        # deckfield.html can download the CSV already named for results/.
+        "results_file": _round_file_stems()[info["abs_round"]] + ".csv",
         "batch": {"label": b["label"], "settings_tsv": b["settings_tsv"],
                   "matchups_tsv": b["matchups_tsv"], "games": b["games"]},
     }
@@ -400,14 +405,29 @@ def build_rt_data():
             games = regional_tournament_games(SEASON, region, md)
             if games is None:
                 break
-            rounds[str(md)] = [
-                {
+            entries = []
+            for home, away in games:
+                entry = {
                     "home": home, "away": away,
                     "home_seed": seed_of[home], "away_seed": seed_of[away],
                     "home_dex": dex_by_name[home], "away_dex": dex_by_name[away],
+                    "result": rt_game_result(SEASON, region, md, home, away),
                 }
-                for home, away in games
-            ]
+                # Leg 2 of a two-legged tie (MD3/5/7/9) carries the aggregate
+                # once both legs are in. Leg 1 is the same pair with ends
+                # swapped, so each side's total is summed by NAME.
+                if md in (3, 5, 7, 9) and entry["result"]:
+                    leg1 = rt_game_result(SEASON, region, md - 1, away, home)
+                    if leg1:
+                        h = entry["result"]["home_score"] + leg1["away_score"]
+                        a = entry["result"]["away_score"] + leg1["home_score"]
+                        # An exact tie goes to the higher seed, matching
+                        # _rt_tie_winner, which decides who advances.
+                        better = home if seed_of[home] < seed_of[away] else away
+                        entry["agg"] = {"home": h, "away": a,
+                                        "winner": home if h > a else away if a > h else better}
+                entries.append(entry)
+            rounds[str(md)] = entries
         rt[region] = rounds
     return rt
 
