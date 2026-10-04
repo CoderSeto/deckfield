@@ -283,6 +283,14 @@ and the Conflict Resolution Log accumulates 10/14/7/8/3/4 across rounds
 `RT_DATA` and `SCHEDULE_DATA` held still again (a cup round touches
 neither), as did every RDS constant.
 
+Round 72 (Regional Tournament MD7, semifinal leg 2, week 26 Tue) was
+ingested 2026-10-04 as `results/2026-w26-tue-rt-7.csv`; a clean rebuild of
+main (60 files, 3265 games through round 71) reproduced its dashboard with
+only `TEAMS_EXPORT_TSV` differing, and the database now reports **3285 games
+through round 72**. `export-results --from 72 --to 72` reported the file
+already up to date. Ingested alongside the new RT bonus (see "Regional
+Tournament bonus").
+
 Round 49 (RDS Final **leg 2**, week 18 Thu) was ingested 2026-09-14 as
 `results/2026-w18-thu-rds-final-2.csv`. `results/` now runs 12-49 with no gaps
 (38 files) and a clean rebuild reports **2610 games through round 49**.
@@ -655,11 +663,11 @@ whole of it.
 **Cumulative totals, and the timing is part of the rule, not an
 implementation detail:**
 
-| stage | RDS (Ribbon/Dream/Star) | PA |
-|---|---|---|
-| semifinalists, once both brackets finish their last round | -- | **30** |
-| finalists, **at the end of the semifinals** | **15** | **45** |
-| winner, at the end of the final | **30** | **60** |
+| stage | RDS (Ribbon/Dream/Star) | PA | Regional Tournament |
+|---|---|---|---|
+| semifinalists, once the semifinal field is settled | -- | **30** | **15** (end of MD5) |
+| finalists, **at the end of the semifinals** | **15** | **45** | **30** (end of MD7) |
+| winner, at the end of the final | **30** | **60** | **45** (end of MD9) |
 
 `TOURNAMENT_BONUS` stores each tier as the **increment** collected at that
 stage, so the table above is the running total. The finalists collect when the
@@ -721,6 +729,35 @@ is no semifinal to conclude).
 **Not displayed separately yet.** `tb` is a real column on
 `team_round_ratings` and is folded into the TOT the Rankings tab shows, but no
 tab breaks it out on its own.
+
+### Regional Tournament bonus (2026-10-04, per explicit instruction)
+
+"15 for losing semifinalists, 30 for losing finalist, and 45 for the winners
+of each region, awarded at the equivalent times as the cups." Read as PA's
+cumulative tiers: `TOURNAMENT_BONUS["RT"]` is 15/15/15 increments, so every
+semifinalist banks 15 when MD5 settles the field (round 70), the two
+finalists add 15 when the semifinal ends (MD7, round 72) and the champion
+adds 15 when the final ends (MD9, round 74) -- 15 / 30 / 45 standing.
+
+`_rt_stages` yields each region in `_cup_stages`' exact shape, and
+`tournament_bonus_points` chains the two, so the RT gets the same
+settled-round gating and never-stored discipline. **It is deliberately kept
+OUT of `_cup_stages`**, because that walk also drives `cup_champions` and the
+cup-title accolades; an RT accolade (the "Region" family -- `Lily Valley S6,
+S7, S8` already exists in the stored data) was not part of the request. The
+final's exact aggregate tie goes to the higher seed, as in every RT tie.
+`_rt_stages` returns immediately for any `through_round` before MD5, so the
+per-round recompute pays nothing for it until the RT is under way (~0.02s vs
+~0.4s per call).
+
+Applied by `recompute --from 70` the day it landed (RT7 was the newest round).
+Verified: rounds 68-69 unchanged; 40 semifinalists +15 at 70-71; at 72 the 20
+finalists +30 and the 20 losing semifinalists +15, TOT moving by exactly the
+bonus on all 40; a clean wipe-and-rebuild matches the incremental recompute on
+all 11,520 rating rows. A synthetic RT8/RT9 on a scratch copy paid each
+champion 45 at round 74 but not 73, each runner-up 30, an exactly level final
+(Indigo) went to #1 Victory Road, and RT stacks correctly with cup bonuses
+(Snowpoint City 30 RT + 15 Ribbon + 45 PA = 90).
 
 ### Cup-title accolades (2026-09-14, per explicit instruction)
 
