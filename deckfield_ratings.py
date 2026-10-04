@@ -15,6 +15,7 @@ Known open items:
 """
 
 import sqlite3
+import itertools
 import json
 import math
 import random
@@ -1773,6 +1774,10 @@ def pa_final_series(season):
 TOURNAMENT_BONUS = {
     "RDS": {"semifinalist": 0, "finalist": 15, "winner": 15},
     "PA":  {"semifinalist": 30, "finalist": 15, "winner": 15},
+    # Regional Tournament, per explicit instruction 2026-10-04: losing
+    # semifinalists 15, losing finalist 30, winner 45 -- cumulative, collected
+    # at the same points as the cups (see _rt_stages).
+    "RT":  {"semifinalist": 15, "finalist": 15, "winner": 15},
 }
 
 
@@ -1891,6 +1896,48 @@ def _cup_stages(conn, season):
         yield cup, kind, stage
 
 
+def _rt_stages(conn, season, through_round=None):
+    """Yield (region, "RT", stage) for each Regional Tournament, in the same
+    shape `_cup_stages` yields for the cups, so `tournament_bonus_points`
+    treats the two identically.
+
+    Timing matches the cups, each tier settled by the round that decided it:
+    the semifinal field (`field`) when MD5 completes -- PA's semifinalists
+    collect when its brackets finish -- the finalists at the end of the
+    semifinal (MD7), and the champion at the end of the final (MD9). An
+    exact aggregate tie in the final goes to the higher seed, as in every RT
+    tie (`_rt_tie_winner`).
+
+    Deliberately NOT part of `_cup_stages`: that walk drives the cup-title
+    accolades (`cup_champions`), and the RT's own title goes through
+    `rt_champions` instead -- a region-named accolade, not a cup. Skipped outright before MD5 can have been played, since this is
+    called once per recomputed round."""
+    md5_round = abs_round_for_event(("RT", 5))
+    if through_round is not None and through_round < md5_round:
+        return
+    sf_round = abs_round_for_event(("RT", 7))
+    final_round = abs_round_for_event(("RT", 9))
+    for region in REGION_COLORS:
+        sf = regional_tournament_games(season, region, 6)
+        if sf is None:
+            continue
+        stage = {"field": [t for pair in sf for t in pair], "field_round": md5_round,
+                 "finalists": None, "finalists_round": None,
+                 "champion": None, "champion_round": None}
+        final = regional_tournament_games(season, region, 8)
+        if final:
+            home, away = final[0]                   # leg 1 orientation
+            stage["finalists"] = [home, away]
+            stage["finalists_round"] = sf_round
+            seed_of = {n: s for s, n in regional_standings_seeds(season, region).items()}
+            better = home if seed_of[home] < seed_of[away] else away
+            champion = _rt_tie_winner(conn, season, region, 8, 9, home, away, better)
+            if champion:
+                stage["champion"] = champion
+                stage["champion_round"] = final_round
+        yield region, "RT", stage
+
+
 def tournament_bonus_points(season, through_round=None):
     """{team_id: bonus points} earned through cup runs as of `through_round`.
 
@@ -1927,7 +1974,8 @@ def tournament_bonus_points(season, through_round=None):
         return rnd is not None and (through_round is None or rnd <= through_round)
 
     try:
-        for cup, kind, stage in _cup_stages(conn, season):
+        for cup, kind, stage in itertools.chain(_cup_stages(conn, season),
+                                                _rt_stages(conn, season, through_round)):
             tiers = TOURNAMENT_BONUS[kind]
             if not settled(stage["field_round"]):
                 continue
@@ -1956,6 +2004,19 @@ def cup_champions(season, through_round=None):
             if stage["champion"] and r is not None and (through_round is None or r <= through_round):
                 out[cup] = stage["champion"]
         return out
+    finally:
+        conn.close()
+
+
+def rt_champions(season, through_round=None):
+    """{region: champion} for every Regional Tournament whose final is
+    decided by `through_round`. Reads the same _rt_stages walk as the RT
+    bonus, so the accolade and the +45 can never disagree."""
+    conn = get_connection()
+    try:
+        return {region: stage["champion"]
+                for region, _kind, stage in _rt_stages(conn, season, through_round)
+                if stage["champion"] and (through_round is None or stage["champion_round"] <= through_round)}
     finally:
         conn.close()
 
@@ -4045,6 +4106,14 @@ def export_teams_for_deckfield(season):
     earned = {}
     for cup, champion in cup_champions(season, latest_round).items():
         earned.setdefault(champion, []).append(cup)
+    # Regional Tournament champions, per explicit instruction 2026-10-04: the
+    # title is the region's display name ("Lily Valley"), which merge_accolades
+    # files in the Region family -- a repeat champion gains the season on its
+    # existing entry ("Lily Valley S6, S7, S8, S9"), a first-time one a new
+    # "<Region> S9" entry. Same _rt_stages walk as the RT bonus, gated on the
+    # round that settled the final, so the title and the +45 cannot disagree.
+    for region, champion in rt_champions(season, latest_round).items():
+        earned.setdefault(champion, []).append(region_display_name(region))
     # Per explicit instruction: Canalave City earned Division One this season.
     earned.setdefault("Canalave City", []).append("Division One")
     region_display = {region_display_name(r["region"]) for r in
