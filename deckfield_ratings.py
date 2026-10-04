@@ -4970,22 +4970,85 @@ def wc_seeded_field(season, round_num=None):
     return [(i + 1, r["name"], r["rank"]) for i, r in enumerate(ranked)]
 
 
-def wc_groups(season, round_num=None):
-    """{group_label: [(seed, name), ...]} -- the field snaked into 6 groups
-    of 8, each group's list in its own seed order (best first).
+WC_GROUP_REGION_CAP = 2
 
-    Snake, per explicit instruction: seeds 1-6 go across A-F, seeds 7-12
-    come back F-A, and so on for all eight passes.  That is what keeps the
-    groups balanced -- a straight deal would put seeds 1-8 together."""
+
+def _wc_snake_group(slot):
+    """Group index (0-5) of snake slot 0-47: across A-F, back F-A, and so on.
+    The reversal on odd passes IS the snake -- a straight deal would put
+    seeds 1-8 together."""
+    row, col = divmod(slot, WC_GROUP_COUNT)
+    return WC_GROUP_COUNT - 1 - col if row % 2 else col
+
+
+def wc_draw(season, round_num=None):
+    """({group_label: [(seed, name), ...]}, swap_log) -- the field snaked into
+    6 groups of 8, each group in its own seed order (best first), with **no
+    more than two teams from one region in a group** (per explicit
+    instruction 2026-10-04).
+
+    The snake is walked slot by slot in seed order. When the team due in a
+    slot would be its region's THIRD in that group, it switches places in the
+    order with the next LOWER seed (later slot) who can take the slot without
+    breaking the cap itself; the displaced team is then placed when the walk
+    reaches its new slot, and switches again if it must. Only if no team
+    down to #48 can take the slot does it switch with the next HIGHER seed
+    (an earlier slot), and then both groups must stay legal. Every team
+    keeps its own seed number throughout -- only its group changes -- so
+    "the higher seed hosts" and everything downstream still read the real
+    seed."""
     seeded = wc_seeded_field(season, round_num)
+    seed_of = {name: seed for seed, name, _ in seeded}
+    order = [name for _, name, _ in seeded]
+    conn = get_connection()
+    region_of = {r["name"]: r["region"] for r in conn.execute("SELECT name, region FROM teams")}
+    conn.close()
+    n = len(order)
+    group = [_wc_snake_group(i) for i in range(n)]
+    log = []
+
+    def count(g, region, upto, exclude=()):
+        return sum(1 for i in range(upto)
+                   if group[i] == g and region_of[order[i]] == region and i not in exclude)
+
+    for p in range(n):
+        g, team = group[p], order[p]
+        if count(g, region_of[team], p) < WC_GROUP_REGION_CAP:
+            continue
+        swapped = None
+        for q in range(p + 1, n):                    # next lower seed first
+            if count(g, region_of[order[q]], p) < WC_GROUP_REGION_CAP:
+                swapped = q
+                break
+        if swapped is None:                          # reached #48: go up instead
+            for q in range(p - 1, -1, -1):
+                if group[q] == g:
+                    continue
+                if (count(g, region_of[order[q]], p) < WC_GROUP_REGION_CAP and
+                        count(group[q], region_of[team], p, exclude={q}) < WC_GROUP_REGION_CAP):
+                    swapped = q
+                    break
+        if swapped is None:
+            continue                                 # nothing legal exists; leave it
+        other = order[swapped]
+        order[p], order[swapped] = other, team
+        log.append({"seed": seed_of[team], "team": team, "with_seed": seed_of[other],
+                    "with_team": other, "region": region_of[team],
+                    "from_group": WC_GROUP_LABELS[g], "to_group": WC_GROUP_LABELS[group[swapped]],
+                    "direction": "down" if swapped > p else "up"})
+
     groups = {label: [] for label in WC_GROUP_LABELS}
-    for seed, name, _rank in seeded:
-        row, col = divmod(seed - 1, WC_GROUP_COUNT)
-        # Odd passes run backwards -- that reversal IS the snake.
-        if row % 2:
-            col = WC_GROUP_COUNT - 1 - col
-        groups[WC_GROUP_LABELS[col]].append((seed, name))
-    return groups
+    for i, name in enumerate(order):
+        groups[WC_GROUP_LABELS[group[i]]].append((seed_of[name], name))
+    for label in groups:
+        groups[label].sort()
+    return groups, log
+
+
+def wc_groups(season, round_num=None):
+    """{group_label: [(seed, name), ...]} -- the region-capped snake draw (see
+    `wc_draw`), each group in its own seed order."""
+    return wc_draw(season, round_num)[0]
 
 
 def _round_robin_rounds(n):
@@ -5493,6 +5556,8 @@ def world_championship_overview(season, round_num=None):
         "field_frozen": frozen_at is not None, "field_frozen_at_round": frozen_at,
         "playin": None, "bracket_seeds": None, "eliminated": [],
         "bracket": {}, "champion": None,
+        # Region-cap switches the draw made (see wc_draw), for the Groups view.
+        "draw_swaps": wc_draw(season, round_num)[1],
     }
 
     subsets = wc_place_subsets(season, round_num)

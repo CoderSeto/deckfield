@@ -1921,15 +1921,40 @@ is Cinnabar Island at rank 66).
 
 **The draw is a snake** (`wc_groups`): seeds 1-6 across A-F, seeds 7-12 back
 F-A, and so on for all eight passes. The reversal on odd passes IS the snake --
-a straight deal would put seeds 1-8 in one group. It comes out perfectly
-balanced: **every group's seed-sum is exactly 196**, and each group takes
-exactly one seed from each pass of six.
+a straight deal would put seeds 1-8 in one group. Before the region cap
+below, it comes out perfectly balanced: **every group's seed-sum is exactly
+196**, and each group takes exactly one seed from each pass of six (a cap
+switch between adjacent seeds moves a group's sum by 1).
 
 ```
 A: 1 12 13 24 25 36 37 48      D:  4  9 16 21 28 33 40 45
 B: 2 11 14 23 26 35 38 47      E:  5  8 17 20 29 32 41 44
 C: 3 10 15 22 27 34 39 46      F:  6  7 18 19 30 31 42 43
 ```
+
+**No more than two teams from one region in a group** (per explicit
+instruction, 2026-10-04) -- `wc_draw()`, which `wc_groups()` now wraps. The
+snake is walked slot by slot in seed order; when the team due in a slot would
+be its region's third in that group, it switches places in the order with
+the **next lower seed** (a later slot) who can take the slot without breaking
+the cap itself, and the displaced team is placed when the walk reaches its
+new slot (switching again if it must). Only if no team down to #48 can take
+the slot does it switch with the **next higher seed**, and then both groups
+must stay legal. **Every team keeps its own seed** -- only its group changes
+-- so "higher seed hosts" and everything downstream read the real seed, and
+groups are still listed in seed order.
+
+On the real field (round 72) the plain snake had three violations (Group B
+Terastal, C Phoenix, F Indigo); two downward switches cleared all three:
+#43 Mount Moon <-> #44 Mount Silver (F -> E) and #46 Pyrite Town <-> #47 Los
+Platos (C -> B -- one switch fixed both B and C). The upward fallback was
+forced on a synthetic field (#48 the third Indigo in Group A with no lower
+seed left): it switched with #47 and left both groups legal. After the change
+the group stage still checks out: 24 games every matchday, all 168
+intra-group pairs exactly once, the higher seed hosting all of them. The
+switches are listed under the groups on the WC tab (`WC_DATA.draw_swaps`).
+The draw still moves until the field freezes at week 26, so which switches
+are needed can change with it.
 
 **Single round robin over 7 matchdays**, by the circle method
 (`_round_robin_rounds`, generic over any even field): index 0 is fixed and the
