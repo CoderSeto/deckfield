@@ -5812,12 +5812,19 @@ def world_championship_field(season, round_num=None):
                   "RDS Cup", f"{cup} Cup", "RDS Cup result", nominal=nominal, nominal_pos=pos,
                   spot=None if nominal else f"{cup} Cup bid {k + 1}")
 
-    # 4. Regional Tournaments, best-allocated region first. The chain is the
+    # 4. Regional Tournaments, in standard region order. The chain is the
     #    region's own finishing order -- champion, runner-up, the losing
     #    semifinalists -- read from the real bracket once each stage is
     #    played (chalk seeds only before the semifinal field exists).
     allocation = region_allocation_ranking(season, round_num)
-    for row in allocation:
+    # Awarded in the standard region order (Indigo ... Terastal, as every other
+    # tab lays regions out), per explicit request 2026-10-04 -- not allocation
+    # order. That is purely presentational: a region's chain only ever holds
+    # its own teams, so no two regions can contest a team and the order cannot
+    # change who qualifies. The allocation still decides how MANY bids each
+    # region gets.
+    region_pos = {r: i for i, r in enumerate(REGION_COLORS)}
+    for row in sorted(allocation, key=lambda r: region_pos[r["region"]]):
         order = orders["RT"][row["region"]]
         name = region_display_name(row["region"])
         for place in range(row["bids"]):

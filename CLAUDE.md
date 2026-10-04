@@ -1652,6 +1652,14 @@ to absorb exactly one passed bid, in order (`replaces_spot`). Anything still a
 projection says so (`projected finalist`, `seed #3 (projected)`). The
 **"How it projects" column was removed**; `basis` stays in the data.
 
+**RT bids are listed in standard region order** (Indigo ... Terastal, as every
+other tab lays regions out), not allocation order -- per explicit request,
+2026-10-04. Purely presentational: a region's chain holds only its own teams,
+so regions can never contest a team; the 48 teams and every non-at-large bid
+were verified identical before and after. Only which passed bid each at-large
+team is shown replacing can reorder. The allocation still decides how many
+bids each region gets.
+
 **The allocation bid counts are final after RT9.** `region_allocation_ranking`
 clamps any round past RT9 to RT9's (`min(round_num, abs_round(("RT", 9)))`),
 so World Championship games -- which move S9 strength -- can never re-deal
