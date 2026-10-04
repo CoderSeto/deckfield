@@ -759,6 +759,19 @@ champion 45 at round 74 but not 73, each runner-up 30, an exactly level final
 (Indigo) went to #1 Victory Road, and RT stacks correctly with cup bonuses
 (Snowpoint City 30 RT + 15 Ribbon + 45 PA = 90).
 
+**RT champions are accoladed too** (per explicit instruction, same day: "an S9
+or <region> S9 (if they have not won before)"). `rt_champions()` reads the
+same `_rt_stages` walk as the bonus, gated on the final's round, and
+`export_teams_for_deckfield` passes each champion's region DISPLAY name
+(`Lily Valley`, not `LilyValley`) as an earned title, so `merge_accolades`
+files it in the Region family: a repeat champion gains the season on its
+existing entry, a first-timer gets a new `<Region> S9`. Verified on the
+synthetic RT8/RT9 copy: National Park `Silver S8, S9`, Celestic Town
+`Lily Valley S1, S9`, Camphrier Town `World Finalist S8; Kalosite S8, S9`,
+the other seven `<Region> S9`; nothing awarded at round 73; still no team
+above four banner rows. On the real data nothing changes until RT9 is
+played (`rt_champions` is `{}` at round 72).
+
 ### Cup-title accolades (2026-09-14, per explicit instruction)
 
 Winning a cup earns an accolade -- `Ribbon S9`, `Dream S9`, `Star S9` -- and

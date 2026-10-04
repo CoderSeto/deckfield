@@ -1908,9 +1908,9 @@ def _rt_stages(conn, season, through_round=None):
     exact aggregate tie in the final goes to the higher seed, as in every RT
     tie (`_rt_tie_winner`).
 
-    Deliberately NOT part of `_cup_stages`: that walk also drives the cup-title
-    accolades (`cup_champions`), and an RT title accolade has not been asked
-    for. Skipped outright before MD5 can have been played, since this is
+    Deliberately NOT part of `_cup_stages`: that walk drives the cup-title
+    accolades (`cup_champions`), and the RT's own title goes through
+    `rt_champions` instead -- a region-named accolade, not a cup. Skipped outright before MD5 can have been played, since this is
     called once per recomputed round."""
     md5_round = abs_round_for_event(("RT", 5))
     if through_round is not None and through_round < md5_round:
@@ -2004,6 +2004,19 @@ def cup_champions(season, through_round=None):
             if stage["champion"] and r is not None and (through_round is None or r <= through_round):
                 out[cup] = stage["champion"]
         return out
+    finally:
+        conn.close()
+
+
+def rt_champions(season, through_round=None):
+    """{region: champion} for every Regional Tournament whose final is
+    decided by `through_round`. Reads the same _rt_stages walk as the RT
+    bonus, so the accolade and the +45 can never disagree."""
+    conn = get_connection()
+    try:
+        return {region: stage["champion"]
+                for region, _kind, stage in _rt_stages(conn, season, through_round)
+                if stage["champion"] and (through_round is None or stage["champion_round"] <= through_round)}
     finally:
         conn.close()
 
@@ -4093,6 +4106,14 @@ def export_teams_for_deckfield(season):
     earned = {}
     for cup, champion in cup_champions(season, latest_round).items():
         earned.setdefault(champion, []).append(cup)
+    # Regional Tournament champions, per explicit instruction 2026-10-04: the
+    # title is the region's display name ("Lily Valley"), which merge_accolades
+    # files in the Region family -- a repeat champion gains the season on its
+    # existing entry ("Lily Valley S6, S7, S8, S9"), a first-time one a new
+    # "<Region> S9" entry. Same _rt_stages walk as the RT bonus, gated on the
+    # round that settled the final, so the title and the +45 cannot disagree.
+    for region, champion in rt_champions(season, latest_round).items():
+        earned.setdefault(champion, []).append(region_display_name(region))
     # Per explicit instruction: Canalave City earned Division One this season.
     earned.setdefault("Canalave City", []).append("Division One")
     region_display = {region_display_name(r["region"]) for r in
