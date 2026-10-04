@@ -1981,6 +1981,24 @@ intra-group pairs exactly once, every team playing every matchday, the
 higher seed hosting all of them. No WC game had been played, so nothing
 needed migrating.
 
+**Starting points and tiebreakers** (per explicit instruction, 2026-10-04).
+Each group's top four seeds -- by the group's own seed order -- start on
+**4 / 3 / 2 / 1** points (`WC_GROUP_START_POINTS`), the other four on 0.
+`wc_group_tables` carries `start`, `earned` and `points` (= start + earned),
+and every ranking reads the total. **Ties break on points, then wins (the W
+column, so an OT win counts), then seed** -- inside a group, and the same
+three when `wc_place_subsets` ranks each place-subset across groups for the
+Play-in. This replaced "points, then seed" in both places. The WC tab shows a
+Start column beside Pts.
+
+Verified on a scratch copy with RT8/RT9, all seven group matchdays (some OT
+results) and both Play-in matchdays: in all six groups total = start + earned
+and the order follows (points, wins, seed); 22 group places came out
+differently than earned points alone would give (synthetic Group A: Virbank
+City 1 + 12 = 13 finished third over Ruins of Alph 0 + 12); 6 of 11 adjacent
+point ties were settled by wins rather than seed; all three subsets ordered by
+the same key; the bracket still seeds 16 with 2 eliminated.
+
 **Higher (lower-numbered) seed always hosts**, so a group's own seed order
 fixes home/away entirely and the round robin only decides who meets whom.
 **Worth knowing what that means at the extremes**: a group's top seed hosts all
@@ -2030,7 +2048,8 @@ group winners contest seeds **1-6**, runners-up **7-12**, and the third-placed
 teams **13-16** with two eliminated. Nine games on the Thursday, six on the
 Weekend.
 
-**Ranking inside a subset is points, then initial seed** -- points on the
+**Ranking inside a subset is points, then wins, then initial seed** (wins
+added 2026-10-04; points include the group starting points) -- points on the
 CSV's own scale (3 win, 2 OT win, 1 OT loss, 0 loss). `_wc_group_points` reads
 each side from its own perspective: `games` stores only team_a's result and
 team B's is `3 - result_a`, which is what keeps an OT pair reading 2/1 instead

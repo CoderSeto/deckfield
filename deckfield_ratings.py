@@ -5159,10 +5159,23 @@ def _wc_group_stage_complete(conn, season):
     return True
 
 
+# Starting points by position in the group's own seed order, per explicit
+# instruction 2026-10-04: the group's top seed starts on 4, the second 3, the
+# third 2, the fourth 1, everyone else 0.
+WC_GROUP_START_POINTS = (4, 3, 2, 1, 0, 0, 0, 0)
+
+
 def wc_group_tables(season, round_num=None):
-    """{group_label: [{place, name, seed, points, w, l, played}]} -- each
-    group ordered by **points, then initial seed**, WHENEVER asked, however
-    few matchdays have been played.
+    """{group_label: [{place, name, seed, points, start, earned, w, l,
+    played}]} -- each group ordered by **points, then wins, then initial
+    seed**, WHENEVER asked, however few matchdays have been played.
+
+    `points` is the group total: the team's starting points
+    (`WC_GROUP_START_POINTS`, by its place in the group's seed order) plus
+    what it has `earned` in group games. The total is what every ranking
+    reads -- the group order here, the gated standings, and through them the
+    Play-in's place-subsets -- so the head start counts everywhere a group
+    point does.
 
     This is the display form. `wc_group_standings` is the same thing behind
     a completeness gate, and everything that decides real qualification goes
@@ -5175,28 +5188,33 @@ def wc_group_tables(season, round_num=None):
     groups = wc_groups(season, round_num)
     out = {}
     for label in WC_GROUP_LABELS:
-        ordered = sorted(groups[label],
-                         key=lambda sn: (-rec.get(sn[1], blank)["points"], sn[0]))
-        out[label] = [{"place": i + 1, "name": name, "seed": seed,
-                       **rec.get(name, blank)}
-                      for i, (seed, name) in enumerate(ordered)]
+        rows = {}
+        for pos, (seed, name) in enumerate(groups[label]):     # groups are in seed order
+            r = dict(rec.get(name, blank))
+            r["earned"] = r["points"]
+            r["start"] = WC_GROUP_START_POINTS[pos]
+            r["points"] = r["earned"] + r["start"]
+            rows[name] = (seed, r)
+        # Tiebreakers, per explicit instruction 2026-10-04: points, then wins
+        # (the W column, so an OT win counts), then seed.
+        ordered = sorted(rows.items(),
+                         key=lambda kv: (-kv[1][1]["points"], -kv[1][1]["w"], kv[1][0]))
+        out[label] = [{"place": i + 1, "name": name, "seed": seed, **r}
+                      for i, (name, (seed, r)) in enumerate(ordered)]
     return out
 
 
 def wc_group_standings(season, round_num=None):
-    """{group_label: [{place, name, seed, points, w, l, played}]} -- each
-    group ordered by **points, then initial seed**, the ranking rule given
-    for the World Championship. Returns None until all 7 group matchdays
-    are complete, which is what keeps a partial table from ever seeding
-    the Play-in.
+    """{group_label: [{place, name, seed, points, start, earned, w, l,
+    played}]} -- `wc_group_tables` behind a completeness gate: each group
+    ordered by **points (start + earned), then wins, then initial seed**,
+    and None until all 7 group matchdays are complete, which is what keeps a
+    partial table from ever seeding the Play-in.
 
-    That tiebreak is the one reading chosen rather than given: the rule was
-    stated for ranking the six teams WITHIN a place-subset, and deciding who
-    finishes 1st/2nd/3rd inside a group needs a rule too. Using the same one
-    keeps the group table and the subset table consistent; the alternative
-    would have the two disagree about which of two tied teams is ahead. Note
-    this is deliberately NOT `_standings_order` (W-L, then head-to-head, then
-    DSCR), which is the Regional/League rule and was never named here."""
+    Both tiebreak orders were given explicitly (2026-10-04): points, wins,
+    seed inside a group, and the same for ranking each place-subset across
+    groups (`wc_place_subsets`). Deliberately NOT `_standings_order` (W-L,
+    then head-to-head, then DSCR), which is the Regional/League rule."""
     conn = get_connection()
     complete = _wc_group_stage_complete(conn, season)
     conn.close()
@@ -5205,20 +5223,22 @@ def wc_group_standings(season, round_num=None):
 
 def wc_place_subsets(season, round_num=None):
     """{place: [name, ...]} -- the six group winners, the six runners-up and
-    the six third-placed teams, each ranked 1-6 by the same points-then-seed
-    rule. Returns None until the group stage is complete.
+    the six third-placed teams, each ranked 1-6 across groups by the same
+    rule as inside a group: **points (start + earned), then wins, then
+    seed** (per explicit instruction 2026-10-04). Returns None until the
+    group stage is complete.
 
     These three lists are the Play-in's inputs: index 0 is that subset's
     rank 1, and every "2 at 1" below reads off these positions."""
     standings = wc_group_standings(season, round_num)
     if standings is None:
         return None
-    points = {row["name"]: row["points"] for g in standings.values() for row in g}
-    seeds = {row["name"]: row["seed"] for g in standings.values() for row in g}
+    row_of = {row["name"]: row for g in standings.values() for row in g}
     subsets = {}
     for place in WC_PLACE_SUBSETS:
         members = [g[place - 1]["name"] for g in standings.values()]
-        subsets[place] = sorted(members, key=lambda n: (-points[n], seeds[n]))
+        subsets[place] = sorted(members, key=lambda n: (-row_of[n]["points"], -row_of[n]["w"],
+                                                         row_of[n]["seed"]))
     return subsets
 
 
