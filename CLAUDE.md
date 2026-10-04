@@ -1618,6 +1618,47 @@ means the **best (lowest-numbered)** seed, matching this file's usage
 everywhere else. For PA, where a team holds a different seed in each
 bracket, its *better* seed is the one used.
 
+### Real results, position labels, no "How it projects" column (2026-10-04, per explicit request)
+
+The cup and RT bids had gone badly stale: they still projected "who is still
+alive" by OVR rank long after the cups' end stages and most of the Regional
+Tournament were played. The tab showed **Mossui Town** as Lily Valley's RT
+"Champion" (not even a semifinalist) and **Mistralton City** as a Dream Cup
+"finalist" (the final was Cocona Village vs Nimbasa City).
+
+`_wc_category_orders()` now builds every cup and region's bid order from the
+**real results** wherever the deciding stage was played by the field's round,
+falling back to the old projection only for what is not:
+
+- PA and RDS read `_cup_stages`, RT reads `_rt_stages` -- the same walks the
+  tournament bonus and the accolades use, so the three cannot disagree about
+  who finished where. Each tier is gated on the round that settled it.
+- Order is champion, runner-up (or both "finalist" before the final), then
+  the losing semifinalists by seed. PA's replacement pool is the real round-8
+  losers; each RDS cup's is its own losing semifinalists; each region's chain
+  is its own finishing order (chalk seeds only before MD5 settles the field).
+
+**The Bid column names the chosen team's actual finish in its category**
+(`bid_label`): `Lily Valley runner-up (replaces Snowpoint City)`,
+`PA Cup champion`, `Division 2 #3`. An at-large bid says which spot it absorbs
+-- `At-large (replaces Kalosite finalist)` -- since every at-large bid exists
+to absorb exactly one passed bid, in order (`replaces_spot`). Anything still a
+projection says so (`projected finalist`, `seed #3 (projected)`). The
+**"How it projects" column was removed**; `basis` stays in the data.
+
+**The allocation bid counts are final after RT9.** `region_allocation_ranking`
+clamps any round past RT9 to RT9's (`min(round_num, abs_round(("RT", 9)))`),
+so World Championship games -- which move S9 strength -- can never re-deal
+regional bids mid-championship. Verified on a scratch copy: after RT8/RT9 and
+three WC group matchdays, S9 strength had moved in all 10 regions while the
+allocation and the entire 48-team field stayed identical.
+
+Regenerating moved only `QUALIFICATION_DATA`, `WC_DATA` (the draw follows the
+corrected field) and `TEAMS_EXPORT_TSV`; the allocation itself was unchanged,
+and the field swapped three teams (Mount Moon, Porto Marinada, Shalour City out;
+Blackthorn City, Humilau City, Mount Silver in -- real semifinalists replacing
+stale projections). 0 clipped cells at 1920/1600/1240, zero `pageerror`.
+
 ### Allocation ranking (which regions get 3, 2, or 1 RT bids)
 
 `region_allocation_ranking()`. Per region:
@@ -2101,8 +2142,9 @@ which is what proves the pin does real work rather than being a no-op.
 and the WC tab's note says which state it is in, so a reader knows whether the
 groups in front of them are a projection or the final draw.
 
-**The one thing the freeze does NOT fix, and it matters before week 26
-arrives:** the Regional Tournament bids are still awarded on **chalk**
+**Resolved 2026-10-04 -- RT bids now read the real bracket (see "Real
+results, position labels" in the Qualification section).** The note below is
+kept for history. **The one thing the freeze did NOT fix:** the Regional Tournament bids were still awarded on **chalk**
 (`regional_standings_seeds` seeds 1/2/3 as Champion/Runner-up/Semifinalist),
 never reading the real RT results. That is pre-existing and harmless while
 everything is openly a projection -- but freezing at week 26 would lock in a
