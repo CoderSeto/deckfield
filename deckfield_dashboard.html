@@ -638,12 +638,12 @@
       <table id="qual-table">
         <thead>
           <tr>
-            <th class="col-sticky-1">#</th>
-            <th class="left col-sticky-2">Team</th>
-            <th class="left">Reg/Div</th>
-            <th class="num">OVR</th>
-            <th class="num">Rank</th>
-            <th class="left group-start">Bid</th>
+            <th class="col-sticky-1" data-qsort="seq">#</th>
+            <th class="left col-sticky-2" data-qsort="name">Team</th>
+            <th class="left" data-qsort="regdiv">Reg/Div</th>
+            <th class="num" data-qsort="ovr">OVR</th>
+            <th class="num" data-qsort="rank">Rank</th>
+            <th class="left group-start" data-qsort="bid">Bid</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -1443,6 +1443,53 @@ function qualBidHtml(r) {
 function escQ(v) {
   return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+// Column sorting for the Qualification table. '#' (bid order) is the default;
+// clicking a header sorts by it, clicking again reverses. OVR opens
+// descending (best first); everything else ascending. Ties fall back to bid
+// order so the table never shuffles arbitrarily.
+let qualSortKey = 'seq', qualSortAsc = true;
+function qualSortValue(r, key) {
+  switch (key) {
+    case 'seq': return r.seq;
+    case 'name': return (r.name || '').toLowerCase();
+    case 'regdiv': {
+      const i = REGION_ORDER.indexOf(r.region);
+      return [i < 0 ? 99 : i, r.division == null ? 99 : r.division];
+    }
+    case 'ovr': return r.ovr;
+    case 'rank': return r.rank;
+    case 'bid': return (r.bid_label || `${r.source} ${r.detail}`).toLowerCase();
+  }
+  return null;
+}
+function qualCompare(a, b) {
+  if (Array.isArray(a)) {
+    for (let i = 0; i < a.length; i++) { const c = qualCompare(a[i], b[i]); if (c) return c; }
+    return 0;
+  }
+  return typeof a === 'string' ? a.localeCompare(b) : a - b;
+}
+function qualSorted(invites) {
+  return invites.slice().sort((x, y) => {
+    const a = qualSortValue(x, qualSortKey), b = qualSortValue(y, qualSortKey);
+    // Missing values (no OVR/rank yet) always sink to the bottom.
+    if (a == null || b == null) {
+      if (a == null && b == null) return x.seq - y.seq;
+      return a == null ? 1 : -1;
+    }
+    const c = qualCompare(a, b);
+    return c ? (qualSortAsc ? c : -c) : x.seq - y.seq;
+  });
+}
+document.querySelectorAll('#qual-table thead th[data-qsort]').forEach(th => {
+  th.style.cursor = 'pointer';
+  th.addEventListener('click', () => {
+    const key = th.dataset.qsort;
+    if (qualSortKey === key) qualSortAsc = !qualSortAsc;
+    else { qualSortKey = key; qualSortAsc = key !== 'ovr'; }
+    renderQualification();
+  });
+});
 function renderQualification() {
   const d = QUALIFICATION_DATA;
   const note = document.getElementById('qual-note');
@@ -1482,7 +1529,10 @@ function renderQualification() {
     </div>`;
   }).join('');
 
-  tbody.innerHTML = d.invites.map(r => `
+  document.querySelectorAll('#qual-table thead th[data-qsort]').forEach(th => {
+    th.classList.toggle('sorted', th.dataset.qsort === qualSortKey);
+  });
+  tbody.innerHTML = qualSorted(d.invites).map(r => `
     <tr>
       <td class="rank-num col-sticky-1">${r.seq}</td>
       <td class="team-name left col-sticky-2">${winnerNameHtml(r.name)}</td>
@@ -1726,20 +1776,20 @@ function wcGroupsHtml(d) {
         <td class="team-name left" style="${cut}">`
         + `<span class="qual-sub">#${r.seed}</span> ${winnerNameHtml(r.name)}</td>
         <td class="num" style="${cut}">${r.w}&ndash;${r.l}</td>
-        <td class="num qual-sub" style="${cut}">${r.start ? '+' + r.start : ''}</td>
         <td class="num" style="${cut}">${r.points}</td>
       </tr>`;
     }).join('');
     return `<div class="mini-standings">
       <h3>Group ${label}</h3>
       <table><thead><tr><th class="num">#</th><th class="left">Team</th>
-        <th class="num">W&ndash;L</th><th class="num" title="Starting points: the group's top four seeds start on 4 / 3 / 2 / 1">Start</th><th class="num" title="Starting points plus points earned">Pts</th></tr></thead>
+        <th class="num">W&ndash;L</th><th class="num" title="Starting points (top four seeds start on 4 / 3 / 2 / 1) plus points earned">Pts</th></tr></thead>
         <tbody>${rows}</tbody></table>
     </div>`;
-  }).join('') + '</div>' + wcBestThirdsHtml(d) + wcDrawSwapsHtml(d);
+  }).join('') + wcBestThirdsHtml(d) + '</div>' + wcDrawSwapsHtml(d);
 }
 
 
+// Drawn as a seventh box in the groups grid, so it sits beside Group F.
 // The six third-placed teams, ranked by the engine (wc_best_thirds) with the
 // same points / wins / seed key as the groups and the Play-in -- so once the
 // group stage ends this IS the third-place Play-in ladder, in order.
@@ -1749,16 +1799,15 @@ function wcBestThirdsHtml(d) {
       <td class="num">${escWc(r.group)}</td>
       <td class="team-name left"><span class="qual-sub">#${r.seed}</span> ${winnerNameHtml(r.name)}</td>
       <td class="num">${r.w}&ndash;${r.l}</td>
-      <td class="num qual-sub">${r.start ? '+' + r.start : ''}</td>
       <td class="num">${r.points}</td>
     </tr>`).join('');
   if (!rows) return '';
-  return `<div class="mini-standings" style="margin-top:16px;max-width:560px">
+  return `<div class="mini-standings">
       <h3>Best Third Placed Teams</h3>
       <div class="meta-note" style="margin:0;padding:8px 12px">Live ranking of each group's third-placed team by Pts, then wins, then seed. `
     + `When the group stage ends these six contest the Play-in for seeds 13&ndash;16 (2 at 1, 4 at 3, 6 at 5); two are eliminated.</div>
       <table><thead><tr><th class="num">#</th><th class="num">Grp</th><th class="left">Team</th>
-        <th class="num">W&ndash;L</th><th class="num">Start</th><th class="num">Pts</th></tr></thead>
+        <th class="num">W&ndash;L</th><th class="num">Pts</th></tr></thead>
         <tbody>${rows}</tbody></table>
     </div>`;
 }
@@ -1773,7 +1822,7 @@ function wcDrawSwapsHtml(d) {
     + `would have been a third in Group ${x.from_group} &mdash; switched with #${x.with_seed} `
     + `${winnerNameHtml(x.with_team)}, moving to Group ${x.to_group}.`);
   return `<div class="meta-note" style="margin-top:14px"><strong>Starting points:</strong> each group's top four seeds `
-    + `start on 4 / 3 / 2 / 1 points (Start); Pts is that plus everything earned in group games. Ties break on Pts, then wins, then seed &mdash; inside a group and when ranking the Play-in subsets across groups. `
+    + `start on 4 / 3 / 2 / 1 points; Pts is that plus everything earned in group games. Ties break on Pts, then wins, then seed &mdash; inside a group and when ranking the Play-in subsets across groups. `
     + `<strong>Region cap:</strong> no group holds more than two `
     + `teams from one region. ${lines.length ? lines.join(' ') : 'The snake needed no switches.'}</div>`;
 }
