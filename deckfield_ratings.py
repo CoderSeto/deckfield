@@ -5671,18 +5671,39 @@ def _wc_category_orders(conn, season, round_num, proj):
             out["RDS"][cup] = {"order": [(t, "projected finalist") for t in cp["finalists"]],
                                "replacements": [(t, "projected semifinalist") for t in cp["losing_sf"]]}
 
-    # RT: champion, runner-up, then the losing semifinalists -- which is also
-    # each region's replacement chain. Before the semifinal field exists, the
-    # region's top four seeds, labelled as the projection they are.
+    # RT, per explicit instruction 2026-10-04: champion, runner-up, the
+    # region's #1 SEED, then the losing semifinalists by seed -- which is also
+    # each region's replacement chain. The #1 seed sits third wherever it
+    # finished (even out before the semifinal), and is not repeated when it
+    # is itself the champion or runner-up. Before the final, the top two are
+    # the finalists; before the semifinal is decided, the projected finalists
+    # (the higher seed of each semifinal pair). Before the semifinal field
+    # exists, the top four seeds, labelled as the projection they are.
     rt = {region: st for region, _k, st in _rt_stages(conn, season, round_num)
           if settled(st["field_round"])}
     for region in REGION_COLORS:
         seeds = regional_standings_seeds(season, region)
-        if region in rt:
-            seed_of = {n: k for k, n in seeds.items()}
-            out["RT"][region] = finish(rt[region], "semifinalist", seed_of)
-        else:
+        if region not in rt:
             out["RT"][region] = [(seeds[k], f"seed #{k} (projected)") for k in (1, 2, 3, 4)]
+            continue
+        st = rt[region]
+        seed_of = {n: k for k, n in seeds.items()}
+        by_seed = lambda names: sorted(names, key=lambda n: seed_of.get(n, 10 ** 6))
+        if st["champion"] and settled(st["champion_round"]):
+            ru = next(t for t in st["finalists"] if t != st["champion"])
+            top = [(st["champion"], "champion"), (ru, "runner-up")]
+        elif st["finalists"] and settled(st["finalists_round"]):
+            top = [(t, "finalist") for t in by_seed(st["finalists"])]
+        else:
+            pairs = regional_tournament_games(season, region, 6) or []
+            top = [(t, "projected finalist") for t in by_seed([min(p, key=lambda n: seed_of[n]) for p in pairs])]
+        placed = {t for t, _ in top}
+        order = list(top)
+        if seeds[1] not in placed:
+            order.append((seeds[1], "#1 seed"))
+            placed.add(seeds[1])
+        order += [(t, "semifinalist") for t in by_seed([t for t in st["field"] if t not in placed])]
+        out["RT"][region] = order
     return out
 
 

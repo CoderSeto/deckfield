@@ -1634,7 +1634,13 @@ falling back to the old projection only for what is not:
   tournament bonus and the accolades use, so the three cannot disagree about
   who finished where. Each tier is gated on the round that settled it.
 - Order is champion, runner-up (or both "finalist" before the final), then
-  the losing semifinalists by seed. PA's replacement pool is the real round-8
+  the losing semifinalists by seed -- **except the Regional Tournament, whose
+  chain is champion, runner-up, the region's #1 SEED, then the losing
+  semifinalists by seed** (per explicit instruction, 2026-10-04). The #1 seed
+  sits third wherever it finished -- even out before the semifinal (Silver's
+  Cianwood City) -- and is not repeated when it is the champion or runner-up.
+  Before the semifinal is decided the top two are the projected finalists
+  (higher seed of each semifinal pair). PA's replacement pool is the real round-8
   losers; each RDS cup's is its own losing semifinalists; each region's chain
   is its own finishing order (chalk seeds only before MD5 settles the field).
 
