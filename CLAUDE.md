@@ -1673,6 +1673,12 @@ and the field swapped three teams (Mount Moon, Porto Marinada, Shalour City out;
 Blackthorn City, Humilau City, Mount Silver in -- real semifinalists replacing
 stale projections). 0 clipped cells at 1920/1600/1240, zero `pageerror`.
 
+**The Qualification table sorts by any column** (2026-10-04, per explicit
+request). Click a header to sort, again to reverse; `#` (bid order) is the
+default, OVR opens best-first, Reg/Div sorts by `REGION_ORDER` then division,
+missing values sink, and ties fall back to bid order. Renderer-only
+(`qualSortKey`/`qualSortAsc` are `let`s, so the const manifest is untouched).
+
 ### Allocation ranking (which regions get 3, 2, or 1 RT bids)
 
 `region_allocation_ranking()`. Per region:
@@ -2007,7 +2013,10 @@ Teams** sits under the groups: `wc_best_thirds()` ranks each group's
 third-placed team live with `_wc_rank_key` -- the one points/wins/seed key now
 shared by the group tables and `wc_place_subsets` -- so once the stage ends it
 is exactly the Play-in's third-place subset (verified equal on a fully played
-group stage). Carried as `WC_DATA.best_thirds`.
+group stage). Carried as `WC_DATA.best_thirds`. It is drawn as a seventh box in the groups grid, so
+it sits beside Group F, and the separate Start column was dropped from both it
+and the group boxes (per explicit request, 2026-10-04) -- Pts already includes
+the starting points, which the header's tooltip and the note below say.
 
 **Higher (lower-numbered) seed always hosts**, so a group's own seed order
 fixes home/away entirely and the round robin only decides who meets whom.
