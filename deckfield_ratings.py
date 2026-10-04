@@ -4782,13 +4782,18 @@ def region_allocation_ranking(season, round_num=None):
     Allocation = (S9/2 + S8/3 + S7/6) * 100, rounded to 2dp, where S9 is
     the region's live strength multiplier and S8/S7 are the normalized
     prior-season columns.  Because the S9 term is live, this ranking moves
-    with every result -- it is derived, never static."""
+    with every result -- it is derived, never static -- UNTIL the Regional
+    Tournament ends: per explicit instruction (2026-10-04) the bid counts are
+    final after RT9, so any later round reads RT9's ranking. Without this the
+    World Championship's own games, which move S9 strength, could re-deal the
+    regional bids mid-championship."""
     if round_num is None:
         conn = get_connection()
         round_num = conn.execute(
             "SELECT MAX(round) m FROM team_round_ratings WHERE season=?", (season,)
         ).fetchone()["m"]
         conn.close()
+    round_num = min(round_num, abs_round_for_event(("RT", 9)))
 
     regional_bd, _ = compute_strength_breakdown(season, round_num)
     s9 = {g: v["final"] for g, v in regional_bd.items()}
@@ -5602,6 +5607,106 @@ def wc_field_freeze_round(season):
     return max(rounds) if rounds else None
 
 
+def _wc_category_orders(conn, season, round_num, proj):
+    """Each cup's and region's bid order as [(team, position)], from REAL
+    results wherever the stage that decides it has been played by
+    `round_num`, falling back to the projection only for what is not.
+
+    Positions name where the team actually finished in that category --
+    champion / runner-up / finalist / semifinalist / quarterfinalist -- so the
+    Qualification tab can say "Lily Valley runner-up" rather than "RT bid 2".
+    A position that is still a projection says so ("projected finalist",
+    "seed #3 (projected)").
+
+    PA and RDS read `_cup_stages`, RT reads `_rt_stages`: the same walks the
+    tournament bonus and the accolades use, so the bids cannot disagree with
+    them about who finished where."""
+    def settled(rnd):
+        return rnd is not None and rnd <= round_num
+
+    def finish(stage, field_label, seed_of):
+        """Ordered [(team, position)] for a finished-or-finishing end stage."""
+        by_seed = lambda names: sorted(names, key=lambda n: seed_of.get(n, 10 ** 6))
+        field = stage["field"]
+        if stage["champion"] and settled(stage["champion_round"]):
+            ch = stage["champion"]
+            ru = next(t for t in stage["finalists"] if t != ch)
+            top = [(ch, "champion"), (ru, "runner-up")]
+        elif stage["finalists"] and settled(stage["finalists_round"]):
+            top = [(t, "finalist") for t in by_seed(stage["finalists"])]
+        else:
+            top = []
+        rest = [(t, field_label) for t in by_seed([t for t in field if t not in {x for x, _ in top}])]
+        return top + rest
+
+    stages = {cup: st for cup, _k, st in _cup_stages(conn, season) if settled(st["field_round"])}
+    out = {"PA": None, "RDS": {}, "RT": {}}
+
+    # PA: 4 semifinal bids, replaced from the round-8 losers.
+    pa_seed = _pa_seed_lookup(conn)
+    if "PA" in stages:
+        order = finish(stages["PA"], "semifinalist", pa_seed)
+        field = {t for t, _ in order}
+        r8 = {r["n"] for r in conn.execute("""
+            SELECT ta.name n FROM games g JOIN teams ta ON ta.team_id=g.team_a
+            WHERE g.season=? AND g.cup_name='PA' AND g.cup_round=? AND g.round<=?
+            UNION SELECT tb.name FROM games g JOIN teams tb ON tb.team_id=g.team_b
+            WHERE g.season=? AND g.cup_name='PA' AND g.cup_round=? AND g.round<=?
+        """, (season, PA_BRACKET_LAST_ROUND, round_num, season, PA_BRACKET_LAST_ROUND, round_num))}
+        repl = [(t, "quarterfinalist") for t in sorted(r8 - field, key=lambda n: pa_seed.get(n, 10 ** 6))]
+        out["PA"] = {"order": order, "replacements": repl}
+    else:
+        out["PA"] = {"order": [(t, "projected semifinalist") for t in proj["pa_semifinalists"]],
+                     "replacements": [(t, "projected quarterfinalist") for t in proj["pa_losing_qf"]]}
+
+    # RDS: 2 finalist bids per cup, replaced from that cup's losing semifinalists.
+    for cup in RDS_CUP_REGIONS:
+        st = stages.get(cup)
+        if st and st["finalists"] and settled(st["finalists_round"]):
+            seed_of = _rds_seed_lookup(cup)
+            order = finish(st, "semifinalist", seed_of)
+            out["RDS"][cup] = {"order": order[:2], "replacements": order[2:]}
+        else:
+            cp = proj["rds_by_cup"][cup]
+            out["RDS"][cup] = {"order": [(t, "projected finalist") for t in cp["finalists"]],
+                               "replacements": [(t, "projected semifinalist") for t in cp["losing_sf"]]}
+
+    # RT, per explicit instruction 2026-10-04: champion, runner-up, the
+    # region's #1 SEED, then the losing semifinalists by seed -- which is also
+    # each region's replacement chain. The #1 seed sits third wherever it
+    # finished (even out before the semifinal), and is not repeated when it
+    # is itself the champion or runner-up. Before the final, the top two are
+    # the finalists; before the semifinal is decided, the projected finalists
+    # (the higher seed of each semifinal pair). Before the semifinal field
+    # exists, the top four seeds, labelled as the projection they are.
+    rt = {region: st for region, _k, st in _rt_stages(conn, season, round_num)
+          if settled(st["field_round"])}
+    for region in REGION_COLORS:
+        seeds = regional_standings_seeds(season, region)
+        if region not in rt:
+            out["RT"][region] = [(seeds[k], f"seed #{k} (projected)") for k in (1, 2, 3, 4)]
+            continue
+        st = rt[region]
+        seed_of = {n: k for k, n in seeds.items()}
+        by_seed = lambda names: sorted(names, key=lambda n: seed_of.get(n, 10 ** 6))
+        if st["champion"] and settled(st["champion_round"]):
+            ru = next(t for t in st["finalists"] if t != st["champion"])
+            top = [(st["champion"], "champion"), (ru, "runner-up")]
+        elif st["finalists"] and settled(st["finalists_round"]):
+            top = [(t, "finalist") for t in by_seed(st["finalists"])]
+        else:
+            pairs = regional_tournament_games(season, region, 6) or []
+            top = [(t, "projected finalist") for t in by_seed([min(p, key=lambda n: seed_of[n]) for p in pairs])]
+        placed = {t for t, _ in top}
+        order = list(top)
+        if seeds[1] not in placed:
+            order.append((seeds[1], "#1 seed"))
+            placed.add(seeds[1])
+        order += [(t, "semifinalist") for t in by_seed([t for t in st["field"] if t not in placed])]
+        out["RT"][region] = order
+    return out
+
+
 def world_championship_field(season, round_num=None):
     """The 48-team World Championship field as it currently projects.
 
@@ -5638,29 +5743,39 @@ def world_championship_field(season, round_num=None):
     invites, invited, invited_from = [], set(), {}
     passed = []
 
-    def award(chain, source, detail, basis, nominal=None, short_reason=None):
-        """Fill one bid from `chain`, in order, skipping anyone already in.
-        `nominal` is the team this specific bid would have gone to, so a
-        replacement can say who it stood in for."""
-        for i, name in enumerate([n for n in chain if n is not None]):
+    def award(chain, source, category, basis, nominal=None, nominal_pos=None,
+              spot=None, short_reason=None):
+        """Fill one bid from `chain` -- [(team, position)] in order -- skipping
+        anyone already in. `nominal` is the team this specific bid would have
+        gone to, so a replacement can say who it stood in for.
+
+        The bid is labelled by where the CHOSEN team actually finished in its
+        category ("Lily Valley runner-up"), plus "(replaces X)" when it stood
+        in for someone already qualified. `spot` names the bid itself for
+        when it passes to at-large ("Lily Valley champion")."""
+        for name, pos in [(n, p) for n, p in chain if n is not None]:
             if name in invited:
                 continue
             invited.add(name)
-            invited_from[name] = f"{source} ({detail})"
+            label = f"{category} {pos}"
+            invited_from[name] = label
             rec = dict(meta.get(name, {"name": name, "region": None, "division": None,
                                        "ovr": None, "rank": None, "team_id": None}))
             replaced = nominal is not None and name != nominal
-            rec.update({"seq": len(invites) + 1, "source": source, "detail": detail,
+            rec.update({"seq": len(invites) + 1, "source": source, "detail": pos,
                         "basis": basis, "replaced": replaced,
                         "instead_of": nominal if replaced else None,
-                        "instead_of_via": invited_from.get(nominal) if replaced else None})
+                        "instead_of_via": invited_from.get(nominal) if replaced else None,
+                        "bid_label": label + (f" (replaces {nominal})" if replaced else "")})
             invites.append(rec)
             return True
         passed.append({
-            "source": source, "detail": detail, "nominal": nominal,
+            "source": source,
+            "detail": spot or (f"{category} {nominal_pos}" if nominal_pos else category),
+            "nominal": nominal,
             "already_in_via": invited_from.get(nominal) if nominal else None,
             "reason": short_reason or ("every eligible replacement was already qualified"
-                                       if nominal else "the projection produced no candidate"),
+                                       if nominal else "the category produced no candidate"),
         })
         return False
 
@@ -5669,51 +5784,46 @@ def world_championship_field(season, round_num=None):
     for div in sorted(WC_DIVISION_BIDS):
         standings = division_standings_seeds(season, div)
         for place in range(1, WC_DIVISION_BIDS[div] + 1):
-            award([standings.get(place)], f"Division {div}", f"#{place}",
-                  "Current League standings", nominal=standings.get(place))
+            award([(standings.get(place), f"#{place}")], f"Division {div}", f"Division {div}",
+                  "League standings", nominal=standings.get(place), nominal_pos=f"#{place}")
 
-    # 2. PA Cup semifinalists -> best-seeded losing quarterfinalist.
-    pa_sf = proj["pa_semifinalists"]
-    pa_short = (None if len(pa_sf) >= 4 else
-                f"only {len(pa_sf)} distinct semifinalist(s) project -- Draw and Process "
-                f"currently lead with the same teams, and the mutual semifinal "
-                f"collapses a double qualifier into one")
+    orders = _wc_category_orders(conn2 := get_connection(), season, round_num, proj)
+    conn2.close()
+
+    # 2. PA Cup semifinalists -> best-seeded losing quarterfinalist. "Max":
+    #    a team through both brackets holds one semifinal slot, not two.
+    pa = orders["PA"]
     for k in range(4):
-        nominal = pa_sf[k] if k < len(pa_sf) else None
-        award(([nominal] if nominal else []) + proj["pa_losing_qf"],
-              "PA Cup", f"Semifinalist {k + 1}", "Projected from teams still alive",
-              nominal=nominal, short_reason=None if nominal else pa_short)
+        nominal, pos = pa["order"][k] if k < len(pa["order"]) else (None, None)
+        award(([(nominal, pos)] if nominal else []) + pa["replacements"],
+              "PA Cup", "PA Cup", "PA Cup result", nominal=nominal, nominal_pos=pos,
+              spot=None if nominal else f"PA Cup bid {k + 1}",
+              short_reason=None if nominal else
+              f"only {len(pa['order'])} distinct semifinalist(s) -- a team through both "
+              f"brackets holds one semifinal slot")
 
-    # 3. RDS Cup finalists -> best-seeded losing semifinalist.
-    # Each cup provides its own 2 bids, and a duplicate is replaced from
-    # that cup's own losing semifinalists -- a Ribbon bid never falls to a
-    # Star team.
+    # 3. RDS Cup finalists -> that cup's own losing semifinalists (a Ribbon
+    #    bid never falls to a Star team). Every cup seats exactly 2.
     for cup in RDS_CUP_REGIONS:
-        cup_proj = proj["rds_by_cup"][cup]
-        finalists, losers = cup_proj["finalists"], cup_proj["losing_sf"]
-        short = (None if len(finalists) >= 2 else
-                 f"{cup} Cup projects only {len(finalists)} finalist(s) -- too few teams "
-                 f"remain alive in its brackets to seat a second")
+        c = orders["RDS"][cup]
         for k in range(2):
-            nominal = finalists[k] if k < len(finalists) else None
-            award(([nominal] if nominal else []) + losers,
-                  "RDS Cup", f"{cup} finalist {k + 1}",
-                  "Projected from teams still alive",
-                  nominal=nominal, short_reason=None if nominal else short)
+            nominal, pos = c["order"][k] if k < len(c["order"]) else (None, None)
+            award(([(nominal, pos)] if nominal else []) + c["replacements"],
+                  "RDS Cup", f"{cup} Cup", "RDS Cup result", nominal=nominal, nominal_pos=pos,
+                  spot=None if nominal else f"{cup} Cup bid {k + 1}")
 
-    # 4. Regional Tournaments, best-allocated region first. No RT game has
-    #    been played, so the bracket is projected on chalk (better seed
-    #    always advances), which puts seeds 1/2/3 in the top three and
-    #    makes the replacement chain the region's own seed order.
-    RT_PLACE = ["Champion", "Runner-up", "Semifinalist"]
+    # 4. Regional Tournaments, best-allocated region first. The chain is the
+    #    region's own finishing order -- champion, runner-up, the losing
+    #    semifinalists -- read from the real bracket once each stage is
+    #    played (chalk seeds only before the semifinal field exists).
     allocation = region_allocation_ranking(season, round_num)
     for row in allocation:
-        seeds = regional_standings_seeds(season, row["region"])
-        label = f"{region_display_name(row['region'])} RT"
+        order = orders["RT"][row["region"]]
+        name = region_display_name(row["region"])
         for place in range(row["bids"]):
-            award([seeds.get(place + 1)] + [seeds.get(s) for s in (1, 2, 3, 4)],
-                  label, RT_PLACE[place], "Projected on seed (chalk)",
-                  nominal=seeds.get(place + 1))
+            nominal, pos = order[place]
+            award([(nominal, pos)] + order, f"{name} RT", name, "Regional Tournament result",
+                  nominal=nominal, nominal_pos=pos)
 
     # 5. Highest OVR closes the field, absorbing every bid the categories
     #    above could not fill.
@@ -5721,7 +5831,13 @@ def world_championship_field(season, round_num=None):
                     key=lambda m: m["rank"]):
         if len(invites) >= WC_FIELD_SIZE:
             break
-        award([m["name"]], "At-large", f"OVR #{m['rank']}", "Highest OVR remaining")
+        # Every at-large bid exists to absorb one that passed, in order, so
+        # each says which spot it is standing in for.
+        k = sum(1 for r in invites if r["source"] == "At-large")
+        spot = passed[k]["detail"] if k < len(passed) else None
+        if award([(m["name"], f"OVR #{m['rank']}")], "At-large", "At-large", "Highest OVR remaining"):
+            invites[-1]["replaces_spot"] = spot
+            invites[-1]["bid_label"] = f"At-large (replaces {spot})" if spot else f"At-large (OVR #{m['rank']})"
 
     counts = {}
     for r in invites:
