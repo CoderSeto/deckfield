@@ -5159,6 +5159,26 @@ def _wc_group_stage_complete(conn, season):
     return True
 
 
+def _wc_rank_key(row):
+    """The World Championship's one ranking order -- points (start +
+    earned), then wins, then seed -- shared by the group tables, the Play-in
+    subsets and the tab's Best Third Placed Teams table, so they can never
+    disagree."""
+    return (-row["points"], -row["w"], row["seed"])
+
+
+def wc_best_thirds(tables):
+    """The six third-placed teams from `wc_group_tables` output, ranked by
+    `_wc_rank_key` -- live, at any point of the group stage. Once the stage
+    is complete this is exactly the Play-in's third-place subset (seeds 13-16
+    and the two eliminations are then decided in the Play-in itself)."""
+    rows = [dict(g[2], group=label) for label, g in tables.items() if len(g) >= 3]
+    rows.sort(key=_wc_rank_key)
+    for i, r in enumerate(rows):
+        r["rank"] = i + 1
+    return rows
+
+
 # Starting points by position in the group's own seed order, per explicit
 # instruction 2026-10-04: the group's top seed starts on 4, the second 3, the
 # third 2, the fourth 1, everyone else 0.
@@ -5197,8 +5217,7 @@ def wc_group_tables(season, round_num=None):
             rows[name] = (seed, r)
         # Tiebreakers, per explicit instruction 2026-10-04: points, then wins
         # (the W column, so an OT win counts), then seed.
-        ordered = sorted(rows.items(),
-                         key=lambda kv: (-kv[1][1]["points"], -kv[1][1]["w"], kv[1][0]))
+        ordered = sorted(rows.items(), key=lambda kv: _wc_rank_key(dict(kv[1][1], seed=kv[1][0])))
         out[label] = [{"place": i + 1, "name": name, "seed": seed, **r}
                       for i, (name, (seed, r)) in enumerate(ordered)]
     return out
@@ -5237,8 +5256,7 @@ def wc_place_subsets(season, round_num=None):
     subsets = {}
     for place in WC_PLACE_SUBSETS:
         members = [g[place - 1]["name"] for g in standings.values()]
-        subsets[place] = sorted(members, key=lambda n: (-row_of[n]["points"], -row_of[n]["w"],
-                                                         row_of[n]["seed"]))
+        subsets[place] = sorted(members, key=lambda n: _wc_rank_key(row_of[n]))
     return subsets
 
 
@@ -5577,7 +5595,7 @@ def world_championship_overview(season, round_num=None):
 
     frozen_at = wc_field_freeze_round(season) if round_num is None else None
     out = {
-        "seeded": seeded, "groups": tables,
+        "seeded": seeded, "groups": tables, "best_thirds": wc_best_thirds(tables),
         "group_matchdays": WC_GROUP_MATCHDAYS, "group_matchdays_played": played_mds,
         "group_stage_complete": complete,
         # The draw inherits the field's freeze for free -- wc_seeded_field ->

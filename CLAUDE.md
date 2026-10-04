@@ -1999,6 +1999,16 @@ City 1 + 12 = 13 finished third over Ruins of Alph 0 + 12); 6 of 11 adjacent
 point ties were settled by wins rather than seed; all three subsets ordered by
 the same key; the bracket still seeds 16 with 2 eliminated.
 
+**Group boxes: gold line under place 2, silver under place 3** (per explicit
+request, 2026-10-04 -- the silver is the Silver region's own bright tone,
+`REGION_COLORS.Silver.bright`, rather than a new constant: a top-level
+`const WC_SILVER` tripped the const manifest, correctly). **Best Third Placed
+Teams** sits under the groups: `wc_best_thirds()` ranks each group's
+third-placed team live with `_wc_rank_key` -- the one points/wins/seed key now
+shared by the group tables and `wc_place_subsets` -- so once the stage ends it
+is exactly the Play-in's third-place subset (verified equal on a fully played
+group stage). Carried as `WC_DATA.best_thirds`.
+
 **Higher (lower-numbered) seed always hosts**, so a group's own seed order
 fixes home/away entirely and the round robin only decides who meets whom.
 **Worth knowing what that means at the extremes**: a group's top seed hosts all
