@@ -1652,6 +1652,14 @@ to absorb exactly one passed bid, in order (`replaces_spot`). Anything still a
 projection says so (`projected finalist`, `seed #3 (projected)`). The
 **"How it projects" column was removed**; `basis` stays in the data.
 
+**RT bids are listed in standard region order** (Indigo ... Terastal, as every
+other tab lays regions out), not allocation order -- per explicit request,
+2026-10-04. Purely presentational: a region's chain holds only its own teams,
+so regions can never contest a team; the 48 teams and every non-at-large bid
+were verified identical before and after. Only which passed bid each at-large
+team is shown replacing can reorder. The allocation still decides how many
+bids each region gets.
+
 **The allocation bid counts are final after RT9.** `region_allocation_ranking`
 clamps any round past RT9 to RT9's (`min(round_num, abs_round(("RT", 9)))`),
 so World Championship games -- which move S9 strength -- can never re-deal
@@ -1913,9 +1921,10 @@ is Cinnabar Island at rank 66).
 
 **The draw is a snake** (`wc_groups`): seeds 1-6 across A-F, seeds 7-12 back
 F-A, and so on for all eight passes. The reversal on odd passes IS the snake --
-a straight deal would put seeds 1-8 in one group. It comes out perfectly
-balanced: **every group's seed-sum is exactly 196**, and each group takes
-exactly one seed from each pass of six.
+a straight deal would put seeds 1-8 in one group. Before the region cap
+below, it comes out perfectly balanced: **every group's seed-sum is exactly
+196**, and each group takes exactly one seed from each pass of six (a cap
+switch between adjacent seeds moves a group's sum by 1).
 
 ```
 A: 1 12 13 24 25 36 37 48      D:  4  9 16 21 28 33 40 45
@@ -1923,11 +1932,82 @@ B: 2 11 14 23 26 35 38 47      E:  5  8 17 20 29 32 41 44
 C: 3 10 15 22 27 34 39 46      F:  6  7 18 19 30 31 42 43
 ```
 
-**Single round robin over 7 matchdays**, by the circle method
-(`_round_robin_rounds`, generic over any even field): index 0 is fixed and the
-rest rotate. Verified rather than assumed -- all **168** intra-group pairs meet
-exactly once, every team plays exactly once per matchday, and there are zero
-cross-group games.
+**No more than two teams from one region in a group** (per explicit
+instruction, 2026-10-04) -- `wc_draw()`, which `wc_groups()` now wraps. The
+snake is walked slot by slot in seed order; when the team due in a slot would
+be its region's third in that group, it switches places in the order with
+the **next lower seed** (a later slot) who can take the slot without breaking
+the cap itself, and the displaced team is placed when the walk reaches its
+new slot (switching again if it must). Only if no team down to #48 can take
+the slot does it switch with the **next higher seed**, and then both groups
+must stay legal. **Every team keeps its own seed** -- only its group changes
+-- so "higher seed hosts" and everything downstream read the real seed, and
+groups are still listed in seed order.
+
+On the real field (round 72) the plain snake had three violations (Group B
+Terastal, C Phoenix, F Indigo); two downward switches cleared all three:
+#43 Mount Moon <-> #44 Mount Silver (F -> E) and #46 Pyrite Town <-> #47 Los
+Platos (C -> B -- one switch fixed both B and C). The upward fallback was
+forced on a synthetic field (#48 the third Indigo in Group A with no lower
+seed left): it switched with #47 and left both groups legal. After the change
+the group stage still checks out: 24 games every matchday, all 168
+intra-group pairs exactly once, the higher seed hosting all of them. The
+switches are listed under the groups on the WC tab (`WC_DATA.draw_swaps`).
+The draw still moves until the field freezes at week 26, so which switches
+are needed can change with it.
+
+**Single round robin over 7 matchdays, the top seed meeting the group from the
+bottom up** (per explicit instruction, 2026-10-04) -- `_wc_group_rounds()`, by
+position in the group's own seed order:
+
+| MD | games |
+|---|---|
+| 1 | 8 at 1, 7 at 2, 6 at 3, 5 at 4 |
+| 2 | 7 at 1, 5 at 2, 4 at 3, 8 at 6 |
+| 3 | 6 at 1, 3 at 2, 8 at 4, 7 at 5 |
+| 4 | 5 at 1, 8 at 2, 7 at 3, 6 at 4 |
+| 5 | 4 at 1, 6 at 2, 5 at 3, 8 at 7 |
+| 6 | 3 at 1, 4 at 2, 8 at 5, 7 at 6 |
+| 7 | 2 at 1, 8 at 3, 7 at 4, 6 at 5 |
+
+Only matchday 1 and the top seed's sequence (8, 7, ..., 2) were given; the
+rest is the standard odd-modulus construction that makes them consistent:
+positions 2-8 become x = 0..6, each matchday pairs every x/y summing to that
+matchday's target mod 7, and the top seed meets the x with 2x equal to the
+target. It replaced the circle method (`_round_robin_rounds`, now deleted),
+which already matched matchday 1 but then ran the top seed's opponents 8, 2,
+3, ..., 7. Verified on the real draw: 24 games every matchday, all **168**
+intra-group pairs exactly once, every team playing every matchday, the
+higher seed hosting all of them. No WC game had been played, so nothing
+needed migrating.
+
+**Starting points and tiebreakers** (per explicit instruction, 2026-10-04).
+Each group's top four seeds -- by the group's own seed order -- start on
+**4 / 3 / 2 / 1** points (`WC_GROUP_START_POINTS`), the other four on 0.
+`wc_group_tables` carries `start`, `earned` and `points` (= start + earned),
+and every ranking reads the total. **Ties break on points, then wins (the W
+column, so an OT win counts), then seed** -- inside a group, and the same
+three when `wc_place_subsets` ranks each place-subset across groups for the
+Play-in. This replaced "points, then seed" in both places. The WC tab shows a
+Start column beside Pts.
+
+Verified on a scratch copy with RT8/RT9, all seven group matchdays (some OT
+results) and both Play-in matchdays: in all six groups total = start + earned
+and the order follows (points, wins, seed); 22 group places came out
+differently than earned points alone would give (synthetic Group A: Virbank
+City 1 + 12 = 13 finished third over Ruins of Alph 0 + 12); 6 of 11 adjacent
+point ties were settled by wins rather than seed; all three subsets ordered by
+the same key; the bracket still seeds 16 with 2 eliminated.
+
+**Group boxes: gold line under place 2, silver under place 3** (per explicit
+request, 2026-10-04 -- the silver is the Silver region's own bright tone,
+`REGION_COLORS.Silver.bright`, rather than a new constant: a top-level
+`const WC_SILVER` tripped the const manifest, correctly). **Best Third Placed
+Teams** sits under the groups: `wc_best_thirds()` ranks each group's
+third-placed team live with `_wc_rank_key` -- the one points/wins/seed key now
+shared by the group tables and `wc_place_subsets` -- so once the stage ends it
+is exactly the Play-in's third-place subset (verified equal on a fully played
+group stage). Carried as `WC_DATA.best_thirds`.
 
 **Higher (lower-numbered) seed always hosts**, so a group's own seed order
 fixes home/away entirely and the round robin only decides who meets whom.
@@ -1978,7 +2058,8 @@ group winners contest seeds **1-6**, runners-up **7-12**, and the third-placed
 teams **13-16** with two eliminated. Nine games on the Thursday, six on the
 Weekend.
 
-**Ranking inside a subset is points, then initial seed** -- points on the
+**Ranking inside a subset is points, then wins, then initial seed** (wins
+added 2026-10-04; points include the group starting points) -- points on the
 CSV's own scale (3 win, 2 OT win, 1 OT loss, 0 loss). `_wc_group_points` reads
 each side from its own perspective: `games` stores only team_a's result and
 team B's is `3 - result_a`, which is what keeps an OT pair reading 2/1 instead

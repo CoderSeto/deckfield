@@ -4970,37 +4970,110 @@ def wc_seeded_field(season, round_num=None):
     return [(i + 1, r["name"], r["rank"]) for i, r in enumerate(ranked)]
 
 
-def wc_groups(season, round_num=None):
-    """{group_label: [(seed, name), ...]} -- the field snaked into 6 groups
-    of 8, each group's list in its own seed order (best first).
+WC_GROUP_REGION_CAP = 2
 
-    Snake, per explicit instruction: seeds 1-6 go across A-F, seeds 7-12
-    come back F-A, and so on for all eight passes.  That is what keeps the
-    groups balanced -- a straight deal would put seeds 1-8 together."""
+
+def _wc_snake_group(slot):
+    """Group index (0-5) of snake slot 0-47: across A-F, back F-A, and so on.
+    The reversal on odd passes IS the snake -- a straight deal would put
+    seeds 1-8 together."""
+    row, col = divmod(slot, WC_GROUP_COUNT)
+    return WC_GROUP_COUNT - 1 - col if row % 2 else col
+
+
+def wc_draw(season, round_num=None):
+    """({group_label: [(seed, name), ...]}, swap_log) -- the field snaked into
+    6 groups of 8, each group in its own seed order (best first), with **no
+    more than two teams from one region in a group** (per explicit
+    instruction 2026-10-04).
+
+    The snake is walked slot by slot in seed order. When the team due in a
+    slot would be its region's THIRD in that group, it switches places in the
+    order with the next LOWER seed (later slot) who can take the slot without
+    breaking the cap itself; the displaced team is then placed when the walk
+    reaches its new slot, and switches again if it must. Only if no team
+    down to #48 can take the slot does it switch with the next HIGHER seed
+    (an earlier slot), and then both groups must stay legal. Every team
+    keeps its own seed number throughout -- only its group changes -- so
+    "the higher seed hosts" and everything downstream still read the real
+    seed."""
     seeded = wc_seeded_field(season, round_num)
+    seed_of = {name: seed for seed, name, _ in seeded}
+    order = [name for _, name, _ in seeded]
+    conn = get_connection()
+    region_of = {r["name"]: r["region"] for r in conn.execute("SELECT name, region FROM teams")}
+    conn.close()
+    n = len(order)
+    group = [_wc_snake_group(i) for i in range(n)]
+    log = []
+
+    def count(g, region, upto, exclude=()):
+        return sum(1 for i in range(upto)
+                   if group[i] == g and region_of[order[i]] == region and i not in exclude)
+
+    for p in range(n):
+        g, team = group[p], order[p]
+        if count(g, region_of[team], p) < WC_GROUP_REGION_CAP:
+            continue
+        swapped = None
+        for q in range(p + 1, n):                    # next lower seed first
+            if count(g, region_of[order[q]], p) < WC_GROUP_REGION_CAP:
+                swapped = q
+                break
+        if swapped is None:                          # reached #48: go up instead
+            for q in range(p - 1, -1, -1):
+                if group[q] == g:
+                    continue
+                if (count(g, region_of[order[q]], p) < WC_GROUP_REGION_CAP and
+                        count(group[q], region_of[team], p, exclude={q}) < WC_GROUP_REGION_CAP):
+                    swapped = q
+                    break
+        if swapped is None:
+            continue                                 # nothing legal exists; leave it
+        other = order[swapped]
+        order[p], order[swapped] = other, team
+        log.append({"seed": seed_of[team], "team": team, "with_seed": seed_of[other],
+                    "with_team": other, "region": region_of[team],
+                    "from_group": WC_GROUP_LABELS[g], "to_group": WC_GROUP_LABELS[group[swapped]],
+                    "direction": "down" if swapped > p else "up"})
+
     groups = {label: [] for label in WC_GROUP_LABELS}
-    for seed, name, _rank in seeded:
-        row, col = divmod(seed - 1, WC_GROUP_COUNT)
-        # Odd passes run backwards -- that reversal IS the snake.
-        if row % 2:
-            col = WC_GROUP_COUNT - 1 - col
-        groups[WC_GROUP_LABELS[col]].append((seed, name))
-    return groups
+    for i, name in enumerate(order):
+        groups[WC_GROUP_LABELS[group[i]]].append((seed_of[name], name))
+    for label in groups:
+        groups[label].sort()
+    return groups, log
 
 
-def _round_robin_rounds(n):
-    """[[(i, j), ...], ...] -- a single round robin over n (even) indices as
-    n-1 rounds of n/2 pairs, by the circle method: index 0 is fixed and the
-    rest rotate.  Every pair meets exactly once and every index appears
-    exactly once per round."""
-    if n % 2:
-        raise ValueError(f"round robin needs an even field, got {n}")
-    rotating = list(range(1, n))
+def wc_groups(season, round_num=None):
+    """{group_label: [(seed, name), ...]} -- the region-capped snake draw (see
+    `wc_draw`), each group in its own seed order."""
+    return wc_draw(season, round_num)[0]
+
+
+def _wc_group_rounds():
+    """[[(i, j), ...] x 7] -- the group stage's pairings by position in the
+    group's own seed order (0 = the group's top seed), per explicit
+    instruction 2026-10-04: **the top seed meets the others from the bottom
+    up** -- 8 at 1 on matchday 1, 7 at 1 on matchday 2, 6 at 1 on matchday 3,
+    and so on to 2 at 1 on matchday 7 -- with matchday 1 being 8 at 1 / 7 at 2
+    / 6 at 3 / 5 at 4.
+
+    Built by the standard odd-modulus construction rather than the circle
+    method it replaced (which ran the top seed's opponents 8, 2, 3, ..., 7): positions 2-8 become x = 0..6, and on each matchday every pair
+    whose x values sum to that matchday's target (mod 7) meets, while the top
+    seed meets the one x with 2x equal to the target. Choosing the targets so
+    the top seed's opponent steps 8, 7, ..., 2 fixes the rest, and every pair
+    meets exactly once by construction."""
     rounds = []
-    for _ in range(n - 1):
-        arrangement = [0] + rotating
-        rounds.append([(arrangement[i], arrangement[n - 1 - i]) for i in range(n // 2)])
-        rotating = rotating[1:] + rotating[:1]
+    for opp in range(WC_GROUP_SIZE, 1, -1):          # top seed's opponent: 8, 7, ..., 2
+        target = (2 * (opp - 2)) % 7
+        pairs = [(0, opp - 1)]
+        for a in range(7):
+            b = (target - a) % 7
+            if a < b:
+                pairs.append((a + 1, b + 1))
+        rounds.append(sorted(pairs))
     return rounds
 
 
@@ -5018,7 +5091,7 @@ def wc_group_games(season, matchday, round_num=None):
         raise ValueError(
             f"World Championship group matchday must be 1-{WC_GROUP_MATCHDAYS}, got {matchday}")
     groups = wc_groups(season, round_num)
-    schedule = _round_robin_rounds(WC_GROUP_SIZE)[matchday - 1]
+    schedule = _wc_group_rounds()[matchday - 1]
     games = []
     for label in WC_GROUP_LABELS:
         members = groups[label]
@@ -5086,10 +5159,43 @@ def _wc_group_stage_complete(conn, season):
     return True
 
 
+def _wc_rank_key(row):
+    """The World Championship's one ranking order -- points (start +
+    earned), then wins, then seed -- shared by the group tables, the Play-in
+    subsets and the tab's Best Third Placed Teams table, so they can never
+    disagree."""
+    return (-row["points"], -row["w"], row["seed"])
+
+
+def wc_best_thirds(tables):
+    """The six third-placed teams from `wc_group_tables` output, ranked by
+    `_wc_rank_key` -- live, at any point of the group stage. Once the stage
+    is complete this is exactly the Play-in's third-place subset (seeds 13-16
+    and the two eliminations are then decided in the Play-in itself)."""
+    rows = [dict(g[2], group=label) for label, g in tables.items() if len(g) >= 3]
+    rows.sort(key=_wc_rank_key)
+    for i, r in enumerate(rows):
+        r["rank"] = i + 1
+    return rows
+
+
+# Starting points by position in the group's own seed order, per explicit
+# instruction 2026-10-04: the group's top seed starts on 4, the second 3, the
+# third 2, the fourth 1, everyone else 0.
+WC_GROUP_START_POINTS = (4, 3, 2, 1, 0, 0, 0, 0)
+
+
 def wc_group_tables(season, round_num=None):
-    """{group_label: [{place, name, seed, points, w, l, played}]} -- each
-    group ordered by **points, then initial seed**, WHENEVER asked, however
-    few matchdays have been played.
+    """{group_label: [{place, name, seed, points, start, earned, w, l,
+    played}]} -- each group ordered by **points, then wins, then initial
+    seed**, WHENEVER asked, however few matchdays have been played.
+
+    `points` is the group total: the team's starting points
+    (`WC_GROUP_START_POINTS`, by its place in the group's seed order) plus
+    what it has `earned` in group games. The total is what every ranking
+    reads -- the group order here, the gated standings, and through them the
+    Play-in's place-subsets -- so the head start counts everywhere a group
+    point does.
 
     This is the display form. `wc_group_standings` is the same thing behind
     a completeness gate, and everything that decides real qualification goes
@@ -5102,28 +5208,32 @@ def wc_group_tables(season, round_num=None):
     groups = wc_groups(season, round_num)
     out = {}
     for label in WC_GROUP_LABELS:
-        ordered = sorted(groups[label],
-                         key=lambda sn: (-rec.get(sn[1], blank)["points"], sn[0]))
-        out[label] = [{"place": i + 1, "name": name, "seed": seed,
-                       **rec.get(name, blank)}
-                      for i, (seed, name) in enumerate(ordered)]
+        rows = {}
+        for pos, (seed, name) in enumerate(groups[label]):     # groups are in seed order
+            r = dict(rec.get(name, blank))
+            r["earned"] = r["points"]
+            r["start"] = WC_GROUP_START_POINTS[pos]
+            r["points"] = r["earned"] + r["start"]
+            rows[name] = (seed, r)
+        # Tiebreakers, per explicit instruction 2026-10-04: points, then wins
+        # (the W column, so an OT win counts), then seed.
+        ordered = sorted(rows.items(), key=lambda kv: _wc_rank_key(dict(kv[1][1], seed=kv[1][0])))
+        out[label] = [{"place": i + 1, "name": name, "seed": seed, **r}
+                      for i, (name, (seed, r)) in enumerate(ordered)]
     return out
 
 
 def wc_group_standings(season, round_num=None):
-    """{group_label: [{place, name, seed, points, w, l, played}]} -- each
-    group ordered by **points, then initial seed**, the ranking rule given
-    for the World Championship. Returns None until all 7 group matchdays
-    are complete, which is what keeps a partial table from ever seeding
-    the Play-in.
+    """{group_label: [{place, name, seed, points, start, earned, w, l,
+    played}]} -- `wc_group_tables` behind a completeness gate: each group
+    ordered by **points (start + earned), then wins, then initial seed**,
+    and None until all 7 group matchdays are complete, which is what keeps a
+    partial table from ever seeding the Play-in.
 
-    That tiebreak is the one reading chosen rather than given: the rule was
-    stated for ranking the six teams WITHIN a place-subset, and deciding who
-    finishes 1st/2nd/3rd inside a group needs a rule too. Using the same one
-    keeps the group table and the subset table consistent; the alternative
-    would have the two disagree about which of two tied teams is ahead. Note
-    this is deliberately NOT `_standings_order` (W-L, then head-to-head, then
-    DSCR), which is the Regional/League rule and was never named here."""
+    Both tiebreak orders were given explicitly (2026-10-04): points, wins,
+    seed inside a group, and the same for ranking each place-subset across
+    groups (`wc_place_subsets`). Deliberately NOT `_standings_order` (W-L,
+    then head-to-head, then DSCR), which is the Regional/League rule."""
     conn = get_connection()
     complete = _wc_group_stage_complete(conn, season)
     conn.close()
@@ -5132,20 +5242,21 @@ def wc_group_standings(season, round_num=None):
 
 def wc_place_subsets(season, round_num=None):
     """{place: [name, ...]} -- the six group winners, the six runners-up and
-    the six third-placed teams, each ranked 1-6 by the same points-then-seed
-    rule. Returns None until the group stage is complete.
+    the six third-placed teams, each ranked 1-6 across groups by the same
+    rule as inside a group: **points (start + earned), then wins, then
+    seed** (per explicit instruction 2026-10-04). Returns None until the
+    group stage is complete.
 
     These three lists are the Play-in's inputs: index 0 is that subset's
     rank 1, and every "2 at 1" below reads off these positions."""
     standings = wc_group_standings(season, round_num)
     if standings is None:
         return None
-    points = {row["name"]: row["points"] for g in standings.values() for row in g}
-    seeds = {row["name"]: row["seed"] for g in standings.values() for row in g}
+    row_of = {row["name"]: row for g in standings.values() for row in g}
     subsets = {}
     for place in WC_PLACE_SUBSETS:
         members = [g[place - 1]["name"] for g in standings.values()]
-        subsets[place] = sorted(members, key=lambda n: (-points[n], seeds[n]))
+        subsets[place] = sorted(members, key=lambda n: _wc_rank_key(row_of[n]))
     return subsets
 
 
@@ -5484,7 +5595,7 @@ def world_championship_overview(season, round_num=None):
 
     frozen_at = wc_field_freeze_round(season) if round_num is None else None
     out = {
-        "seeded": seeded, "groups": tables,
+        "seeded": seeded, "groups": tables, "best_thirds": wc_best_thirds(tables),
         "group_matchdays": WC_GROUP_MATCHDAYS, "group_matchdays_played": played_mds,
         "group_stage_complete": complete,
         # The draw inherits the field's freeze for free -- wc_seeded_field ->
@@ -5493,6 +5604,8 @@ def world_championship_overview(season, round_num=None):
         "field_frozen": frozen_at is not None, "field_frozen_at_round": frozen_at,
         "playin": None, "bracket_seeds": None, "eliminated": [],
         "bracket": {}, "champion": None,
+        # Region-cap switches the draw made (see wc_draw), for the Groups view.
+        "draw_swaps": wc_draw(season, round_num)[1],
     }
 
     subsets = wc_place_subsets(season, round_num)
@@ -5812,12 +5925,19 @@ def world_championship_field(season, round_num=None):
                   "RDS Cup", f"{cup} Cup", "RDS Cup result", nominal=nominal, nominal_pos=pos,
                   spot=None if nominal else f"{cup} Cup bid {k + 1}")
 
-    # 4. Regional Tournaments, best-allocated region first. The chain is the
+    # 4. Regional Tournaments, in standard region order. The chain is the
     #    region's own finishing order -- champion, runner-up, the losing
     #    semifinalists -- read from the real bracket once each stage is
     #    played (chalk seeds only before the semifinal field exists).
     allocation = region_allocation_ranking(season, round_num)
-    for row in allocation:
+    # Awarded in the standard region order (Indigo ... Terastal, as every other
+    # tab lays regions out), per explicit request 2026-10-04 -- not allocation
+    # order. That is purely presentational: a region's chain only ever holds
+    # its own teams, so no two regions can contest a team and the order cannot
+    # change who qualifies. The allocation still decides how MANY bids each
+    # region gets.
+    region_pos = {r: i for i, r in enumerate(REGION_COLORS)}
+    for row in sorted(allocation, key=lambda r: region_pos[r["region"]]):
         order = orders["RT"][row["region"]]
         name = region_display_name(row["region"])
         for place in range(row["bids"]):
