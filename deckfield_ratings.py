@@ -5051,19 +5051,29 @@ def wc_groups(season, round_num=None):
     return wc_draw(season, round_num)[0]
 
 
-def _round_robin_rounds(n):
-    """[[(i, j), ...], ...] -- a single round robin over n (even) indices as
-    n-1 rounds of n/2 pairs, by the circle method: index 0 is fixed and the
-    rest rotate.  Every pair meets exactly once and every index appears
-    exactly once per round."""
-    if n % 2:
-        raise ValueError(f"round robin needs an even field, got {n}")
-    rotating = list(range(1, n))
+def _wc_group_rounds():
+    """[[(i, j), ...] x 7] -- the group stage's pairings by position in the
+    group's own seed order (0 = the group's top seed), per explicit
+    instruction 2026-10-04: **the top seed meets the others from the bottom
+    up** -- 8 at 1 on matchday 1, 7 at 1 on matchday 2, 6 at 1 on matchday 3,
+    and so on to 2 at 1 on matchday 7 -- with matchday 1 being 8 at 1 / 7 at 2
+    / 6 at 3 / 5 at 4.
+
+    Built by the standard odd-modulus construction rather than the circle
+    method it replaced (which ran the top seed's opponents 8, 2, 3, ..., 7): positions 2-8 become x = 0..6, and on each matchday every pair
+    whose x values sum to that matchday's target (mod 7) meets, while the top
+    seed meets the one x with 2x equal to the target. Choosing the targets so
+    the top seed's opponent steps 8, 7, ..., 2 fixes the rest, and every pair
+    meets exactly once by construction."""
     rounds = []
-    for _ in range(n - 1):
-        arrangement = [0] + rotating
-        rounds.append([(arrangement[i], arrangement[n - 1 - i]) for i in range(n // 2)])
-        rotating = rotating[1:] + rotating[:1]
+    for opp in range(WC_GROUP_SIZE, 1, -1):          # top seed's opponent: 8, 7, ..., 2
+        target = (2 * (opp - 2)) % 7
+        pairs = [(0, opp - 1)]
+        for a in range(7):
+            b = (target - a) % 7
+            if a < b:
+                pairs.append((a + 1, b + 1))
+        rounds.append(sorted(pairs))
     return rounds
 
 
@@ -5081,7 +5091,7 @@ def wc_group_games(season, matchday, round_num=None):
         raise ValueError(
             f"World Championship group matchday must be 1-{WC_GROUP_MATCHDAYS}, got {matchday}")
     groups = wc_groups(season, round_num)
-    schedule = _round_robin_rounds(WC_GROUP_SIZE)[matchday - 1]
+    schedule = _wc_group_rounds()[matchday - 1]
     games = []
     for label in WC_GROUP_LABELS:
         members = groups[label]

@@ -1956,11 +1956,30 @@ switches are listed under the groups on the WC tab (`WC_DATA.draw_swaps`).
 The draw still moves until the field freezes at week 26, so which switches
 are needed can change with it.
 
-**Single round robin over 7 matchdays**, by the circle method
-(`_round_robin_rounds`, generic over any even field): index 0 is fixed and the
-rest rotate. Verified rather than assumed -- all **168** intra-group pairs meet
-exactly once, every team plays exactly once per matchday, and there are zero
-cross-group games.
+**Single round robin over 7 matchdays, the top seed meeting the group from the
+bottom up** (per explicit instruction, 2026-10-04) -- `_wc_group_rounds()`, by
+position in the group's own seed order:
+
+| MD | games |
+|---|---|
+| 1 | 8 at 1, 7 at 2, 6 at 3, 5 at 4 |
+| 2 | 7 at 1, 5 at 2, 4 at 3, 8 at 6 |
+| 3 | 6 at 1, 3 at 2, 8 at 4, 7 at 5 |
+| 4 | 5 at 1, 8 at 2, 7 at 3, 6 at 4 |
+| 5 | 4 at 1, 6 at 2, 5 at 3, 8 at 7 |
+| 6 | 3 at 1, 4 at 2, 8 at 5, 7 at 6 |
+| 7 | 2 at 1, 8 at 3, 7 at 4, 6 at 5 |
+
+Only matchday 1 and the top seed's sequence (8, 7, ..., 2) were given; the
+rest is the standard odd-modulus construction that makes them consistent:
+positions 2-8 become x = 0..6, each matchday pairs every x/y summing to that
+matchday's target mod 7, and the top seed meets the x with 2x equal to the
+target. It replaced the circle method (`_round_robin_rounds`, now deleted),
+which already matched matchday 1 but then ran the top seed's opponents 8, 2,
+3, ..., 7. Verified on the real draw: 24 games every matchday, all **168**
+intra-group pairs exactly once, every team playing every matchday, the
+higher seed hosting all of them. No WC game had been played, so nothing
+needed migrating.
 
 **Higher (lower-numbered) seed always hosts**, so a group's own seed order
 fixes home/away entirely and the round robin only decides who meets whom.
