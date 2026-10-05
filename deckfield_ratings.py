@@ -920,7 +920,7 @@ def compute_round_ratings(season, round_num):
             "pf": pf, "pa": pa, "avg_pf": avg_pf, "avg_pa": avg_pa, "avg_pd": avg_pd,
             "games_played": games_played, "avg_raw_goal_score": avg_raw_goal_score,
             "vic_avg": vic_avg, "d_sqrt": d_sqrt, "avg_gi": avg_gi, "elo": elo,
-            "str_mod": str_mod, "ex": team_seasons[tid]["ex"], "rlstr": rlstr,
+            "str_mod": str_mod, "raw_sos": raw_sos, "ex": team_seasons[tid]["ex"], "rlstr": rlstr,
         }
 
     # ---- league-wide passes ----
@@ -993,7 +993,13 @@ def compute_round_ratings(season, round_num):
         grade = grade_for(ovr)
         basclm = team_seasons[tid]["basclm"]
         climate = (basclm / 100) * (ovr + 50)
-        inner_score = (elo_comp / 100 + dscr_comp * 3 + sos / 2.5) / 3
+        # Playoff seeding score (per explicit instruction, 2026-10-05): the
+        # World Championship seeds by this, read at RT9. It replaces the old
+        # workbook formula, which used the 0-100 normalised components. Every
+        # input here is RAW: Elo itself, the 0-10 DSCR shown on the roster,
+        # and the SOS before RL Strength multiplies it -- so all three terms
+        # land near OVR/4 and OVR/5 in scale.
+        inner_score = (v["elo"] / 100 + v["d_sqrt"] * 2.5 + v["raw_sos"] / 2.5) / 3
         playoff_score = (ovr / 4 + ovr / 5 + inner_score) / 3
 
         b = v["buckets"]
@@ -4850,7 +4856,8 @@ def _wc_team_meta(conn, season, round_num):
     """({name: {team_id, name, region, division, ovr, rank}}, {name: rank})
     for every team at round_num, ranked by OVR descending."""
     rows = conn.execute("""
-        SELECT t.team_id, t.name, t.region, ts.league_division AS division, r.ovr
+        SELECT t.team_id, t.name, t.region, ts.league_division AS division, r.ovr,
+               r.playoff_score
         FROM team_round_ratings r
         JOIN teams t ON t.team_id = r.team_id
         JOIN team_seasons ts ON ts.team_id = t.team_id AND ts.season = r.season
@@ -4862,6 +4869,7 @@ def _wc_team_meta(conn, season, round_num):
         meta[r["name"]] = {
             "team_id": r["team_id"], "name": r["name"], "region": r["region"],
             "division": r["division"], "ovr": round(r["ovr"], 2), "rank": i + 1,
+            "playoff_score": round(r["playoff_score"], 2),
         }
         rank_of[r["name"]] = i + 1
     return meta, rank_of
@@ -4982,8 +4990,18 @@ def wc_seeded_field(season, round_num=None):
     This moves with every result, exactly as the field itself does -- the
     field is a projection until the season ends, so the draw below is too."""
     field = world_championship_field(season, round_num)
-    ranked = sorted(field["invites"], key=lambda r: r["rank"])
+    # Seeded by the playoff seeding score (per explicit instruction,
+    # 2026-10-05), best first; OVR rank only breaks an exact tie. The score is
+    # read at the field's own round, which is RT9 once the field freezes.
+    ranked = sorted(field["invites"],
+                    key=lambda r: (-(r.get("playoff_score") or 0), r["rank"]))
     return [(i + 1, r["name"], r["rank"]) for i, r in enumerate(ranked)]
+
+
+def wc_playoff_scores(season, round_num=None):
+    """{name: playoff seeding score} for the 48 qualifiers, at the field's round."""
+    field = world_championship_field(season, round_num)
+    return {r["name"]: r.get("playoff_score") for r in field["invites"]}
 
 
 WC_GROUP_REGION_CAP = 2
@@ -5602,12 +5620,14 @@ def world_championship_overview(season, round_num=None):
             "AND cup_bracket='Group' AND cup_round=?", (season, md)).fetchone()["c"] > 0
     )
 
-    seeded = [{"seed": sd, "name": n, "rank": rk, "dex": dex.get(n)}
+    score_of = wc_playoff_scores(season, round_num)
+    seeded = [{"seed": sd, "name": n, "rank": rk, "dex": dex.get(n), "score": score_of.get(n)}
               for sd, n, rk in wc_seeded_field(season, round_num)]
     tables = wc_group_tables(season, round_num)
     for rows in tables.values():
         for row in rows:
             row["dex"] = dex.get(row["name"])
+            row["score"] = score_of.get(row["name"])
 
     frozen_at = wc_field_freeze_round(season) if round_num is None else None
     out = {
