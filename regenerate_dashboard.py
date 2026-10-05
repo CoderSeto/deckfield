@@ -38,7 +38,7 @@ import re
 import sys
 
 from deckfield_ratings import (
-    RT_MATCHDAY_LABEL,
+    RT_MATCHDAY_LABEL, hall_of_fame,
     PA_BRACKET_LAST_ROUND,
     get_connection, taper_n, export_teams_for_deckfield,
     export_matchday_batches, rank_elo_history,
@@ -478,7 +478,7 @@ DERIVED_CONSTS = {
     "RANK_ELO_HISTORY", "CUP_REAL_RESULTS", "RDS_ROUND_PAIRINGS",
     "PA_CUP_DATA", "PA_REAL_RESULTS", "PA_ROUND_PAIRINGS", "PA_SWAP_LOG",
     "STRENGTH_DATA", "RT_DATA", "TEAMS_EXPORT_TSV", "QUALIFICATION_DATA",
-    "RDS_MUTUAL_STAGE", "PA_MUTUAL_STAGE", "WC_DATA",
+    "RDS_MUTUAL_STAGE", "PA_MUTUAL_STAGE", "WC_DATA", "HOF_DATA",
 }
 
 # STATIC: genuinely fixed, with the reason it can never go stale. Anything
@@ -615,6 +615,9 @@ def main():
     content = _replace_const(content, "RT_DATA", build_rt_data())
     content = _replace_const(content, "QUALIFICATION_DATA", build_qualification())
     content = _replace_const(content, "WC_DATA", build_wc())
+    # Hall of Fame: seasons 1-8 from hall_of_fame.json, the current season
+    # derived from real results (deckfield_ratings.hall_of_fame).
+    content = _replace_const(content, "HOF_DATA", hall_of_fame(SEASON))
 
     teams_out, tsv = export_teams_for_deckfield(SEASON)
     pattern = re.compile(r'const TEAMS_EXPORT_TSV = "(?:[^"\\]|\\.)*";\n')

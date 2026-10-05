@@ -53,6 +53,9 @@ cross-referenced between conversations).
   conflict-resolved), `rank_history_verbatim.json` (the 9 historical Rank
   History checkpoints, copied verbatim from `Rankings!CT:CL` -- see
   "Rank/Elo History tab" below).
+- `hall_of_fame.json` — seasons 1-8 of the Hall of Fame, extracted once from
+  the workbook's `HOF` sheet by `extract_hall_of_fame.py` (static history; see
+  "Hall of Fame tab").
 - `CLAUDE.md` — this file.
 
 ## THE RUNBOOK: adding a matchday's results
@@ -1687,6 +1690,11 @@ and the field swapped three teams (Mount Moon, Porto Marinada, Shalour City out;
 Blackthorn City, Humilau City, Mount Silver in -- real semifinalists replacing
 stale projections). 0 clipped cells at 1920/1600/1240, zero `pageerror`.
 
+**The five category boxes above the table sit on one row** at every width
+(`repeat(5, minmax(0,1fr))` on `#qual-summary`), per explicit request
+2026-10-05. The Best Third Placed Teams box on the WC tab lost its explanatory
+note the same day.
+
 **The Qualification table sorts by any column** (2026-10-04, per explicit
 request). Click a header to sort, again to reverse; `#` (bid order) is the
 default, OVR opens best-first, Reg/Div sorts by `REGION_ORDER` then division,
@@ -2396,6 +2404,38 @@ ones are purely appended. `next_matchday()` still returns week 20 Tue / PA Draw
 `cal-pending`, all 11 dashboard tabs and all 4 `deckfield.html` tabs render,
 and every new Cup Name/Cup Bracket combination is settable -- zero `pageerror`
 events on either page.
+
+## Hall of Fame tab (2026-10-05, per explicit request)
+
+Three stacked sections: **Champions** as perennial plaques (World
+Championship; Cup Championship -- WCS, then Swiss Cup from S7, then PA Cup
+from S9; Regional Cups; League Championship -- MRL/UTL, then First Division
+from S7), one plate per season with the champion in full and runners-up
+beneath; **Regional Champions**, ten plaques five across; and **World
+Championship Final Placings**, No. 3-16 per season.
+
+- **History is static, the current season is derived.** `hall_of_fame.json`
+  holds seasons 1-8, read from the workbook's `HOF` sheet by
+  `extract_hall_of_fame.py` (re-runnable). `hall_of_fame(season)` adds the
+  current season from real results, never stored: PA and RDS from
+  `_cup_stages`, the league plaque from final division standings once L15 is
+  played, regional champions from `rt_champions`, and the World Championship
+  champion, finalist and placings from `world_championship_overview`.
+  `HOF_DATA` is derived and in the manifest.
+- **Each name carries the region it held AT THE TIME**, read from the cell's
+  font colour, so a team that later moved keeps its old colour (Olivine City*
+  is red, Indigo). Asterisked names mean "since renamed or moved conference"
+  (the user's own definition) and are footnoted.
+- **Resort Area is shown as Battle Zone** with a dagger and "Formerly Resort
+  Area" (per explicit instruction). `RENAMED` in the extraction script.
+- **A column that changes title says so** with an era ribbon inside the plaque
+  ("Swiss Cup - from S7"). The sheet's "2* Div." is normalised to "2nd Div.".
+- **Shading marks consecutive winners** (the user's definition of the sheet's
+  shading), tinted in the winner's region colour; computed, not copied.
+- **No. 3-16 ordering, confirmed by the user 2026-10-05**: by the
+  stage a team went out in (SF, QF, R16), then bracket seed within a stage.
+- Adding the twelfth tab widened the nav from 1472px to 1559px, so the
+  pre-existing horizontal scroll now starts below ~1560px instead of ~1470px.
 
 ## Region colors & Region Climate (confirmed against DECKFIELD's real code)
 

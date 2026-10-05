@@ -1,0 +1,1124 @@
+{
+ "plaques": {
+  "world": {
+   "title": "World Championship",
+   "seasons": {
+    "1": {
+     "labels": [
+      "World Champion",
+      "World Finalist"
+     ],
+     "teams": [
+      {
+       "name": "Saffron City",
+       "region": "Indigo"
+      },
+      {
+       "name": "Rustboro City",
+       "region": "Delta"
+      }
+     ]
+    },
+    "2": {
+     "labels": [
+      "World Champion",
+      "World Finalist"
+     ],
+     "teams": [
+      {
+       "name": "Geosenge Town",
+       "region": "Kalosite"
+      },
+      {
+       "name": "Castelia City",
+       "region": "Vertress"
+      }
+     ]
+    },
+    "3": {
+     "labels": [
+      "World Champion",
+      "World Finalist"
+     ],
+     "teams": [
+      {
+       "name": "Battle Zone",
+       "region": "LilyValley",
+       "note": "Formerly Resort Area"
+      },
+      {
+       "name": "Kala'e Bay",
+       "region": "Lanakila"
+      }
+     ]
+    },
+    "4": {
+     "labels": [
+      "World Champion",
+      "World Finalist"
+     ],
+     "teams": [
+      {
+       "name": "Lumiose City",
+       "region": "Kalosite"
+      },
+      {
+       "name": "Hulbury",
+       "region": "Dynamax"
+      }
+     ]
+    },
+    "5": {
+     "labels": [
+      "World Champion",
+      "World Finalist"
+     ],
+     "teams": [
+      {
+       "name": "Slateport City",
+       "region": "Delta"
+      },
+      {
+       "name": "Cianwood City",
+       "region": "Silver"
+      }
+     ]
+    },
+    "6": {
+     "labels": [
+      "World Champion",
+      "World Finalist"
+     ],
+     "teams": [
+      {
+       "name": "Canalave City",
+       "region": "LilyValley"
+      },
+      {
+       "name": "Striaton City",
+       "region": "Vertress"
+      }
+     ]
+    },
+    "7": {
+     "labels": [
+      "World Champion",
+      "World Finalist"
+     ],
+     "teams": [
+      {
+       "name": "Pueltown",
+       "region": "Phoenix"
+      },
+      {
+       "name": "Canalave City",
+       "region": "LilyValley"
+      }
+     ]
+    },
+    "8": {
+     "labels": [
+      "World Champion",
+      "World Finalist"
+     ],
+     "teams": [
+      {
+       "name": "Agate Village",
+       "region": "Phoenix"
+      },
+      {
+       "name": "Camphrier Town",
+       "region": "Kalosite"
+      }
+     ]
+    }
+   }
+  },
+  "cup": {
+   "title": "Cup Championship",
+   "seasons": {
+    "3": {
+     "labels": [
+      "WCS Champion",
+      "WCS Runner-up"
+     ],
+     "teams": [
+      {
+       "name": "Cinnabar Island",
+       "region": "Indigo"
+      },
+      {
+       "name": "Kala'e Bay",
+       "region": "Lanakila"
+      }
+     ]
+    },
+    "4": {
+     "labels": [
+      "WCS Champion",
+      "WCS Runner-up"
+     ],
+     "teams": [
+      {
+       "name": "Lumiose City",
+       "region": "Kalosite"
+      },
+      {
+       "name": "Cinnabar Island",
+       "region": "Indigo"
+      }
+     ]
+    },
+    "5": {
+     "labels": [
+      "WCS Champion",
+      "WCS Runner-up"
+     ],
+     "teams": [
+      {
+       "name": "Battle Zone",
+       "region": "LilyValley",
+       "note": "Formerly Resort Area"
+      },
+      {
+       "name": "Cinnabar Island",
+       "region": "Indigo"
+      }
+     ]
+    },
+    "6": {
+     "labels": [
+      "WCS Champion",
+      "WCS Runner-up"
+     ],
+     "teams": [
+      {
+       "name": "Seafolk Village",
+       "region": "Lanakila"
+      },
+      {
+       "name": "Slateport City",
+       "region": "Delta"
+      }
+     ]
+    },
+    "7": {
+     "labels": [
+      "Swiss Champion",
+      "Swiss Runner-up"
+     ],
+     "teams": [
+      {
+       "name": "Pueltown",
+       "region": "Phoenix"
+      },
+      {
+       "name": "Cortondo",
+       "region": "Terastal"
+      }
+     ]
+    },
+    "8": {
+     "labels": [
+      "Swiss Champion",
+      "Swiss Runner-up"
+     ],
+     "teams": [
+      {
+       "name": "Canalave City",
+       "region": "LilyValley"
+      },
+      {
+       "name": "Camphrier Town",
+       "region": "Kalosite"
+      }
+     ]
+    }
+   }
+  },
+  "rds": {
+   "title": "Regional Cups",
+   "seasons": {}
+  },
+  "league": {
+   "title": "League Championship",
+   "seasons": {
+    "3": {
+     "labels": [
+      "MRL Champion",
+      "MRL Second",
+      "UTL Champion A",
+      "UTL Champion B"
+     ],
+     "teams": [
+      {
+       "name": "Castelia City",
+       "region": "Vertress"
+      },
+      {
+       "name": "Virbank City",
+       "region": "Vertress"
+      },
+      {
+       "name": "Battle Zone",
+       "region": "LilyValley",
+       "note": "Formerly Resort Area"
+      },
+      {
+       "name": "Olivine City*",
+       "region": "Indigo",
+       "note": "Since renamed or moved conference"
+      }
+     ]
+    },
+    "4": {
+     "labels": [
+      "MRL Champion",
+      "MRL Second",
+      "UTL Champion A",
+      "UTL Champion B"
+     ],
+     "teams": [
+      {
+       "name": "Virbank City",
+       "region": "Vertress"
+      },
+      {
+       "name": "Wild Area*",
+       "region": "Dynamax",
+       "note": "Since renamed or moved conference"
+      },
+      {
+       "name": "Solaceon Town",
+       "region": "LilyValley"
+      },
+      {
+       "name": "Aqua Resort",
+       "region": "Phoenix"
+      }
+     ]
+    },
+    "5": {
+     "labels": [
+      "MRL Champion",
+      "MRL Second",
+      "UTL Champion A",
+      "UTL Champion B"
+     ],
+     "teams": [
+      {
+       "name": "Battle Zone",
+       "region": "LilyValley",
+       "note": "Formerly Resort Area"
+      },
+      {
+       "name": "Cinnabar Island",
+       "region": "Indigo"
+      },
+      {
+       "name": "Slateport City",
+       "region": "Delta"
+      },
+      {
+       "name": "Wyndon South",
+       "region": "Dynamax"
+      }
+     ]
+    },
+    "6": {
+     "labels": [
+      "MRL Champion",
+      "MRL Second",
+      "UTL Champion A",
+      "UTL Champion B"
+     ],
+     "teams": [
+      {
+       "name": "Cianwood City",
+       "region": "Silver"
+      },
+      {
+       "name": "Lumiose City",
+       "region": "Kalosite"
+      },
+      {
+       "name": "Cortondo",
+       "region": "Terastal"
+      },
+      {
+       "name": "Spikemuth",
+       "region": "Dynamax"
+      }
+     ]
+    },
+    "7": {
+     "labels": [
+      "First Div. Champion",
+      "First Div. Second",
+      "First Div. Third",
+      "2nd Div. Champion"
+     ],
+     "teams": [
+      {
+       "name": "Spikemuth",
+       "region": "Dynamax"
+      },
+      {
+       "name": "Lumiose City",
+       "region": "Kalosite"
+      },
+      {
+       "name": "Cascarrafa",
+       "region": "Terastal"
+      },
+      {
+       "name": "Canalave City",
+       "region": "LilyValley"
+      }
+     ]
+    },
+    "8": {
+     "labels": [
+      "First Div. Champion",
+      "First Div. Second",
+      "First Div. Third",
+      "2nd Div. Champion"
+     ],
+     "teams": [
+      {
+       "name": "Canalave City",
+       "region": "LilyValley"
+      },
+      {
+       "name": "Mount Silver",
+       "region": "Silver"
+      },
+      {
+       "name": "Ultra Megalopolis",
+       "region": "Lanakila"
+      },
+      {
+       "name": "National Park",
+       "region": "Silver"
+      }
+     ]
+    }
+   }
+  }
+ },
+ "regions": {
+  "Indigo": {
+   "1": {
+    "name": "Saffron City",
+    "region": "Indigo"
+   },
+   "2": {
+    "name": "Viridian City",
+    "region": "Indigo"
+   },
+   "3": {
+    "name": "Cinnabar Island",
+    "region": "Indigo"
+   },
+   "4": {
+    "name": "Cinnabar Island",
+    "region": "Indigo"
+   },
+   "5": {
+    "name": "Cinnabar Island",
+    "region": "Indigo"
+   },
+   "6": {
+    "name": "Lavender Town",
+    "region": "Indigo"
+   },
+   "7": {
+    "name": "Vermilion City",
+    "region": "Indigo"
+   },
+   "8": {
+    "name": "Mount Moon",
+    "region": "Indigo"
+   }
+  },
+  "Delta": {
+   "1": {
+    "name": "Rustboro City",
+    "region": "Delta"
+   },
+   "2": {
+    "name": "Rustboro City",
+    "region": "Delta"
+   },
+   "3": {
+    "name": "Ever Grande City",
+    "region": "Delta"
+   },
+   "4": {
+    "name": "Dewford Town",
+    "region": "Delta"
+   },
+   "5": {
+    "name": "Slateport City",
+    "region": "Delta"
+   },
+   "6": {
+    "name": "Slateport City",
+    "region": "Delta"
+   },
+   "7": {
+    "name": "Ever Grande City",
+    "region": "Delta"
+   },
+   "8": {
+    "name": "Lilycove City",
+    "region": "Delta"
+   }
+  },
+  "LilyValley": {
+   "1": {
+    "name": "Celestic Town",
+    "region": "LilyValley"
+   },
+   "2": {
+    "name": "Solaceon Town",
+    "region": "LilyValley"
+   },
+   "3": {
+    "name": "Battle Zone",
+    "region": "LilyValley",
+    "note": "Formerly Resort Area"
+   },
+   "4": {
+    "name": "Battle Zone",
+    "region": "LilyValley",
+    "note": "Formerly Resort Area"
+   },
+   "5": {
+    "name": "Battle Zone",
+    "region": "LilyValley",
+    "note": "Formerly Resort Area"
+   },
+   "6": {
+    "name": "Canalave City",
+    "region": "LilyValley"
+   },
+   "7": {
+    "name": "Canalave City",
+    "region": "LilyValley"
+   },
+   "8": {
+    "name": "Canalave City",
+    "region": "LilyValley"
+   }
+  },
+  "Vertress": {
+   "1": {
+    "name": "Castelia City",
+    "region": "Vertress"
+   },
+   "2": {
+    "name": "Castelia City",
+    "region": "Vertress"
+   },
+   "3": {
+    "name": "Castelia City",
+    "region": "Vertress"
+   },
+   "4": {
+    "name": "Castelia City",
+    "region": "Vertress"
+   },
+   "5": {
+    "name": "Striaton City",
+    "region": "Vertress"
+   },
+   "6": {
+    "name": "Striaton City",
+    "region": "Vertress"
+   },
+   "7": {
+    "name": "Virbank City",
+    "region": "Vertress"
+   },
+   "8": {
+    "name": "Castelia City",
+    "region": "Vertress"
+   }
+  },
+  "Kalosite": {
+   "1": {
+    "name": "Vaniville Town",
+    "region": "Kalosite"
+   },
+   "2": {
+    "name": "Geosenge Town",
+    "region": "Kalosite"
+   },
+   "3": {
+    "name": "Lumiose City",
+    "region": "Kalosite"
+   },
+   "4": {
+    "name": "Lumiose City",
+    "region": "Kalosite"
+   },
+   "5": {
+    "name": "Couriway Town",
+    "region": "Kalosite"
+   },
+   "6": {
+    "name": "Lumiose City",
+    "region": "Kalosite"
+   },
+   "7": {
+    "name": "Snowbelle City",
+    "region": "Kalosite"
+   },
+   "8": {
+    "name": "Camphrier Town",
+    "region": "Kalosite"
+   }
+  },
+  "Lanakila": {
+   "2": {
+    "name": "Paniola Town",
+    "region": "Lanakila"
+   },
+   "3": {
+    "name": "Kala'e Bay",
+    "region": "Lanakila"
+   },
+   "4": {
+    "name": "Kala'e Bay",
+    "region": "Lanakila"
+   },
+   "5": {
+    "name": "Ultra Megalopolis",
+    "region": "Lanakila"
+   },
+   "6": {
+    "name": "Seafolk Village",
+    "region": "Lanakila"
+   },
+   "7": {
+    "name": "Seafolk Village",
+    "region": "Lanakila"
+   },
+   "8": {
+    "name": "Konikoni City",
+    "region": "Lanakila"
+   }
+  },
+  "Dynamax": {
+   "3": {
+    "name": "Wild Area*",
+    "region": "Dynamax",
+    "note": "Since renamed or moved conference"
+   },
+   "4": {
+    "name": "Spikemuth",
+    "region": "Dynamax"
+   },
+   "5": {
+    "name": "Spikemuth",
+    "region": "Dynamax"
+   },
+   "6": {
+    "name": "Wyndon South",
+    "region": "Dynamax"
+   },
+   "7": {
+    "name": "Spikemuth",
+    "region": "Dynamax"
+   },
+   "8": {
+    "name": "Spikemuth",
+    "region": "Dynamax"
+   }
+  },
+  "Phoenix": {
+   "4": {
+    "name": "Fall City",
+    "region": "Phoenix"
+   },
+   "5": {
+    "name": "Pyrite Town",
+    "region": "Phoenix"
+   },
+   "6": {
+    "name": "Agate Village",
+    "region": "Phoenix"
+   },
+   "7": {
+    "name": "Pueltown",
+    "region": "Phoenix"
+   },
+   "8": {
+    "name": "Agate Village",
+    "region": "Phoenix"
+   }
+  },
+  "Silver": {
+   "5": {
+    "name": "Mount Silver",
+    "region": "Silver"
+   },
+   "6": {
+    "name": "Olivine City",
+    "region": "Silver"
+   },
+   "7": {
+    "name": "Mount Silver",
+    "region": "Silver"
+   },
+   "8": {
+    "name": "National Park",
+    "region": "Silver"
+   }
+  },
+  "Terastal": {
+   "5": {
+    "name": "Cortondo",
+    "region": "Terastal"
+   },
+   "6": {
+    "name": "Porto Marinada",
+    "region": "Terastal"
+   },
+   "7": {
+    "name": "Porto Marinada",
+    "region": "Terastal"
+   },
+   "8": {
+    "name": "Mesagoza",
+    "region": "Terastal"
+   }
+  }
+ },
+ "placings": {
+  "1": [
+   {
+    "name": "Vaniville Town",
+    "region": "Kalosite"
+   },
+   {
+    "name": "Mistralton City",
+    "region": "Vertress"
+   },
+   {
+    "name": "Celestic Town",
+    "region": "LilyValley"
+   },
+   {
+    "name": "Driftveil City",
+    "region": "Vertress"
+   },
+   {
+    "name": "Castelia City",
+    "region": "Vertress"
+   },
+   {
+    "name": "Cyllage City",
+    "region": "Kalosite"
+   },
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "2": [
+   {
+    "name": "Rustboro City",
+    "region": "Delta"
+   },
+   {
+    "name": "Solaceon Town",
+    "region": "LilyValley"
+   },
+   {
+    "name": "Santalune City",
+    "region": "Kalosite"
+   },
+   {
+    "name": "Oreburgh City",
+    "region": "LilyValley"
+   },
+   {
+    "name": "Viridian City",
+    "region": "Indigo"
+   },
+   {
+    "name": "Paniola Town",
+    "region": "Lanakila"
+   },
+   {
+    "name": "Lumiose City",
+    "region": "Kalosite"
+   },
+   {
+    "name": "Virbank City",
+    "region": "Vertress"
+   },
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "3": [
+   {
+    "name": "Lumiose City",
+    "region": "Kalosite"
+   },
+   {
+    "name": "Cinnabar Island",
+    "region": "Indigo"
+   },
+   {
+    "name": "Virbank City",
+    "region": "Vertress"
+   },
+   {
+    "name": "Ever Grande City",
+    "region": "Delta"
+   },
+   {
+    "name": "Wild Area*",
+    "region": "Dynamax",
+    "note": "Since renamed or moved conference"
+   },
+   {
+    "name": "Olivine City*",
+    "region": "Indigo",
+    "note": "Since renamed or moved conference"
+   },
+   {
+    "name": "Castelia City",
+    "region": "Vertress"
+   },
+   {
+    "name": "Vaniville Town",
+    "region": "Kalosite"
+   },
+   {
+    "name": "Veilstone City",
+    "region": "LilyValley"
+   },
+   {
+    "name": "Slateport City",
+    "region": "Delta"
+   },
+   {
+    "name": "Dewford Town",
+    "region": "Delta"
+   },
+   {
+    "name": "Cianwood City*",
+    "region": "Indigo",
+    "note": "Since renamed or moved conference"
+   },
+   null,
+   null
+  ],
+  "4": [
+   {
+    "name": "Solaceon Town",
+    "region": "LilyValley"
+   },
+   {
+    "name": "Aqua Resort",
+    "region": "Phoenix"
+   },
+   {
+    "name": "Battle Zone",
+    "region": "LilyValley",
+    "note": "Formerly Resort Area"
+   },
+   {
+    "name": "Spikemuth",
+    "region": "Dynamax"
+   },
+   {
+    "name": "Aquacorde Town",
+    "region": "Kalosite"
+   },
+   {
+    "name": "Castelia City",
+    "region": "Vertress"
+   },
+   {
+    "name": "Virbank City",
+    "region": "Vertress"
+   },
+   {
+    "name": "Fall City",
+    "region": "Phoenix"
+   },
+   {
+    "name": "Kala'e Bay",
+    "region": "Lanakila"
+   },
+   {
+    "name": "Gateon Port",
+    "region": "Phoenix"
+   },
+   {
+    "name": "Cinnabar Island",
+    "region": "Indigo"
+   },
+   {
+    "name": "Wild Area*",
+    "region": "Dynamax",
+    "note": "Since renamed or moved conference"
+   },
+   {
+    "name": "Dewford Town",
+    "region": "Delta"
+   },
+   {
+    "name": "Coumarine City",
+    "region": "Kalosite"
+   }
+  ],
+  "5": [
+   {
+    "name": "Striaton City",
+    "region": "Vertress"
+   },
+   {
+    "name": "Zapapico",
+    "region": "Terastal"
+   },
+   {
+    "name": "Cinnabar Island",
+    "region": "Indigo"
+   },
+   {
+    "name": "Mount Silver",
+    "region": "Silver"
+   },
+   {
+    "name": "Battle Zone",
+    "region": "LilyValley",
+    "note": "Formerly Resort Area"
+   },
+   {
+    "name": "Wild Area",
+    "region": "Dynamax"
+   },
+   {
+    "name": "Pyrite Town",
+    "region": "Phoenix"
+   },
+   {
+    "name": "Kala'e Bay",
+    "region": "Lanakila"
+   },
+   {
+    "name": "Hammerlocke",
+    "region": "Dynamax"
+   },
+   {
+    "name": "Fall City",
+    "region": "Phoenix"
+   },
+   {
+    "name": "Ever Grande City",
+    "region": "Delta"
+   },
+   {
+    "name": "Lumiose City",
+    "region": "Kalosite"
+   },
+   {
+    "name": "Oreburgh City",
+    "region": "LilyValley"
+   },
+   {
+    "name": "Couriway Town",
+    "region": "Kalosite"
+   }
+  ],
+  "6": [
+   {
+    "name": "Seafolk Village",
+    "region": "Lanakila"
+   },
+   {
+    "name": "Lumiose City",
+    "region": "Kalosite"
+   },
+   {
+    "name": "Battle Zone",
+    "region": "LilyValley",
+    "note": "Formerly Resort Area"
+   },
+   {
+    "name": "Lavender Town",
+    "region": "Indigo"
+   },
+   {
+    "name": "Wyndon South",
+    "region": "Dynamax"
+   },
+   {
+    "name": "Spikemuth",
+    "region": "Dynamax"
+   },
+   {
+    "name": "Veilstone City",
+    "region": "LilyValley"
+   },
+   {
+    "name": "Ultra Megalopolis",
+    "region": "Lanakila"
+   },
+   {
+    "name": "Slateport City",
+    "region": "Delta"
+   },
+   {
+    "name": "Shalour City",
+    "region": "Kalosite"
+   },
+   {
+    "name": "Aqua Resort",
+    "region": "Phoenix"
+   },
+   {
+    "name": "Cortondo",
+    "region": "Terastal"
+   },
+   {
+    "name": "Pueltown",
+    "region": "Phoenix"
+   },
+   {
+    "name": "Vermilion City",
+    "region": "Indigo"
+   }
+  ],
+  "7": [
+   {
+    "name": "Spikemuth",
+    "region": "Dynamax"
+   },
+   {
+    "name": "Cortondo",
+    "region": "Terastal"
+   },
+   {
+    "name": "Lumiose City",
+    "region": "Kalosite"
+   },
+   {
+    "name": "Goldenrod City",
+    "region": "Silver"
+   },
+   {
+    "name": "Virbank City",
+    "region": "Vertress"
+   },
+   {
+    "name": "Snowbelle City",
+    "region": "Kalosite"
+   },
+   {
+    "name": "Nimbasa City",
+    "region": "Vertress"
+   },
+   {
+    "name": "Olivine City",
+    "region": "Silver"
+   },
+   {
+    "name": "Seafolk Village",
+    "region": "Lanakila"
+   },
+   {
+    "name": "Ultra Megalopolis",
+    "region": "Lanakila"
+   },
+   {
+    "name": "Cocona Village",
+    "region": "Phoenix"
+   },
+   {
+    "name": "Mount Silver",
+    "region": "Silver"
+   },
+   {
+    "name": "Cianwood City",
+    "region": "Silver"
+   },
+   {
+    "name": "Mount Mortar",
+    "region": "Silver"
+   }
+  ],
+  "8": [
+   {
+    "name": "Wintown",
+    "region": "Phoenix"
+   },
+   {
+    "name": "Snowpoint City",
+    "region": "LilyValley"
+   },
+   {
+    "name": "Lilycove City",
+    "region": "Delta"
+   },
+   {
+    "name": "Virbank City",
+    "region": "Vertress"
+   },
+   {
+    "name": "Motostoke",
+    "region": "Dynamax"
+   },
+   {
+    "name": "Spikemuth",
+    "region": "Dynamax"
+   },
+   {
+    "name": "Canalave City",
+    "region": "LilyValley"
+   },
+   {
+    "name": "Santalune City",
+    "region": "Kalosite"
+   },
+   {
+    "name": "Aqua Resort",
+    "region": "Phoenix"
+   },
+   {
+    "name": "National Park",
+    "region": "Silver"
+   },
+   {
+    "name": "Mount Silver",
+    "region": "Silver"
+   },
+   {
+    "name": "Castelia City",
+    "region": "Vertress"
+   },
+   {
+    "name": "Nimbasa City",
+    "region": "Vertress"
+   },
+   {
+    "name": "Cyllage City",
+    "region": "Kalosite"
+   }
+  ]
+ }
+}

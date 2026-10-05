@@ -6022,3 +6022,83 @@ def world_championship_field(season, round_num=None):
             "rds_losing_sf": proj["rds_losing_sf"],
         },
     }
+
+
+# ---------------------------------------------------------------------------
+# Hall of Fame (2026-10-05, per explicit request)
+# ---------------------------------------------------------------------------
+# Seasons 1-8 are history, read from hall_of_fame.json (extracted once from the
+# workbook's HOF sheet by extract_hall_of_fame.py, each name in the region it
+# held at the time). The current season is DERIVED from real results here and
+# never stored, so a title appears the moment it is decided and a corrected
+# result re-settles it -- the same discipline as the cup accolades.
+
+HOF_PATH = Path(__file__).resolve().parent / "hall_of_fame.json"
+
+HOF_CURRENT_LABELS = {
+    "world": ["World Champion", "World Finalist"],
+    "cup": ["PA Cup Champion", "PA Cup Runner-up"],
+    "rds": ["Ribbon Cup Winner", "Dream Cup Winner", "Star Cup Winner"],
+    "league": ["First Div. Champion", "First Div. Second", "First Div. Third",
+               "2nd Div. Champion"],
+}
+
+
+def hall_of_fame(season):
+    """History plus the current season's titles, as far as they are decided."""
+    with open(HOF_PATH) as f:
+        hof = json.load(f)
+    conn = get_connection()
+    region_of = {r["name"]: r["region"] for r in conn.execute("SELECT name, region FROM teams")}
+
+    def t(name):
+        return {"name": name, "region": region_of.get(name)} if name else None
+
+    s = str(season)
+    cur = {}
+
+    # Cups: the same _cup_stages walk the bonus and the accolades read.
+    stages = {cup: stage for cup, _kind, stage in _cup_stages(conn, season)}
+    pa = stages.get("PA")
+    if pa and pa.get("champion"):
+        runner = next((n for n in pa["finalists"] if n != pa["champion"]), None)
+        cur["cup"] = [t(pa["champion"]), t(runner)]
+    rds = [t(stages[c]["champion"]) if stages.get(c) and stages[c].get("champion") else None
+           for c in ("Ribbon", "Dream", "Star")]
+    if any(rds):
+        cur["rds"] = rds
+
+    # League: final division standings, only once the last league round is in.
+    if _event_is_played(conn, season, ("L", 15)):
+        d1 = division_standings_seeds(season, 1)
+        d2 = division_standings_seeds(season, 2)
+        cur["league"] = [t(d1.get(1)), t(d1.get(2)), t(d1.get(3)), t(d2.get(1))]
+    conn.close()
+
+    # World Championship: champion, finalist, then No. 3-16 by the stage each
+    # team went out in -- semifinal, quarterfinal, round of 16 -- and by
+    # bracket seed within a stage (the one reading chosen rather than given).
+    wc = world_championship_overview(season)
+    placings = None
+    if wc.get("champion"):
+        final = wc["bracket"]["Final"][0]
+        runner = final["worse"] if final["winner"] == final["better"] else final["better"]
+        cur["world"] = [t(wc["champion"]), t(runner)]
+        placings = []
+        for stage in ("SF", "QF", "R16"):
+            losers = []
+            for tie in wc["bracket"].get(stage, []):
+                if tie["winner"] == tie["better"]:
+                    losers.append((tie["worse_seed"], tie["worse"]))
+                else:
+                    losers.append((tie["better_seed"], tie["better"]))
+            placings += [t(n) for _sd, n in sorted(losers)]
+
+    for key, teams in cur.items():
+        hof["plaques"][key]["seasons"][s] = {"labels": HOF_CURRENT_LABELS[key], "teams": teams}
+    for region, champ in rt_champions(season).items():
+        hof["regions"].setdefault(region, {})[s] = t(champ)
+    if placings:
+        hof["placings"][s] = placings
+    hof["current_season"] = season
+    return hof
