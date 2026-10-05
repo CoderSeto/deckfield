@@ -633,7 +633,7 @@
 
   <section id="panel-qual" class="panel">
     <div class="meta-note" style="margin-top:0" id="qual-note"></div>
-    <div id="qual-summary" class="standings-grid" style="margin-bottom:16px"></div>
+    <div id="qual-summary" class="standings-grid" style="margin-bottom:16px;grid-template-columns:repeat(5,minmax(0,1fr))"></div>
     <div class="table-scroll" style="margin-bottom:18px">
       <table id="qual-table">
         <thead>
@@ -1804,8 +1804,6 @@ function wcBestThirdsHtml(d) {
   if (!rows) return '';
   return `<div class="mini-standings">
       <h3>Best Third Placed Teams</h3>
-      <div class="meta-note" style="margin:0;padding:8px 12px">Live ranking of each group's third-placed team by Pts, then wins, then seed. `
-    + `When the group stage ends these six contest the Play-in for seeds 13&ndash;16 (2 at 1, 4 at 3, 6 at 5); two are eliminated.</div>
       <table><thead><tr><th class="num">#</th><th class="num">Grp</th><th class="left">Team</th>
         <th class="num">W&ndash;L</th><th class="num">Pts</th></tr></thead>
         <tbody>${rows}</tbody></table>

@@ -1687,6 +1687,11 @@ and the field swapped three teams (Mount Moon, Porto Marinada, Shalour City out;
 Blackthorn City, Humilau City, Mount Silver in -- real semifinalists replacing
 stale projections). 0 clipped cells at 1920/1600/1240, zero `pageerror`.
 
+**The five category boxes above the table sit on one row** at every width
+(`repeat(5, minmax(0,1fr))` on `#qual-summary`), per explicit request
+2026-10-05. The Best Third Placed Teams box on the WC tab lost its explanatory
+note the same day.
+
 **The Qualification table sorts by any column** (2026-10-04, per explicit
 request). Click a header to sort, again to reverse; `#` (bid order) is the
 default, OVR opens best-first, Reg/Div sorts by `REGION_ORDER` then division,
