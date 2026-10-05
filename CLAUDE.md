@@ -1652,6 +1652,18 @@ to absorb exactly one passed bid, in order (`replaces_spot`). Anything still a
 projection says so (`projected finalist`, `seed #3 (projected)`). The
 **"How it projects" column was removed**; `basis` stays in the data.
 
+**A region's vacated seats are mini-pooled** (per explicit request,
+2026-10-05). Each RT bid used to walk the region's whole finishing order, so
+seat 1 (National Park, already in) took Mount Silver -- seat 2's own team --
+and seat 2 then read "Cianwood City (replaces Mount Silver)". Now every seat
+whose own team is not already in keeps it first, then the vacated seats are
+refilled in slot order from the rest of that region's order, and only what the
+region cannot refill passes to at-large. PA and RDS never had this: their
+replacements come from a separate pool (losing semifinalists), not from the
+bid order itself. Verified: the same 48 teams before and after; only
+`QUALIFICATION_DATA` (labels, order within a region) and `TEAMS_EXPORT_TSV`
+moved.
+
 **RT bids are listed in standard region order** (Indigo ... Terastal, as every
 other tab lays regions out), not allocation order -- per explicit request,
 2026-10-04. Purely presentational: a region's chain holds only its own teams,
