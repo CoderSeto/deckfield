@@ -1652,6 +1652,20 @@ to absorb exactly one passed bid, in order (`replaces_spot`). Anything still a
 projection says so (`projected finalist`, `seed #3 (projected)`). The
 **"How it projects" column was removed**; `basis` stays in the data.
 
+**A region's vacated seats are mini-pooled** (per explicit request,
+2026-10-05). Each RT bid used to walk the region's whole finishing order, so
+seat 1 (National Park, already in) took Mount Silver -- seat 2's own team --
+and seat 2 then read "Cianwood City (replaces Mount Silver)". Now every seat
+whose own team is not already in keeps it first, then the vacated seats are
+refilled in slot order from the rest of that region's order, and only what the
+region cannot refill passes to at-large. Within a region the guaranteed
+seats are listed first, then the refills (Mount Silver, then Cianwood City
+(replaces National Park)). PA and RDS never had this: their
+replacements come from a separate pool (losing semifinalists), not from the
+bid order itself. Verified: the same 48 teams before and after; only
+`QUALIFICATION_DATA` (labels, order within a region) and `TEAMS_EXPORT_TSV`
+moved.
+
 **RT bids are listed in standard region order** (Indigo ... Terastal, as every
 other tab lays regions out), not allocation order -- per explicit request,
 2026-10-04. Purely presentational: a region's chain holds only its own teams,
@@ -1737,6 +1751,14 @@ Eterna/Mossui/Celestic never played each other and should resolve by DSCR).
   helper functions look games up by `host_region` + `cup_round`, not
   `cup_name`/`cup_bracket` the way RDS/PA do).
 - Calendar: weeks 24-26, `("RT", matchday)` events, confirmed placement.
+
+**Matchday names** (per explicit request, 2026-10-05): `RT_MATCHDAY_LABEL` in
+the engine -- Regional Play-In, RT Round 1 Leg 1/2, Regional QF Leg 1/2,
+Regional SF Leg 1/2, Regional Final Leg 1/2. It feeds the batch Round Label
+(and so the Matchday Pack and the game's banner) and the calendar; the
+dashboard's `RT_MD_LABELS` repeats it for the Regional Playoffs headers. Labels
+only: events stay `("RT", n)`, files stay `...-rt-<n>.csv`, Cup Round # still
+carries n, and the Rank/Elo History columns keep the compact `RT<n>`.
 
 ### RT results were invisible to the engine, fixed 2026-10-03 (per explicit request)
 
