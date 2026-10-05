@@ -2516,6 +2516,22 @@ def resolve_pa_cup_conflicts(draw_seed_to_team, draw_opponent_of, process_seed_t
 # mapping to absolute rounds (see REGIONAL_ABS_ROUND / LEAGUE_ABS_ROUND
 # below); anything past that has no games yet regardless.
 
+# Display names for the Regional Tournament's nine matchdays (per explicit
+# request, 2026-10-05). Labels only: events stay ("RT", n), results files stay
+# ...-rt-<n>.csv, and Cup Round # still carries the matchday number.
+RT_MATCHDAY_LABEL = {
+    1: "Regional Play-In",
+    2: "RT Round 1 Leg 1",
+    3: "RT Round 1 Leg 2",
+    4: "Regional QF Leg 1",
+    5: "Regional QF Leg 2",
+    6: "Regional SF Leg 1",
+    7: "Regional SF Leg 2",
+    8: "Regional Final Leg 1",
+    9: "Regional Final Leg 2",
+}
+
+
 WEEKLY_SCHEDULE = [
     {"week": 1, "Tue": None, "Thu": None, "Weekend": ("R", 1)},
     {"week": 2, "Tue": None, "Thu": None, "Weekend": ("R", 2)},
@@ -3736,7 +3752,7 @@ def export_matchday_batches(season, event=None):
 
     if kind == "RT":
         _, matchday = event
-        label = f"RT{matchday}"
+        label = RT_MATCHDAY_LABEL[matchday]
         agg = matchday != 1
         games = _games_for_event(season, event, info.get("week"), info.get("day"))
         adv_per_game = _rt_adv_by_dex(season, matchday, games)

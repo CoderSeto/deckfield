@@ -38,6 +38,7 @@ import re
 import sys
 
 from deckfield_ratings import (
+    RT_MATCHDAY_LABEL,
     PA_BRACKET_LAST_ROUND,
     get_connection, taper_n, export_teams_for_deckfield,
     export_matchday_batches, rank_elo_history,
@@ -198,7 +199,7 @@ def build_calendar():
         if kind in ("R", "L"):
             return f"{kind}{slot[1]}"
         if kind == "RT":
-            return f"RT{slot[1]}"
+            return RT_MATCHDAY_LABEL[slot[1]]
         if kind == "WC":
             _, stage, n = slot
             # Group and Play-in number their own separate matchdays; every

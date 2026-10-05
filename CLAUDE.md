@@ -1738,6 +1738,14 @@ Eterna/Mossui/Celestic never played each other and should resolve by DSCR).
   `cup_name`/`cup_bracket` the way RDS/PA do).
 - Calendar: weeks 24-26, `("RT", matchday)` events, confirmed placement.
 
+**Matchday names** (per explicit request, 2026-10-05): `RT_MATCHDAY_LABEL` in
+the engine -- Regional Play-In, RT Round 1 Leg 1/2, Regional QF Leg 1/2,
+Regional SF Leg 1/2, Regional Final Leg 1/2. It feeds the batch Round Label
+(and so the Matchday Pack and the game's banner) and the calendar; the
+dashboard's `RT_MD_LABELS` repeats it for the Regional Playoffs headers. Labels
+only: events stay `("RT", n)`, files stay `...-rt-<n>.csv`, Cup Round # still
+carries n, and the Rank/Elo History columns keep the compact `RT<n>`.
+
 ### RT results were invisible to the engine, fixed 2026-10-03 (per explicit request)
 
 Raised directly: RT games "should be classified as Playoff games ... they
