@@ -301,6 +301,17 @@ with only `TEAMS_EXPORT_TSV` differing. The database now reports **3295 games
 through round 73** (62 files) and `export-results --from 73 --to 73` reported
 the file already up to date.
 
+Round 74 (Regional Tournament MD9, Regional Final Leg 2, week 26 Weekend)
+was ingested 2026-10-05 as `results/2026-w26-weekend-rt-9.csv`, proved the same
+way (base regenerate matched main except `TEAMS_EXPORT_TSV`). **3305 games
+through round 74** (63 files). It completes week 26, so the World Championship
+field is now **frozen at round 74** (48 distinct teams, one region-cap switch:
+#39 Veilstone City C -> D) and `next_matchday()` is WC Group MD1 (round 75, 24
+games). All ten RT champions banked +45 and gained their Region accolade
+(Victory Road, National Park, Petalburg City, Snowpoint City, Mistralton City,
+Camphrier Town, Po Town, Stow-on-Side, Dolce Island, Casseroya Lake); Snowpoint
+City and Casseroya Lake stand at 105 total tournament bonus.
+
 Round 49 (RDS Final **leg 2**, week 18 Thu) was ingested 2026-09-14 as
 `results/2026-w18-thu-rds-final-2.csv`. `results/` now runs 12-49 with no gaps
 (38 files) and a clean rebuild reports **2610 games through round 49**.
@@ -2441,9 +2452,11 @@ Championship Final Placings**, No. 3-16 per season.
   shading), tinted in the winner's region colour; computed, not copied.
 - **No. 3-16 ordering, confirmed by the user 2026-10-05**: by the
   stage a team went out in (SF, QF, R16), then bracket seed within a stage.
-- **Every plaque starts at S1** (per explicit request, 2026-10-05): seasons
-  before a title or region existed get a greyed, dashed "Did not exist"
-  filler plate, so seasons line up across plaques at a glance. Regional plates
+- **Every regional plaque starts at S1** (per explicit request, 2026-10-05):
+  seasons before a region existed get a greyed, dashed "Did not exist" filler
+  plate, so seasons line up across plaques at a glance. The title plaques had
+  the same fillers for a day and dropped them (per explicit request): they
+  start at their first real season. Regional plates
   are a fixed 28px tall, which makes all ten regional plaques the same height
   (346px) with season n on the same line in each.
 - Adding the twelfth tab widened the nav from 1472px to 1559px, so the
