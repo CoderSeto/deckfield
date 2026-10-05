@@ -5971,13 +5971,17 @@ def world_championship_field(season, round_num=None):
                 fills[place] = next(((n, p) for n, p in order if n is not None and n not in taken), None)
                 if fills[place]:
                     taken.add(fills[place][0])
+        # Guaranteed seats are listed first, then the refills (per explicit
+        # request): Silver reads Mount Silver, then Cianwood City (replaces
+        # National Park).
+        for place, (nominal, pos) in enumerate(slots):
+            if place not in fills:
+                award([(nominal, pos)], f"{name} RT", name, "Regional Tournament result",
+                      nominal=nominal, nominal_pos=pos)
         for place, (nominal, pos) in enumerate(slots):
             if place in fills:
-                chain = [fills[place]] if fills[place] else []
-            else:
-                chain = [(nominal, pos)]
-            award(chain, f"{name} RT", name, "Regional Tournament result",
-                  nominal=nominal, nominal_pos=pos)
+                award([fills[place]] if fills[place] else [], f"{name} RT", name,
+                      "Regional Tournament result", nominal=nominal, nominal_pos=pos)
 
     # 5. Highest OVR closes the field, absorbing every bid the categories
     #    above could not fill.

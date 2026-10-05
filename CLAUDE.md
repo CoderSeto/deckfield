@@ -1658,7 +1658,9 @@ seat 1 (National Park, already in) took Mount Silver -- seat 2's own team --
 and seat 2 then read "Cianwood City (replaces Mount Silver)". Now every seat
 whose own team is not already in keeps it first, then the vacated seats are
 refilled in slot order from the rest of that region's order, and only what the
-region cannot refill passes to at-large. PA and RDS never had this: their
+region cannot refill passes to at-large. Within a region the guaranteed
+seats are listed first, then the refills (Mount Silver, then Cianwood City
+(replaces National Park)). PA and RDS never had this: their
 replacements come from a separate pool (losing semifinalists), not from the
 bid order itself. Verified: the same 48 teams before and after; only
 `QUALIFICATION_DATA` (labels, order within a region) and `TEAMS_EXPORT_TSV`
