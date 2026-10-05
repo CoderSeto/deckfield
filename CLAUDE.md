@@ -2432,7 +2432,7 @@ Championship Final Placings**, No. 3-16 per season.
   ("Swiss Cup - from S7"). The sheet's "2* Div." is normalised to "2nd Div.".
 - **Shading marks consecutive winners** (the user's definition of the sheet's
   shading), tinted in the winner's region colour; computed, not copied.
-- **No. 3-16 ordering is the one reading chosen rather than given**: by the
+- **No. 3-16 ordering, confirmed by the user 2026-10-05**: by the
   stage a team went out in (SF, QF, R16), then bracket seed within a stage.
 - Adding the twelfth tab widened the nav from 1472px to 1559px, so the
   pre-existing horizontal scroll now starts below ~1560px instead of ~1470px.
