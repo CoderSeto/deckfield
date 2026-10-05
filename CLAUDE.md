@@ -294,6 +294,13 @@ through round 72**. `export-results --from 72 --to 72` reported the file
 already up to date. Ingested alongside the new RT bonus (see "Regional
 Tournament bonus").
 
+Round 73 (Regional Tournament MD8, Regional Final Leg 1, week 26 Thu) was
+ingested 2026-10-05 as `results/2026-w26-thu-rt-8.csv`. The base was proved
+first: regenerating against the round-72 database reproduced main's dashboard
+with only `TEAMS_EXPORT_TSV` differing. The database now reports **3295 games
+through round 73** (62 files) and `export-results --from 73 --to 73` reported
+the file already up to date.
+
 Round 49 (RDS Final **leg 2**, week 18 Thu) was ingested 2026-09-14 as
 `results/2026-w18-thu-rds-final-2.csv`. `results/` now runs 12-49 with no gaps
 (38 files) and a clean rebuild reports **2610 games through round 49**.
@@ -2434,6 +2441,11 @@ Championship Final Placings**, No. 3-16 per season.
   shading), tinted in the winner's region colour; computed, not copied.
 - **No. 3-16 ordering, confirmed by the user 2026-10-05**: by the
   stage a team went out in (SF, QF, R16), then bracket seed within a stage.
+- **Every plaque starts at S1** (per explicit request, 2026-10-05): seasons
+  before a title or region existed get a greyed, dashed "Did not exist"
+  filler plate, so seasons line up across plaques at a glance. Regional plates
+  are a fixed 28px tall, which makes all ten regional plaques the same height
+  (346px) with season n on the same line in each.
 - Adding the twelfth tab widened the nav from 1472px to 1559px, so the
   pre-existing horizontal scroll now starts below ~1560px instead of ~1470px.
 
