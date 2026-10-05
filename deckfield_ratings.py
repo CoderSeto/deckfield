@@ -999,7 +999,7 @@ def compute_round_ratings(season, round_num):
         # input here is RAW: Elo itself, the 0-10 DSCR shown on the roster,
         # and the SOS before RL Strength multiplies it -- so all three terms
         # land near OVR/4 and OVR/5 in scale.
-        inner_score = (v["elo"] / 100 + v["d_sqrt"] * 2.5 + v["raw_sos"] / 2.5) / 3
+        inner_score = (v["elo"] / 100 + v["d_sqrt"] * 3 + v["raw_sos"] / 2.5) / 3
         playoff_score = (ovr / 4 + ovr / 5 + inner_score) / 3
 
         b = v["buckets"]
@@ -3560,6 +3560,31 @@ def _rt_adv_by_dex(season, matchday, games):
     return out
 
 
+def _wc_group_adv_by_dex(season, games):
+    """{(home_dex, away_dex): adv} for a World Championship group matchday:
+    the home team's playoff seeding score minus the away team's (per explicit
+    instruction, 2026-10-05). Read unrounded at the field's own round (RT9
+    once frozen), so it matches the score the draw was seeded by. The higher
+    seed always hosts in the group stage, so this is never negative."""
+    conn = get_connection()
+    round_num = wc_field_freeze_round(season) or conn.execute(
+        "SELECT MAX(round) m FROM team_round_ratings WHERE season=?", (season,)).fetchone()["m"]
+    score = {r["team_id"]: r["playoff_score"] for r in conn.execute(
+        "SELECT team_id, playoff_score FROM team_round_ratings WHERE season=? AND round=?",
+        (season, round_num))}
+    conn.close()
+    return {(h, a): round(score[h] - score[a], 3) for h, a in games}
+
+
+def _event_adv_by_dex(season, event, games):
+    """The per-game Adv for an event, or {} where it has none."""
+    if event[0] == "RT":
+        return _rt_adv_by_dex(season, event[1], games)
+    if event[0] == "WC" and event[1] == "Group":
+        return _wc_group_adv_by_dex(season, games)
+    return {}
+
+
 def export_matchday_for_deckfield(season, event=None):
     """
     Returns the next (or a specified) matchday's games in DECKFIELD's
@@ -3589,7 +3614,7 @@ def export_matchday_for_deckfield(season, event=None):
     # order (e.g. PA Cup's ladder-row order) -- sort each game by its
     # lowest-ranked (highest rank number) team, descending.
     games = sorted(games, key=lambda hg: max(ranks[hg[0]], ranks[hg[1]]), reverse=True)
-    adv = _rt_adv_by_dex(season, event[1], games) if event[0] == "RT" else {}
+    adv = _event_adv_by_dex(season, event, games)
     lines = ["Away Team Rank\tHome Team Rank\tAdv"]
     lines += [f"{ranks[away]}\t{ranks[home]}\t{_fmt_adv(adv.get((home, away)))}" for home, away in games]
     return info, "\n".join(lines)
@@ -3752,7 +3777,8 @@ def export_matchday_batches(season, event=None):
         label = (f"WC {stage} MD{matchday}" if single
                  else f"WC {stage} leg {matchday}")
         batch = build_batch(label, "Finals", not single,
-                            "WC", stage, matchday, games)
+                            "WC", stage, matchday, games,
+                            adv_per_game=_event_adv_by_dex(season, event, games))
         conn.close()
         return info, [batch]
 

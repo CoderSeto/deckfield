@@ -1976,7 +1976,7 @@ is Cinnabar Island at rank 66).
 **Seeding is now the playoff seeding score, not OVR rank** (per explicit
 instruction, 2026-10-05; supersedes the paragraph above). The score is the
 average of OVR/4, OVR/5, and the mean of three RAW numbers: Elo/100, the 0-10
-DSCR shown on the roster x 2.5, and the SOS *before* RL Strength multiplies it
+DSCR shown on the roster x 3 (first given as x 2.5, corrected the same day), and the SOS *before* RL Strength multiplies it
 (`raw_sos`, the mean prior OVR of opponents) / 2.5. All three land near
 OVR/4-OVR/5 in scale (~23-25 at the top), which is what confirms the raw
 reading. It lives in the existing `team_round_ratings.playoff_score` column,
@@ -1985,6 +1985,12 @@ nothing; it is read at the field's round, i.e. **RT9 once frozen**. OVR rank
 only breaks an exact tie. Applied with a full `recompute --from 1`: `DATA`
 came back byte-identical (no rating moved), and the draw changed -- same top
 eight, 23 of 48 seeds moved, and the new order needed no region-cap switch.
+**Group-stage Adv** (per explicit instruction, same day): every WC group
+game carries home score minus away score as DECKFIELD's Adv
+(`_wc_group_adv_by_dex`, wired through `_event_adv_by_dex` alongside the RT
+modifier), unrounded scores at the field's round, three decimals. The higher
+seed always hosts, so it is never negative; MD1 runs up to +8.618 (seed 1 v
+seed 48). Play-in and knockout games carry none.
 The score shows in small brackets after each name in the group boxes and as a
 sortable **Playoff Score** column on the Qualification tab (opens best-first).
 
