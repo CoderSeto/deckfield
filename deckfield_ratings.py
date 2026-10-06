@@ -5227,16 +5227,21 @@ def _wc_rank_key(row):
     return (-row["points"], -row["w"], row["seed"])
 
 
-def wc_best_thirds(tables):
-    """The six third-placed teams from `wc_group_tables` output, ranked by
-    `_wc_rank_key` -- live, at any point of the group stage. Once the stage
-    is complete this is exactly the Play-in's third-place subset (seeds 13-16
-    and the two eliminations are then decided in the Play-in itself)."""
-    rows = [dict(g[2], group=label) for label, g in tables.items() if len(g) >= 3]
+def wc_best_by_place(tables, place):
+    """The six teams in `place` (1-based) from `wc_group_tables` output,
+    ranked by `_wc_rank_key` -- live, at any point of the group stage. Once
+    the stage is complete this is exactly that place's Play-in subset, in
+    order (the dashboard's Best Second / Best Third Placed Teams tables)."""
+    rows = [dict(g[place - 1], group=label) for label, g in tables.items() if len(g) >= place]
     rows.sort(key=_wc_rank_key)
     for i, r in enumerate(rows):
         r["rank"] = i + 1
     return rows
+
+
+def wc_best_thirds(tables):
+    """The six third-placed teams, ranked -- see wc_best_by_place."""
+    return wc_best_by_place(tables, 3)
 
 
 # Starting points by position in the group's own seed order, per explicit
@@ -5325,30 +5330,40 @@ def wc_place_subsets(season, round_num=None):
 WC_PLAYIN_MD1_PAIRS = ((1, 2), (3, 4), (5, 6))
 
 
-def _wc_playin_subset(conn, season, ranked):
+# The runners-up play their own ladder (per explicit instruction,
+# 2026-10-06), as (home rank, away rank): matchday 1 is "3 at 2, 5 at 4",
+# and ranks 1 and 6 wait for matchday 2.
+WC_PLAYIN_SECONDS_MD1_PAIRS = ((2, 3), (4, 5))
+
+
+def _wc_playin_subset(conn, season, ranked, place=1):
     """Resolve one place-subset's Play-in from real results.
 
     `ranked` is that subset's six teams, best first. Returns
-    {"md1": [(home, away) x3], "md2": [(home, away) x2] or None,
+    {"md1": [(home, away), ...], "md2": [(home, away), ...] or None,
      "places": {1..6: name} for however much is settled}.
 
-    The shape is identical for all three subsets -- only what the places
-    are WORTH differs (seeds 1-6 / 7-12, or 13-16 plus two eliminations),
-    which is applied by the caller. Placement:
+    Group winners and third-placed teams share one ladder -- only what the
+    places are WORTH differs (seeds 1-6, or 13-16 plus two eliminations),
+    which is applied by the caller:
 
         1 = winner of (2 at 1)                     -- settled on matchday 1
         2 / 3 = winner / loser of [loser(2@1) hosts winner(4@3)]
         4 / 5 = winner / loser of [loser(4@3) hosts winner(6@5)]
         6 = loser of (6 at 5)                      -- settled on matchday 1
-    """
-    md1 = [(ranked[h - 1], ranked[a - 1]) for h, a in WC_PLAYIN_MD1_PAIRS]
 
+    The runners-up (`place == 2`) play their own, per explicit instruction
+    2026-10-06 -- see _wc_playin_seconds."""
     def settle(home, away, matchday):
         winner = _real_bracket_winner(conn, "WC", "Play-in", matchday, home, away)
         if winner is None:
             return None, None
         return winner, (away if winner == home else home)
 
+    if place == 2:
+        return _wc_playin_seconds(ranked, settle)
+
+    md1 = [(ranked[h - 1], ranked[a - 1]) for h, a in WC_PLAYIN_MD1_PAIRS]
     result = {"md1": md1, "md2": None, "places": {}}
     wa, la = settle(*md1[0], 1)
     wb, lb = settle(*md1[1], 1)
@@ -5373,10 +5388,35 @@ def _wc_playin_subset(conn, season, ranked):
     return result
 
 
+def _wc_playin_seconds(ranked, settle):
+    """The runners-up' Play-in, per explicit instruction 2026-10-06.
+
+        MD1: G1 = 3 at 2, G2 = 5 at 4      (ranks 1 and 6 wait)
+        MD2: rank 1 hosts winner(G1)        -> places 1 / 2 (seeds 7 / 8)
+             loser(G1) hosts winner(G2)     -> places 3 / 4 (seeds 9 / 10)
+             loser(G2) hosts rank 6         -> places 5 / 6 (seeds 11 / 12)
+
+    Nothing is settled on matchday 1 -- every place comes from a matchday-2
+    game, its winner taking the better place."""
+    md1 = [(ranked[h - 1], ranked[a - 1]) for h, a in WC_PLAYIN_SECONDS_MD1_PAIRS]
+    result = {"md1": md1, "md2": None, "places": {}}
+    w1, l1 = settle(*md1[0], 1)
+    w2, l2 = settle(*md1[1], 1)
+    if None in (w1, w2):
+        return result
+    md2 = [(ranked[0], w1), (l1, w2), (l2, ranked[5])]
+    result["md2"] = md2
+    for i, game in enumerate(md2):
+        w, l = settle(*game, 2)
+        if w is not None:
+            result["places"][2 * i + 1], result["places"][2 * i + 2] = w, l
+    return result
+
+
 def wc_playin_games(season, matchday, round_num=None):
     """[(home_name, away_name)] -- one Play-in matchday across all three
-    place-subsets: 9 games on matchday 1 (three per subset), 6 on matchday 2
-    (two per subset, the other two places having been settled already)."""
+    place-subsets: 8 games on matchday 1 (three each for the winners and the
+    thirds, two for the runners-up) and 7 on matchday 2 (two, three, two)."""
     if matchday not in (1, 2):
         raise ValueError(f"World Championship Play-in matchday must be 1 or 2, got {matchday}")
     subsets = wc_place_subsets(season, round_num)
@@ -5386,7 +5426,7 @@ def wc_playin_games(season, matchday, round_num=None):
     conn = get_connection()
     games = []
     for place in WC_PLACE_SUBSETS:
-        res = _wc_playin_subset(conn, season, subsets[place])
+        res = _wc_playin_subset(conn, season, subsets[place], place)
         if matchday == 1:
             games.extend(res["md1"])
         elif res["md2"] is None:
@@ -5415,7 +5455,7 @@ def wc_bracket_seeds(season, round_num=None):
     conn = get_connection()
     seeds, eliminated = {}, []
     for place in WC_PLACE_SUBSETS:
-        res = _wc_playin_subset(conn, season, subsets[place])
+        res = _wc_playin_subset(conn, season, subsets[place], place)
         places = res["places"]
         if len(places) < len(subsets[place]):
             conn.close()
@@ -5657,7 +5697,7 @@ def world_championship_overview(season, round_num=None):
 
     frozen_at = wc_field_freeze_round(season) if round_num is None else None
     out = {
-        "seeded": seeded, "groups": tables, "best_thirds": wc_best_thirds(tables),
+        "seeded": seeded, "groups": tables, "best_seconds": wc_best_by_place(tables, 2), "best_thirds": wc_best_thirds(tables),
         "group_matchdays": WC_GROUP_MATCHDAYS, "group_matchdays_played": played_mds,
         "group_stage_complete": complete,
         # The draw inherits the field's freeze for free -- wc_seeded_field ->
@@ -5675,11 +5715,11 @@ def world_championship_overview(season, round_num=None):
         conn.close()
         return out
 
-    # ---- Play-in: one block per place-subset, all three sharing a ladder --
+    # ---- Play-in: one block per place-subset (runners-up on their own ladder) --
     SUBSET_LABEL = {1: "Group winners", 2: "Runners-up", 3: "Third place"}
     playin = {}
     for place, ranked in subsets.items():
-        res = _wc_playin_subset(conn, season, ranked)
+        res = _wc_playin_subset(conn, season, ranked, place)
 
         def leg_rows(pairs, md):
             return [{"home": h, "away": a, "home_dex": dex.get(h), "away_dex": dex.get(a),
