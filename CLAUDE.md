@@ -2133,8 +2133,8 @@ third-place teams will compete for the remaining four spots" made it sound
 like a six-team mini-tournament. In fact **all three place-subsets play it
 simultaneously**, so the Play-in is what seeds the entire 16-team bracket:
 group winners contest seeds **1-6**, runners-up **7-12**, and the third-placed
-teams **13-16** with two eliminated. Nine games on the Thursday, six on the
-Weekend.
+teams **13-16** with two eliminated. Eight games on the Thursday, seven on
+the Weekend (the runners-up play their own format -- see below).
 
 **Ranking inside a subset is points, then wins, then initial seed** (wins
 added 2026-10-04; points include the group starting points) -- points on the
@@ -2151,7 +2151,7 @@ disagreeing about which of two tied teams is ahead. Note it is deliberately
 **not** `_standings_order` (W-L, then head-to-head, then DSCR) -- that is the
 Regional/League rule and was never named for the World Championship.
 
-**The ladder, identical in all three subsets** (`_wc_playin_subset`). Matchday
+**The ladder, shared by the group winners and the third-placed teams** (`_wc_playin_subset`). Matchday
 1 is `2 at 1`, `4 at 3`, `6 at 5`, better rank hosting:
 
 | place | decided by | hosting |
@@ -2164,6 +2164,31 @@ Regional/League rule and was never named for the World Championship.
 **MD2 hosting is given, not derived from rank**: the LOSER of the earlier game
 hosts the winner of the next one down. Worth keeping, because "better rank
 hosts" is the MD1 rule and would quietly produce the opposite seating here.
+
+**The runners-up play their own ladder** (per explicit instruction,
+2026-10-06) -- `_wc_playin_seconds`, reached through `_wc_playin_subset(...,
+place=2)`. Group winners and third-placed teams keep the ladder above.
+
+| MD | game | decides |
+|---|---|---|
+| 1 | G1: **3 at 2** | -- |
+| 1 | G2: **5 at 4** | -- |
+| 2 | **1 hosts winner(G1)** | seeds 7 / 8 |
+| 2 | **loser(G1) hosts winner(G2)** | seeds 9 / 10 |
+| 2 | **loser(G2) hosts 6** | seeds 11 / 12 |
+
+Ranks 1 and 6 sit out matchday 1, and nothing is settled until matchday 2.
+So the Play-in is now **8 games on MD1 (3 + 2 + 3) and 7 on MD2 (2 + 3 + 2)**
+-- still 15 in all. Verified with four seeded synthetic walks (group stage +
+both Play-in matchdays on a scratch copy): every pairing and host matched the
+rule, seeds 7-12 followed the MD2 results, the 16 seeds plus 2 eliminations
+covered all 18 Play-in teams, and `next_matchday()` moved on to R16 leg 1.
+
+**Best Second Placed Teams** sits between Group F and Best Third Placed Teams
+on the WC tab: `wc_best_by_place(tables, place)` generalises
+`wc_best_thirds` (kept as a wrapper), carried as `WC_DATA.best_seconds`, and
+drawn by the shared `wcBestPlacedHtml`. Once the group stage ends it is the
+runners-up' Play-in order.
 
 **Only what the places are WORTH differs between subsets**, which is what lets
 one function serve all three: `WC_PLACE_SEED_BASE` is `{1: 0, 2: 6, 3: 12}` and
