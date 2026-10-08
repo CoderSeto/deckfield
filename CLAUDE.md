@@ -793,6 +793,20 @@ the other seven `<Region> S9`; nothing awarded at round 73; still no team
 above four banner rows. On the real data nothing changes until RT9 is
 played (`rt_champions` is `{}` at round 72).
 
+### World Championship bonus (2026-10-08, per explicit instruction)
+
+"Round of 16 = 40, Quarterfinals = 60, Semifinals = 80, Losing Finalist = 100,
+Winner = 120" -- cumulative standings, read the same way as the RT's.
+`_wc_bonus_awards` yields `WC_BONUS_FIELD` (40) to all 16 bracket teams when
+Play-in MD2 settles the field (round 83), then `WC_BONUS_PER_STAGE` (20) to
+every winner of each stage once the WHOLE stage is decided -- the cups'
+timing, where finalists collect at the end of the semifinals. A stage settles
+at its latest game, so a leg 3 nobody had to play costs nothing.
+`tournament_bonus_points` applies the same settled-round gate, and the walk
+returns immediately for any round before the Play-in can be over. Kept apart
+from `_cup_stages`/`_rt_stages`: those feed accolades, and no WC accolade was
+asked for.
+
 ### Cup-title accolades (2026-09-14, per explicit instruction)
 
 Winning a cup earns an accolade -- `Ribbon S9`, `Dream S9`, `Star S9` -- and
@@ -2189,6 +2203,19 @@ on the WC tab: `wc_best_by_place(tables, place)` generalises
 `wc_best_thirds` (kept as a wrapper), carried as `WC_DATA.best_seconds`, and
 drawn by the shared `wcBestPlacedHtml`. Once the group stage ends it is the
 runners-up' Play-in order.
+
+**The Play-in carries an Adv too** (per explicit instruction, 2026-10-08):
+each team's **Play-in score** is its frozen playoff seeding score plus **half
+the group points it EARNED** (`wc_playin_scores`), and a game's Adv is home
+minus away (`_wc_playin_adv_by_dex`, wired through `_event_adv_by_dex`, three
+decimals). "Earned" deliberately excludes the 4/3/2/1 starting points -- the
+one reading chosen rather than given: those are a seeding head start, not
+points earned in the group stage. **Signed, not clamped**: Play-in hosting is
+set by rank (MD1) or the ladder (MD2), not by this score, so the host can be
+the lower side -- 1 of the real MD1's 8 games reads -0.677. The WC tab's
+Play-in view prints the score in brackets after each name. Verified on a
+scratch walk: every Play-in game's Adv matched a hand calculation from the
+round-74 playoff scores and the stored group results.
 
 **Only what the places are WORTH differs between subsets**, which is what lets
 one function serve all three: `WC_PLACE_SEED_BASE` is `{1: 0, 2: 6, 3: 12}` and

@@ -1786,6 +1786,13 @@ TOURNAMENT_BONUS = {
     "RT":  {"semifinalist": 15, "finalist": 15, "winner": 15},
 }
 
+# World Championship, per explicit instruction 2026-10-08: Round of 16 40,
+# quarterfinals 60, semifinals 80, losing finalist 100, winner 120 --
+# cumulative standings, so the bracket field banks 40 when the Play-in settles
+# it and every stage won adds 20 (see _wc_bonus_awards).
+WC_BONUS_FIELD = 40
+WC_BONUS_PER_STAGE = 20
+
 
 def _pa_seed_lookup(conn):
     """{team_name: best seed} across PA's two bracket seedings. A team holds a
@@ -1944,6 +1951,42 @@ def _rt_stages(conn, season, through_round=None):
         yield region, "RT", stage
 
 
+def _wc_bonus_awards(conn, season, through_round=None):
+    """Yield (team_name, points, settled_round) for the World Championship
+    bonus. The 16-team bracket field collects WC_BONUS_FIELD when Play-in
+    matchday 2 settles it; each stage's winners collect WC_BONUS_PER_STAGE
+    when that WHOLE stage is decided (the cups' timing: finalists collect at
+    the end of the semifinals), so the totals stand at 40 / 60 / 80 / 100 /
+    120. A stage's settling round is its latest game -- a leg 3 nobody had
+    to play adds none. Skipped outright before the Play-in can be over,
+    since this runs once per recomputed round."""
+    playin_round = abs_round_for_event(("WC", "Play-in", 2))
+    if through_round is not None and through_round < playin_round:
+        return
+
+    def stage_round(bracket):
+        row = conn.execute("SELECT MAX(round) r FROM games WHERE season=? "
+                           "AND cup_name='WC' AND cup_bracket=?", (season, bracket)).fetchone()
+        return row["r"]
+
+    seeds, _elim = wc_bracket_seeds(season)
+    if seeds is None:
+        return
+    settled_at = stage_round("Play-in")
+    for name in seeds.values():
+        yield name, WC_BONUS_FIELD, settled_at
+    for stage in WC_BRACKET_STAGES:
+        ties = _wc_bracket_ties(season, stage)
+        if ties is None:
+            return
+        winners = [_wc_tie_winner(conn, season, stage, better, worse) for better, worse in ties]
+        if any(w is None for w in winners):
+            return
+        settled_at = stage_round(stage)
+        for name in winners:
+            yield name, WC_BONUS_PER_STAGE, settled_at
+
+
 def tournament_bonus_points(season, through_round=None):
     """{team_id: bonus points} earned through cup runs as of `through_round`.
 
@@ -1994,6 +2037,9 @@ def tournament_bonus_points(season, through_round=None):
             if stage["champion"] is None or not settled(stage["champion_round"]):
                 continue
             award(stage["champion"], tiers["winner"])
+        for team, points, rnd in _wc_bonus_awards(conn, season, through_round):
+            if settled(rnd):
+                award(team, points)
     finally:
         conn.close()
     return out
@@ -3560,19 +3606,45 @@ def _rt_adv_by_dex(season, matchday, games):
     return out
 
 
+def _wc_frozen_playoff_scores(conn, season):
+    """{team_id: playoff seeding score}, unrounded, at the field's own round
+    (RT9 once frozen) -- the score the draw was seeded by."""
+    round_num = wc_field_freeze_round(season) or conn.execute(
+        "SELECT MAX(round) m FROM team_round_ratings WHERE season=?", (season,)).fetchone()["m"]
+    return {r["team_id"]: r["playoff_score"] for r in conn.execute(
+        "SELECT team_id, playoff_score FROM team_round_ratings WHERE season=? AND round=?",
+        (season, round_num))}
+
+
 def _wc_group_adv_by_dex(season, games):
     """{(home_dex, away_dex): adv} for a World Championship group matchday:
     the home team's playoff seeding score minus the away team's (per explicit
-    instruction, 2026-10-05). Read unrounded at the field's own round (RT9
-    once frozen), so it matches the score the draw was seeded by. The higher
-    seed always hosts in the group stage, so this is never negative."""
+    instruction, 2026-10-05). The higher seed always hosts in the group
+    stage, so this is never negative."""
     conn = get_connection()
-    round_num = wc_field_freeze_round(season) or conn.execute(
-        "SELECT MAX(round) m FROM team_round_ratings WHERE season=?", (season,)).fetchone()["m"]
-    score = {r["team_id"]: r["playoff_score"] for r in conn.execute(
-        "SELECT team_id, playoff_score FROM team_round_ratings WHERE season=? AND round=?",
-        (season, round_num))}
+    score = _wc_frozen_playoff_scores(conn, season)
     conn.close()
+    return {(h, a): round(score[h] - score[a], 3) for h, a in games}
+
+
+def wc_playin_scores(season):
+    """{team_id: Play-in playoff score} -- the frozen playoff seeding score
+    plus HALF the points the team EARNED in group games (per explicit
+    instruction, 2026-10-08). Earned only: the 4/3/2/1 starting points are a
+    seeding head start, not points earned in the group stage. Unrounded."""
+    conn = get_connection()
+    score = _wc_frozen_playoff_scores(conn, season)
+    earned = _wc_group_records(conn, season)
+    ids = {r["name"]: r["team_id"] for r in conn.execute("SELECT team_id, name FROM teams")}
+    conn.close()
+    return {ids[n]: score[ids[n]] + e["points"] / 2 for n, e in earned.items()}
+
+
+def _wc_playin_adv_by_dex(season, games):
+    """{(home_dex, away_dex): adv} for a Play-in matchday: home Play-in score
+    minus away. Signed -- on matchday 2 the host is set by the ladder, not by
+    the score, so the visitor can be the better side."""
+    score = wc_playin_scores(season)
     return {(h, a): round(score[h] - score[a], 3) for h, a in games}
 
 
@@ -3582,6 +3654,8 @@ def _event_adv_by_dex(season, event, games):
         return _rt_adv_by_dex(season, event[1], games)
     if event[0] == "WC" and event[1] == "Group":
         return _wc_group_adv_by_dex(season, games)
+    if event[0] == "WC" and event[1] == "Play-in":
+        return _wc_playin_adv_by_dex(season, games)
     return {}
 
 
@@ -5717,12 +5791,17 @@ def world_championship_overview(season, round_num=None):
 
     # ---- Play-in: one block per place-subset (runners-up on their own ladder) --
     SUBSET_LABEL = {1: "Group winners", 2: "Runners-up", 3: "Third place"}
+    # Play-in score: playoff score + half the group points earned (2026-10-08).
+    by_dex = wc_playin_scores(season)
+    pin_score = {name: by_dex.get(d) for name, d in dex.items()}
     playin = {}
     for place, ranked in subsets.items():
         res = _wc_playin_subset(conn, season, ranked, place)
 
         def leg_rows(pairs, md):
             return [{"home": h, "away": a, "home_dex": dex.get(h), "away_dex": dex.get(a),
+                     "home_score": round(pin_score[h], 2), "away_score": round(pin_score[a], 2),
+                     "adv": round(pin_score[h] - pin_score[a], 3),
                      "result": _wc_game_result(conn, season, "Play-in", md, h, a)}
                     for h, a in pairs]
 
@@ -5736,7 +5815,8 @@ def world_championship_overview(season, round_num=None):
                            "eliminated": out_of_it})
         playin[str(place)] = {
             "label": SUBSET_LABEL[place], "seed_base": base,
-            "ranked": [{"rank": i + 1, "name": n, "dex": dex.get(n)}
+            "ranked": [{"rank": i + 1, "name": n, "dex": dex.get(n),
+                        "score": round(pin_score[n], 2)}
                        for i, n in enumerate(ranked)],
             "md1": leg_rows(res["md1"], 1),
             "md2": leg_rows(res["md2"], 2) if res["md2"] else None,
