@@ -494,6 +494,8 @@ STATIC_CONSTS = {
     "REGION_ORDER": "fixed display order of the 10 regions",
     "ROUND_LABELS": "static label strings",
     "RT_MD_LABELS": "static label strings",
+    "WC_STAGE_SIZE": "fixed knockout-bracket shape (16 teams -> 8/4/2/1), never from the db",
+    "WC_STAGE_NAMES": "static label strings for the fixed WC_STAGE_SIZE stages",
 }
 
 
