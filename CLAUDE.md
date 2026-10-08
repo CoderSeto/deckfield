@@ -2225,6 +2225,15 @@ Play-in view prints the score in brackets after each name. Verified on a
 scratch walk: every Play-in game's Adv matched a hand calculation from the
 round-74 playoff scores and the stored group results.
 
+**The Play-in view colours every team by its region** (per explicit request,
+2026-10-08), as the group boxes do, rather than only a game's winner: once a
+game is played the loser is dimmed (`wcPlayinSideHtml`) so the result still
+reads. Each name -- the Outcome column too -- carries its Play-in score in
+small brackets. Played rows need ~534px, against a ~499px column three-across
+at 1600px, so the Play-in tables (`.wc-playin`) run 15px type and 5px cell
+padding: 0 overflowing boxes at 1600px and up, played or not. Below ~1560px
+the page already scrolls sideways (pre-existing, the 12-tab nav).
+
 **Only what the places are WORTH differs between subsets**, which is what lets
 one function serve all three: `WC_PLACE_SEED_BASE` is `{1: 0, 2: 6, 3: 12}` and
 the seed is `base + place` -- except that the third subset's places **5 and 6
