@@ -301,6 +301,10 @@
   /* Hall of Fame. Each title is a perennial plaque: one engraved plate per
      season, oldest first, the champion in full and the runners-up beneath. */
   .wc-pscore { font-size: 10.5px; }
+  /* Play-in rows carry two names, two scores and a result -- ~534px played at
+     the default size, against a ~499px column three-across at 1600px. */
+  .wc-playin table.scoreboard { font-size: 15px; }
+  .wc-playin table.scoreboard td { padding: 6px 5px; }
   .hof-h { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent);
            margin: 26px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
   .hof-h:first-child { margin-top: 4px; }
@@ -1889,6 +1893,14 @@ function wcPinScore(v) {
   return v == null ? '' : ` <span class="qual-sub wc-pscore">(${Number(v).toFixed(2)})</span>`;
 }
 
+// Play-in sides are always coloured by their own region, as in the group
+// boxes; once a game is played the loser is dimmed so the winner still reads.
+function wcPlayinSideHtml(name, result) {
+  const lost = result && result.winner && result.winner !== name;
+  const html = winnerNameHtml(name);
+  return lost ? `<span style="opacity:.5">${html}</span>` : html;
+}
+
 function wcPlayinHtml(d) {
   if (!d.playin) {
     return '<div class="qual-sub">The Play-in is seeded by the final group tables, '
@@ -1899,16 +1911,17 @@ function wcPlayinHtml(d) {
     const legHtml = (games, title) => {
       if (!games) return '';
       const rows = games.map(g => `<tr>
-        <td class="left">${wcSideHtml(g.away, g.away_dex, g.result && g.result.winner)}${wcPinScore(g.away_score)}</td>
+        <td class="left">${wcPlayinSideHtml(g.away, g.result)}${wcPinScore(g.away_score)}</td>
         <td class="num">${wcScoreCell(g.result)}</td>
-        <td class="left">at ${wcSideHtml(g.home, g.home_dex, g.result && g.result.winner)}${wcPinScore(g.home_score)}</td>
+        <td class="left">at ${wcPlayinSideHtml(g.home, g.result)}${wcPinScore(g.home_score)}</td>
       </tr>`).join('');
       return `<div><h3 class="rds-bracket-title">${title}</h3>
         <div class="table-scroll"><table class="scoreboard"><tbody>${rows}</tbody></table></div></div>`;
     };
+    const scoreOf = Object.fromEntries((b.ranked || []).map(r => [r.name, r.score]));
     const places = b.places.map(p => `<tr>
       <td class="num">${p.slot}</td>
-      <td class="left">${p.name ? winnerNameHtml(p.name) : '<span class="sb-leg">&ndash;</span>'}</td>
+      <td class="left">${p.name ? winnerNameHtml(p.name) + wcPinScore(scoreOf[p.name]) : '<span class="sb-leg">&ndash;</span>'}</td>
       <td class="left">${p.eliminated
           ? '<span style="color:var(--grade-bad)">Eliminated</span>'
           : `<span class="qual-sub">seed</span> ${p.seed}`}</td>
@@ -1916,7 +1929,7 @@ function wcPlayinHtml(d) {
     return `<div style="margin-bottom:26px">
       <h3 class="rds-bracket-title" style="margin-top:0">${b.label}
         <span class="qual-sub">&mdash; ${wcSeedRange(b)}</span></h3>
-      <div class="wc-grid">
+      <div class="wc-grid wc-playin">
         ${legHtml(b.md1, 'Matchday 1')}
         ${legHtml(b.md2, 'Matchday 2') || '<div><h3 class="rds-bracket-title">Matchday 2</h3>'
           + '<div class="qual-sub">Awaiting matchday 1.</div></div>'}
