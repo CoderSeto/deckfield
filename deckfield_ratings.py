@@ -5406,8 +5406,11 @@ WC_PLAYIN_MD1_PAIRS = ((1, 2), (3, 4), (5, 6))
 
 # The runners-up play their own ladder (per explicit instruction,
 # 2026-10-06), as (home rank, away rank): matchday 1 is "3 at 2, 5 at 4",
-# and ranks 1 and 6 wait for matchday 2.
+# and ranks 1 and 6 wait for matchday 2. The group winners switched to the
+# same ladder on 2026-10-08 (per explicit instruction); only the
+# third-placed teams keep the original one.
 WC_PLAYIN_SECONDS_MD1_PAIRS = ((2, 3), (4, 5))
+WC_PLAYIN_SECONDS_FORMAT_PLACES = (1, 2)
 
 
 def _wc_playin_subset(conn, season, ranked, place=1):
@@ -5417,24 +5420,23 @@ def _wc_playin_subset(conn, season, ranked, place=1):
     {"md1": [(home, away), ...], "md2": [(home, away), ...] or None,
      "places": {1..6: name} for however much is settled}.
 
-    Group winners and third-placed teams share one ladder -- only what the
-    places are WORTH differs (seeds 1-6, or 13-16 plus two eliminations),
-    which is applied by the caller:
+    The third-placed teams play this ladder (seeds 13-16 plus two
+    eliminations, applied by the caller):
 
         1 = winner of (2 at 1)                     -- settled on matchday 1
         2 / 3 = winner / loser of [loser(2@1) hosts winner(4@3)]
         4 / 5 = winner / loser of [loser(4@3) hosts winner(6@5)]
         6 = loser of (6 at 5)                      -- settled on matchday 1
 
-    The runners-up (`place == 2`) play their own, per explicit instruction
-    2026-10-06 -- see _wc_playin_seconds."""
+    The group winners and the runners-up (`WC_PLAYIN_SECONDS_FORMAT_PLACES`)
+    play a different one -- see _wc_playin_seconds."""
     def settle(home, away, matchday):
         winner = _real_bracket_winner(conn, "WC", "Play-in", matchday, home, away)
         if winner is None:
             return None, None
         return winner, (away if winner == home else home)
 
-    if place == 2:
+    if place in WC_PLAYIN_SECONDS_FORMAT_PLACES:
         return _wc_playin_seconds(ranked, settle)
 
     md1 = [(ranked[h - 1], ranked[a - 1]) for h, a in WC_PLAYIN_MD1_PAIRS]
@@ -5463,7 +5465,9 @@ def _wc_playin_subset(conn, season, ranked, place=1):
 
 
 def _wc_playin_seconds(ranked, settle):
-    """The runners-up' Play-in, per explicit instruction 2026-10-06.
+    """The runners-up' Play-in (per explicit instruction 2026-10-06), which
+    the group winners also play since 2026-10-08. Seeds shown for the
+    runners-up; the group winners' places are seeds 1-6.
 
         MD1: G1 = 3 at 2, G2 = 5 at 4      (ranks 1 and 6 wait)
         MD2: rank 1 hosts winner(G1)        -> places 1 / 2 (seeds 7 / 8)
@@ -5489,8 +5493,9 @@ def _wc_playin_seconds(ranked, settle):
 
 def wc_playin_games(season, matchday, round_num=None):
     """[(home_name, away_name)] -- one Play-in matchday across all three
-    place-subsets: 8 games on matchday 1 (three each for the winners and the
-    thirds, two for the runners-up) and 7 on matchday 2 (two, three, two)."""
+    place-subsets: 7 games on matchday 1 (two each for the winners and the
+    runners-up, three for the thirds) and 8 on matchday 2 (three, three,
+    two)."""
     if matchday not in (1, 2):
         raise ValueError(f"World Championship Play-in matchday must be 1 or 2, got {matchday}")
     subsets = wc_place_subsets(season, round_num)
@@ -5789,7 +5794,7 @@ def world_championship_overview(season, round_num=None):
         conn.close()
         return out
 
-    # ---- Play-in: one block per place-subset (runners-up on their own ladder) --
+    # ---- Play-in: one block per place-subset (winners/runners-up share a ladder) --
     SUBSET_LABEL = {1: "Group winners", 2: "Runners-up", 3: "Third place"}
     # Play-in score: playoff score + half the group points earned (2026-10-08).
     by_dex = wc_playin_scores(season)

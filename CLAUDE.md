@@ -2147,8 +2147,8 @@ third-place teams will compete for the remaining four spots" made it sound
 like a six-team mini-tournament. In fact **all three place-subsets play it
 simultaneously**, so the Play-in is what seeds the entire 16-team bracket:
 group winners contest seeds **1-6**, runners-up **7-12**, and the third-placed
-teams **13-16** with two eliminated. Eight games on the Thursday, seven on
-the Weekend (the runners-up play their own format -- see below).
+teams **13-16** with two eliminated. Seven games on the Thursday, eight on
+the Weekend (the group winners and runners-up play their own format -- see below).
 
 **Ranking inside a subset is points, then wins, then initial seed** (wins
 added 2026-10-04; points include the group starting points) -- points on the
@@ -2165,7 +2165,7 @@ disagreeing about which of two tied teams is ahead. Note it is deliberately
 **not** `_standings_order` (W-L, then head-to-head, then DSCR) -- that is the
 Regional/League rule and was never named for the World Championship.
 
-**The ladder, shared by the group winners and the third-placed teams** (`_wc_playin_subset`). Matchday
+**The original ladder, now played by the third-placed teams only** (`_wc_playin_subset`). Matchday
 1 is `2 at 1`, `4 at 3`, `6 at 5`, better rank hosting:
 
 | place | decided by | hosting |
@@ -2192,8 +2192,16 @@ place=2)`. Group winners and third-placed teams keep the ladder above.
 | 2 | **loser(G2) hosts 6** | seeds 11 / 12 |
 
 Ranks 1 and 6 sit out matchday 1, and nothing is settled until matchday 2.
-So the Play-in is now **8 games on MD1 (3 + 2 + 3) and 7 on MD2 (2 + 3 + 2)**
--- still 15 in all. Verified with four seeded synthetic walks (group stage +
+
+**The group winners switched to this same ladder on 2026-10-08** (per explicit
+instruction, "mirror the runners-up play-in format") -- seeds 1-6 instead of
+7-12, via `WC_PLAYIN_SECONDS_FORMAT_PLACES = (1, 2)`. Only the third-placed
+teams keep the original ladder. The Play-in is now **7 games on MD1
+(2 + 2 + 3) and 8 on MD2 (3 + 3 + 2)** -- still 15 in all. Verified with three
+seeded synthetic walks: both subsets' pairings, hosts and seeds matched the
+rule, the thirds still played 2@1 / 4@3 / 6@5, and the 16 seeds plus 2
+eliminations covered all 18 teams. No Play-in game had been played, so nothing
+needed migrating. Verified with four seeded synthetic walks (group stage +
 both Play-in matchdays on a scratch copy): every pairing and host matched the
 rule, seeds 7-12 followed the MD2 results, the 16 seeds plus 2 eliminations
 covered all 18 Play-in teams, and `next_matchday()` moved on to R16 leg 1.
