@@ -56,7 +56,55 @@ cross-referenced between conversations).
 - `hall_of_fame.json` — seasons 1-8 of the Hall of Fame, extracted once from
   the workbook's `HOF` sheet by `extract_hall_of_fame.py` (static history; see
   "Hall of Fame tab").
+- `deckfield_dashboard_s9.html`, `archive/s9_final.json`,
+  `archive/SHA256SUMS` — **Season 9's frozen record**, written once by
+  `freeze_season.py`. Never edited, never regenerated; see "Season 9 is
+  frozen" below.
+- `results/s9/` — every S9 matchday CSV from round 12 on (moved here from
+  `results/` when S9 was frozen). Kept as the audit trail, not the record.
 - `CLAUDE.md` — this file.
+
+## Season 9 is frozen (2026-10-10, per explicit instruction)
+
+"It's important that we keep the final results of S9 intact, even if that
+means we need to create a historical tab with just numbers, no formulas."
+S9 finished at round 95 (3525 games, Casseroya Lake world champion) and is
+now a fixed record, not something the engine rebuilds:
+
+- **`deckfield_dashboard_s9.html`** — a byte-for-byte copy of the final
+  dashboard (main at `057db94`). Every tab is drawn from inline JSON, so it
+  needs no engine and no database. It is the version that looks exactly like
+  the original.
+- **`archive/s9_final.json`** — every data constant on that page as plain
+  JSON (26 of 28: `TEAMS_EXPORT_TSV` is dropped because its Secondary Type is
+  random per export, `NEXT_MATCHDAY_DATA` because it drives the game and is
+  null anyway). `meta` records the season, round, date and the source page's
+  SHA-256. **This file is what anything later reads S9 from** — the planned
+  Season 9 history tab, the Hall of Fame, S10's carryover seeds and the
+  region-strength priors. S10 never recomputes S9.
+- **`archive/SHA256SUMS`** — both files' checksums (`sha256sum -c
+  archive/SHA256SUMS`). `regenerate_dashboard.py` checks it before writing
+  anything (`_check_frozen_archive`) and refuses to run if a frozen file has
+  changed, is missing, or exists unlisted, or if it is pointed at a frozen
+  dashboard as its target. If it trips, **restore the file from git** — never
+  update the checksum to match.
+- **The workbook and `results/s9/` are the audit trail, not the authority.**
+  If a future rebuild of S9 disagrees with the archive, the archive wins and
+  the difference shows the engine has changed. It already does by a hair: a
+  clean rebuild today reproduces every constant except `QUALIFICATION_DATA`,
+  whose allocation `s9` strength terms differ in the 15th decimal place (float
+  summation order). The 2dp allocation scores, the bids and the 48-team field
+  are identical — but that is exactly the drift freezing protects against.
+
+Verified when frozen: the copy is byte-identical to main's dashboard; the JSON
+reads back equal to the page's constants; in Chromium all 12 tabs render with
+zero `pageerror` and all 26 archived constants equal the live page's values.
+The one difference is `DATA.teams[].plusminus`, which the page computes on
+load (`ovr` minus the mean OVR) rather than storing. All 83 CSVs report
+"already up to date" from `results/s9/`.
+
+`freeze_season.py <N>` is reusable at the end of any season. It refuses to
+overwrite an existing freeze and appends to `SHA256SUMS`.
 
 ## THE RUNBOOK: adding a matchday's results
 
@@ -78,7 +126,7 @@ pip install openpyxl playwright        # neither is preinstalled
 Do **not** run `playwright install` — it is blocked, and Chromium is
 already on disk. See step 6 for how to point Playwright at it.
 
-### 1. Rebuild the database (migrate, then replay `results/` IN ROUND ORDER)
+### 1. Rebuild the database (migrate, then replay `results/s9/` IN ROUND ORDER)
 
 ```
 python3 deckfield_cli.py migrate "Baccer Game S9 Stats.xlsm"
@@ -86,17 +134,17 @@ python3 deckfield_cli.py migrate "Baccer Game S9 Stats.xlsm"
 
 The workbook path is a **positional** argument, not `--workbook`, and the
 filename has spaces (quote it). Migrate covers rounds 1-11 only; every
-round from 12 on lives in `results/` and must be replayed:
+round from 12 on lives in `results/s9/` and must be replayed:
 
 ```
-for f in $(for f in results/*.csv; do r=$(sed -n 2p "$f" | cut -d, -f1); \
+for f in $(for f in results/s9/*.csv; do r=$(sed -n 2p "$f" | cut -d, -f1); \
     echo "$r $f"; done | sort -n | cut -d' ' -f2); do
   python3 deckfield_cli.py add-results "$f"
 done
 ```
 
 That sorts by the round number **inside each file**, which is the only
-correct order. `for f in results/*.csv` looks equivalent and is **wrong** —
+correct order. `for f in results/s9/*.csv` looks equivalent and is **wrong** —
 a shell glob sorts `thu` before `tue`, feeding round 25 before 24, 13
 before 12, and so on. (Fatigue is rederived on every ingest now, so
 out-of-order replay no longer corrupts it — see the fatigue section — but
@@ -133,15 +181,15 @@ must equal the `round` column in the CSV you were given. If it does not,
 do not "fix" the CSV or hand-pick a number — work out why they disagree
 first (`abs_round_for_event()` is the single source of truth).
 
-### 4. Save the CSV into `results/` under the engine's own filename
+### 4. Save the CSV into `results/s9/` under the engine's own filename
 
 Never invent a filename. Copy the CSV in with your best guess, then let
 the engine confirm it:
 
 ```
-cp <uploaded.csv> results/<year>-w<week>-<day>-<event>.csv
-python3 deckfield_cli.py add-results results/<...>.csv
-python3 deckfield_cli.py export-results --from N --to N
+cp <uploaded.csv> results/s9/<year>-w<week>-<day>-<event>.csv
+python3 deckfield_cli.py add-results results/s9/<...>.csv
+python3 deckfield_cli.py export-results --from N --to N -o results/s9
 ```
 
 `export-results` derives the filename from
@@ -201,7 +249,7 @@ events**. Two things are expected noise and are **not** code bugs:
 
 ### 7. Commit and push
 
-Commit `results/*.csv`, `deckfield_dashboard.html`, and anything else you
+Commit `results/s9/*.csv`, `deckfield_dashboard.html`, and anything else you
 changed. Never commit `deckfield.db` (it is gitignored — keep it that
 way). Push to the branch named in the session instructions.
 

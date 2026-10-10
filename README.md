@@ -20,7 +20,10 @@ conf_pods.json, league_pods.json  pod structures for the Regional/League schedul
 cup_seeds_full.json               Ribbon/Dream/Star Cup seeding
 pa_cup_seeds.json                 PA Cup Draw seeding
 pa_process_real_seeds_v2.json     PA Cup Process seeding (resolved)
-results/                          every batch of game results ever entered, as CSVs
+results/s9/                       every S9 batch of game results (round 12 on), as CSVs
+deckfield_dashboard_s9.html       Season 9's final dashboard, frozen (never regenerated)
+archive/s9_final.json             Season 9's final numbers as plain JSON -- the S9 record
+archive/SHA256SUMS                checksums regenerate_dashboard.py verifies before running
 deckfield.db                      the database — gitignored, always regenerable
 ```
 
@@ -52,20 +55,20 @@ rebuilds everything rather than duplicating data.
 
 2. **Play the matchday** in `deckfield.html`, then export its results.
 
-3. **Save the results as a new file in `results/`**, named for what it is,
-   e.g. `results/2026-w6-tue-pa-draw-1.csv`. This file *is* the record —
+3. **Save the results as a new file in `results/s9/`**, named for what it is,
+   e.g. `results/s9/2026-w6-tue-pa-draw-1.csv`. This file *is* the record —
    treat it the way you'd treat a save file, not a scratch export.
 
 4. **Load it into the database:**
    ```
-   python3 deckfield_cli.py add-results results/2026-w6-tue-pa-draw-1.csv
+   python3 deckfield_cli.py add-results results/s9/2026-w6-tue-pa-draw-1.csv
    ```
    This updates the real database and recomputes ratings from the
    earliest affected round forward.
 
 5. **Commit the result file:**
    ```
-   git add results/2026-w6-tue-pa-draw-1.csv
+   git add results/s9/2026-w6-tue-pa-draw-1.csv
    git commit -m "Week 6 Tue: PA Draw round 1"
    ```
 
@@ -79,9 +82,9 @@ machine, the entire history is recoverable:
 
 ```
 python3 deckfield_cli.py migrate
-python3 deckfield_cli.py add-results results/<file1>.csv
-python3 deckfield_cli.py add-results results/<file2>.csv
-...  # every file in results/, in the order they were played
+python3 deckfield_cli.py add-results results/s9/<file1>.csv
+python3 deckfield_cli.py add-results results/s9/<file2>.csv
+...  # every file in results/s9/, in the order they were played
 ```
 
 ## Running the HTML files
