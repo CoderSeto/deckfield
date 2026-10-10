@@ -208,6 +208,50 @@ restored:
 The RT ends at round 77, which is where the WC field freezes (S9: 74). Key the
 EX taper to S10's real calendar weeks (`week_for_round` is S9-shaped).
 
+### B10a. Regional/League schedule outline: every host reversed for S10
+"As it's a new season, we need to reverse location of all the games in the
+schedule (i.e., A12L becomes A12R)." Same 15 rounds, same pairings in the same
+rounds, only the host flips. There are therefore **two outlines**, which
+alternate by season: **Outline A** (S9, odd seasons) and **Outline B** (S10,
+even seasons).
+
+Notation: pod round = `away@home` by pod position, played in every pod. Cross
+round = relation (A = Across, S = Same, D = Diag), position pattern (the
+listed pairs plus their mirrors; `=` means 1v1, 2v2, 3v3, 4v4), and the host
+side (L/R for Across and Diag, U/D for Same).
+
+| Rd | Outline A (S9) | Outline B (S10) |
+|---|---|---|
+| 1 | Pod 4@1, 3@2 | Pod 1@4, 2@3 |
+| 2 | A 13/24 L | A 13/24 **R** |
+| 3 | A 14/23 R | A 14/23 **L** |
+| 4 | D 13/24 L | D 13/24 **R** |
+| 5 | D 14/23 R | D 14/23 **L** |
+| 6 | S 13/24 D | S 13/24 **U** |
+| 7 | S 14/23 U | S 14/23 **D** |
+| 8 | Pod 1@3, 2@4 | Pod 3@1, 4@2 |
+| 9 | S = D | S = **U** |
+| 10 | S 12/34 U | S 12/34 **D** |
+| 11 | D = L | D = **R** |
+| 12 | D 12/34 R | D 12/34 **L** |
+| 13 | A = L | A = **R** |
+| 14 | A 12/34 R | A 12/34 **L** |
+| 15 | Pod 2@1, 4@3 | Pod 1@2, 3@4 |
+
+- **Outline B is Outline A with every host flipped** (L<->R, U<->D, and each
+  pod game's away/home swapped). Implement it as that flip, keyed on season
+  parity, from the one `POD_ROUND_DEFS` / `CROSS_ROUND_DEFS` table, rather than
+  as a second hand-copied table that could drift.
+- Verified against the real generator (Indigo's pods): every round keeps the
+  same pairings with every host reversed; 120 games, 120 distinct pairs; each
+  team's home count flips between 7 and 8.
+- **Regions** keep their S9 pods (B3), so every S10 regional game is the S9
+  fixture **at the other team's ground**: a true home-and-away across the two
+  seasons. **Divisions** are reshuffled by promotion/relegation (B2), so for
+  League games the reversal is at the outline level only.
+- Fatigue follows automatically (hosting sets `host_region`).
+- S9's frozen record keeps Outline A; nothing about S9 is recomputed.
+
 ### B11. Rules carried over unchanged
 - Tournament bonuses:
   - RDS 15 / 30
@@ -250,8 +294,8 @@ EX taper to S10's real calendar weeks (`week_for_round` is S9-shaped).
 
 1. Make the season number a setting everywhere: `SEASON = 9` in
    `regenerate_dashboard.py` and `migrate_s9.py`, the CLI `--season` default,
-   and the dashboard title/subtitle. Add a per-season `WEEKLY_SCHEDULE` (B10)
-   and `results/s10/` naming (B12).
+   and the dashboard title/subtitle. Add a per-season `WEEKLY_SCHEDULE` (B10),
+   the season-parity schedule outline (B10a) and `results/s10/` naming (B12).
 2. Build S10's starting point from the archive: `team_seasons` rows (division
    B2, basclm B5, EX seed B6, starting fatigue B4), carryover seeds, Elo carry,
    S10 `league_pods.json`, and the cup seed files (B9).
@@ -263,6 +307,8 @@ EX taper to S10's real calendar weeks (`week_for_round` is S9-shaped).
    `results/s10/`, not migrate + `results/`.
 6. **Test run on a scratch database**:
    - `next-matchday` = week 1 Weekend R1, round 1
+   - R1-R15 / L1-L15 hosts follow Outline B (every S9 regional pairing
+     reversed)
    - the roster at MD1 = 100% seed
    - Elo carried, pods generate
    - RDS and PA brackets generate from the new seeds with clean conflict
