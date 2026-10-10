@@ -243,6 +243,8 @@ side (L/R for Across and Diag, U/D for Same).
   at 4` in Outline B. Every regional season ends with each pod's 1 and 2, and
   3 and 4, meeting; only the host alternates. **This applies to Regional
   rounds only. League L15 is NOT pinned.**
+- **Confirmed: the outlines alternate every season**, A in odd seasons, B in
+  even ones (S11 returns to A).
 - **Outline B is Outline A with every host flipped** (L<->R, U<->D, and each
   pod game's away/home swapped). Implement it as that flip, keyed on season
   parity, from the one `POD_ROUND_DEFS` / `CROSS_ROUND_DEFS` table, rather than
@@ -313,6 +315,9 @@ Regional draw has the tighter rules, and rule 5 depends on when each Regional
 game falls. 110 of S10's 1,200 League games are same-region pairs (8-16 per
 division; Division 8 has the most).
 
+Confirmed: rule 4 uses the previous season's FINAL Division 1 top three (by
+definition they are never relegated, so all three are always in Division 1).
+
 The previous season's RT pairs come from the frozen archive (`RT_DATA`: MD6
 pairs = semifinals, MD8 = final). The Division 1 top three come from the
 archived final standings. For S9 that is Canalave City, Pueltown and National
@@ -373,7 +378,7 @@ Build notes:
 
 ### B10c. Dashboard changes for the per-group orders (per explicit request)
 - **Standings gets a third sub-tab** showing each group's round order for the
-  season, for the user's own reference: game 1-15 -> the round definition
+  season, for the user's own reference (confirmed: regions AND divisions): game 1-15 -> the round definition
   (e.g. `Diag 1v3/2v4 at R`), per region and per division, marking the
   pinned rounds (Rivalry Week; the L1 pod round, or which exception unpinned
   it).
