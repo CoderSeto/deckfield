@@ -4,7 +4,8 @@ DECKFIELD CLI -- run locally to keep the ratings database updated without
 routing every game result through a chat conversation.
 
 Commands:
-  deckfield migrate [workbook.xlsm]      Run the full initial migration
+  deckfield start-season                 Build the running season from seasons/s<N>/ (S10 on)
+  deckfield migrate [workbook.xlsm]      Season 9 only: rebuild from its workbook
   deckfield add-results results.csv      Ingest new game results, recompute ratings
   deckfield export-results [--from N]    Write games back out as add-results CSVs
   deckfield recompute [--from N]         Recompute ratings from a given round onward
@@ -42,6 +43,19 @@ def cmd_migrate(args):
     touched = db.recompute_from_round(args.season, 1)
     print(f"Recomputed rounds: {touched}")
     print("\nMigration complete.")
+
+
+def cmd_start_season(args):
+    """Build the running season's database from its committed starting files
+    (seasons/s<N>/, written from the previous season's frozen record by
+    prepare_season.py). The first step of every rebuild: then replay
+    results/s<N>/ in round order with add-results."""
+    if args.season == 9:
+        print("Season 9 is built with `migrate` from its workbook, not `start-season`.", file=sys.stderr)
+        sys.exit(1)
+    n = db.start_season(args.season)
+    print(f"Season {args.season}: {n} teams, carryover seeds and the round-0 opening state written "
+          f"to {db.DB_PATH}. Next: {db.next_matchday(args.season)}")
 
 
 def cmd_add_results(args):
@@ -221,6 +235,10 @@ def main():
     p_migrate.add_argument("workbook", nargs="?", default=None,
                             help="Path to the .xlsm workbook (default: bundled path)")
     p_migrate.set_defaults(func=cmd_migrate)
+
+    p_start = sub.add_parser("start-season",
+                             help="Build the season's database from seasons/s<N>/ (drops every table)")
+    p_start.set_defaults(func=cmd_start_season)
 
     p_add = sub.add_parser("add-results", help="Ingest new game results from a CSV file and recompute ratings")
     p_add.add_argument("csv_file", help="Path to a CSV file with a header row (see module docstring for format)")

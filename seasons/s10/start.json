@@ -1,0 +1,3693 @@
+{
+ "season": 10,
+ "from_season": 9,
+ "source": "archive/s9_final.json, archive/s9_inputs.json, legacy_points.json",
+ "ex_seed_scale": {
+  "tot_min": 24.0,
+  "tot_max": 1421.0,
+  "ovr_min": 7.173769679250952,
+  "ovr_max": 114.39615241454038
+ },
+ "teams": {
+  "1": {
+   "name": "Cycling Road",
+   "region": "Indigo",
+   "primary_type": "8",
+   "division": 9,
+   "division_seed": 7,
+   "basclm": 4.0,
+   "ex_seed": 76,
+   "ex_parts": {
+    "cups_sqrt": 30.269606955252712,
+    "ovr": 46.08270416189934,
+    "legacy": 0
+   },
+   "starting_fatigue": 22,
+   "starting_elo": 1562,
+   "seeds": {
+    "ovr": 41.041721055333305,
+    "pf": 33.55290092049635,
+    "pa": 69.95859955665667,
+    "dscr": 5.7532599454570095,
+    "fatigue": 22
+   }
+  },
+  "2": {
+   "name": "Fighting Dojo",
+   "region": "Indigo",
+   "primary_type": "7",
+   "division": 9,
+   "division_seed": 15,
+   "basclm": 9.0,
+   "ex_seed": 86,
+   "ex_parts": {
+    "cups_sqrt": 36.82456619885311,
+    "ovr": 48.932484325469574,
+    "legacy": 0
+   },
+   "starting_fatigue": 27,
+   "starting_elo": 1400,
+   "seeds": {
+    "ovr": 42.47403458381657,
+    "pf": 48.25683878474444,
+    "pa": 57.67234179021894,
+    "dscr": 6.0836511085704785,
+    "fatigue": 27
+   }
+  },
+  "3": {
+   "name": "Cerulean Cape",
+   "region": "Indigo",
+   "primary_type": "4",
+   "division": 8,
+   "division_seed": 1,
+   "basclm": 3.0,
+   "ex_seed": 113,
+   "ex_parts": {
+    "cups_sqrt": 45.70610418657558,
+    "ovr": 67.72655850995113,
+    "legacy": 0
+   },
+   "starting_fatigue": 30,
+   "starting_elo": 1800,
+   "seeds": {
+    "ovr": 51.92002871833487,
+    "pf": 57.819482056876325,
+    "pa": 61.11741549869076,
+    "dscr": 6.727916829514531,
+    "fatigue": 30
+   }
+  },
+  "4": {
+   "name": "Lavender Town",
+   "region": "Indigo",
+   "primary_type": "14",
+   "division": 7,
+   "division_seed": 3,
+   "basclm": 7.0,
+   "ex_seed": 104,
+   "ex_parts": {
+    "cups_sqrt": 38.999660443064144,
+    "ovr": 59.03336788388158,
+    "legacy": 6
+   },
+   "starting_fatigue": 24,
+   "starting_elo": 1616,
+   "seeds": {
+    "ovr": 47.55078834724459,
+    "pf": 26.676423679807705,
+    "pa": 60.41433923165569,
+    "dscr": 10.0,
+    "fatigue": 24
+   }
+  },
+  "5": {
+   "name": "Pallet Town",
+   "region": "Indigo",
+   "primary_type": "1",
+   "division": 6,
+   "division_seed": 13,
+   "basclm": 5.0,
+   "ex_seed": 150,
+   "ex_parts": {
+    "cups_sqrt": 67.68489880414549,
+    "ovr": 82.69966395702835,
+    "legacy": 0
+   },
+   "starting_fatigue": 26,
+   "starting_elo": 1876,
+   "seeds": {
+    "ovr": 59.445585169814684,
+    "pf": 78.50980923031638,
+    "pa": 74.5110183857087,
+    "dscr": 8.752958683455882,
+    "fatigue": 26
+   }
+  },
+  "6": {
+   "name": "Sevii Islands",
+   "region": "Indigo",
+   "primary_type": "2",
+   "division": 6,
+   "division_seed": 6,
+   "basclm": 5.0,
+   "ex_seed": 143,
+   "ex_parts": {
+    "cups_sqrt": 60.539213910505424,
+    "ovr": 82.28729301646484,
+    "legacy": 0
+   },
+   "starting_fatigue": 30,
+   "starting_elo": 1848,
+   "seeds": {
+    "ovr": 59.238325506605264,
+    "pf": 49.415133755783,
+    "pa": 84.70480672717403,
+    "dscr": 7.740861078236589,
+    "fatigue": 30
+   }
+  },
+  "7": {
+   "name": "Mount Moon",
+   "region": "Indigo",
+   "primary_type": "18",
+   "division": 2,
+   "division_seed": 3,
+   "basclm": 3.0,
+   "ex_seed": 170,
+   "ex_parts": {
+    "cups_sqrt": 69.68586842176153,
+    "ovr": 96.44565377410538,
+    "legacy": 4
+   },
+   "starting_fatigue": 33,
+   "starting_elo": 2033,
+   "seeds": {
+    "ovr": 66.35438726938668,
+    "pf": 75.49211118941916,
+    "pa": 69.24913168719401,
+    "dscr": 8.20448879355907,
+    "fatigue": 33
+   }
+  },
+  "8": {
+   "name": "Victory Road",
+   "region": "Indigo",
+   "primary_type": "15",
+   "division": 5,
+   "division_seed": 10,
+   "basclm": 4.0,
+   "ex_seed": 231,
+   "ex_parts": {
+    "cups_sqrt": 110.63945067566296,
+    "ovr": 116.27588172384748,
+    "legacy": 4
+   },
+   "starting_fatigue": 36,
+   "starting_elo": 2150,
+   "seeds": {
+    "ovr": 76.32115738323955,
+    "pf": 69.65669136961914,
+    "pa": 94.06623621296667,
+    "dscr": 8.653482456253647,
+    "fatigue": 36
+   }
+  },
+  "9": {
+   "name": "Celadon City",
+   "region": "Indigo",
+   "primary_type": "5",
+   "division": 6,
+   "division_seed": 14,
+   "basclm": 10.0,
+   "ex_seed": 120,
+   "ex_parts": {
+    "cups_sqrt": 48.99563914973215,
+    "ovr": 71.22354360345956,
+    "legacy": 0
+   },
+   "starting_fatigue": 22,
+   "starting_elo": 1695,
+   "seeds": {
+    "ovr": 53.67763062825251,
+    "pf": 43.13812171230435,
+    "pa": 77.21245373481649,
+    "dscr": 6.471436253219773,
+    "fatigue": 22
+   }
+  },
+  "10": {
+   "name": "Cerulean City",
+   "region": "Indigo",
+   "primary_type": "3",
+   "division": 8,
+   "division_seed": 12,
+   "basclm": 9.0,
+   "ex_seed": 94,
+   "ex_parts": {
+    "cups_sqrt": 33.97754953765955,
+    "ovr": 59.69368747812658,
+    "legacy": 0
+   },
+   "starting_fatigue": 23,
+   "starting_elo": 1586,
+   "seeds": {
+    "ovr": 47.88266822347153,
+    "pf": 45.32013355327577,
+    "pa": 70.83192071978094,
+    "dscr": 6.38793505647281,
+    "fatigue": 23
+   }
+  },
+  "11": {
+   "name": "Saffron City",
+   "region": "Indigo",
+   "primary_type": "11",
+   "division": 9,
+   "division_seed": 8,
+   "basclm": 10.0,
+   "ex_seed": 107,
+   "ex_parts": {
+    "cups_sqrt": 37.80672696957188,
+    "ovr": 49.22431869430922,
+    "legacy": 20
+   },
+   "starting_fatigue": 24,
+   "starting_elo": 1536,
+   "seeds": {
+    "ovr": 42.62071197314955,
+    "pf": 48.909948069267514,
+    "pa": 48.28041465640891,
+    "dscr": 5.857805808396937,
+    "fatigue": 24
+   }
+  },
+  "12": {
+   "name": "Vermilion City",
+   "region": "Indigo",
+   "primary_type": "4",
+   "division": 1,
+   "division_seed": 10,
+   "basclm": 10.0,
+   "ex_seed": 195,
+   "ex_parts": {
+    "cups_sqrt": 83.44754759556253,
+    "ovr": 105.61897830842481,
+    "legacy": 6
+   },
+   "starting_fatigue": 37,
+   "starting_elo": 2023,
+   "seeds": {
+    "ovr": 70.96494530457645,
+    "pf": 67.98035913877659,
+    "pa": 80.09633896589017,
+    "dscr": 8.130793560383182,
+    "fatigue": 37
+   }
+  },
+  "13": {
+   "name": "Cinnabar Island",
+   "region": "Indigo",
+   "primary_type": "2",
+   "division": 1,
+   "division_seed": 14,
+   "basclm": 10.0,
+   "ex_seed": 197,
+   "ex_parts": {
+    "cups_sqrt": 68.22422923379534,
+    "ovr": 88.29131280235666,
+    "legacy": 40
+   },
+   "starting_fatigue": 28,
+   "starting_elo": 1924,
+   "seeds": {
+    "ovr": 62.25597538519811,
+    "pf": 53.43249059418132,
+    "pa": 72.93358450573322,
+    "dscr": 7.5537788204371665,
+    "fatigue": 28
+   }
+  },
+  "14": {
+   "name": "Fuchsia City",
+   "region": "Indigo",
+   "primary_type": "8",
+   "division": 6,
+   "division_seed": 3,
+   "basclm": 10.0,
+   "ex_seed": 116,
+   "ex_parts": {
+    "cups_sqrt": 49.36823492793504,
+    "ovr": 66.2833826892778,
+    "legacy": 0
+   },
+   "starting_fatigue": 22,
+   "starting_elo": 1662,
+   "seeds": {
+    "ovr": 51.19468145177916,
+    "pf": 55.68922439709749,
+    "pa": 62.742860868431336,
+    "dscr": 6.974784516214035,
+    "fatigue": 22
+   }
+  },
+  "15": {
+   "name": "Pewter City",
+   "region": "Indigo",
+   "primary_type": "13",
+   "division": 8,
+   "division_seed": 7,
+   "basclm": 9.0,
+   "ex_seed": 124,
+   "ex_parts": {
+    "cups_sqrt": 55.31972533783148,
+    "ovr": 69.06755525937838,
+    "legacy": 0
+   },
+   "starting_fatigue": 26,
+   "starting_elo": 1767,
+   "seeds": {
+    "ovr": 52.594020281056125,
+    "pf": 53.74349877942113,
+    "pa": 61.999608814708566,
+    "dscr": 6.704653678780206,
+    "fatigue": 26
+   }
+  },
+  "16": {
+   "name": "Viridian City",
+   "region": "Indigo",
+   "primary_type": "9",
+   "division": 9,
+   "division_seed": 9,
+   "basclm": 9.0,
+   "ex_seed": 150,
+   "ex_parts": {
+    "cups_sqrt": 65.20272884048828,
+    "ovr": 79.21693864240042,
+    "legacy": 6
+   },
+   "starting_fatigue": 23,
+   "starting_elo": 1814,
+   "seeds": {
+    "ovr": 57.69515029490726,
+    "pf": 60.920185050410126,
+    "pa": 84.02051549528404,
+    "dscr": 7.415749006899663,
+    "fatigue": 23
+   }
+  },
+  "17": {
+   "name": "Dewford Town",
+   "region": "Delta",
+   "primary_type": "3",
+   "division": 9,
+   "division_seed": 11,
+   "basclm": 10.0,
+   "ex_seed": 113,
+   "ex_parts": {
+    "cups_sqrt": 42.160683867051276,
+    "ovr": 66.43523378240354,
+    "legacy": 4
+   },
+   "starting_fatigue": 25,
+   "starting_elo": 1630,
+   "seeds": {
+    "ovr": 51.27100255815057,
+    "pf": 56.26178488506292,
+    "pa": 68.21848579574488,
+    "dscr": 7.621271795690256,
+    "fatigue": 25
+   }
+  },
+  "18": {
+   "name": "Littleroot Town",
+   "region": "Delta",
+   "primary_type": "1",
+   "division": 5,
+   "division_seed": 12,
+   "basclm": 4.0,
+   "ex_seed": 139,
+   "ex_parts": {
+    "cups_sqrt": 51.190550309064676,
+    "ovr": 88.0000741379145,
+    "legacy": 0
+   },
+   "starting_fatigue": 20,
+   "starting_elo": 1891,
+   "seeds": {
+    "ovr": 62.109597399825624,
+    "pf": 49.54974281397953,
+    "pa": 92.10457686790976,
+    "dscr": 7.560458075790743,
+    "fatigue": 20
+   }
+  },
+  "19": {
+   "name": "Oldale Town",
+   "region": "Delta",
+   "primary_type": "12",
+   "division": 7,
+   "division_seed": 4,
+   "basclm": 5.0,
+   "ex_seed": 117,
+   "ex_parts": {
+    "cups_sqrt": 48.431371128404336,
+    "ovr": 68.9619124216412,
+    "legacy": 0
+   },
+   "starting_fatigue": 24,
+   "starting_elo": 1733,
+   "seeds": {
+    "ovr": 52.54092367114473,
+    "pf": 49.97317193791201,
+    "pa": 72.82011996348938,
+    "dscr": 6.759067983087609,
+    "fatigue": 24
+   }
+  },
+  "20": {
+   "name": "Petalburg City",
+   "region": "Delta",
+   "primary_type": "1",
+   "division": 2,
+   "division_seed": 15,
+   "basclm": 10.0,
+   "ex_seed": 250,
+   "ex_parts": {
+    "cups_sqrt": 124.5843483047517,
+    "ovr": 117.10986076781963,
+    "legacy": 8
+   },
+   "starting_fatigue": 49,
+   "starting_elo": 2221,
+   "seeds": {
+    "ovr": 76.74031935314264,
+    "pf": 66.21004476168004,
+    "pa": 94.40519528269016,
+    "dscr": 8.743240949160784,
+    "fatigue": 49
+   }
+  },
+  "21": {
+   "name": "Fallarbor Town",
+   "region": "Delta",
+   "primary_type": "9",
+   "division": 3,
+   "division_seed": 6,
+   "basclm": 6.0,
+   "ex_seed": 127,
+   "ex_parts": {
+    "cups_sqrt": 49.36823492793504,
+    "ovr": 77.4494358067839,
+    "legacy": 0
+   },
+   "starting_fatigue": 28,
+   "starting_elo": 1829,
+   "seeds": {
+    "ovr": 56.80679467525327,
+    "pf": 61.907354873133514,
+    "pa": 65.21583568945613,
+    "dscr": 6.983080597712327,
+    "fatigue": 28
+   }
+  },
+  "22": {
+   "name": "Lavaridge Town",
+   "region": "Delta",
+   "primary_type": "2",
+   "division": 8,
+   "division_seed": 3,
+   "basclm": 8.0,
+   "ex_seed": 85,
+   "ex_parts": {
+    "cups_sqrt": 34.24615094705708,
+    "ovr": 50.767191540138924,
+    "legacy": 0
+   },
+   "starting_fatigue": 29,
+   "starting_elo": 1562,
+   "seeds": {
+    "ovr": 43.39616745496566,
+    "pf": 46.10602447283736,
+    "pa": 56.75834264307338,
+    "dscr": 5.86883661752849,
+    "fatigue": 29
+   }
+  },
+  "23": {
+   "name": "Rustboro City",
+   "region": "Delta",
+   "primary_type": "13",
+   "division": 5,
+   "division_seed": 4,
+   "basclm": 9.0,
+   "ex_seed": 115,
+   "ex_parts": {
+    "cups_sqrt": 39.69821735277078,
+    "ovr": 55.75282539013617,
+    "legacy": 20
+   },
+   "starting_fatigue": 21,
+   "starting_elo": 1645,
+   "seeds": {
+    "ovr": 45.901971552664506,
+    "pf": 62.96455075596297,
+    "pa": 52.946929195462246,
+    "dscr": 6.423845380586632,
+    "fatigue": 21
+   }
+  },
+  "24": {
+   "name": "Verdanturf Town",
+   "region": "Delta",
+   "primary_type": "10",
+   "division": 10,
+   "division_seed": 1,
+   "basclm": 5.0,
+   "ex_seed": 87,
+   "ex_parts": {
+    "cups_sqrt": 38.04830595777246,
+    "ovr": 48.690075217718736,
+    "legacy": 0
+   },
+   "starting_fatigue": 27,
+   "starting_elo": 1597,
+   "seeds": {
+    "ovr": 42.35219857383323,
+    "pf": 41.18033442772809,
+    "pa": 55.60097094195412,
+    "dscr": 6.058052492344383,
+    "fatigue": 27
+   }
+  },
+  "25": {
+   "name": "Ever Grande City",
+   "region": "Delta",
+   "primary_type": "17",
+   "division": 4,
+   "division_seed": 3,
+   "basclm": 7.0,
+   "ex_seed": 104,
+   "ex_parts": {
+    "cups_sqrt": 42.59311245197346,
+    "ovr": 51.86062961420412,
+    "legacy": 10
+   },
+   "starting_fatigue": 25,
+   "starting_elo": 1666,
+   "seeds": {
+    "ovr": 43.94573480969109,
+    "pf": 36.47332048448413,
+    "pa": 62.73809643218953,
+    "dscr": 5.8991524815010505,
+    "fatigue": 25
+   }
+  },
+  "26": {
+   "name": "Mossdeep City",
+   "region": "Delta",
+   "primary_type": "11",
+   "division": 8,
+   "division_seed": 8,
+   "basclm": 10.0,
+   "ex_seed": 138,
+   "ex_parts": {
+    "cups_sqrt": 56.79081660263128,
+    "ovr": 81.33604206120326,
+    "legacy": 0
+   },
+   "starting_fatigue": 25,
+   "starting_elo": 1804,
+   "seeds": {
+    "ovr": 58.76022209721916,
+    "pf": 58.08627243773348,
+    "pa": 80.10701495298196,
+    "dscr": 10.0,
+    "fatigue": 25
+   }
+  },
+  "27": {
+   "name": "Pacifidlog Town",
+   "region": "Delta",
+   "primary_type": "3",
+   "division": 6,
+   "division_seed": 15,
+   "basclm": 6.0,
+   "ex_seed": 149,
+   "ex_parts": {
+    "cups_sqrt": 66.17908070514284,
+    "ovr": 83.0314999652706,
+    "legacy": 0
+   },
+   "starting_fatigue": 25,
+   "starting_elo": 1845,
+   "seeds": {
+    "ovr": 59.612367579882346,
+    "pf": 66.64912869398192,
+    "pa": 78.78471769461468,
+    "dscr": 7.685948836923749,
+    "fatigue": 25
+   }
+  },
+  "28": {
+   "name": "Sootopolis City",
+   "region": "Delta",
+   "primary_type": "3",
+   "division": 4,
+   "division_seed": 10,
+   "basclm": 10.0,
+   "ex_seed": 175,
+   "ex_parts": {
+    "cups_sqrt": 78.70097808365705,
+    "ovr": 96.23934407867398,
+    "legacy": 0
+   },
+   "starting_fatigue": 39,
+   "starting_elo": 1923,
+   "seeds": {
+    "ovr": 66.25069500161068,
+    "pf": 58.288546151480716,
+    "pa": 80.4468995602129,
+    "dscr": 7.5622267043029545,
+    "fatigue": 39
+   }
+  },
+  "29": {
+   "name": "Fortree City",
+   "region": "Delta",
+   "primary_type": "10",
+   "division": 4,
+   "division_seed": 8,
+   "basclm": 8.0,
+   "ex_seed": 149,
+   "ex_parts": {
+    "cups_sqrt": 62.03423443508455,
+    "ovr": 86.51490933857376,
+    "legacy": 0
+   },
+   "starting_fatigue": 33,
+   "starting_elo": 1915,
+   "seeds": {
+    "ovr": 61.36314626604488,
+    "pf": 60.427891617282995,
+    "pa": 90.8111684787886,
+    "dscr": 8.062389699064072,
+    "fatigue": 33
+   }
+  },
+  "30": {
+   "name": "Lilycove City",
+   "region": "Delta",
+   "primary_type": "16",
+   "division": 3,
+   "division_seed": 9,
+   "basclm": 8.0,
+   "ex_seed": 162,
+   "ex_parts": {
+    "cups_sqrt": 67.54939336532125,
+    "ovr": 88.40767161807577,
+    "legacy": 6
+   },
+   "starting_fatigue": 31,
+   "starting_elo": 1960,
+   "seeds": {
+    "ovr": 62.3144578983559,
+    "pf": 69.51812102199737,
+    "pa": 83.92554439953057,
+    "dscr": 8.499159622322333,
+    "fatigue": 31
+   }
+  },
+  "31": {
+   "name": "Mauville City",
+   "region": "Delta",
+   "primary_type": "4",
+   "division": 10,
+   "division_seed": 4,
+   "basclm": 10.0,
+   "ex_seed": 67,
+   "ex_parts": {
+    "cups_sqrt": 31.45709830298277,
+    "ovr": 35.40441780856999,
+    "legacy": 0
+   },
+   "starting_fatigue": 23,
+   "starting_elo": 1407,
+   "seeds": {
+    "ovr": 35.6747618068941,
+    "pf": 32.38969404717109,
+    "pa": 45.028686921371744,
+    "dscr": 5.67205626049515,
+    "fatigue": 23
+   }
+  },
+  "32": {
+   "name": "Slateport City",
+   "region": "Delta",
+   "primary_type": "3",
+   "division": 7,
+   "division_seed": 1,
+   "basclm": 8.0,
+   "ex_seed": 83,
+   "ex_parts": {
+    "cups_sqrt": 24.591144939770878,
+    "ovr": 26.241255203225357,
+    "legacy": 32
+   },
+   "starting_fatigue": 20,
+   "starting_elo": 1412,
+   "seeds": {
+    "ovr": 31.069311207194314,
+    "pf": 3.3160178469329566,
+    "pa": 48.883888452280665,
+    "dscr": 4.472740256867752,
+    "fatigue": 20
+   }
+  },
+  "33": {
+   "name": "Canalave City",
+   "region": "LilyValley",
+   "primary_type": "17",
+   "division": 1,
+   "division_seed": 1,
+   "basclm": 8.0,
+   "ex_seed": 336,
+   "ex_parts": {
+    "cups_sqrt": 121.2296813813216,
+    "ovr": 144.62846319903994,
+    "legacy": 70
+   },
+   "starting_fatigue": 53,
+   "starting_elo": 2348,
+   "seeds": {
+    "ovr": 90.57130430105157,
+    "pf": 96.7930070252915,
+    "pa": 88.42447160350406,
+    "dscr": 9.503986404438802,
+    "fatigue": 53
+   }
+  },
+  "34": {
+   "name": "Jubilife City",
+   "region": "LilyValley",
+   "primary_type": "4",
+   "division": 10,
+   "division_seed": 3,
+   "basclm": 8.0,
+   "ex_seed": 72,
+   "ex_parts": {
+    "cups_sqrt": 31.45709830298277,
+    "ovr": 40.8944635108102,
+    "legacy": 0
+   },
+   "starting_fatigue": 27,
+   "starting_elo": 1515,
+   "seeds": {
+    "ovr": 38.43408578276831,
+    "pf": 43.312607271964296,
+    "pa": 27.00156474116572,
+    "dscr": 5.130148248601747,
+    "fatigue": 27
+   }
+  },
+  "35": {
+   "name": "Sandgem Town",
+   "region": "LilyValley",
+   "primary_type": "9",
+   "division": 3,
+   "division_seed": 12,
+   "basclm": 5.0,
+   "ex_seed": 172,
+   "ex_parts": {
+    "cups_sqrt": 72.52082365772105,
+    "ovr": 99.19545817577986,
+    "legacy": 0
+   },
+   "starting_fatigue": 29,
+   "starting_elo": 1832,
+   "seeds": {
+    "ovr": 67.7364524881532,
+    "pf": 63.89293791459533,
+    "pa": 69.50094898654034,
+    "dscr": 7.432286921862536,
+    "fatigue": 29
+   }
+  },
+  "36": {
+   "name": "Twinleaf Town",
+   "region": "LilyValley",
+   "primary_type": "1",
+   "division": 9,
+   "division_seed": 16,
+   "basclm": 4.0,
+   "ex_seed": 94,
+   "ex_parts": {
+    "cups_sqrt": 39.46673889344446,
+    "ovr": 54.28263217106229,
+    "legacy": 0
+   },
+   "starting_fatigue": 26,
+   "starting_elo": 1427,
+   "seeds": {
+    "ovr": 45.16304520877216,
+    "pf": 54.37501343215909,
+    "pa": 51.20404013349638,
+    "dscr": 6.384313546455833,
+    "fatigue": 26
+   }
+  },
+  "37": {
+   "name": "Eterna City",
+   "region": "LilyValley",
+   "primary_type": "5",
+   "division": 6,
+   "division_seed": 8,
+   "basclm": 10.0,
+   "ex_seed": 186,
+   "ex_parts": {
+    "cups_sqrt": 83.1174966742872,
+    "ovr": 102.413753920423,
+    "legacy": 0
+   },
+   "starting_fatigue": 43,
+   "starting_elo": 1994,
+   "seeds": {
+    "ovr": 69.35398376043827,
+    "pf": 62.65057687019113,
+    "pa": 73.11397980324827,
+    "dscr": 7.684881743228545,
+    "fatigue": 43
+   }
+  },
+  "38": {
+   "name": "Floaroma City",
+   "region": "LilyValley",
+   "primary_type": "5",
+   "division": 3,
+   "division_seed": 7,
+   "basclm": 6.0,
+   "ex_seed": 122,
+   "ex_parts": {
+    "cups_sqrt": 39.92835387406223,
+    "ovr": 82.06238962991281,
+    "legacy": 0
+   },
+   "starting_fatigue": 21,
+   "starting_elo": 1739,
+   "seeds": {
+    "ovr": 59.12528795820833,
+    "pf": 42.89951595383046,
+    "pa": 76.2335552399446,
+    "dscr": 9.886518256860867,
+    "fatigue": 21
+   }
+  },
+  "39": {
+   "name": "Oreburgh City",
+   "region": "LilyValley",
+   "primary_type": "13",
+   "division": 9,
+   "division_seed": 5,
+   "basclm": 10.0,
+   "ex_seed": 110,
+   "ex_parts": {
+    "cups_sqrt": 38.999660443064144,
+    "ovr": 68.6091978870445,
+    "legacy": 2
+   },
+   "starting_fatigue": 28,
+   "starting_elo": 1618,
+   "seeds": {
+    "ovr": 52.363647611028355,
+    "pf": 60.221599989281536,
+    "pa": 60.40878862954753,
+    "dscr": 6.681277848152292,
+    "fatigue": 28
+   }
+  },
+  "40": {
+   "name": "Snowpoint City",
+   "region": "LilyValley",
+   "primary_type": "6",
+   "division": 2,
+   "division_seed": 13,
+   "basclm": 9.0,
+   "ex_seed": 290,
+   "ex_parts": {
+    "cups_sqrt": 132.28891831822773,
+    "ovr": 140.32433162624366,
+    "legacy": 17
+   },
+   "starting_fatigue": 50,
+   "starting_elo": 2193,
+   "seeds": {
+    "ovr": 88.40802660023249,
+    "pf": 94.5612435564537,
+    "pa": 83.413150938252,
+    "dscr": 9.550209081820853,
+    "fatigue": 50
+   }
+  },
+  "41": {
+   "name": "Mossui Town",
+   "region": "LilyValley",
+   "primary_type": "18",
+   "division": 4,
+   "division_seed": 16,
+   "basclm": 4.0,
+   "ex_seed": 190,
+   "ex_parts": {
+    "cups_sqrt": 79.51175275426793,
+    "ovr": 110.47329419461173,
+    "legacy": 0
+   },
+   "starting_fatigue": 30,
+   "starting_elo": 2052,
+   "seeds": {
+    "ovr": 73.40474834770174,
+    "pf": 73.44779446403092,
+    "pa": 93.0386404137871,
+    "dscr": 8.942159818646848,
+    "fatigue": 30
+   }
+  },
+  "42": {
+   "name": "Battle Zone",
+   "region": "LilyValley",
+   "primary_type": "17",
+   "division": 7,
+   "division_seed": 5,
+   "basclm": 10.0,
+   "ex_seed": 129,
+   "ex_parts": {
+    "cups_sqrt": 25.68461321029281,
+    "ovr": 49.46621533083702,
+    "legacy": 54
+   },
+   "starting_fatigue": 26,
+   "starting_elo": 1498,
+   "seeds": {
+    "ovr": 42.742290412575315,
+    "pf": 37.63626014962064,
+    "pa": 40.50723692789151,
+    "dscr": 5.421122709233893,
+    "fatigue": 26
+   }
+  },
+  "43": {
+   "name": "Sunyshore City",
+   "region": "LilyValley",
+   "primary_type": "4",
+   "division": 3,
+   "division_seed": 10,
+   "basclm": 9.0,
+   "ex_seed": 147,
+   "ex_parts": {
+    "cups_sqrt": 56.951925625901445,
+    "ovr": 90.19307190174561,
+    "legacy": 0
+   },
+   "starting_fatigue": 30,
+   "starting_elo": 1912,
+   "seeds": {
+    "ovr": 63.21180886344031,
+    "pf": 55.13546992723033,
+    "pa": 77.42208892945625,
+    "dscr": 7.17966705687799,
+    "fatigue": 30
+   }
+  },
+  "44": {
+   "name": "Veilstone City",
+   "region": "LilyValley",
+   "primary_type": "7",
+   "division": 2,
+   "division_seed": 8,
+   "basclm": 9.0,
+   "ex_seed": 170,
+   "ex_parts": {
+    "cups_sqrt": 69.55426137621296,
+    "ovr": 100.64108239529786,
+    "legacy": 0
+   },
+   "starting_fatigue": 34,
+   "starting_elo": 1986,
+   "seeds": {
+    "ovr": 68.46303033201208,
+    "pf": 47.318819513418916,
+    "pa": 76.60805096585511,
+    "dscr": 8.490811359995016,
+    "fatigue": 34
+   }
+  },
+  "45": {
+   "name": "Celestic Town",
+   "region": "LilyValley",
+   "primary_type": "15",
+   "division": 4,
+   "division_seed": 13,
+   "basclm": 5.0,
+   "ex_seed": 207,
+   "ex_parts": {
+    "cups_sqrt": 92.60718992017047,
+    "ovr": 108.75845595131995,
+    "legacy": 6
+   },
+   "starting_fatigue": 36,
+   "starting_elo": 2083,
+   "seeds": {
+    "ovr": 72.54286221121107,
+    "pf": 64.84638561679805,
+    "pa": 83.56855818584857,
+    "dscr": 7.870543472051631,
+    "fatigue": 36
+   }
+  },
+  "46": {
+   "name": "Hearthome City",
+   "region": "LilyValley",
+   "primary_type": "14",
+   "division": 5,
+   "division_seed": 13,
+   "basclm": 10.0,
+   "ex_seed": 174,
+   "ex_parts": {
+    "cups_sqrt": 75.49218128059691,
+    "ovr": 98.31111790986286,
+    "legacy": 0
+   },
+   "starting_fatigue": 36,
+   "starting_elo": 1943,
+   "seeds": {
+    "ovr": 67.29197872037017,
+    "pf": 63.25606290519542,
+    "pa": 74.66710131699048,
+    "dscr": 7.425496616388698,
+    "fatigue": 36
+   }
+  },
+  "47": {
+   "name": "Pastoria City",
+   "region": "LilyValley",
+   "primary_type": "3",
+   "division": 6,
+   "division_seed": 1,
+   "basclm": 10.0,
+   "ex_seed": 111,
+   "ex_parts": {
+    "cups_sqrt": 42.3774497373538,
+    "ovr": 68.69500878124352,
+    "legacy": 0
+   },
+   "starting_fatigue": 23,
+   "starting_elo": 1698,
+   "seeds": {
+    "ovr": 52.406776588562714,
+    "pf": 48.912218693731084,
+    "pa": 59.430032457806604,
+    "dscr": 6.423773413256796,
+    "fatigue": 23
+   }
+  },
+  "48": {
+   "name": "Solaceon Town",
+   "region": "LilyValley",
+   "primary_type": "9",
+   "division": 10,
+   "division_seed": 6,
+   "basclm": 5.0,
+   "ex_seed": 95,
+   "ex_parts": {
+    "cups_sqrt": 32.60136442024414,
+    "ovr": 46.436014217459665,
+    "legacy": 16
+   },
+   "starting_fatigue": 22,
+   "starting_elo": 1427,
+   "seeds": {
+    "ovr": 41.21929642721541,
+    "pf": 42.37377898464313,
+    "pa": 45.67903246837918,
+    "dscr": 5.936937107821021,
+    "fatigue": 22
+   }
+  },
+  "49": {
+   "name": "Anville Town",
+   "region": "Vertress",
+   "primary_type": "17",
+   "division": 1,
+   "division_seed": 4,
+   "basclm": 4.0,
+   "ex_seed": 184,
+   "ex_parts": {
+    "cups_sqrt": 69.55426137621296,
+    "ovr": 114.38646960665743,
+    "legacy": 0
+   },
+   "starting_fatigue": 36,
+   "starting_elo": 2013,
+   "seeds": {
+    "ovr": 75.37152955898623,
+    "pf": 54.92737190243282,
+    "pa": 94.60536855242813,
+    "dscr": 7.942009204482304,
+    "fatigue": 36
+   }
+  },
+  "50": {
+   "name": "Aspertia City",
+   "region": "Vertress",
+   "primary_type": "1",
+   "division": 7,
+   "division_seed": 14,
+   "basclm": 8.0,
+   "ex_seed": 147,
+   "ex_parts": {
+    "cups_sqrt": 58.381903629796085,
+    "ovr": 88.60977291381131,
+    "legacy": 0
+   },
+   "starting_fatigue": 29,
+   "starting_elo": 1721,
+   "seeds": {
+    "ovr": 62.41603500374333,
+    "pf": 60.73955649111138,
+    "pa": 86.73751466944843,
+    "dscr": 10.0,
+    "fatigue": 29
+   }
+  },
+  "51": {
+   "name": "Floccesy Town",
+   "region": "Vertress",
+   "primary_type": "5",
+   "division": 8,
+   "division_seed": 11,
+   "basclm": 6.0,
+   "ex_seed": 90,
+   "ex_parts": {
+    "cups_sqrt": 33.70680777646556,
+    "ovr": 56.69198263111564,
+    "legacy": 0
+   },
+   "starting_fatigue": 22,
+   "starting_elo": 1542,
+   "seeds": {
+    "ovr": 46.37399660176257,
+    "pf": 37.230222948995504,
+    "pa": 65.69522319294127,
+    "dscr": 6.362214848445294,
+    "fatigue": 22
+   }
+  },
+  "52": {
+   "name": "Mistralton City",
+   "region": "Vertress",
+   "primary_type": "10",
+   "division": 3,
+   "division_seed": 13,
+   "basclm": 9.0,
+   "ex_seed": 257,
+   "ex_parts": {
+    "cups_sqrt": 116.84225121016668,
+    "ovr": 132.12806806424632,
+    "legacy": 8
+   },
+   "starting_fatigue": 35,
+   "starting_elo": 2221,
+   "seeds": {
+    "ovr": 84.28854421596473,
+    "pf": 79.93101125470703,
+    "pa": 100.0,
+    "dscr": 10.0,
+    "fatigue": 35
+   }
+  },
+  "53": {
+   "name": "Driftveil City",
+   "region": "Vertress",
+   "primary_type": "9",
+   "division": 5,
+   "division_seed": 6,
+   "basclm": 9.0,
+   "ex_seed": 113,
+   "ex_parts": {
+    "cups_sqrt": 48.431371128404336,
+    "ovr": 62.46452591396305,
+    "legacy": 2
+   },
+   "starting_fatigue": 22,
+   "starting_elo": 1744,
+   "seeds": {
+    "ovr": 49.275305251275796,
+    "pf": 41.052550575511425,
+    "pa": 47.744164819402776,
+    "dscr": 5.798366376107925,
+    "fatigue": 22
+   }
+  },
+  "54": {
+   "name": "Icirrus City",
+   "region": "Vertress",
+   "primary_type": "6",
+   "division": 8,
+   "division_seed": 15,
+   "basclm": 9.0,
+   "ex_seed": 120,
+   "ex_parts": {
+    "cups_sqrt": 46.10529171497694,
+    "ovr": 74.04844904853202,
+    "legacy": 0
+   },
+   "starting_fatigue": 29,
+   "starting_elo": 1630,
+   "seeds": {
+    "ovr": 55.09744200085827,
+    "pf": 57.741899535824274,
+    "pa": 64.35156632705204,
+    "dscr": 7.299574219348947,
+    "fatigue": 29
+   }
+  },
+  "55": {
+   "name": "Nimbasa City",
+   "region": "Vertress",
+   "primary_type": "4",
+   "division": 1,
+   "division_seed": 11,
+   "basclm": 10.0,
+   "ex_seed": 299,
+   "ex_parts": {
+    "cups_sqrt": 139.4374627310923,
+    "ovr": 148.4294302423632,
+    "legacy": 11
+   },
+   "starting_fatigue": 56,
+   "starting_elo": 2356,
+   "seeds": {
+    "ovr": 92.48168903425514,
+    "pf": 99.57856209947697,
+    "pa": 80.19486028969146,
+    "dscr": 9.22459487917662,
+    "fatigue": 56
+   }
+  },
+  "56": {
+   "name": "Virbank City",
+   "region": "Vertress",
+   "primary_type": "8",
+   "division": 1,
+   "division_seed": 5,
+   "basclm": 10.0,
+   "ex_seed": 201,
+   "ex_parts": {
+    "cups_sqrt": 71.50293705267076,
+    "ovr": 105.9614849946017,
+    "legacy": 24
+   },
+   "starting_fatigue": 35,
+   "starting_elo": 1997,
+   "seeds": {
+    "ovr": 71.1370908498639,
+    "pf": 51.2596329423808,
+    "pa": 87.75683177169681,
+    "dscr": 7.142285691426743,
+    "fatigue": 35
+   }
+  },
+  "57": {
+   "name": "Accumula Town",
+   "region": "Vertress",
+   "primary_type": "16",
+   "division": 4,
+   "division_seed": 11,
+   "basclm": 5.0,
+   "ex_seed": 171,
+   "ex_parts": {
+    "cups_sqrt": 72.52082365772105,
+    "ovr": 98.3985232773932,
+    "legacy": 0
+   },
+   "starting_fatigue": 42,
+   "starting_elo": 1968,
+   "seeds": {
+    "ovr": 67.33590908804418,
+    "pf": 48.286940818903176,
+    "pa": 84.87319076802711,
+    "dscr": 7.608328769622581,
+    "fatigue": 42
+   }
+  },
+  "58": {
+   "name": "Castelia City",
+   "region": "Vertress",
+   "primary_type": "12",
+   "division": 4,
+   "division_seed": 1,
+   "basclm": 10.0,
+   "ex_seed": 143,
+   "ex_parts": {
+    "cups_sqrt": 35.039603322557,
+    "ovr": 68.01955012019926,
+    "legacy": 40
+   },
+   "starting_fatigue": 27,
+   "starting_elo": 1823,
+   "seeds": {
+    "ovr": 52.067287742892304,
+    "pf": 37.41499031613897,
+    "pa": 62.082192376233316,
+    "dscr": 5.858279990273975,
+    "fatigue": 27
+   }
+  },
+  "59": {
+   "name": "Nacrene City",
+   "region": "Vertress",
+   "primary_type": "1",
+   "division": 8,
+   "division_seed": 2,
+   "basclm": 9.0,
+   "ex_seed": 110,
+   "ex_parts": {
+    "cups_sqrt": 38.526919815439214,
+    "ovr": 71.65525394421296,
+    "legacy": 0
+   },
+   "starting_fatigue": 25,
+   "starting_elo": 1710,
+   "seeds": {
+    "ovr": 53.89461036912927,
+    "pf": 35.86924883738309,
+    "pa": 70.74234931843485,
+    "dscr": 6.478564260065256,
+    "fatigue": 25
+   }
+  },
+  "60": {
+   "name": "Striaton City",
+   "region": "Vertress",
+   "primary_type": "1",
+   "division": 2,
+   "division_seed": 4,
+   "basclm": 9.0,
+   "ex_seed": 149,
+   "ex_parts": {
+    "cups_sqrt": 49.55348223893347,
+    "ovr": 79.26067308627043,
+    "legacy": 20
+   },
+   "starting_fatigue": 29,
+   "starting_elo": 1875,
+   "seeds": {
+    "ovr": 57.7171314415292,
+    "pf": 38.461745947234405,
+    "pa": 73.01522362759158,
+    "dscr": 6.404100249059192,
+    "fatigue": 29
+   }
+  },
+  "61": {
+   "name": "Humilau City",
+   "region": "Vertress",
+   "primary_type": "3",
+   "division": 7,
+   "division_seed": 9,
+   "basclm": 9.0,
+   "ex_seed": 179,
+   "ex_parts": {
+    "cups_sqrt": 83.55727485873496,
+    "ovr": 95.50276531282742,
+    "legacy": 0
+   },
+   "starting_fatigue": 45,
+   "starting_elo": 2005,
+   "seeds": {
+    "ovr": 65.88048689061246,
+    "pf": 72.35064728295934,
+    "pa": 70.23056223995067,
+    "dscr": 7.737394440460737,
+    "fatigue": 45
+   }
+  },
+  "62": {
+   "name": "Lacunosa Town",
+   "region": "Vertress",
+   "primary_type": "8",
+   "division": 10,
+   "division_seed": 13,
+   "basclm": 5.0,
+   "ex_seed": 71,
+   "ex_parts": {
+    "cups_sqrt": 31.164467772432953,
+    "ovr": 39.822756999022104,
+    "legacy": 0
+   },
+   "starting_fatigue": 23,
+   "starting_elo": 1309,
+   "seeds": {
+    "ovr": 37.89544081814247,
+    "pf": 28.995878550877624,
+    "pa": 46.90746294605987,
+    "dscr": 5.088931343830669,
+    "fatigue": 23
+   }
+  },
+  "63": {
+   "name": "Opelucid City",
+   "region": "Vertress",
+   "primary_type": "15",
+   "division": 5,
+   "division_seed": 7,
+   "basclm": 9.0,
+   "ex_seed": 142,
+   "ex_parts": {
+    "cups_sqrt": 51.190550309064676,
+    "ovr": 91.14299868488433,
+    "legacy": 0
+   },
+   "starting_fatigue": 19,
+   "starting_elo": 1831,
+   "seeds": {
+    "ovr": 63.689246737403764,
+    "pf": 59.28575010755011,
+    "pa": 72.67671043261082,
+    "dscr": 7.255766937144125,
+    "fatigue": 19
+   }
+  },
+  "64": {
+   "name": "Undella Town",
+   "region": "Vertress",
+   "primary_type": "3",
+   "division": 6,
+   "division_seed": 11,
+   "basclm": 7.0,
+   "ex_seed": 178,
+   "ex_parts": {
+    "cups_sqrt": 79.39643470554157,
+    "ovr": 98.29180357287194,
+    "legacy": 0
+   },
+   "starting_fatigue": 37,
+   "starting_elo": 1939,
+   "seeds": {
+    "ovr": 67.28227123958992,
+    "pf": 64.89685046508258,
+    "pa": 72.31166799037447,
+    "dscr": 7.806407624509497,
+    "fatigue": 37
+   }
+  },
+  "65": {
+   "name": "Ambrette Town",
+   "region": "Kalosite",
+   "primary_type": "13",
+   "division": 9,
+   "division_seed": 13,
+   "basclm": 4.0,
+   "ex_seed": 100,
+   "ex_parts": {
+    "cups_sqrt": 47.282637582416854,
+    "ovr": 52.90002018037741,
+    "legacy": 0
+   },
+   "starting_fatigue": 30,
+   "starting_elo": 1515,
+   "seeds": {
+    "ovr": 44.46813762108647,
+    "pf": 47.043342416107244,
+    "pa": 45.86246326368898,
+    "dscr": 6.559784236601782,
+    "fatigue": 30
+   }
+  },
+  "66": {
+   "name": "Cyllage City",
+   "region": "Kalosite",
+   "primary_type": "13",
+   "division": 2,
+   "division_seed": 5,
+   "basclm": 9.0,
+   "ex_seed": 193,
+   "ex_parts": {
+    "cups_sqrt": 76.33704414787144,
+    "ovr": 115.12201825718506,
+    "legacy": 2
+   },
+   "starting_fatigue": 38,
+   "starting_elo": 2060,
+   "seeds": {
+    "ovr": 75.74121992895793,
+    "pf": 71.1955746862254,
+    "pa": 85.44235843115277,
+    "dscr": 8.639961583838945,
+    "fatigue": 38
+   }
+  },
+  "67": {
+   "name": "Geosenge Town",
+   "region": "Kalosite",
+   "primary_type": "13",
+   "division": 7,
+   "division_seed": 8,
+   "basclm": 5.0,
+   "ex_seed": 147,
+   "ex_parts": {
+    "cups_sqrt": 47.6686247017805,
+    "ovr": 79.56998749248525,
+    "legacy": 20
+   },
+   "starting_fatigue": 28,
+   "starting_elo": 1708,
+   "seeds": {
+    "ovr": 57.872594383632496,
+    "pf": 57.819482056876325,
+    "pa": 64.95093884469945,
+    "dscr": 6.758513150094479,
+    "fatigue": 28
+   }
+  },
+  "68": {
+   "name": "Shalour City",
+   "region": "Kalosite",
+   "primary_type": "7",
+   "division": 3,
+   "division_seed": 11,
+   "basclm": 9.0,
+   "ex_seed": 167,
+   "ex_parts": {
+    "cups_sqrt": 68.22422923379534,
+    "ovr": 98.30976541097004,
+    "legacy": 0
+   },
+   "starting_fatigue": 39,
+   "starting_elo": 1929,
+   "seeds": {
+    "ovr": 67.29129894777361,
+    "pf": 55.8964476899646,
+    "pa": 79.71378276176814,
+    "dscr": 7.561415211453475,
+    "fatigue": 39
+   }
+  },
+  "69": {
+   "name": "Camphrier Town",
+   "region": "Kalosite",
+   "primary_type": "1",
+   "division": 1,
+   "division_seed": 16,
+   "basclm": 5.0,
+   "ex_seed": 289,
+   "ex_parts": {
+    "cups_sqrt": 127.42030507181954,
+    "ovr": 138.0773054112612,
+    "legacy": 24
+   },
+   "starting_fatigue": 39,
+   "starting_elo": 2329,
+   "seeds": {
+    "ovr": 87.2786601712993,
+    "pf": 80.32345322581898,
+    "pa": 90.44999569033153,
+    "dscr": 9.046209057118055,
+    "fatigue": 39
+   }
+  },
+  "70": {
+   "name": "Coumarine City",
+   "region": "Kalosite",
+   "primary_type": "5",
+   "division": 8,
+   "division_seed": 10,
+   "basclm": 9.0,
+   "ex_seed": 146,
+   "ex_parts": {
+    "cups_sqrt": 61.141608985370766,
+    "ovr": 84.86820120095012,
+    "legacy": 0
+   },
+   "starting_fatigue": 30,
+   "starting_elo": 1792,
+   "seeds": {
+    "ovr": 60.535502655799895,
+    "pf": 66.44770680147812,
+    "pa": 81.07497111596976,
+    "dscr": 7.893034904268447,
+    "fatigue": 30
+   }
+  },
+  "71": {
+   "name": "Laverre City",
+   "region": "Kalosite",
+   "primary_type": "18",
+   "division": 9,
+   "division_seed": 14,
+   "basclm": 9.0,
+   "ex_seed": 64,
+   "ex_parts": {
+    "cups_sqrt": 25.68461321029281,
+    "ovr": 38.28849087221834,
+    "legacy": 0
+   },
+   "starting_fatigue": 27,
+   "starting_elo": 1296,
+   "seeds": {
+    "ovr": 37.12431111564586,
+    "pf": 38.8811275903474,
+    "pa": 47.7745903420698,
+    "dscr": 5.1456562047787235,
+    "fatigue": 27
+   }
+  },
+  "72": {
+   "name": "Lumiose City",
+   "region": "Kalosite",
+   "primary_type": "4",
+   "division": 1,
+   "division_seed": 12,
+   "basclm": 10.0,
+   "ex_seed": 271,
+   "ex_parts": {
+    "cups_sqrt": 97.14610534562092,
+    "ovr": 115.66837158819054,
+    "legacy": 58
+   },
+   "starting_fatigue": 52,
+   "starting_elo": 2097,
+   "seeds": {
+    "ovr": 76.01581980067247,
+    "pf": 66.35380453820414,
+    "pa": 81.94353892293648,
+    "dscr": 7.757484864862543,
+    "fatigue": 52
+   }
+  },
+  "73": {
+   "name": "Anistar City",
+   "region": "Kalosite",
+   "primary_type": "11",
+   "division": 2,
+   "division_seed": 16,
+   "basclm": 9.0,
+   "ex_seed": 225,
+   "ex_parts": {
+    "cups_sqrt": 104.41917617077453,
+    "ovr": 120.77296999908938,
+    "legacy": 0
+   },
+   "starting_fatigue": 45,
+   "starting_elo": 2055,
+   "seeds": {
+    "ovr": 78.58141607187567,
+    "pf": 73.22783176286356,
+    "pa": 89.87543193375929,
+    "dscr": 8.572576188054557,
+    "fatigue": 45
+   }
+  },
+  "74": {
+   "name": "Couriway Town",
+   "region": "Kalosite",
+   "primary_type": "3",
+   "division": 7,
+   "division_seed": 11,
+   "basclm": 5.0,
+   "ex_seed": 120,
+   "ex_parts": {
+    "cups_sqrt": 48.241815132442184,
+    "ovr": 67.63997121860042,
+    "legacy": 4
+   },
+   "starting_fatigue": 35,
+   "starting_elo": 1687,
+   "seeds": {
+    "ovr": 51.87650951977291,
+    "pf": 61.04079267258054,
+    "pa": 61.43565001955926,
+    "dscr": 6.9664610059461625,
+    "fatigue": 35
+   }
+  },
+  "75": {
+   "name": "Dendemille Town",
+   "region": "Kalosite",
+   "primary_type": "6",
+   "division": 5,
+   "division_seed": 14,
+   "basclm": 6.0,
+   "ex_seed": 151,
+   "ex_parts": {
+    "cups_sqrt": 61.29128267073941,
+    "ovr": 89.38197628422716,
+    "legacy": 0
+   },
+   "starting_fatigue": 32,
+   "starting_elo": 1854,
+   "seeds": {
+    "ovr": 62.80414821623807,
+    "pf": 51.17670940023253,
+    "pa": 89.82369990161096,
+    "dscr": 7.71274034545204,
+    "fatigue": 32
+   }
+  },
+  "76": {
+   "name": "Snowbelle City",
+   "region": "Kalosite",
+   "primary_type": "6",
+   "division": 8,
+   "division_seed": 4,
+   "basclm": 9.0,
+   "ex_seed": 100,
+   "ex_parts": {
+    "cups_sqrt": 36.323528346303256,
+    "ovr": 57.84103465548619,
+    "legacy": 6
+   },
+   "starting_fatigue": 27,
+   "starting_elo": 1612,
+   "seeds": {
+    "ovr": 46.95151580148047,
+    "pf": 54.68428349271064,
+    "pa": 38.09166775329247,
+    "dscr": 5.861124275919918,
+    "fatigue": 27
+   }
+  },
+  "77": {
+   "name": "Aquacorde Town",
+   "region": "Kalosite",
+   "primary_type": "3",
+   "division": 8,
+   "division_seed": 5,
+   "basclm": 5.0,
+   "ex_seed": 90,
+   "ex_parts": {
+    "cups_sqrt": 35.55873683373984,
+    "ovr": 52.28943124216181,
+    "legacy": 2
+   },
+   "starting_fatigue": 25,
+   "starting_elo": 1521,
+   "seeds": {
+    "ovr": 44.16125261720856,
+    "pf": 60.362724073848064,
+    "pa": 34.33020972465489,
+    "dscr": 5.987148398523787,
+    "fatigue": 25
+   }
+  },
+  "78": {
+   "name": "Kiloude City",
+   "region": "Kalosite",
+   "primary_type": "1",
+   "division": 7,
+   "division_seed": 10,
+   "basclm": 5.0,
+   "ex_seed": 109,
+   "ex_parts": {
+    "cups_sqrt": 43.23364632621201,
+    "ovr": 65.84993198397449,
+    "legacy": 0
+   },
+   "starting_fatigue": 31,
+   "starting_elo": 1609,
+   "seeds": {
+    "ovr": 50.97682699511863,
+    "pf": 55.1635727447068,
+    "pa": 64.28125870034853,
+    "dscr": 6.7186710397622935,
+    "fatigue": 31
+   }
+  },
+  "79": {
+   "name": "Santalune City",
+   "region": "Kalosite",
+   "primary_type": "12",
+   "division": 4,
+   "division_seed": 5,
+   "basclm": 9.0,
+   "ex_seed": 151,
+   "ex_parts": {
+    "cups_sqrt": 59.93076415734989,
+    "ovr": 89.27758697729035,
+    "legacy": 2
+   },
+   "starting_fatigue": 30,
+   "starting_elo": 2001,
+   "seeds": {
+    "ovr": 62.75168163707315,
+    "pf": 56.451344853533605,
+    "pa": 80.94943930108228,
+    "dscr": 7.513654237453305,
+    "fatigue": 30
+   }
+  },
+  "80": {
+   "name": "Vaniville Town",
+   "region": "Kalosite",
+   "primary_type": "1",
+   "division": 2,
+   "division_seed": 12,
+   "basclm": 4.0,
+   "ex_seed": 210,
+   "ex_parts": {
+    "cups_sqrt": 89.7941653226102,
+    "ovr": 112.51191565256745,
+    "legacy": 8
+   },
+   "starting_fatigue": 36,
+   "starting_elo": 2048,
+   "seeds": {
+    "ovr": 74.42936952059534,
+    "pf": 79.5955147317883,
+    "pa": 82.93949667492501,
+    "dscr": 8.82530452732369,
+    "fatigue": 36
+   }
+  },
+  "81": {
+   "name": "Exeggutor Island",
+   "region": "Lanakila",
+   "primary_type": "5",
+   "division": 4,
+   "division_seed": 2,
+   "basclm": 6.0,
+   "ex_seed": 144,
+   "ex_parts": {
+    "cups_sqrt": 61.29128267073941,
+    "ovr": 82.48866249770522,
+    "legacy": 0
+   },
+   "starting_fatigue": 39,
+   "starting_elo": 1849,
+   "seeds": {
+    "ovr": 59.339534798427586,
+    "pf": 53.463765714650876,
+    "pa": 72.44173709977595,
+    "dscr": 6.875847055256009,
+    "fatigue": 39
+   }
+  },
+  "82": {
+   "name": "Poni Meadow",
+   "region": "Lanakila",
+   "primary_type": "5",
+   "division": 9,
+   "division_seed": 6,
+   "basclm": 3.0,
+   "ex_seed": 108,
+   "ex_parts": {
+    "cups_sqrt": 47.282637582416854,
+    "ovr": 60.23885090167447,
+    "legacy": 0
+   },
+   "starting_fatigue": 30,
+   "starting_elo": 1607,
+   "seeds": {
+    "ovr": 48.15667004184466,
+    "pf": 44.76555818549334,
+    "pa": 60.83618499187673,
+    "dscr": 7.9608841013844485,
+    "fatigue": 30
+   }
+  },
+  "83": {
+   "name": "Seafolk Village",
+   "region": "Lanakila",
+   "primary_type": "18",
+   "division": 2,
+   "division_seed": 6,
+   "basclm": 10.0,
+   "ex_seed": 174,
+   "ex_parts": {
+    "cups_sqrt": 58.69494557155512,
+    "ovr": 94.87323293617854,
+    "legacy": 20
+   },
+   "starting_fatigue": 54,
+   "starting_elo": 1841,
+   "seeds": {
+    "ovr": 65.56408082139384,
+    "pf": 60.13429037372981,
+    "pa": 66.38783438346492,
+    "dscr": 7.0649279930633275,
+    "fatigue": 54
+   }
+  },
+  "84": {
+   "name": "Vast Poni Canyon",
+   "region": "Lanakila",
+   "primary_type": "9",
+   "division": 7,
+   "division_seed": 15,
+   "basclm": 5.0,
+   "ex_seed": 144,
+   "ex_parts": {
+    "cups_sqrt": 54.31686771920907,
+    "ovr": 89.85198599919839,
+    "legacy": 0
+   },
+   "starting_fatigue": 38,
+   "starting_elo": 1663,
+   "seeds": {
+    "ovr": 63.040377410994076,
+    "pf": 71.22804487016224,
+    "pa": 81.74819703702218,
+    "dscr": 9.403354556916213,
+    "fatigue": 38
+   }
+  },
+  "85": {
+   "name": "Hau'oli City",
+   "region": "Lanakila",
+   "primary_type": "1",
+   "division": 10,
+   "division_seed": 16,
+   "basclm": 10.0,
+   "ex_seed": 19,
+   "ex_parts": {
+    "cups_sqrt": 10.485699434327593,
+    "ovr": 8.835410620054061,
+    "legacy": 0
+   },
+   "starting_fatigue": 36,
+   "starting_elo": 1068,
+   "seeds": {
+    "ovr": 22.32104809909545,
+    "pf": 12.128135981547224,
+    "pa": 17.858695179727903,
+    "dscr": 3.7211855936276845,
+    "fatigue": 36
+   }
+  },
+  "86": {
+   "name": "Iki Town",
+   "region": "Lanakila",
+   "primary_type": "7",
+   "division": 10,
+   "division_seed": 8,
+   "basclm": 7.0,
+   "ex_seed": 82,
+   "ex_parts": {
+    "cups_sqrt": 33.70680777646556,
+    "ovr": 47.9717337850198,
+    "legacy": 0
+   },
+   "starting_fatigue": 34,
+   "starting_elo": 1488,
+   "seeds": {
+    "ovr": 41.99115663618575,
+    "pf": 45.43747275891798,
+    "pa": 55.9849587493348,
+    "dscr": 5.855697156546706,
+    "fatigue": 34
+   }
+  },
+  "87": {
+   "name": "Kala'e Bay",
+   "region": "Lanakila",
+   "primary_type": "3",
+   "division": 3,
+   "division_seed": 3,
+   "basclm": 3.0,
+   "ex_seed": 154,
+   "ex_parts": {
+    "cups_sqrt": 46.10529171497694,
+    "ovr": 88.20964727375787,
+    "legacy": 20
+   },
+   "starting_fatigue": 43,
+   "starting_elo": 1808,
+   "seeds": {
+    "ovr": 62.21492988880577,
+    "pf": 55.218641512219236,
+    "pa": 76.91729690963618,
+    "dscr": 7.187489130426564,
+    "fatigue": 43
+   }
+  },
+  "88": {
+   "name": "Ultra Megalopolis",
+   "region": "Lanakila",
+   "primary_type": "8",
+   "division": 1,
+   "division_seed": 8,
+   "basclm": 4.0,
+   "ex_seed": 158,
+   "ex_parts": {
+    "cups_sqrt": 57.27278408377953,
+    "ovr": 93.06341489394336,
+    "legacy": 8
+   },
+   "starting_fatigue": 33,
+   "starting_elo": 1934,
+   "seeds": {
+    "ovr": 64.6544573707418,
+    "pf": 68.86246846241376,
+    "pa": 77.76274612074585,
+    "dscr": 7.5790830579958675,
+    "fatigue": 33
+   }
+  },
+  "89": {
+   "name": "Malie City",
+   "region": "Lanakila",
+   "primary_type": "8",
+   "division": 2,
+   "division_seed": 7,
+   "basclm": 10.0,
+   "ex_seed": 143,
+   "ex_parts": {
+    "cups_sqrt": 50.831313938711666,
+    "ovr": 92.07595375598464,
+    "legacy": 0
+   },
+   "starting_fatigue": 35,
+   "starting_elo": 1959,
+   "seeds": {
+    "ovr": 64.15815454541163,
+    "pf": 57.44148236793921,
+    "pa": 79.43995305776501,
+    "dscr": 7.29184836866339,
+    "fatigue": 35
+   }
+  },
+  "90": {
+   "name": "Mount Hokulani",
+   "region": "Lanakila",
+   "primary_type": "4",
+   "division": 6,
+   "division_seed": 16,
+   "basclm": 5.0,
+   "ex_seed": 206,
+   "ex_parts": {
+    "cups_sqrt": 94.27415510460534,
+    "ovr": 111.30675699119325,
+    "legacy": 0
+   },
+   "starting_fatigue": 38,
+   "starting_elo": 2090,
+   "seeds": {
+    "ovr": 73.82365084912686,
+    "pf": 80.2033366496458,
+    "pa": 88.59722619110373,
+    "dscr": 9.088688316756656,
+    "fatigue": 38
+   }
+  },
+  "91": {
+   "name": "Po Town",
+   "region": "Lanakila",
+   "primary_type": "12",
+   "division": 2,
+   "division_seed": 14,
+   "basclm": 4.0,
+   "ex_seed": 247,
+   "ex_parts": {
+    "cups_sqrt": 115.1837099752608,
+    "ovr": 128.11812052496094,
+    "legacy": 4
+   },
+   "starting_fatigue": 53,
+   "starting_elo": 2141,
+   "seeds": {
+    "ovr": 82.27312485750056,
+    "pf": 80.74983482618936,
+    "pa": 84.52633980962317,
+    "dscr": 8.673907231845789,
+    "fatigue": 53
+   }
+  },
+  "92": {
+   "name": "Tapu Village",
+   "region": "Lanakila",
+   "primary_type": "18",
+   "division": 6,
+   "division_seed": 12,
+   "basclm": 6.0,
+   "ex_seed": 126,
+   "ex_parts": {
+    "cups_sqrt": 49.55348223893347,
+    "ovr": 76.06790780013088,
+    "legacy": 0
+   },
+   "starting_fatigue": 39,
+   "starting_elo": 1725,
+   "seeds": {
+    "ovr": 56.112431903274185,
+    "pf": 59.97757553580683,
+    "pa": 76.2558479020701,
+    "dscr": 7.401548947974896,
+    "fatigue": 39
+   }
+  },
+  "93": {
+   "name": "Aether Paradise",
+   "region": "Lanakila",
+   "primary_type": "1",
+   "division": 6,
+   "division_seed": 4,
+   "basclm": 6.0,
+   "ex_seed": 115,
+   "ex_parts": {
+    "cups_sqrt": 40.38469273501236,
+    "ovr": 74.1773683241295,
+    "legacy": 0
+   },
+   "starting_fatigue": 45,
+   "starting_elo": 1739,
+   "seeds": {
+    "ovr": 55.16223746293672,
+    "pf": 41.97849899614623,
+    "pa": 76.70165601773374,
+    "dscr": 6.456738625979104,
+    "fatigue": 45
+   }
+  },
+  "94": {
+   "name": "Heahea City",
+   "region": "Lanakila",
+   "primary_type": "1",
+   "division": 8,
+   "division_seed": 13,
+   "basclm": 8.0,
+   "ex_seed": 168,
+   "ex_parts": {
+    "cups_sqrt": 74.39183151100609,
+    "ovr": 94.05034284102751,
+    "legacy": 0
+   },
+   "starting_fatigue": 35,
+   "starting_elo": 1857,
+   "seeds": {
+    "ovr": 65.15049221171559,
+    "pf": 67.71848445334848,
+    "pa": 83.94794738696548,
+    "dscr": 8.91162281947546,
+    "fatigue": 35
+   }
+  },
+  "95": {
+   "name": "Konikoni City",
+   "region": "Lanakila",
+   "primary_type": "3",
+   "division": 4,
+   "division_seed": 12,
+   "basclm": 8.0,
+   "ex_seed": 177,
+   "ex_parts": {
+    "cups_sqrt": 73.77343481931264,
+    "ovr": 99.43949026718413,
+    "legacy": 4
+   },
+   "starting_fatigue": 48,
+   "starting_elo": 1891,
+   "seeds": {
+    "ovr": 67.85910421770433,
+    "pf": 68.99893173789829,
+    "pa": 69.50197395982165,
+    "dscr": 7.335573481185526,
+    "fatigue": 48
+   }
+  },
+  "96": {
+   "name": "Paniola Town",
+   "region": "Lanakila",
+   "primary_type": "5",
+   "division": 7,
+   "division_seed": 13,
+   "basclm": 6.0,
+   "ex_seed": 129,
+   "ex_parts": {
+    "cups_sqrt": 52.95018660958598,
+    "ovr": 70.52640733244746,
+    "legacy": 6
+   },
+   "starting_fatigue": 28,
+   "starting_elo": 1676,
+   "seeds": {
+    "ovr": 53.32724650917855,
+    "pf": 55.87228373987473,
+    "pa": 71.90963619767896,
+    "dscr": 7.702596964660685,
+    "fatigue": 28
+   }
+  },
+  "97": {
+   "name": "Ballonlea",
+   "region": "Dynamax",
+   "primary_type": "18",
+   "division": 5,
+   "division_seed": 5,
+   "basclm": 8.0,
+   "ex_seed": 99,
+   "ex_parts": {
+    "cups_sqrt": 36.323528346303256,
+    "ovr": 62.257958570425,
+    "legacy": 0
+   },
+   "starting_fatigue": 29,
+   "starting_elo": 1723,
+   "seeds": {
+    "ovr": 49.171483488294,
+    "pf": 42.72848493879633,
+    "pa": 72.9290967848798,
+    "dscr": 6.223321438727854,
+    "fatigue": 29
+   }
+  },
+  "98": {
+   "name": "Stow-on-Side",
+   "region": "Dynamax",
+   "primary_type": "14",
+   "division": 4,
+   "division_seed": 15,
+   "basclm": 9.0,
+   "ex_seed": 210,
+   "ex_parts": {
+    "cups_sqrt": 96.29351455254861,
+    "ovr": 110.08208006107041,
+    "legacy": 4
+   },
+   "starting_fatigue": 31,
+   "starting_elo": 2096,
+   "seeds": {
+    "ovr": 73.20812219977353,
+    "pf": 73.24428564331784,
+    "pa": 87.90048552997936,
+    "dscr": 8.48250795322177,
+    "fatigue": 31
+   }
+  },
+  "99": {
+   "name": "Wyndon North",
+   "region": "Dynamax",
+   "primary_type": "17",
+   "division": 7,
+   "division_seed": 12,
+   "basclm": 9.0,
+   "ex_seed": 111,
+   "ex_parts": {
+    "cups_sqrt": 47.282637582416854,
+    "ovr": 63.92870635195237,
+    "legacy": 0
+   },
+   "starting_fatigue": 30,
+   "starting_elo": 1633,
+   "seeds": {
+    "ovr": 50.01120954181774,
+    "pf": 42.313408994620154,
+    "pa": 85.60112139783544,
+    "dscr": 6.763680094523441,
+    "fatigue": 30
+   }
+  },
+  "100": {
+   "name": "Wyndon South",
+   "region": "Dynamax",
+   "primary_type": "2",
+   "division": 3,
+   "division_seed": 4,
+   "basclm": 9.0,
+   "ex_seed": 166,
+   "ex_parts": {
+    "cups_sqrt": 70.079206645114,
+    "ovr": 88.37413260799136,
+    "legacy": 8
+   },
+   "starting_fatigue": 34,
+   "starting_elo": 1995,
+   "seeds": {
+    "ovr": 62.29760102690666,
+    "pf": 65.90278128732592,
+    "pa": 71.99265903346715,
+    "dscr": 7.511693012556731,
+    "fatigue": 34
+   }
+  },
+  "101": {
+   "name": "City of Circhester",
+   "region": "Dynamax",
+   "primary_type": "13",
+   "division": 10,
+   "division_seed": 10,
+   "basclm": 9.0,
+   "ex_seed": 104,
+   "ex_parts": {
+    "cups_sqrt": 45.505197261517196,
+    "ovr": 58.46038909734928,
+    "legacy": 0
+   },
+   "starting_fatigue": 33,
+   "starting_elo": 1615,
+   "seeds": {
+    "ovr": 47.26280639060974,
+    "pf": 55.84929555878399,
+    "pa": 73.0834305995948,
+    "dscr": 6.909166763500043,
+    "fatigue": 33
+   }
+  },
+  "102": {
+   "name": "Circhester Bay",
+   "region": "Dynamax",
+   "primary_type": "6",
+   "division": 9,
+   "division_seed": 12,
+   "basclm": 3.0,
+   "ex_seed": 119,
+   "ex_parts": {
+    "cups_sqrt": 52.07780094692392,
+    "ovr": 67.42197833882769,
+    "legacy": 0
+   },
+   "starting_fatigue": 30,
+   "starting_elo": 1575,
+   "seeds": {
+    "ovr": 51.766945226076544,
+    "pf": 62.078801928733895,
+    "pa": 70.33511539966095,
+    "dscr": 7.315988259321246,
+    "fatigue": 30
+   }
+  },
+  "103": {
+   "name": "Hammerlocke",
+   "region": "Dynamax",
+   "primary_type": "15",
+   "division": 6,
+   "division_seed": 2,
+   "basclm": 10.0,
+   "ex_seed": 53,
+   "ex_parts": {
+    "cups_sqrt": 24.960957344487582,
+    "ovr": 27.81241636781079,
+    "legacy": 0
+   },
+   "starting_fatigue": 27,
+   "starting_elo": 1512,
+   "seeds": {
+    "ovr": 31.858984537169324,
+    "pf": 35.43288901363195,
+    "pa": 29.655756943538925,
+    "dscr": 4.762352359916263,
+    "fatigue": 27
+   }
+  },
+  "104": {
+   "name": "Spikemuth",
+   "region": "Dynamax",
+   "primary_type": "16",
+   "division": 3,
+   "division_seed": 2,
+   "basclm": 8.0,
+   "ex_seed": 165,
+   "ex_parts": {
+    "cups_sqrt": 45.906131856415556,
+    "ovr": 82.2779544416997,
+    "legacy": 37
+   },
+   "starting_fatigue": 34,
+   "starting_elo": 1923,
+   "seeds": {
+    "ovr": 59.233631892991184,
+    "pf": 52.06355376874541,
+    "pa": 86.08383401707172,
+    "dscr": 7.092610817261032,
+    "fatigue": 34
+   }
+  },
+  "105": {
+   "name": "Crown Tundra",
+   "region": "Dynamax",
+   "primary_type": "6",
+   "division": 4,
+   "division_seed": 9,
+   "basclm": 6.0,
+   "ex_seed": 131,
+   "ex_parts": {
+    "cups_sqrt": 54.82058979197127,
+    "ovr": 75.80189535671978,
+    "legacy": 0
+   },
+   "starting_fatigue": 35,
+   "starting_elo": 1877,
+   "seeds": {
+    "ovr": 55.978732740681494,
+    "pf": 54.58000067439387,
+    "pa": 76.6168992045899,
+    "dscr": 7.617961232070779,
+    "fatigue": 35
+   }
+  },
+  "106": {
+   "name": "Postwick",
+   "region": "Dynamax",
+   "primary_type": "1",
+   "division": 2,
+   "division_seed": 11,
+   "basclm": 4.0,
+   "ex_seed": 141,
+   "ex_parts": {
+    "cups_sqrt": 56.304723639142146,
+    "ovr": 84.21940233900219,
+    "legacy": 0
+   },
+   "starting_fatigue": 27,
+   "starting_elo": 1872,
+   "seeds": {
+    "ovr": 60.20941315629676,
+    "pf": 56.884458991835395,
+    "pa": 85.24171991133133,
+    "dscr": 7.313514886837928,
+    "fatigue": 27
+   }
+  },
+  "107": {
+   "name": "Wild Area",
+   "region": "Dynamax",
+   "primary_type": "1",
+   "division": 3,
+   "division_seed": 8,
+   "basclm": 4.0,
+   "ex_seed": 175,
+   "ex_parts": {
+    "cups_sqrt": 70.6002488127813,
+    "ovr": 90.70431448194357,
+    "legacy": 14
+   },
+   "starting_fatigue": 28,
+   "starting_elo": 1927,
+   "seeds": {
+    "ovr": 63.468761899086694,
+    "pf": 59.67945457648567,
+    "pa": 90.69403548566109,
+    "dscr": 8.110286319609592,
+    "fatigue": 28
+   }
+  },
+  "108": {
+   "name": "Wedgehurst",
+   "region": "Dynamax",
+   "primary_type": "17",
+   "division": 7,
+   "division_seed": 16,
+   "basclm": 5.0,
+   "ex_seed": 120,
+   "ex_parts": {
+    "cups_sqrt": 51.54728319857314,
+    "ovr": 68.33429101763316,
+    "legacy": 0
+   },
+   "starting_fatigue": 38,
+   "starting_elo": 1630,
+   "seeds": {
+    "ovr": 52.22547806617562,
+    "pf": 52.05984611120642,
+    "pa": 72.70274052329778,
+    "dscr": 8.09742506497756,
+    "fatigue": 38
+   }
+  },
+  "109": {
+   "name": "Hulbury",
+   "region": "Dynamax",
+   "primary_type": "3",
+   "division": 7,
+   "division_seed": 2,
+   "basclm": 9.0,
+   "ex_seed": 110,
+   "ex_parts": {
+    "cups_sqrt": 43.23364632621201,
+    "ovr": 58.68561346906056,
+    "legacy": 8
+   },
+   "starting_fatigue": 30,
+   "starting_elo": 1655,
+   "seeds": {
+    "ovr": 47.37600526772666,
+    "pf": 47.592166530513126,
+    "pa": 60.270118458930554,
+    "dscr": 6.390497753576128,
+    "fatigue": 30
+   }
+  },
+  "110": {
+   "name": "Isle of Armor",
+   "region": "Dynamax",
+   "primary_type": "7",
+   "division": 6,
+   "division_seed": 9,
+   "basclm": 6.0,
+   "ex_seed": 133,
+   "ex_parts": {
+    "cups_sqrt": 56.14175738232338,
+    "ovr": 77.35014448668858,
+    "legacy": 0
+   },
+   "starting_fatigue": 36,
+   "starting_elo": 1804,
+   "seeds": {
+    "ovr": 56.75689036935225,
+    "pf": 50.88027562620553,
+    "pa": 79.44154509092783,
+    "dscr": 7.000830515515766,
+    "fatigue": 36
+   }
+  },
+  "111": {
+   "name": "Motostoke",
+   "region": "Dynamax",
+   "primary_type": "2",
+   "division": 2,
+   "division_seed": 9,
+   "basclm": 10.0,
+   "ex_seed": 158,
+   "ex_parts": {
+    "cups_sqrt": 60.083454249804944,
+    "ovr": 95.7174910901368,
+    "legacy": 2
+   },
+   "starting_fatigue": 36,
+   "starting_elo": 2009,
+   "seeds": {
+    "ovr": 65.98840912253964,
+    "pf": 47.904836957764,
+    "pa": 92.88744897038025,
+    "dscr": 7.538958643997023,
+    "fatigue": 36
+   }
+  },
+  "112": {
+   "name": "Turffield",
+   "region": "Dynamax",
+   "primary_type": "5",
+   "division": 10,
+   "division_seed": 14,
+   "basclm": 9.0,
+   "ex_seed": 80,
+   "ex_parts": {
+    "cups_sqrt": 38.526919815439214,
+    "ovr": 41.30429296314161,
+    "legacy": 0
+   },
+   "starting_fatigue": 28,
+   "starting_elo": 1413,
+   "seeds": {
+    "ovr": 38.64006808149052,
+    "pf": 52.6106909470944,
+    "pa": 44.458208371365224,
+    "dscr": 6.007889549759155,
+    "fatigue": 28
+   }
+  },
+  "113": {
+   "name": "Agate Village",
+   "region": "Phoenix",
+   "primary_type": "5",
+   "division": 1,
+   "division_seed": 6,
+   "basclm": 5.0,
+   "ex_seed": 169,
+   "ex_parts": {
+    "cups_sqrt": 51.011248356028034,
+    "ovr": 94.02742728691798,
+    "legacy": 24
+   },
+   "starting_fatigue": 32,
+   "starting_elo": 2047,
+   "seeds": {
+    "ovr": 65.1389747414969,
+    "pf": 67.70312807156574,
+    "pa": 78.27617681575173,
+    "dscr": 7.488060672268818,
+    "fatigue": 32
+   }
+  },
+  "114": {
+   "name": "Gateon Port",
+   "region": "Phoenix",
+   "primary_type": "3",
+   "division": 9,
+   "division_seed": 10,
+   "basclm": 7.0,
+   "ex_seed": 126,
+   "ex_parts": {
+    "cups_sqrt": 60.99156800095781,
+    "ovr": 64.57370707833975,
+    "legacy": 0
+   },
+   "starting_fatigue": 32,
+   "starting_elo": 1681,
+   "seeds": {
+    "ovr": 50.33539007970484,
+    "pf": 58.583305097286576,
+    "pa": 66.27330812361456,
+    "dscr": 7.285449730646542,
+    "fatigue": 32
+   }
+  },
+  "115": {
+   "name": "Phenac City",
+   "region": "Phoenix",
+   "primary_type": "9",
+   "division": 7,
+   "division_seed": 7,
+   "basclm": 7.0,
+   "ex_seed": 118,
+   "ex_parts": {
+    "cups_sqrt": 46.50105255079868,
+    "ovr": 71.98100108334582,
+    "legacy": 0
+   },
+   "starting_fatigue": 22,
+   "starting_elo": 1753,
+   "seeds": {
+    "ovr": 54.05833248363097,
+    "pf": 46.7858371373771,
+    "pa": 73.08025818229234,
+    "dscr": 7.012845356914696,
+    "fatigue": 22
+   }
+  },
+  "116": {
+   "name": "Pyrite Town",
+   "region": "Phoenix",
+   "primary_type": "16",
+   "division": 1,
+   "division_seed": 15,
+   "basclm": 6.0,
+   "ex_seed": 168,
+   "ex_parts": {
+    "cups_sqrt": 73.1498104885913,
+    "ovr": 91.14876254364346,
+    "legacy": 4
+   },
+   "starting_fatigue": 35,
+   "starting_elo": 1998,
+   "seeds": {
+    "ovr": 63.69214368116893,
+    "pf": 74.62771263203625,
+    "pa": 70.00011097455076,
+    "dscr": 7.765992421955635,
+    "fatigue": 35
+   }
+  },
+  "117": {
+   "name": "Fall City",
+   "region": "Phoenix",
+   "primary_type": "3",
+   "division": 4,
+   "division_seed": 7,
+   "basclm": 8.0,
+   "ex_seed": 150,
+   "ex_parts": {
+    "cups_sqrt": 61.73812661344698,
+    "ovr": 84.26753774890038,
+    "legacy": 4
+   },
+   "starting_fatigue": 26,
+   "starting_elo": 1898,
+   "seeds": {
+    "ovr": 60.23360625009312,
+    "pf": 50.56913073604985,
+    "pa": 84.97848480897119,
+    "dscr": 7.071741214829896,
+    "fatigue": 26
+   }
+  },
+  "118": {
+   "name": "Ringtown",
+   "region": "Phoenix",
+   "primary_type": "2",
+   "division": 4,
+   "division_seed": 14,
+   "basclm": 7.0,
+   "ex_seed": 187,
+   "ex_parts": {
+    "cups_sqrt": 84.53841151073733,
+    "ovr": 102.6763597377228,
+    "legacy": 0
+   },
+   "starting_fatigue": 38,
+   "starting_elo": 1987,
+   "seeds": {
+    "ovr": 69.48597073598998,
+    "pf": 75.2566845598178,
+    "pa": 76.84244581837685,
+    "dscr": 8.210554643090186,
+    "fatigue": 38
+   }
+  },
+  "119": {
+   "name": "Summerland",
+   "region": "Phoenix",
+   "primary_type": "5",
+   "division": 10,
+   "division_seed": 15,
+   "basclm": 7.0,
+   "ex_seed": 50,
+   "ex_parts": {
+    "cups_sqrt": 27.073959521658196,
+    "ovr": 23.415129084904052,
+    "legacy": 0
+   },
+   "starting_fatigue": 27,
+   "starting_elo": 1297,
+   "seeds": {
+    "ovr": 29.648886318209104,
+    "pf": 45.43747275891798,
+    "pa": 20.831145397581686,
+    "dscr": 5.247908206184683,
+    "fatigue": 27
+   }
+  },
+  "120": {
+   "name": "Wintown",
+   "region": "Phoenix",
+   "primary_type": "6",
+   "division": 5,
+   "division_seed": 9,
+   "basclm": 6.0,
+   "ex_seed": 141,
+   "ex_parts": {
+    "cups_sqrt": 59.77768404998126,
+    "ovr": 77.07659310240936,
+    "legacy": 4
+   },
+   "starting_fatigue": 32,
+   "starting_elo": 1941,
+   "seeds": {
+    "ovr": 56.619402097994644,
+    "pf": 60.046806065207825,
+    "pa": 74.28894917453542,
+    "dscr": 7.379933240493869,
+    "fatigue": 32
+   }
+  },
+  "121": {
+   "name": "Boyleland",
+   "region": "Phoenix",
+   "primary_type": "2",
+   "division": 9,
+   "division_seed": 1,
+   "basclm": 6.0,
+   "ex_seed": 0,
+   "ex_parts": {
+    "cups_sqrt": 0.0,
+    "ovr": 0.0,
+    "legacy": 0
+   },
+   "starting_fatigue": 19,
+   "starting_elo": 1210,
+   "seeds": {
+    "ovr": 17.880327259438218,
+    "pf": 0.0,
+    "pa": 0.0,
+    "dscr": 3.5584908518720604,
+    "fatigue": 19
+   }
+  },
+  "122": {
+   "name": "Haruba Village",
+   "region": "Phoenix",
+   "primary_type": "9",
+   "division": 9,
+   "division_seed": 3,
+   "basclm": 6.0,
+   "ex_seed": 68,
+   "ex_parts": {
+    "cups_sqrt": 28.716270557001913,
+    "ovr": 39.31236495250264,
+    "legacy": 0
+   },
+   "starting_fatigue": 23,
+   "starting_elo": 1436,
+   "seeds": {
+    "ovr": 37.63891526490673,
+    "pf": 47.081492789755345,
+    "pa": 30.027382970400296,
+    "dscr": 5.2486733017564955,
+    "fatigue": 23
+   }
+  },
+  "123": {
+   "name": "Pueltown",
+   "region": "Phoenix",
+   "primary_type": "3",
+   "division": 1,
+   "division_seed": 2,
+   "basclm": 8.0,
+   "ex_seed": 239,
+   "ex_parts": {
+    "cups_sqrt": 93.78694690715035,
+    "ovr": 111.63527423851205,
+    "legacy": 34
+   },
+   "starting_fatigue": 36,
+   "starting_elo": 2168,
+   "seeds": {
+    "ovr": 73.98876523362917,
+    "pf": 77.11307430926433,
+    "pa": 76.31197528511389,
+    "dscr": 7.9341036040626545,
+    "fatigue": 36
+   }
+  },
+  "124": {
+   "name": "Vientown",
+   "region": "Phoenix",
+   "primary_type": "1",
+   "division": 9,
+   "division_seed": 4,
+   "basclm": 5.0,
+   "ex_seed": 89,
+   "ex_parts": {
+    "cups_sqrt": 37.563594370710106,
+    "ovr": 51.87910013374187,
+    "legacy": 0
+   },
+   "starting_fatigue": 24,
+   "starting_elo": 1606,
+   "seeds": {
+    "ovr": 43.95501818366857,
+    "pf": 33.34712301168008,
+    "pa": 61.6798765123188,
+    "dscr": 6.015071161763681,
+    "fatigue": 24
+   }
+  },
+  "125": {
+   "name": "Aqua Resort",
+   "region": "Phoenix",
+   "primary_type": "1",
+   "division": 1,
+   "division_seed": 9,
+   "basclm": 8.0,
+   "ex_seed": 192,
+   "ex_parts": {
+    "cups_sqrt": 82.56447991041665,
+    "ovr": 103.27637725349612,
+    "legacy": 6
+   },
+   "starting_fatigue": 37,
+   "starting_elo": 2101,
+   "seeds": {
+    "ovr": 69.7875424909468,
+    "pf": 61.57229390596508,
+    "pa": 80.65028034945885,
+    "dscr": 7.813449942247022,
+    "fatigue": 37
+   }
+  },
+  "126": {
+   "name": "Cocona Village",
+   "region": "Phoenix",
+   "primary_type": "10",
+   "division": 2,
+   "division_seed": 10,
+   "basclm": 5.0,
+   "ex_seed": 186,
+   "ex_parts": {
+    "cups_sqrt": 83.00718807004387,
+    "ovr": 97.41069461142773,
+    "legacy": 6
+   },
+   "starting_fatigue": 48,
+   "starting_elo": 1975,
+   "seeds": {
+    "ovr": 66.83942154132994,
+    "pf": 68.61568952205505,
+    "pa": 78.27617681575173,
+    "dscr": 8.101115366135616,
+    "fatigue": 48
+   }
+  },
+  "127": {
+   "name": "Dolce Island",
+   "region": "Phoenix",
+   "primary_type": "5",
+   "division": 5,
+   "division_seed": 15,
+   "basclm": 4.0,
+   "ex_seed": 201,
+   "ex_parts": {
+    "cups_sqrt": 95.62513304644509,
+    "ovr": 101.62811922792493,
+    "legacy": 4
+   },
+   "starting_fatigue": 38,
+   "starting_elo": 2127,
+   "seeds": {
+    "ovr": 68.95911989939538,
+    "pf": 67.12502810771248,
+    "pa": 91.46564089190245,
+    "dscr": 8.344238478703355,
+    "fatigue": 38
+   }
+  },
+  "128": {
+   "name": "Tilt Village",
+   "region": "Phoenix",
+   "primary_type": "9",
+   "division": 10,
+   "division_seed": 7,
+   "basclm": 6.0,
+   "ex_seed": 63,
+   "ex_parts": {
+    "cups_sqrt": 29.34747278577756,
+    "ovr": 33.321501878241946,
+    "legacy": 0
+   },
+   "starting_fatigue": 24,
+   "starting_elo": 1436,
+   "seeds": {
+    "ovr": 34.62787801429848,
+    "pf": 33.34712301168008,
+    "pa": 50.922809626682366,
+    "dscr": 5.598503661090456,
+    "fatigue": 24
+   }
+  },
+  "129": {
+   "name": "Cianwood City",
+   "region": "Silver",
+   "primary_type": "7",
+   "division": 1,
+   "division_seed": 7,
+   "basclm": 8.0,
+   "ex_seed": 193,
+   "ex_parts": {
+    "cups_sqrt": 75.73453240570991,
+    "ovr": 101.3457703674291,
+    "legacy": 16
+   },
+   "starting_fatigue": 40,
+   "starting_elo": 2042,
+   "seeds": {
+    "ovr": 68.81720997321588,
+    "pf": 73.3613822626901,
+    "pa": 73.31650615651137,
+    "dscr": 7.679551432478439,
+    "fatigue": 40
+   }
+  },
+  "130": {
+   "name": "Olivine City",
+   "region": "Silver",
+   "primary_type": "17",
+   "division": 3,
+   "division_seed": 5,
+   "basclm": 9.0,
+   "ex_seed": 144,
+   "ex_parts": {
+    "cups_sqrt": 57.11258017812468,
+    "ovr": 78.7731971384721,
+    "legacy": 8
+   },
+   "starting_fatigue": 29,
+   "starting_elo": 1856,
+   "seeds": {
+    "ovr": 57.47212363223663,
+    "pf": 58.260514282740594,
+    "pa": 71.27596617751787,
+    "dscr": 6.821158635320331,
+    "fatigue": 29
+   }
+  },
+  "131": {
+   "name": "Goldenrod City",
+   "region": "Silver",
+   "primary_type": "1",
+   "division": 5,
+   "division_seed": 3,
+   "basclm": 10.0,
+   "ex_seed": 94,
+   "ex_parts": {
+    "cups_sqrt": 36.82456619885311,
+    "ovr": 55.22207926463614,
+    "legacy": 2
+   },
+   "starting_fatigue": 26,
+   "starting_elo": 1715,
+   "seeds": {
+    "ovr": 45.635215939209964,
+    "pf": 58.05849890339736,
+    "pa": 47.70232972573564,
+    "dscr": 6.163287362366866,
+    "fatigue": 26
+   }
+  },
+  "132": {
+   "name": "National Park",
+   "region": "Silver",
+   "primary_type": "12",
+   "division": 1,
+   "division_seed": 3,
+   "basclm": 4.0,
+   "ex_seed": 260,
+   "ex_parts": {
+    "cups_sqrt": 118.40021668033337,
+    "ovr": 127.45071163493813,
+    "legacy": 14
+   },
+   "starting_fatigue": 46,
+   "starting_elo": 2250,
+   "seeds": {
+    "ovr": 81.93768186634294,
+    "pf": 91.19969981978483,
+    "pa": 85.62982935067447,
+    "dscr": 9.134390881399456,
+    "fatigue": 46
+   }
+  },
+  "133": {
+   "name": "Azalea Town",
+   "region": "Silver",
+   "primary_type": "5",
+   "division": 10,
+   "division_seed": 2,
+   "basclm": 9.0,
+   "ex_seed": 72,
+   "ex_parts": {
+    "cups_sqrt": 36.070399629338546,
+    "ovr": 36.28409053961803,
+    "legacy": 0
+   },
+   "starting_fatigue": 20,
+   "starting_elo": 1461,
+   "seeds": {
+    "ovr": 36.11688964869205,
+    "pf": 49.15724376960071,
+    "pa": 15.136227634597688,
+    "dscr": 5.183393441324666,
+    "fatigue": 20
+   }
+  },
+  "134": {
+   "name": "Ilex Forest",
+   "region": "Silver",
+   "primary_type": "12",
+   "division": 7,
+   "division_seed": 6,
+   "basclm": 3.0,
+   "ex_seed": 112,
+   "ex_parts": {
+    "cups_sqrt": 42.3774497373538,
+    "ovr": 69.30238416139483,
+    "legacy": 0
+   },
+   "starting_fatigue": 21,
+   "starting_elo": 1733,
+   "seeds": {
+    "ovr": 52.71204644234979,
+    "pf": 51.44031613639059,
+    "pa": 60.34033120354674,
+    "dscr": 6.3647880024231345,
+    "fatigue": 21
+   }
+  },
+  "135": {
+   "name": "Violet City",
+   "region": "Silver",
+   "primary_type": "10",
+   "division": 5,
+   "division_seed": 16,
+   "basclm": 10.0,
+   "ex_seed": 130,
+   "ex_parts": {
+    "cups_sqrt": 51.190550309064676,
+    "ovr": 78.48270096734134,
+    "legacy": 0
+   },
+   "starting_fatigue": 24,
+   "starting_elo": 1712,
+   "seeds": {
+    "ovr": 57.326118827654824,
+    "pf": 71.99724172675508,
+    "pa": 64.65314904159602,
+    "dscr": 7.440465463651416,
+    "fatigue": 24
+   }
+  },
+  "136": {
+   "name": "Ruins of Alph",
+   "region": "Silver",
+   "primary_type": "13",
+   "division": 6,
+   "division_seed": 7,
+   "basclm": 4.0,
+   "ex_seed": 187,
+   "ex_parts": {
+    "cups_sqrt": 86.36126282388089,
+    "ovr": 101.00254218812702,
+    "legacy": 0
+   },
+   "starting_fatigue": 34,
+   "starting_elo": 2001,
+   "seeds": {
+    "ovr": 68.64470180193466,
+    "pf": 88.57024263988286,
+    "pa": 66.95788238362238,
+    "dscr": 8.262152134567412,
+    "fatigue": 34
+   }
+  },
+  "137": {
+   "name": "Mahogany Town",
+   "region": "Silver",
+   "primary_type": "6",
+   "division": 8,
+   "division_seed": 16,
+   "basclm": 10.0,
+   "ex_seed": 120,
+   "ex_parts": {
+    "cups_sqrt": 53.80843031080285,
+    "ovr": 66.23142720544298,
+    "legacy": 0
+   },
+   "starting_fatigue": 22,
+   "starting_elo": 1639,
+   "seeds": {
+    "ovr": 51.16856837003103,
+    "pf": 70.90915438163987,
+    "pa": 56.195881629445324,
+    "dscr": 7.4543656717099385,
+    "fatigue": 22
+   }
+  },
+  "138": {
+   "name": "Lake of Rage",
+   "region": "Silver",
+   "primary_type": "3",
+   "division": 5,
+   "division_seed": 11,
+   "basclm": 2.0,
+   "ex_seed": 209,
+   "ex_parts": {
+    "cups_sqrt": 99.01447079044897,
+    "ovr": 109.78913529097554,
+    "legacy": 0
+   },
+   "starting_fatigue": 40,
+   "starting_elo": 2128,
+   "seeds": {
+    "ovr": 73.06088671730751,
+    "pf": 89.29323502338956,
+    "pa": 69.64547021920863,
+    "dscr": 8.28463548897507,
+    "fatigue": 40
+   }
+  },
+  "139": {
+   "name": "Ecruteak City",
+   "region": "Silver",
+   "primary_type": "14",
+   "division": 10,
+   "division_seed": 12,
+   "basclm": 10.0,
+   "ex_seed": 60,
+   "ex_parts": {
+    "cups_sqrt": 26.733393014652606,
+    "ovr": 32.937077881370854,
+    "legacy": 0
+   },
+   "starting_fatigue": 22,
+   "starting_elo": 1353,
+   "seeds": {
+    "ovr": 34.43466462246188,
+    "pf": 46.555449530721546,
+    "pa": 38.20315556135089,
+    "dscr": 5.364965716838938,
+    "fatigue": 22
+   }
+  },
+  "140": {
+   "name": "Mount Mortar",
+   "region": "Silver",
+   "primary_type": "9",
+   "division": 8,
+   "division_seed": 6,
+   "basclm": 3.0,
+   "ex_seed": 102,
+   "ex_parts": {
+    "cups_sqrt": 39.92835387406223,
+    "ovr": 61.842383253739655,
+    "legacy": 0
+   },
+   "starting_fatigue": 22,
+   "starting_elo": 1624,
+   "seeds": {
+    "ovr": 48.96261328988319,
+    "pf": 69.07471288696587,
+    "pa": 42.86086843134698,
+    "dscr": 7.081666470542086,
+    "fatigue": 22
+   }
+  },
+  "141": {
+   "name": "New Bark Town",
+   "region": "Silver",
+   "primary_type": "1",
+   "division": 8,
+   "division_seed": 9,
+   "basclm": 5.0,
+   "ex_seed": 81,
+   "ex_parts": {
+    "cups_sqrt": 33.97754953765955,
+    "ovr": 47.22403448680973,
+    "legacy": 0
+   },
+   "starting_fatigue": 23,
+   "starting_elo": 1489,
+   "seeds": {
+    "ovr": 41.61535929091894,
+    "pf": 42.99470105506178,
+    "pa": 52.91954622506194,
+    "dscr": 5.614013079530796,
+    "fatigue": 23
+   }
+  },
+  "142": {
+   "name": "Cherrygrove City",
+   "region": "Silver",
+   "primary_type": "5",
+   "division": 4,
+   "division_seed": 4,
+   "basclm": 6.0,
+   "ex_seed": 146,
+   "ex_parts": {
+    "cups_sqrt": 64.92107426743047,
+    "ovr": 80.88596396062604,
+    "legacy": 0
+   },
+   "starting_fatigue": 34,
+   "starting_elo": 1921,
+   "seeds": {
+    "ovr": 58.53401062990261,
+    "pf": 72.9703658510148,
+    "pa": 71.59168948580867,
+    "dscr": 7.629475007422784,
+    "fatigue": 34
+   }
+  },
+  "143": {
+   "name": "Blackthorn City",
+   "region": "Silver",
+   "primary_type": "15",
+   "division": 8,
+   "division_seed": 14,
+   "basclm": 9.0,
+   "ex_seed": 145,
+   "ex_parts": {
+    "cups_sqrt": 64.77978775770042,
+    "ovr": 79.92055959329954,
+    "legacy": 0
+   },
+   "starting_fatigue": 23,
+   "starting_elo": 1750,
+   "seeds": {
+    "ovr": 58.04879364599105,
+    "pf": 80.66040217842449,
+    "pa": 66.86549268674327,
+    "dscr": 7.634804771730514,
+    "fatigue": 23
+   }
+  },
+  "144": {
+   "name": "Mount Silver",
+   "region": "Silver",
+   "primary_type": "4",
+   "division": 2,
+   "division_seed": 2,
+   "basclm": 4.0,
+   "ex_seed": 189,
+   "ex_parts": {
+    "cups_sqrt": 79.0494712040365,
+    "ovr": 94.12777866121915,
+    "legacy": 16
+   },
+   "starting_fatigue": 41,
+   "starting_elo": 1998,
+   "seeds": {
+    "ovr": 65.18941183585626,
+    "pf": 67.65783621455158,
+    "pa": 66.01827065419987,
+    "dscr": 8.658102857903641,
+    "fatigue": 41
+   }
+  },
+  "145": {
+   "name": "Montenevera",
+   "region": "Terastal",
+   "primary_type": "14",
+   "division": 9,
+   "division_seed": 2,
+   "basclm": 8.0,
+   "ex_seed": 103,
+   "ex_parts": {
+    "cups_sqrt": 39.233894743943175,
+    "ovr": 63.569622555857194,
+    "legacy": 0
+   },
+   "starting_fatigue": 25,
+   "starting_elo": 1636,
+   "seeds": {
+    "ovr": 49.83073225954138,
+    "pf": 38.853127534698835,
+    "pa": 65.67298915714615,
+    "dscr": 6.294075358254349,
+    "fatigue": 25
+   }
+  },
+  "146": {
+   "name": "Glaseado Mountain",
+   "region": "Terastal",
+   "primary_type": "6",
+   "division": 4,
+   "division_seed": 6,
+   "basclm": 8.0,
+   "ex_seed": 126,
+   "ex_parts": {
+    "cups_sqrt": 48.241815132442184,
+    "ovr": 77.39033666948248,
+    "legacy": 0
+   },
+   "starting_fatigue": 32,
+   "starting_elo": 1791,
+   "seeds": {
+    "ovr": 56.77709115813269,
+    "pf": 47.474739409964826,
+    "pa": 68.07259747033511,
+    "dscr": 6.7708935894754685,
+    "fatigue": 32
+   }
+  },
+  "147": {
+   "name": "Tagtree Thicket",
+   "region": "Terastal",
+   "primary_type": "12",
+   "division": 5,
+   "division_seed": 8,
+   "basclm": 2.0,
+   "ex_seed": 155,
+   "ex_parts": {
+    "cups_sqrt": 60.69037323172797,
+    "ovr": 94.33142181595176,
+    "legacy": 0
+   },
+   "starting_fatigue": 26,
+   "starting_elo": 1861,
+   "seeds": {
+    "ovr": 65.29176388716014,
+    "pf": 66.63997682523427,
+    "pa": 74.783256056549,
+    "dscr": 9.399529923921603,
+    "fatigue": 26
+   }
+  },
+  "148": {
+   "name": "Blueberry Terarium",
+   "region": "Terastal",
+   "primary_type": "15",
+   "division": 3,
+   "division_seed": 16,
+   "basclm": 9.0,
+   "ex_seed": 250,
+   "ex_parts": {
+    "cups_sqrt": 117.77950353569085,
+    "ovr": 129.89844611471295,
+    "legacy": 2
+   },
+   "starting_fatigue": 47,
+   "starting_elo": 2195,
+   "seeds": {
+    "ovr": 83.1679252564591,
+    "pf": 83.19825474445119,
+    "pa": 86.49738708286107,
+    "dscr": 9.502064552992195,
+    "fatigue": 47
+   }
+  },
+  "149": {
+   "name": "Porto Marinada",
+   "region": "Terastal",
+   "primary_type": "3",
+   "division": 2,
+   "division_seed": 1,
+   "basclm": 2.0,
+   "ex_seed": 160,
+   "ex_parts": {
+    "cups_sqrt": 55.81439740574687,
+    "ovr": 96.26515395570112,
+    "legacy": 8
+   },
+   "starting_fatigue": 37,
+   "starting_elo": 1905,
+   "seeds": {
+    "ovr": 66.26366717276517,
+    "pf": 69.83709906617959,
+    "pa": 68.87469031164429,
+    "dscr": 7.721432044673631,
+    "fatigue": 37
+   }
+  },
+  "150": {
+   "name": "Cascarrafa",
+   "region": "Terastal",
+   "primary_type": "3",
+   "division": 5,
+   "division_seed": 1,
+   "basclm": 10.0,
+   "ex_seed": 129,
+   "ex_parts": {
+    "cups_sqrt": 47.86045092833652,
+    "ovr": 77.54033977261409,
+    "legacy": 4
+   },
+   "starting_fatigue": 24,
+   "starting_elo": 1825,
+   "seeds": {
+    "ovr": 56.852483455642655,
+    "pf": 52.7092704386334,
+    "pa": 65.27928403550563,
+    "dscr": 6.789877688470555,
+    "fatigue": 24
+   }
+  },
+  "151": {
+   "name": "Casseroya Lake",
+   "region": "Terastal",
+   "primary_type": "15",
+   "division": 3,
+   "division_seed": 14,
+   "basclm": 3.0,
+   "ex_seed": 346,
+   "ex_parts": {
+    "cups_sqrt": 160.0,
+    "ovr": 160.0,
+    "legacy": 26
+   },
+   "starting_fatigue": 58,
+   "starting_elo": 2519,
+   "seeds": {
+    "ovr": 98.29711431090529,
+    "pf": 100.0,
+    "pa": 95.51717955404875,
+    "dscr": 10.0,
+    "fatigue": 58
+   }
+  },
+  "152": {
+   "name": "Medali",
+   "region": "Terastal",
+   "primary_type": "1",
+   "division": 10,
+   "division_seed": 11,
+   "basclm": 10.0,
+   "ex_seed": 80,
+   "ex_parts": {
+    "cups_sqrt": 33.97754953765955,
+    "ovr": 45.95928472464932,
+    "legacy": 0
+   },
+   "starting_fatigue": 33,
+   "starting_elo": 1450,
+   "seeds": {
+    "ovr": 40.97968983906239,
+    "pf": 48.51588867416575,
+    "pa": 43.157517277350365,
+    "dscr": 5.821466626565038,
+    "fatigue": 33
+   }
+  },
+  "153": {
+   "name": "Zapapico",
+   "region": "Terastal",
+   "primary_type": "9",
+   "division": 5,
+   "division_seed": 2,
+   "basclm": 2.0,
+   "ex_seed": 103,
+   "ex_parts": {
+    "cups_sqrt": 37.31887779586538,
+    "ovr": 62.05491692085254,
+    "legacy": 4
+   },
+   "starting_fatigue": 31,
+   "starting_elo": 1659,
+   "seeds": {
+    "ovr": 49.069433756442464,
+    "pf": 48.99393822131815,
+    "pa": 50.64333681053592,
+    "dscr": 5.733236433289665,
+    "fatigue": 31
+   }
+  },
+  "154": {
+   "name": "Artazon",
+   "region": "Terastal",
+   "primary_type": "5",
+   "division": 10,
+   "division_seed": 9,
+   "basclm": 10.0,
+   "ex_seed": 76,
+   "ex_parts": {
+    "cups_sqrt": 32.03434091490789,
+    "ovr": 44.46495976881045,
+    "legacy": 0
+   },
+   "starting_fatigue": 25,
+   "starting_elo": 1399,
+   "seeds": {
+    "ovr": 40.22863476556621,
+    "pf": 36.75422732314013,
+    "pa": 49.93850285283328,
+    "dscr": 5.4722889128723775,
+    "fatigue": 25
+   }
+  },
+  "155": {
+   "name": "Levincia",
+   "region": "Terastal",
+   "primary_type": "4",
+   "division": 6,
+   "division_seed": 10,
+   "basclm": 10.0,
+   "ex_seed": 157,
+   "ex_parts": {
+    "cups_sqrt": 61.29128267073941,
+    "ovr": 96.12605235813587,
+    "legacy": 0
+   },
+   "starting_fatigue": 37,
+   "starting_elo": 1810,
+   "seeds": {
+    "ovr": 66.19375402557813,
+    "pf": 57.302190366152196,
+    "pa": 76.80023471117487,
+    "dscr": 7.355134261181097,
+    "fatigue": 37
+   }
+  },
+  "156": {
+   "name": "Cabo Poco",
+   "region": "Terastal",
+   "primary_type": "3",
+   "division": 3,
+   "division_seed": 15,
+   "basclm": 2.0,
+   "ex_seed": 265,
+   "ex_parts": {
+    "cups_sqrt": 122.58256534147883,
+    "ovr": 134.85720575575007,
+    "legacy": 8
+   },
+   "starting_fatigue": 59,
+   "starting_elo": 2229,
+   "seeds": {
+    "ovr": 85.66022224453842,
+    "pf": 76.69889433048542,
+    "pa": 92.91668825033,
+    "dscr": 9.078048188025308,
+    "fatigue": 59
+   }
+  },
+  "157": {
+   "name": "Alfornada",
+   "region": "Terastal",
+   "primary_type": "11",
+   "division": 10,
+   "division_seed": 5,
+   "basclm": 9.0,
+   "ex_seed": 89,
+   "ex_parts": {
+    "cups_sqrt": 33.433873666912866,
+    "ovr": 55.37538749096952,
+    "legacy": 0
+   },
+   "starting_fatigue": 30,
+   "starting_elo": 1604,
+   "seeds": {
+    "ovr": 45.71226940789927,
+    "pf": 39.349400955003624,
+    "pa": 61.29873516755768,
+    "dscr": 6.392635565530402,
+    "fatigue": 30
+   }
+  },
+  "158": {
+   "name": "Cortondo",
+   "region": "Terastal",
+   "primary_type": "12",
+   "division": 3,
+   "division_seed": 1,
+   "basclm": 10.0,
+   "ex_seed": 110,
+   "ex_parts": {
+    "cups_sqrt": 35.039603322557,
+    "ovr": 59.62527949105768,
+    "legacy": 15
+   },
+   "starting_fatigue": 31,
+   "starting_elo": 1641,
+   "seeds": {
+    "ovr": 47.84828603266691,
+    "pf": 40.033806252154115,
+    "pa": 44.86895292736993,
+    "dscr": 5.715399327578451,
+    "fatigue": 31
+   }
+  },
+  "159": {
+   "name": "Los Platos",
+   "region": "Terastal",
+   "primary_type": "1",
+   "division": 6,
+   "division_seed": 5,
+   "basclm": 3.0,
+   "ex_seed": 164,
+   "ex_parts": {
+    "cups_sqrt": 71.24619318215659,
+    "ovr": 92.4755270340257,
+    "legacy": 0
+   },
+   "starting_fatigue": 29,
+   "starting_elo": 1941,
+   "seeds": {
+    "ovr": 64.35898204048466,
+    "pf": 54.98342212514502,
+    "pa": 73.96072599977933,
+    "dscr": 7.022354415611728,
+    "fatigue": 29
+   }
+  },
+  "160": {
+   "name": "Mesagoza",
+   "region": "Terastal",
+   "primary_type": "1",
+   "division": 1,
+   "division_seed": 13,
+   "basclm": 9.0,
+   "ex_seed": 257,
+   "ex_parts": {
+    "cups_sqrt": 118.70935615345545,
+    "ovr": 129.08190533143102,
+    "legacy": 9
+   },
+   "starting_fatigue": 47,
+   "starting_elo": 2213,
+   "seeds": {
+    "ovr": 82.75752784215896,
+    "pf": 64.98173464314635,
+    "pa": 89.47928891207023,
+    "dscr": 8.732806236365533,
+    "fatigue": 47
+   }
+  }
+ }
+}

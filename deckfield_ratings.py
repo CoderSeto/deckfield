@@ -97,6 +97,10 @@ def frozen_season_inputs(season):
 BASELINE_OVR = 50.0  # stand-in for an un-rated opponent, pending S8 carryover
 STARTING_ELO = 1800.0  # confirmed; matters for a team's very first game ever, and if new teams are ever added
 STARTING_TOT = 20.0  # every team starts the season at TOT=20, as a floor against going negative
+SQRT_CUPS_FROM_SEASON = 10  # SEASON10_PLAN B8: OVR's Cups component on the square-root scale
+TIEBREAK_DSCR_CAP = 400.0  # SEASON10_PLAN B9a: per-game DSCR cap for the standings tiebreak only
+TIEBREAK_DSCR_CAP_FROM_SEASON = 10
+GAPFILL_FROM_SEASON = 10  # recompute_from_round fills rounds that never got ratings (see there)
 GAME_TYPE_POINT_MULTIPLIER = {"R": 1, "L": 1, "S": 2, "P": 8, "F": 12}
 
 # ---------------------------------------------------------------- schema --
@@ -409,12 +413,13 @@ def add_team(team_id, name, region, primary_type=None, accolades=None):
     conn.close()
 
 
-def set_team_season(team_id, season, league_division, basclm, ex, rlstr=1.0, starting_fatigue=None):
+def set_team_season(team_id, season, league_division, basclm, ex, rlstr=1.0, starting_fatigue=None,
+                    starting_elo=None):
     conn = get_connection()
     conn.execute(
-        "INSERT OR REPLACE INTO team_seasons (team_id, season, league_division, basclm, ex, rlstr, starting_fatigue) "
-        "VALUES (?,?,?,?,?,?,?)",
-        (team_id, season, league_division, basclm, ex, rlstr, starting_fatigue),
+        "INSERT OR REPLACE INTO team_seasons (team_id, season, league_division, basclm, ex, rlstr, "
+        "starting_fatigue, starting_elo) VALUES (?,?,?,?,?,?,?,?)",
+        (team_id, season, league_division, basclm, ex, rlstr, starting_fatigue, starting_elo),
     )
     conn.commit()
     conn.close()
@@ -766,6 +771,22 @@ def recompute_from_round(season, start_round):
     results so the ratings reflect them."""
     conn = get_connection()
     row = conn.execute("SELECT MAX(round) AS m FROM games WHERE season = ?", (season,)).fetchone()
+    if season >= GAPFILL_FROM_SEASON:
+        # A round with NO games -- a best-of-three leg 3 nobody had to play --
+        # never gets its CSV, so ingesting the round after it used to start the
+        # recompute past it, leaving it with no ratings at all. The next round
+        # then found no prior OVR and started SOS and RL Strength from the
+        # baseline for every team. It happened in Season 9: WC SF leg 3 (round
+        # 92) was empty, so the frozen rounds 93-95 were computed that way
+        # (final OVRs off by up to 0.29 from a full recompute; the archive keeps
+        # them). From Season 10 the recompute starts at the earliest round
+        # still missing its ratings, so building round by round and a full
+        # recompute always agree.
+        have = {r["round"] for r in conn.execute(
+            "SELECT DISTINCT round FROM team_round_ratings WHERE season = ?", (season,))}
+        missing = [r for r in range(1, start_round) if r not in have]
+        if missing:
+            start_round = missing[0]
     conn.close()
     if row is None or row["m"] is None:
         return []
@@ -996,10 +1017,9 @@ def compute_round_ratings(season, round_num):
         "SELECT * FROM team_seasons WHERE season = ?", (season,)
     ).fetchall()}
     teams_row = {r["team_id"]: r for r in conn.execute("SELECT * FROM teams").fetchall()}
-    prior_ovr = {r["team_id"]: r["ovr"] for r in conn.execute(
-        "SELECT team_id, ovr FROM team_round_ratings WHERE season = ? AND round = ?",
-        (season, round_num - 1),
-    ).fetchall()}
+    prior_ovr = _prior_round_ovr(conn, season, round_num)
+    seeds = {r["team_id"]: r["ovr_seed"] for r in conn.execute(
+        "SELECT team_id, ovr_seed FROM season_carryover_seeds WHERE season = ?", (season,))}
     regional_strength, league_strength = compute_strength_scores(season, round_num)
     # Cup-run bonuses, settled as of this round -- one pass for the whole
     # league rather than a lookup per team.
@@ -1035,7 +1055,7 @@ def compute_round_ratings(season, round_num):
         avg_gi = sum(gis) / len(gis) if gis else 0.0
 
         played_elos = [g["elo_after"] for g in games if g["elo_after"] is not None]
-        elo = played_elos[-1] if played_elos else STARTING_ELO
+        elo = played_elos[-1] if played_elos else _opening_elo(team_seasons[tid])
 
         opponent_ovrs = [prior_ovr.get(g["opponent"], BASELINE_OVR) for g in games]
         raw_sos = sum(opponent_ovrs) / len(opponent_ovrs) if opponent_ovrs else BASELINE_OVR
@@ -1110,6 +1130,14 @@ def compute_round_ratings(season, round_num):
 
         elo_comp = normalize(v["elo"], elo_vals)
         cups = normalize(v["buckets"]["tot"], tot_vals)
+        if season >= SQRT_CUPS_FROM_SEASON:
+            # SEASON10_PLAN B8: the square root of the 0-1 position, x100 --
+            # the whole fix for one runaway TOT (Casseroya Lake's 1421 in S9)
+            # flattening everyone else's Cups. normalize() returns a neutral
+            # 50 when every TOT is equal, which stays 50 on either scale.
+            lo, hi = min(tot_vals), max(tot_vals)
+            if hi != lo:
+                cups = sqrt(max(v["buckets"]["tot"] - lo, 0) / (hi - lo)) * 100
         ex_norm = normalize(v["ex"], ex_vals)
 
         block_a = (v["rw"] * .5 + v["lw"] * .5) * 3
@@ -1133,20 +1161,27 @@ def compute_round_ratings(season, round_num):
 
         b = v["buckets"]
         fatigue_now = cumulative_fatigue(tid, season, round_num)
+        # Blended OVR (SEASON10_PLAN B4) is an OUTPUT, stored beside raw OVR and
+        # never fed back into anything computed here: SOS reads raw prior OVR,
+        # RL Strength ranks on raw OVR. NULL when there is no seed to blend
+        # with (Season 9), so every reader falls back to raw OVR.
+        ovr_blend = (blend_stat(ovr, seeds[tid], round_num + 1)
+                     if seeds.get(tid) is not None else None)
         results.append((
             tid, season, round_num,
             b["rp"], b["lp"], b["sp"], b["p"], b["f"], b["b"], b["tb"], b["tot"],
             v["rw"], v["lw"], pf_norm, pa_norm, pdg, sos, sov, dscr_comp, eye,
             elo_comp, cups, ex_norm, ovr, grade, climate, playoff_score,
-            v["pf"], v["pa"], v["d_sqrt"], v["rlstr"], fatigue_now,
+            v["pf"], v["pa"], v["d_sqrt"], v["rlstr"], fatigue_now, ovr_blend,
         ))
 
     conn.executemany("""
         INSERT OR REPLACE INTO team_round_ratings
         (team_id, season, round, rp, lp, sp, p, f, b, tb, tot, rw, lw,
          pf_norm, pa_norm, pdg, sos, sov, dscr_comp, eye, elo_comp, cups, ex_norm,
-         ovr, grade, climate, playoff_score, pf_raw, pa_raw, d_sqrt_raw, rlstr_own, fatigue_after)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         ovr, grade, climate, playoff_score, pf_raw, pa_raw, d_sqrt_raw, rlstr_own, fatigue_after,
+         ovr_blend)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, results)
     conn.commit()
     conn.close()
@@ -1275,9 +1310,7 @@ def get_match_inputs(team_id, season, upcoming_round):
 def _team_ranks_snapshot(conn, season, round_num):
     """Global 1-160 rank by the PREVIOUS round's OVR, descending. Ties
     broken by team_id for stability. Un-rated teams default to BASELINE_OVR."""
-    prior = {r["team_id"]: r["ovr"] for r in conn.execute(
-        "SELECT team_id, ovr FROM team_round_ratings WHERE season = ? AND round = ?",
-        (season, round_num - 1)).fetchall()}
+    prior = _prior_round_ovr(conn, season, round_num)
     all_ids = _all_team_ids(conn, season)
     ordered = sorted(all_ids, key=lambda t: (-prior.get(t, BASELINE_OVR), t))
     return {t: i + 1 for i, t in enumerate(ordered)}
@@ -1301,9 +1334,7 @@ def _strength_raw_inputs(conn, season, round_num):
     team_seasons = {r["team_id"]: r for r in conn.execute(
         "SELECT * FROM team_seasons WHERE season = ?", (season,)).fetchall()}
     ranks = _team_ranks_snapshot(conn, season, round_num)
-    prior_ovr = {r["team_id"]: r["ovr"] for r in conn.execute(
-        "SELECT team_id, ovr FROM team_round_ratings WHERE season = ? AND round = ?",
-        (season, round_num - 1)).fetchall()}
+    prior_ovr = _prior_round_ovr(conn, season, round_num)
 
     # RLStr z-scores TOT, so it has to see the same TOT the Rankings tab does.
     bonuses = tournament_bonus_points(season, round_num)
@@ -1318,7 +1349,7 @@ def _strength_raw_inputs(conn, season, round_num):
         gis = [g["interest_score"] for g in games if g["interest_score"] is not None]
         avg_gi = sum(gis) / len(gis) if gis else 0.0
         played_elos = [g["elo_after"] for g in games if g["elo_after"] is not None]
-        elo = played_elos[-1] if played_elos else STARTING_ELO
+        elo = played_elos[-1] if played_elos else _opening_elo(team_seasons[tid])
 
         out[tid] = {
             "region": teams_row[tid]["region"],
@@ -1406,6 +1437,130 @@ def compute_strength_scores(season, round_num):
     regional_strength = {g: v["final"] for g, v in regional_breakdown.items()}
     league_strength = {g: v["final"] for g, v in league_breakdown.items()}
     return regional_strength, league_strength
+
+
+def start_season(season=None):
+    """Build a fresh database for a new season from its committed starting
+    files (seasons/s<N>/start.json and accolades.json, written from the
+    previous season's FROZEN record by prepare_season.py) -- the S10
+    counterpart of migrate_s9, and the first step of every rebuild:
+    start-season, then replay results/s<N>/ in round order.
+
+    Drops every table (init_db), then writes the 160 teams with their stored
+    accolade history, each team's season row (division, base climate, EX
+    seed, starting fatigue, carried Elo), the carryover seeds, and the
+    round-0 OPENING STATE (write_opening_ratings)."""
+    season = season or CURRENT_SEASON
+    start = load_season_json("start.json", season)
+    accolades = load_season_json("accolades.json", season)
+    init_db()
+    seed_region_distances()
+    conn = get_connection()
+    for dex, t in start["teams"].items():
+        conn.execute("INSERT INTO teams (team_id, name, region, primary_type, accolades) VALUES (?,?,?,?,?)",
+                     (int(dex), t["name"], t["region"], t["primary_type"], accolades.get(t["name"]) or None))
+        conn.execute(
+            "INSERT INTO team_seasons (team_id, season, league_division, basclm, ex, rlstr, "
+            "starting_fatigue, starting_elo) VALUES (?,?,?,?,?,?,?,?)",
+            (int(dex), season, t["division"], t["basclm"], t["ex_seed"], 1.0,
+             t["starting_fatigue"], t["starting_elo"]))
+        sd = t["seeds"]
+        conn.execute(
+            "INSERT INTO season_carryover_seeds (team_id, season, ovr_seed, fatigue_seed, dscr_seed, "
+            "pf_seed, pa_seed) VALUES (?,?,?,?,?,?,?)",
+            (int(dex), season, sd["ovr"], sd["fatigue"], sd["dscr"], sd["pf"], sd["pa"]))
+    conn.commit()
+    conn.close()
+    write_opening_ratings(season)
+    return len(start["teams"])
+
+
+def write_opening_ratings(season):
+    """The round-0 OPENING STATE: one team_round_ratings row per team before
+    the season's first game, so the dashboard, the roster and matchday 1's
+    pairings have something to read.
+
+    Before any game, the blend (B4) is 8/8 seed and 0/8 season, so every
+    blended output IS the seed: OVR, PF, PA and raw DSCR read the carryover
+    seeds, fatigue the starting fatigue, TOT the 20 floor. Components that
+    only exist once games are played (PDG, SOS, SOV, EYE, the normalised Elo,
+    Cups and EX) are left NULL rather than invented. Round 0 is never read
+    back as a PRIOR round: SOS and RL Strength at round 1 start from the
+    baseline, exactly as Season 9's round 1 did (_prior_round_ovr)."""
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT s.*, ts.basclm, ts.starting_fatigue FROM season_carryover_seeds s
+        JOIN team_seasons ts ON ts.team_id = s.team_id AND ts.season = s.season
+        WHERE s.season = ?""", (season,)).fetchall()
+    out = []
+    for r in rows:
+        ovr = r["ovr_seed"]
+        out.append((r["team_id"], season, 0, 0, 0, 0, 0, 0, 0, 0, STARTING_TOT,
+                    r["pf_seed"], r["pa_seed"], ovr, grade_for(ovr), (r["basclm"] / 100) * (ovr + 50),
+                    r["dscr_seed"], 1.0, r["starting_fatigue"], ovr))
+    conn.executemany("""
+        INSERT OR REPLACE INTO team_round_ratings
+        (team_id, season, round, rp, lp, sp, p, f, b, tb, tot,
+         pf_norm, pa_norm, ovr, grade, climate, d_sqrt_raw, rlstr_own, fatigue_after, ovr_blend)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    """, out)
+    conn.commit()
+    conn.close()
+    return len(out)
+
+
+def blended_outputs(season, round_num):
+    """{team_id: {ovr, pf, pa, dscr, climate, x}} -- what the game is handed
+    after round_num (SEASON10_PLAN B4): (season value x X + seed x Y) / 8,
+    X = rounds played (capped at 8), for OVR, PF, PA and raw 0-10 DSCR.
+    Climate follows the blended OVR it is computed from. A team with no seed
+    (Season 9) gets its raw values, as does everyone from round 8 on. The
+    `raw` values are the round's own; at round 0 those ARE the seeds."""
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT r.team_id, r.ovr, r.pf_norm, r.pa_norm, r.d_sqrt_raw, r.climate, ts.basclm,
+               s.ovr_seed, s.pf_seed, s.pa_seed, s.dscr_seed
+        FROM team_round_ratings r
+        JOIN team_seasons ts ON ts.team_id = r.team_id AND ts.season = r.season
+        LEFT JOIN season_carryover_seeds s ON s.team_id = r.team_id AND s.season = r.season
+        WHERE r.season = ? AND r.round = ?""", (season, round_num)).fetchall()
+    conn.close()
+    x, _ = blend_weights((round_num or 0) + 1)
+    out = {}
+    for r in rows:
+        if r["ovr_seed"] is None:
+            out[r["team_id"]] = {"ovr": r["ovr"], "pf": r["pf_norm"], "pa": r["pa_norm"],
+                                 "dscr": r["d_sqrt_raw"], "climate": r["climate"], "x": 8}
+            continue
+        mix = lambda raw, seed: blend_stat(raw, seed, (round_num or 0) + 1)
+        ovr = mix(r["ovr"], r["ovr_seed"])
+        out[r["team_id"]] = {
+            "ovr": ovr, "pf": mix(r["pf_norm"], r["pf_seed"]), "pa": mix(r["pa_norm"], r["pa_seed"]),
+            "dscr": mix(r["d_sqrt_raw"], r["dscr_seed"]),
+            "climate": (r["basclm"] / 100) * (ovr + 50), "x": x,
+        }
+    return out
+
+
+def _opening_elo(team_season_row):
+    """A team's Elo before its first game of the season: the Elo it carried
+    over (SEASON10_PLAN B4), or STARTING_ELO when none was carried (Season
+    9's rows, migrated without one, and any team new to the league)."""
+    carried = team_season_row["starting_elo"] if "starting_elo" in team_season_row.keys() else None
+    return carried if carried is not None else STARTING_ELO
+
+
+def _prior_round_ovr(conn, season, round_num):
+    """{team_id: raw OVR} at the round before round_num -- what SOS and RL
+    Strength read. Round 0 is the opening state (seed values, see
+    write_opening_ratings), not a played round, so round 1 reads nothing
+    and every team starts from BASELINE_OVR: the seed never leaks into a raw
+    component (SEASON10_PLAN B4)."""
+    if round_num - 1 < 1:
+        return {}
+    return {r["team_id"]: r["ovr"] for r in conn.execute(
+        "SELECT team_id, ovr FROM team_round_ratings WHERE season = ? AND round = ?",
+        (season, round_num - 1)).fetchall()}
 
 
 def seed_all_teams_for_new_season(previous_season, new_season, fatigue_by_team=None):
@@ -3007,7 +3162,7 @@ def current_rank_lookup(season):
     rows = conn.execute("""
         SELECT team_id, ovr FROM team_round_ratings
         WHERE season=? AND round=(SELECT MAX(round) FROM team_round_ratings WHERE season=?)
-        ORDER BY ovr DESC
+        ORDER BY COALESCE(ovr_blend, ovr) DESC
     """, (season, season)).fetchall()
     conn.close()
     return {r["team_id"]: i + 1 for i, r in enumerate(rows)}
@@ -3104,6 +3259,59 @@ def _rds_round_games(conn, cup, bracket, target_round):
         better_first = (seed_a < seed_b) == home_is_lower
         games.append((team_a, team_b) if better_first else (team_b, team_a))
     return games
+
+
+def rds_cup_bracket_data(season=None):
+    """{cup: {"draw_round1": [...], "process_round1": [...]}} -- the RDS Cup
+    tab's round-1 brackets (CUP_BRACKET_DATA) from the season's own seeding
+    (seasons/s<N>/rds_seeds.json). Season 9 baked this into the dashboard
+    once; from Season 10 the seeding changes every season (SEASON10_PLAN B9),
+    so it is rebuilt from the seed file every run."""
+    seeds = load_season_json("rds_seeds.json", season)
+    conn = get_connection()
+    name_to_dex = {r["name"]: r["team_id"] for r in conn.execute("SELECT team_id, name FROM teams")}
+    conn.close()
+    out = {}
+    for cup in ("Ribbon", "Dream", "Star"):
+        seed_to_team = {int(k): v for k, v in seeds[cup].items()}
+        out[cup] = {}
+        for bracket in ("draw", "process"):
+            entries = generate_cup_bracket(seed_to_team, bracket)[1]
+            if bracket == "draw":
+                # Displayed in plain seed order (1 v 64, 2 v 63, ...), as the
+                # tab always has; the Process keeps its bracket order.
+                entries = sorted(entries, key=lambda e: e["home_seed"])
+            out[cup][f"{bracket}_round1"] = [
+                {**e, "home_dex": name_to_dex.get(e["home"]), "away_dex": name_to_dex.get(e["away"])}
+                for e in entries]
+    return out
+
+
+def schedule_orders_view(season=None):
+    """For the Standings tab's orders view (SEASON10_PLAN B10c): each
+    region's and division's game 1-15 -> definition, with Rivalry Week and
+    the L1 pod round marked, or why a division lost its L1 pin. None for
+    Season 9, which played every group in the same order."""
+    orders = schedule_orders(season)
+    if orders is None:
+        return None
+    labels = {int(k): v for k, v in orders["round_defs"].items()}
+    rivalry = 15  # the pod 1v2 / 3v4 definition in both outlines
+
+    def view(group, kind):
+        return {
+            "order": group["order"],
+            "labels": [labels[r] for r in group["order"]],
+            "rivalry_game": group["order"].index(rivalry) + 1,
+            **({"l1_pinned": group["l1_pinned"], "unpinned_because": group["unpinned_because"]}
+               if kind == "L" else {}),
+        }
+
+    return {
+        "season": orders["season"], "outline": orders["outline"], "round_defs": orders["round_defs"],
+        "regions": {g: view(v, "R") for g, v in orders["regions"].items()},
+        "divisions": {g: view(v, "L") for g, v in orders["divisions"].items()},
+    }
 
 
 def rds_cup_real_results(season):
@@ -4421,7 +4629,11 @@ def rank_elo_history(season):
         games_by_round.setdefault(g["round"], []).append(g)
 
     elo_by_round = {}
-    current_elo = {}
+    # Each team opens on the Elo it carried over (NULL in Season 9, whose
+    # first round everybody played, so nothing changes there).
+    current_elo = {r["team_id"]: r["starting_elo"] for r in conn.execute(
+        "SELECT team_id, starting_elo FROM team_seasons WHERE season=? AND starting_elo IS NOT NULL",
+        (season,))}
     for r in rounds:
         for g in games_by_round.get(r, []):
             current_elo[g["team_a"]] = g["elo_a_after"]
@@ -4478,8 +4690,19 @@ def export_teams_for_deckfield(season):
     # round that settled the final, so the title and the +45 cannot disagree.
     for region, champion in rt_champions(season, latest_round).items():
         earned.setdefault(champion, []).append(region_display_name(region))
-    # Per explicit instruction: Canalave City earned Division One this season.
-    earned.setdefault("Canalave City", []).append("Division One")
+    # The Division One champion, derived from the final League standings once
+    # L15 is played (SEASON10_PLAN A1/B13). This replaced a line that stamped
+    # Canalave City's S9 title by name, which would have followed it into S10.
+    if latest_round is not None:
+        conn_d = get_connection()
+        try:
+            l15 = _event_is_played(conn_d, season, ("L", 15))
+        finally:
+            conn_d.close()
+        if l15:
+            champion = division_standings_seeds(season, 1).get(1)
+            if champion:
+                earned.setdefault(champion, []).append("Division One")
     region_display = {region_display_name(r["region"]) for r in
                       conn.execute("SELECT DISTINCT region FROM teams").fetchall()}
     rows = conn.execute("""
@@ -4489,8 +4712,14 @@ def export_teams_for_deckfield(season):
         JOIN teams t ON t.team_id = r.team_id
         JOIN team_seasons ts ON ts.team_id = r.team_id AND ts.season = r.season
         WHERE r.season = ? AND r.round = ?
-        ORDER BY r.ovr DESC
+        ORDER BY COALESCE(r.ovr_blend, r.ovr) DESC
     """, (season, latest_round)).fetchall()
+    # SEASON10_PLAN B4: during the blend window the roster carries BLENDED
+    # OVR, PF, PA and raw DSCR (and ranks on blended OVR). They exist only
+    # here; the engine never reads them back.
+    blended = blended_outputs(season, latest_round)
+    opening_elo = {r["team_id"]: _opening_elo(r) for r in conn.execute(
+        "SELECT * FROM team_seasons WHERE season=?", (season,))}
 
     def records_for(team_id):
         games = conn.execute("""
@@ -4520,7 +4749,7 @@ def export_teams_for_deckfield(season):
             ORDER BY round DESC LIMIT 1
         """, (season, latest_round, team_id, team_id)).fetchone()
         if row is None:
-            return None
+            return opening_elo.get(team_id)
         return row["elo_a_after"] if row["team_a"] == team_id else row["elo_b_after"]
 
     # Home/Away records ride along on the roster so deckfield.html's score
@@ -4530,6 +4759,7 @@ def export_teams_for_deckfield(season):
 
     teams_out = []
     for rank, r in enumerate(rows, start=1):
+        bl = blended[r["dex"]]
         overall, regional, league, cup = records_for(r["dex"])
         split = splits.get(r["dex"], {"home": "0-0", "away": "0-0"})
         teams_out.append({
@@ -4542,9 +4772,9 @@ def export_teams_for_deckfield(season):
             "accolades": merge_accolades(r["accolades"], earned.get(r["name"], []),
                                          season, region_display),
             "fatigue": round(r["fatigue_after"], 1) if r["fatigue_after"] is not None else "",
-            "climate": round(r["climate"], 2), "pf": round(r["pf_norm"], 2),
-            "pa": round(r["pa_norm"], 2), "dscr": round(r["d_sqrt_raw"], 2),
-            "skill_rating": round(r["ovr"], 2), "elo": round(raw_elo(r["dex"]) or 0),
+            "climate": round(bl["climate"], 2), "pf": round(bl["pf"], 2),
+            "pa": round(bl["pa"], 2), "dscr": round(bl["dscr"], 2),
+            "skill_rating": round(bl["ovr"], 2), "elo": round(raw_elo(r["dex"]) or 0),
             "grade": r["grade"], "region_record": regional, "league_record": league,
             "cup_record": cup, "home_record": split["home"], "away_record": split["away"],
             "overall_record": overall, "primary_type": r["primary_type"],
@@ -4697,7 +4927,11 @@ def _standings_order(season, teams, game_type):
             w, l = w + (1 if won else 0), l + (0 if won else 1)
             own_dscr = g["dscr_a"] if is_a else g["dscr_b"]
             if own_dscr is not None:
-                dscrs.append(own_dscr)
+                # SEASON10_PLAN B9a: from S10 each game counts for at most 400
+                # (= 20^2) in this TIEBREAK only, so one shutout cannot decide
+                # it. The dashboard's tbOf reads the same capped average.
+                dscrs.append(own_dscr if season < TIEBREAK_DSCR_CAP_FROM_SEASON
+                             else min(own_dscr, TIEBREAK_DSCR_CAP))
             opp = g["team_b"] if is_a else g["team_a"]
             log.append((opp, result))
         # No walkover term: a bye is not a win in any displayed record (per
@@ -5105,37 +5339,48 @@ RDS_CUP_REGIONS = {
     "Star": ("Kalosite", "Dynamax", "Terastal"),
 }
 
-# Regional strength for the two prior seasons, supplied already z-scored
-# within each season (each column is exactly mean 0, pstdev 1).  They are
-# NOT on the same scale as a season's stored strength multiplier, so
-# _normalized_prior_strength() runs them through the same tanh squash
-# _strength_formula_breakdown() applies, which is what puts all three
-# seasons on one 1.0-centered scale before they are blended.
-REGION_PRIOR_STRENGTH = {
-    "Indigo":     {"s8": -1.618536908, "s7": 0.813992377},
-    "Delta":      {"s8": -0.487695161, "s7": -1.152955718},
-    "LilyValley": {"s8": 0.865457176, "s7": -0.117069976},
-    "Vertress":   {"s8": 1.519002992, "s7": -0.112008686},
-    "Kalosite":   {"s8": -0.486722187, "s7": 0.249860533},
-    "Lanakila":   {"s8": -1.232247122, "s7": -0.341941543},
-    "Dynamax":    {"s8": -0.152808647, "s7": 0.516139358},
-    "Phoenix":    {"s8": 1.445175233, "s7": -1.428112097},
-    "Silver":     {"s8": 0.396588137, "s7": 2.245646685},
-    "Terastal":   {"s8": -0.248213512, "s7": -0.673550933},
+# Regional strength of finished seasons, z-scored within each season (each
+# column is exactly mean 0, pstdev 1). S7 and S8 were supplied this way; a
+# season frozen by this engine (S9 on) is read from its frozen STRENGTH_DATA
+# and z-scored the same way (_season_strength_z). Allocation reads them as "one
+# season ago" and "two seasons ago" (SEASON10_PLAN B11), so a new season needs
+# no edit here. They are NOT on the same scale as a stored strength multiplier,
+# so _normalized_prior_strength() runs them through the same tanh squash
+# _strength_formula_breakdown() applies, which is what puts all three seasons on
+# one 1.0-centered scale before they are blended.
+REGION_STRENGTH_Z = {
+    8: {"Indigo": -1.618536908, "Delta": -0.487695161, "LilyValley": 0.865457176,
+        "Vertress": 1.519002992, "Kalosite": -0.486722187, "Lanakila": -1.232247122,
+        "Dynamax": -0.152808647, "Phoenix": 1.445175233, "Silver": 0.396588137,
+        "Terastal": -0.248213512},
+    7: {"Indigo": 0.813992377, "Delta": -1.152955718, "LilyValley": -0.117069976,
+        "Vertress": -0.112008686, "Kalosite": 0.249860533, "Lanakila": -0.341941543,
+        "Dynamax": 0.516139358, "Phoenix": -1.428112097, "Silver": 2.245646685,
+        "Terastal": -0.673550933},
 }
 
-# S9 counts for half the allocation score, S8 a third, S7 a sixth.  The
-# weights sum to 1, so the blend stays on the same scale as one season's
-# strength multiplier and x100 lands near 100.
-WC_ALLOCATION_WEIGHTS = {"s9": 1 / 2, "s8": 1 / 3, "s7": 1 / 6}
+# The running season counts for half the allocation score, the season before a
+# third, the one before that a sixth. The weights sum to 1, so the blend stays
+# on the same scale as one season's strength multiplier and x100 lands near 100.
+WC_ALLOCATION_WEIGHTS = (1 / 2, 1 / 3, 1 / 6)
 
 
-def _normalized_prior_strength(key):
-    """{region: multiplier} for a prior season's z-scored strength column,
+def _season_strength_z(season):
+    """{region: z} for a finished season's regional strength."""
+    if season in REGION_STRENGTH_Z:
+        return REGION_STRENGTH_Z[season]
+    final = {g: v["final"] for g, v in frozen_season_data(season)["STRENGTH_DATA"]["regional"].items()}
+    mean = sum(final.values()) / len(final)
+    sd = statistics.pstdev(final.values())
+    return {g: (v - mean) / sd for g, v in final.items()}
+
+
+def _normalized_prior_strength(season):
+    """{region: multiplier} for a finished season's z-scored strength,
     squashed exactly the way _strength_formula_breakdown() squashes its own
     weighted sums -- same STRETCH, same k = pstdev * K_MULTIPLIER -- so a
     prior season lands on the same 1.0-centered scale as the live one."""
-    col = {g: v[key] for g, v in REGION_PRIOR_STRENGTH.items()}
+    col = _season_strength_z(season)
     k = statistics.pstdev(col.values()) * STRENGTH_TANH_K_MULTIPLIER
     if k == 0:
         return {g: 1.0 for g in col}
@@ -5146,14 +5391,15 @@ def region_allocation_ranking(season, round_num=None):
     """Regions ordered best-first by allocation score, with the number of
     Regional Tournament bids each one earns.
 
-    Allocation = (S9/2 + S8/3 + S7/6) * 100, rounded to 2dp, where S9 is
-    the region's live strength multiplier and S8/S7 are the normalized
-    prior-season columns.  Because the S9 term is live, this ranking moves
-    with every result -- it is derived, never static -- UNTIL the Regional
-    Tournament ends: per explicit instruction (2026-10-04) the bid counts are
-    final after RT9, so any later round reads RT9's ranking. Without this the
-    World Championship's own games, which move S9 strength, could re-deal the
-    regional bids mid-championship."""
+    Allocation = (this season/2 + last season/3 + the season before/6) * 100,
+    rounded to 2dp: the region's live strength multiplier, then the two
+    previous seasons' normalized columns. Each row carries the three terms
+    keyed by season ("s10", "s9", "s8" in Season 10). Because the live term
+    moves, this ranking moves with every result -- it is derived, never
+    static -- UNTIL the Regional Tournament ends: per explicit instruction
+    (2026-10-04) the bid counts are final after RT9, so any later round reads
+    RT9's ranking. Without this the World Championship's own games, which move
+    live strength, could re-deal the regional bids mid-championship."""
     if round_num is None:
         conn = get_connection()
         round_num = conn.execute(
@@ -5163,16 +5409,17 @@ def region_allocation_ranking(season, round_num=None):
     round_num = min(round_num, abs_round_for_event(("RT", 9)))
 
     regional_bd, _ = compute_strength_breakdown(season, round_num)
-    s9 = {g: v["final"] for g, v in regional_bd.items()}
-    n8, n7 = _normalized_prior_strength("s8"), _normalized_prior_strength("s7")
-    w = WC_ALLOCATION_WEIGHTS
+    live = {g: v["final"] for g, v in regional_bd.items()}
+    p1, p2 = _normalized_prior_strength(season - 1), _normalized_prior_strength(season - 2)
+    w0, w1, w2 = WC_ALLOCATION_WEIGHTS
+    k0, k1, k2 = f"s{season}", f"s{season - 1}", f"s{season - 2}"
 
     rows = []
-    for g in s9:
-        alloc = round(100 * (s9[g] * w["s9"] + n8[g] * w["s8"] + n7[g] * w["s7"]), 2)
-        rows.append({"region": g, "alloc": alloc, "s9": s9[g], "s8": n8[g], "s7": n7[g]})
+    for g in live:
+        alloc = round(100 * (live[g] * w0 + p1[g] * w1 + p2[g] * w2), 2)
+        rows.append({"region": g, "alloc": alloc, k0: live[g], k1: p1[g], k2: p2[g]})
     # Ties broken by the live season, which is the half-weighted term.
-    rows.sort(key=lambda r: (-r["alloc"], -r["s9"], r["region"]))
+    rows.sort(key=lambda r: (-r["alloc"], -r[k0], r["region"]))
     for i, r in enumerate(rows):
         r["rank"] = i + 1
         r["bids"] = WC_RT_BIDS_BY_ALLOCATION_RANK[i]
@@ -5207,14 +5454,15 @@ def _wc_team_meta(conn, season, round_num):
         JOIN teams t ON t.team_id = r.team_id
         JOIN team_seasons ts ON ts.team_id = t.team_id AND ts.season = r.season
         WHERE r.season=? AND r.round=?
-        ORDER BY r.ovr DESC
+        ORDER BY COALESCE(r.ovr_blend, r.ovr) DESC
     """, (season, round_num)).fetchall()
     meta, rank_of = {}, {}
     for i, r in enumerate(rows):
         meta[r["name"]] = {
             "team_id": r["team_id"], "name": r["name"], "region": r["region"],
             "division": r["division"], "ovr": round(r["ovr"], 2), "rank": i + 1,
-            "playoff_score": round(r["playoff_score"], 2),
+            # NULL only in the round-0 opening state, before any game.
+            "playoff_score": round(r["playoff_score"], 2) if r["playoff_score"] is not None else None,
         }
         rank_of[r["name"]] = i + 1
     return meta, rank_of
