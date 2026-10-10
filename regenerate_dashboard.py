@@ -33,7 +33,10 @@ dashboard's already-published DATA/CALENDAR_DATA at that round -- see the
 
 Usage: python3 regenerate_dashboard.py [dashboard_path]
 """
+import glob
+import hashlib
 import json
+import os
 import re
 import sys
 
@@ -52,6 +55,53 @@ from deckfield_ratings import (
 
 SEASON = 9
 DASHBOARD_PATH = sys.argv[1] if len(sys.argv) > 1 else "deckfield_dashboard.html"
+
+
+# ------------------------------------------------------- frozen seasons --
+# A finished season is frozen by freeze_season.py into a byte-for-byte copy
+# of its final dashboard (deckfield_dashboard_s<N>.html) and a numbers-only
+# archive/s<N>_final.json, plus freeze_season_inputs.py's archive/s<N>_inputs.json
+# (what the next season needs that the dashboard never showed), all listed in
+# archive/SHA256SUMS. Those are the
+# season's record -- the engine will change under later seasons, so they are
+# never rebuilt. This runs before anything is written and refuses to go on if
+# a frozen file has changed, gone missing, or appeared unlisted, or if it has
+# been pointed at a frozen dashboard as its target.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+FROZEN_SUMS = os.path.join(_HERE, "archive", "SHA256SUMS")
+FROZEN_GLOBS = ("deckfield_dashboard_s*.html", os.path.join("archive", "s*_final.json"),
+                os.path.join("archive", "s*_inputs.json"))
+
+
+def _check_frozen_archive(target_path):
+    listed = {}
+    if os.path.exists(FROZEN_SUMS):
+        with open(FROZEN_SUMS) as f:
+            for line in f:
+                if line.strip():
+                    digest, rel = line.rstrip("\n").split("  ", 1)
+                    listed[rel] = digest
+
+    on_disk = {os.path.relpath(p, _HERE) for g in FROZEN_GLOBS for p in glob.glob(os.path.join(_HERE, g))}
+    problems = [f"{rel} is frozen but not listed in archive/SHA256SUMS" for rel in sorted(on_disk - set(listed))]
+    for rel, digest in sorted(listed.items()):
+        path = os.path.join(_HERE, rel)
+        if not os.path.exists(path):
+            problems.append(f"{rel} is missing")
+            continue
+        with open(path, "rb") as f:
+            if hashlib.sha256(f.read()).hexdigest() != digest:
+                problems.append(f"{rel} has changed")
+    if problems:
+        raise RuntimeError(
+            "frozen season archive check failed: " + "; ".join(problems)
+            + ". A frozen season is the permanent record and is never edited or "
+              "regenerated -- restore it from git (git checkout -- <file>) rather "
+              "than updating its checksum.")
+
+    target = os.path.relpath(os.path.abspath(target_path), _HERE)
+    if target in listed:
+        raise RuntimeError(f"refusing to regenerate {target}: it is a frozen season's dashboard")
 
 
 def _records_for(conn, team_id, latest_round):
@@ -581,6 +631,9 @@ def _replace_const(content, var_name, value, is_array=False):
 
 
 def main():
+    # Before anything else: no frozen season may have changed.
+    _check_frozen_archive(DASHBOARD_PATH)
+
     with open(DASHBOARD_PATH) as f:
         content = f.read()
 
