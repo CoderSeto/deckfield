@@ -238,6 +238,11 @@ side (L/R for Across and Diag, U/D for Same).
 | 14 | A 12/34 R | A 12/34 **L** |
 | 15 | Pod 2@1, 4@3 | Pod 1@2, 3@4 |
 
+- **R15 is ALWAYS the pod round 1v2 / 3v4** (per explicit instruction):
+  `2 at 1, 4 at 3` in Outline A, `1 at 2, 3 at 4` in Outline B. Every season
+  ends with each pod's 1 and 2, and 3 and 4, meeting. Only the host alternates.
+  The round order is fixed and never reshuffled; the outlines differ in hosts
+  only.
 - **Outline B is Outline A with every host flipped** (L<->R, U<->D, and each
   pod game's away/home swapped). Implement it as that flip, keyed on season
   parity, from the one `POD_ROUND_DEFS` / `CROSS_ROUND_DEFS` table, rather than
@@ -309,6 +314,7 @@ side (L/R for Across and Diag, U/D for Same).
    - `next-matchday` = week 1 Weekend R1, round 1
    - R1-R15 / L1-L15 hosts follow Outline B (every S9 regional pairing
      reversed)
+   - R15 and L15 are the pod round 1v2 / 3v4 (`1 at 2, 3 at 4`)
    - the roster at MD1 = 100% seed
    - Elo carried, pods generate
    - RDS and PA brackets generate from the new seeds with clean conflict
