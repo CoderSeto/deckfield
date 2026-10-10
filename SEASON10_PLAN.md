@@ -267,9 +267,11 @@ hosts each pairing is unchanged.
 Rules (per explicit instruction):
 1. **Regional R15 stays Rivalry Week** (the pod 1v2 / 3v4 round, B10a).
    League L15 is not pinned.
-2. **No more than 3 home or 3 away games in a row**, counted separately for
+2. **No more than 2 home or 2 away games in a row**, counted separately for
    Regional games and for League games (each sequence on its own, never
-   interleaved). S9's fixed order never exceeded 2; the cap is now 3.
+   interleaved). This matches S9's fixed order, which never exceeded 2. A cap of
+   3 was considered first and replaced once the exact counts below showed the
+   cap-2 pools are still huge.
 3. **Regional:** the previous season's Regional Tournament **finalists** may
    not meet in the first **7** games (their game is game 8 or later), and each
    previous **semifinal** pairing may not meet in the first **3** games.
@@ -291,6 +293,21 @@ keeping those that pass every rule:
 - Division 1 passes at **0.41%**, the tightest group but still billions of
   valid orders.
 - All 10 drawn regional orders came out distinct.
+
+**Exact counts with the cap of 2** (S10 inputs; counted exhaustively, not
+sampled):
+
+| Group | Orders, cap 2 | ...and passing rules 3/4 |
+|---|---|---|
+| each region (R15 pinned) | 144,543,744 | 36.4M (Kalosite, Dynamax) to 94.2M (Terastal) |
+| Division 1 | 568,737,792 | 27,183,360 |
+| Divisions 2-10 | 568,737,792 each | same (no extra rule) |
+
+The base count depends only on the pod structure and the outline's hosts, so
+it is identical for every region and for every division. **Draw uniformly
+from the valid set** using the counting walk (it tracks the last two rounds
+placed and each round's earliest allowed game number), not by trial and
+error, so every valid order is equally likely.
 
 Build notes:
 - The draw is **seeded** (e.g. by season number) so it is reproducible. It is
@@ -362,7 +379,7 @@ Build notes:
      reversed)
    - R15 (Rivalry Week) is the pod round 1v2 / 3v4 (`1 at 2, 3 at 4`) in
      every region
-   - every group's order passes all B10b rules (run cap, RT and Division 1
+   - every group's order passes all B10b rules (cap of 2, RT and Division 1
      protections), and all orders are distinct
    - the roster at MD1 = 100% seed
    - Elo carried, pods generate
