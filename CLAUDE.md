@@ -62,6 +62,8 @@ cross-referenced between conversations).
   frozen" below.
 - `results/s9/` — every S9 matchday CSV from round 12 on (moved here from
   `results/` when S9 was frozen). Kept as the audit trail, not the record.
+- `SEASON10_PLAN.md` — the agreed Season 10 turnover plan (every decision,
+  with numbers and build order). **Read it before any S10 work.**
 - `CLAUDE.md` — this file.
 
 ## Season 9 is frozen (2026-10-10, per explicit instruction)
