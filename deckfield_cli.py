@@ -31,6 +31,12 @@ import migrate_s9
 
 
 def cmd_migrate(args):
+    if args.season != 9:
+        print("`migrate` rebuilds Season 9 from its workbook, and only runs as Season 9: "
+              "DECKFIELD_SEASON=9 DECKFIELD_DB=s9_audit.db python3 deckfield_cli.py migrate "
+              "\"Baccer Game S9 Stats.xlsm\". The running season starts with `start-season`.",
+              file=sys.stderr)
+        sys.exit(1)
     migrate_s9.run_full_migration(args.workbook)
     print("\nComputing ratings for all rounds...")
     touched = db.recompute_from_round(args.season, 1)
@@ -205,7 +211,10 @@ def cmd_export_results(args):
 
 def main():
     parser = argparse.ArgumentParser(prog="deckfield", description="DECKFIELD database CLI")
-    parser.add_argument("--season", type=int, default=9, help="Season number (default: 9)")
+    parser.add_argument("--season", type=int, default=db.CURRENT_SEASON,
+                        help=f"Season number (default: the configured season, {db.CURRENT_SEASON}). "
+                             "The calendar, outline and data files follow the CONFIGURED season "
+                             "(season.json, or DECKFIELD_SEASON), so this must match it.")
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_migrate = sub.add_parser("migrate", help="Run the full initial migration from the Excel workbook")
@@ -244,16 +253,20 @@ def main():
                                "workbook migration, i.e. everything results/ is responsible for)")
     p_export.add_argument("--to", dest="to_round", type=int, default=None,
                           help="Last round to export (default: the latest with games)")
-    # S9's CSVs moved to results/s9/ when the season was frozen. Until the season
-    # becomes a real setting (SEASON10_PLAN C1), default to where they live so a
-    # bare export-results cannot scatter duplicates into results/.
-    p_export.add_argument("--outdir", "-o", default="results/s9",
-                          help="Directory to write the CSVs into (default: results/s9)")
+    # Each season's CSVs live in their own folder (results/s9/, results/s10/...).
+    p_export.add_argument("--outdir", "-o", default=f"results/s{db.CURRENT_SEASON}",
+                          help=f"Directory to write the CSVs into (default: results/s{db.CURRENT_SEASON})")
     p_export.add_argument("--force", action="store_true",
                           help="Overwrite an existing file whose contents differ from the database")
     p_export.set_defaults(func=cmd_export_results)
 
     args = parser.parse_args()
+    if args.season != db.CURRENT_SEASON:
+        print(f"--season {args.season} does not match the configured season "
+              f"({db.CURRENT_SEASON}). The calendar and data files follow the configured "
+              f"season, so set DECKFIELD_SEASON={args.season} (and DECKFIELD_DB to that "
+              f"season's database) instead.", file=sys.stderr)
+        sys.exit(1)
     args.func(args)
 
 

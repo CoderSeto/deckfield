@@ -46,14 +46,15 @@ from deckfield_ratings import (
     get_connection, taper_n, export_teams_for_deckfield,
     export_matchday_batches, rank_elo_history,
     pa_cup_real_results, pa_cup_round_preview, pa_cup_round1_seeding,
-    compute_strength_breakdown, generate_pod_schedule,
+    compute_strength_breakdown,
     rds_cup_real_results, rds_cup_round_pairings,
     regional_standings_seeds, regional_tournament_games, rt_game_result, REGION_COLORS,
     world_championship_field, rds_mutual_stage_data, pa_mutual_stage_data, home_away_records,
-    world_championship_overview,
+    world_championship_overview, pod_blocks, pod_round_games, CURRENT_SEASON,
 )
 
-SEASON = 9
+# The season is a setting (season.json / DECKFIELD_SEASON), read by the engine.
+SEASON = CURRENT_SEASON
 DASHBOARD_PATH = sys.argv[1] if len(sys.argv) > 1 else "deckfield_dashboard.html"
 
 
@@ -323,18 +324,18 @@ def build_schedule_data():
         ).fetchall()
         return {frozenset((r["team_a"], r["team_b"])): (r["team_a"], r["pf_a"], r["pa_a"]) for r in rows}
 
-    def build_mode(pods_path, game_type):
-        with open(pods_path) as f:
-            pod_blocks = json.load(f)
+    def build_mode(game_type):
         scores = pair_scores(game_type)
+        # Round n of each group is that group's own nth game (from Season 10
+        # every region and division plays the definitions in its own drawn
+        # order), so the rounds come from the engine, not the raw outline.
+        by_round = {rnd: pod_round_games(game_type, rnd, SEASON) for rnd in range(1, 16)}
         out = {}
-        for group_name, pod_block in pod_blocks.items():
-            pods = {label: info["teams"] for label, info in pod_block.items()}
-            sched = generate_pod_schedule(pods)
+        for group_name in pod_blocks(game_type, SEASON):
             out[group_name] = {}
             for rnd in range(1, 16):
                 games = []
-                for home, away in sched[rnd]:
+                for home, away in by_round[rnd][group_name]:
                     home_dex, away_dex = name_to_dex[home], name_to_dex[away]
                     game = {"home": home, "away": away, "home_dex": home_dex, "away_dex": away_dex}
                     entry = scores.get(frozenset((home_dex, away_dex)))
@@ -349,8 +350,8 @@ def build_schedule_data():
         return out
 
     data = {
-        "regional": build_mode("conf_pods.json", "R"),
-        "league": build_mode("league_pods.json", "L"),
+        "regional": build_mode("R"),
+        "league": build_mode("L"),
     }
     conn.close()
     return data
@@ -604,11 +605,18 @@ def _replace_subtitle(content):
         "SELECT MAX(round) m FROM games WHERE season=?", (SEASON,)
     ).fetchone()["m"]
     conn.close()
-    pattern = re.compile(r'(<div class="subtitle">Season )\d+( &mdash; through round )\d+(</div>)')
+    # Before a season's first matchday there is no round to be "through".
+    progress = f"through round {latest}" if latest else "preseason"
+    pattern = re.compile(r'(<div class="subtitle">Season )\d+( &mdash; )(?:through round \d+|preseason)(</div>)')
     new_content, n = pattern.subn(
-        lambda m: f"{m.group(1)}{SEASON}{m.group(2)}{latest}{m.group(3)}", content, count=1)
+        lambda m: f"{m.group(1)}{SEASON}{m.group(2)}{progress}{m.group(3)}", content, count=1)
     if n != 1:
         raise RuntimeError(f"expected exactly one header subtitle line, found {n}")
+    # The page title names the season too.
+    new_content, n = re.subn(r'<title>DECKFIELD — Season \d+</title>',
+                             f'<title>DECKFIELD — Season {SEASON}</title>', new_content, count=1)
+    if n != 1:
+        raise RuntimeError(f"expected exactly one <title>, found {n}")
     return new_content
 
 

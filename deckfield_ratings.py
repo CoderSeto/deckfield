@@ -18,6 +18,7 @@ import sqlite3
 import itertools
 import json
 import math
+import os
 import random
 import re
 import statistics
@@ -25,7 +26,74 @@ from pathlib import Path
 from math import sqrt
 from collections import defaultdict
 
-DB_PATH = Path(__file__).parent / "deckfield.db"
+ROOT = Path(__file__).resolve().parent
+
+
+# ------------------------------------------------------------- the season --
+# The season the engine is running is a SETTING, not a constant scattered
+# through the code: season.json in the repo root, overridable with the
+# DECKFIELD_SEASON environment variable (which is how the Season 9 audit
+# rebuild runs -- see CLAUDE.md). Everything season-shaped keys off it: the
+# calendar (weekly_schedule), the Regional/League outline (outline_defs),
+# the per-season data files (season_file) and the results file names.
+#
+# One database holds ONE season. The database is a build artifact, rebuilt
+# from the season's starting point plus its results/ CSVs, and several
+# queries (cup lookups especially) have never filtered on season -- they did
+# not need to while only one season existed, and with one season per
+# database they still do not.
+
+def _configured_season():
+    env = os.environ.get("DECKFIELD_SEASON")
+    if env:
+        return int(env)
+    with open(ROOT / "season.json") as f:
+        return int(json.load(f)["season"])
+
+
+CURRENT_SEASON = _configured_season()
+DB_PATH = Path(os.environ.get("DECKFIELD_DB") or ROOT / "deckfield.db")
+
+
+def season_file(name, season=None):
+    """Path of a per-season data file: seasons/s<N>/<name>. League pods, the
+    cup seedings and (from S10) the drawn schedule orders change every
+    season; conf_pods.json does not (SEASON10_PLAN B3) and stays at the root."""
+    return ROOT / "seasons" / f"s{season or CURRENT_SEASON}" / name
+
+
+def load_season_json(name, season=None):
+    with open(season_file(name, season)) as f:
+        return json.load(f)
+
+
+def load_conf_pods():
+    with open(ROOT / "conf_pods.json") as f:
+        return json.load(f)
+
+
+_FROZEN_CACHE = {}
+
+
+def frozen_season_data(season):
+    """The frozen record of a finished season (archive/s<N>_final.json's
+    `data`): every dashboard constant exactly as published. A later season
+    reads a finished one ONLY from here, never by recomputing it."""
+    if season not in _FROZEN_CACHE:
+        with open(ROOT / "archive" / f"s{season}_final.json") as f:
+            _FROZEN_CACHE[season] = json.load(f)["data"]
+    return _FROZEN_CACHE[season]
+
+
+def frozen_season_inputs(season):
+    """archive/s<N>_inputs.json: what the next season needs from a finished
+    one that its dashboard never showed (raw DSCR, base climate, standings
+    order, capped tiebreak DSCR...)."""
+    key = ("inputs", season)
+    if key not in _FROZEN_CACHE:
+        with open(ROOT / "archive" / f"s{season}_inputs.json") as f:
+            _FROZEN_CACHE[key] = json.load(f)
+    return _FROZEN_CACHE[key]
 BASELINE_OVR = 50.0  # stand-in for an un-rated opponent, pending S8 carryover
 STARTING_ELO = 1800.0  # confirmed; matters for a team's very first game ever, and if new teams are ever added
 STARTING_TOT = 20.0  # every team starts the season at TOT=20, as a floor against going negative
@@ -33,10 +101,34 @@ GAME_TYPE_POINT_MULTIPLIER = {"R": 1, "L": 1, "S": 2, "P": 8, "F": 12}
 
 # ---------------------------------------------------------------- schema --
 
+# Columns added after a database may already have been built. A missing one
+# is added in place (NULL), so an older database keeps working; every reader
+# treats NULL as "not set" (ovr_blend NULL = no blend, starting_elo NULL =
+# STARTING_ELO).
+_LATER_COLUMNS = (
+    ("team_round_ratings", "ovr_blend", "REAL"),   # SEASON10_PLAN B4: blended OVR, outputs only
+    ("team_seasons", "starting_elo", "REAL"),      # B4: Elo carried from the previous season
+)
+_SCHEMA_CHECKED = set()
+
+
+def _ensure_later_columns(conn):
+    if str(DB_PATH) in _SCHEMA_CHECKED:
+        return
+    tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    for table, col, typ in _LATER_COLUMNS:
+        if table in tables and col not in {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {typ}")
+            conn.commit()
+    if {t for t, _, _ in _LATER_COLUMNS} <= tables:
+        _SCHEMA_CHECKED.add(str(DB_PATH))
+
+
 def get_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA foreign_keys = ON")
     conn.row_factory = sqlite3.Row
+    _ensure_later_columns(conn)
     return conn
 
 
@@ -74,6 +166,7 @@ def init_db():
         ex REAL NOT NULL,                   -- EX seed, fixed/season
         rlstr REAL NOT NULL DEFAULT 1,      -- placeholder, see module docstring
         starting_fatigue REAL,              -- season-opening fatigue baseline (R1 value)
+        starting_elo REAL,                  -- Elo carried from the previous season (NULL = STARTING_ELO)
         PRIMARY KEY (team_id, season)
     );
 
@@ -118,6 +211,7 @@ def init_db():
         dscr_comp REAL, eye REAL, elo_comp REAL, cups REAL, ex_norm REAL,
         ovr REAL, grade TEXT, climate REAL, playoff_score REAL,
         pf_raw REAL, pa_raw REAL, d_sqrt_raw REAL, rlstr_own REAL, fatigue_after REAL,
+        ovr_blend REAL,                     -- blended OVR (outputs only; NULL when nothing to blend)
         PRIMARY KEY (team_id, season, round)
     );
 
@@ -237,10 +331,39 @@ def normalize(value, all_values):
 
 
 def week_for_round(round_num):
-    """Weeks 1-3 are a single matchday each; weeks 4-30 are 3 matchdays each."""
-    if round_num <= 3:
-        return round_num
-    return 4 + (round_num - 4) // 3
+    """The calendar week an absolute round falls in.
+
+    Season 9 keeps its original formula (weeks 1-3 a single matchday each,
+    3 matchdays a week after), which is S9-shaped and is what its frozen
+    ratings were computed with. From Season 10 it is read off the real
+    calendar (SEASON10_PLAN B10), so the EX taper follows the weeks the
+    rounds are actually played in."""
+    if CURRENT_SEASON == 9:
+        if round_num <= 3:
+            return round_num
+        return 4 + (round_num - 4) // 3
+    weeks = _round_weeks()
+    if round_num in weeks:
+        return weeks[round_num]
+    return max(weeks.values()) if round_num > max(weeks) else 1
+
+
+_ROUND_WEEKS = None
+
+
+def _round_weeks():
+    """{abs_round: week number} for the running season's calendar."""
+    global _ROUND_WEEKS
+    if _ROUND_WEEKS is None:
+        mapping = full_schedule_abs_round_mapping()
+        _ROUND_WEEKS = {}
+        for wk in WEEKLY_SCHEDULE:
+            for day in ("Tue", "Thu", "Weekend"):
+                slot = wk[day]
+                if slot is not None:
+                    _ROUND_WEEKS[mapping[_schedule_event_key(wk["week"], day, slot)]] = int(
+                        str(wk["week"]).split()[0])
+    return _ROUND_WEEKS
 
 
 def taper_n(round_num):
@@ -335,10 +458,16 @@ CSV_GAME_ALL_FIELDS = CSV_GAME_FIELDS + CSV_GAME_OPTIONAL_FIELDS + CSV_GAME_CUP_
 
 
 def _round_file_stems(year=2026):
-    """{abs_round: filename stem} for every event in WEEKLY_SCHEDULE,
-    matching the naming already used in results/ (e.g.
-    `2026-w6-tue-pa-draw-1`). Built once and shared, since resolving it
-    per round would rebuild the whole schedule mapping each time."""
+    """{abs_round: filename stem} for every event in WEEKLY_SCHEDULE.
+
+    Season 9's files are `2026-w6-tue-pa-draw-1` and `2026-w7-weekend-l4`
+    (results/s9/). From Season 10 (SEASON10_PLAN B12) the stem leads with the
+    season instead of the year and R/L carry a hyphen like every other event:
+    `s10-w1-weekend-r-1`, `s10-w3-tue-rds-draw-1` (results/s10/). Built once
+    and shared, since resolving it per round would rebuild the whole schedule
+    mapping each time."""
+    s9 = CURRENT_SEASON == 9
+    prefix = str(year) if s9 else f"s{CURRENT_SEASON}"
     mapping = full_schedule_abs_round_mapping()
     stems = {}
     for week in WEEKLY_SCHEDULE:
@@ -352,7 +481,7 @@ def _round_file_stems(year=2026):
             wk = str(week["week"]).split()[0]          # "6 (special)" -> "6"
             kind = slot[0]
             if kind in ("R", "L"):
-                event = f"{kind.lower()}{slot[1]}"
+                event = f"{kind.lower()}{slot[1]}" if s9 else f"{kind.lower()}-{slot[1]}"
             elif kind in ("RDS", "PA", "WC"):
                 # slot[2] (cup_round) is None for the two-legged mutual
                 # stages (RDS SF/Final, PA QF/SF/Final) -- those slots
@@ -369,7 +498,7 @@ def _round_file_stems(year=2026):
                 event = f"rt-{slot[1]}"
             else:
                 event = str(kind).lower()
-            stems[abs_round] = f"{year}-w{wk}-{day.lower()}-{event}"
+            stems[abs_round] = f"{prefix}-w{wk}-{day.lower()}-{event}"
     return stems
 
 
@@ -380,7 +509,7 @@ def historical_last_round():
     results/. Exporting a historical round into results/ would double-insert
     it on the next rebuild -- migrate puts it in, then the CSV adds it
     again."""
-    return max(_CONFIRMED_ABS_ROUND.values())
+    return max(_CONFIRMED_ABS_ROUND.values(), default=0)
 
 
 def export_results_csv(season, from_round=None, to_round=None):
@@ -475,7 +604,7 @@ def export_results_csv(season, from_round=None, to_round=None):
                 ("cup_name", r["cup_name"]), ("cup_bracket", r["cup_bracket"]),
                 ("cup_round", r["cup_round"]),
             ]))
-        stem = stems.get(rnd, f"2026-round-{rnd:02d}")
+        stem = stems.get(rnd, f"{'2026' if CURRENT_SEASON == 9 else f's{CURRENT_SEASON}'}-round-{rnd:02d}")
         # No trailing newline: matches what deckfield.html's "Download CSV"
         # writes (csvLines.join("\n")), so the two producers agree byte for
         # byte and re-exporting an already-committed round is a true no-op.
@@ -1347,6 +1476,40 @@ CROSS_ROUND_DEFS = {
 }
 
 
+# The two schedule OUTLINES (SEASON10_PLAN B10a). The tables above are
+# Outline A, which Season 9 played and which predicts the host of every real
+# S9 game. Outline B is the same fifteen definitions with every host reversed
+# -- L<->R, U<->D, and each pod game's away and home swapped -- so each
+# pairing is played at the other ground. They alternate by season: A in odd
+# seasons, B in even ones. B is DERIVED from A here, never a second
+# hand-copied table, so the two cannot drift apart.
+_HOST_FLIP = {"L": "R", "R": "L", "U": "D", "D": "U"}
+
+
+def outline_for_season(season=None):
+    return "A" if (season or CURRENT_SEASON) % 2 == 1 else "B"
+
+
+def outline_defs(season=None):
+    """(pod_round_defs, cross_round_defs) for the season's outline."""
+    if outline_for_season(season) == "A":
+        return POD_ROUND_DEFS, CROSS_ROUND_DEFS
+    pod = {r: [(home, away) for away, home in pairs] for r, pairs in POD_ROUND_DEFS.items()}
+    cross = {r: (rel, pat, _HOST_FLIP[d]) for r, (rel, pat, d) in CROSS_ROUND_DEFS.items()}
+    return pod, cross
+
+
+def round_def_label(r, season=None):
+    """Readable name of a round definition, e.g. `Diag 1v3/2v4 at R` or
+    `Pod 1 at 2, 3 at 4` -- the notation the Standings orders view uses."""
+    pod, cross = outline_defs(season)
+    if r in pod:
+        return "Pod " + ", ".join(f"{a} at {h}" for a, h in pod[r])
+    rel, pat, d = cross[r]
+    pats = "1v1" if pat == "same" else "/".join(f"{a}v{b}" for a, b in pat)
+    return f"{rel} {pats} at {d}"
+
+
 def _ref_other_pod(relation, pod_a, pod_b):
     """Which of the pair is the 'reference' pod whose position number is
     listed first in a pattern like '1v3' -- the L-column pod for Across/Diag,
@@ -1358,23 +1521,29 @@ def _ref_other_pod(relation, pod_a, pod_b):
     return pod_b, pod_a
 
 
-def generate_pod_schedule(pods):
+def generate_pod_schedule(pods, season=None):
     """
     pods: {'UL': [team1,team2,team3,team4], 'UR': [...], 'LL': [...], 'LR': [...]}
     each list already ordered by position 1-4 (as listed in the Conf/League tab).
-    Returns {round_num: [(home, away), ...]} for rounds 1-15. `home`/`away`
-    are whatever's in the pods lists (team_id, name -- caller's choice).
+    Returns {round_def: [(home, away), ...]} for the fifteen round definitions
+    of the season's outline (outline_defs). `home`/`away` are whatever's in
+    the pods lists (team_id, name -- caller's choice).
+
+    In Season 9 definition n was simply round n. From Season 10 each region
+    and division plays the definitions in its own drawn order
+    (pod_round_games), so a definition number is NOT a round number.
     """
+    pod_defs, cross_defs = outline_defs(season)
     schedule = {}
 
-    for rnd, pairs in POD_ROUND_DEFS.items():
+    for rnd, pairs in pod_defs.items():
         games = []
         for teams in pods.values():
             for away_pos, home_pos in pairs:
                 games.append((teams[home_pos - 1], teams[away_pos - 1]))
         schedule[rnd] = games
 
-    for rnd, (relation, pattern, host_dir) in CROSS_ROUND_DEFS.items():
+    for rnd, (relation, pattern, host_dir) in cross_defs.items():
         games = []
         for pod_a, pod_b in RELATION_PAIRS[relation]:
             ref, other = _ref_other_pod(relation, pod_a, pod_b)
@@ -1389,6 +1558,47 @@ def generate_pod_schedule(pods):
         schedule[rnd] = games
 
     return schedule
+
+
+def pod_blocks(kind, season=None):
+    """{group: {pod_label: {"pod_name", "teams"}}} -- regions (kind "R",
+    conf_pods.json, the same every season) or divisions (kind "L", the
+    season's own league_pods.json, reshuffled by promotion/relegation)."""
+    if kind == "R":
+        return load_conf_pods()
+    return load_season_json("league_pods.json", season)
+
+
+def schedule_orders(season=None):
+    """The season's drawn round orders (seasons/s<N>/schedule_orders.json,
+    written once by draw_schedule.py), or None for Season 9, which played
+    every group in the same order -- definition n in round n."""
+    path = season_file("schedule_orders.json", season)
+    if not path.exists():
+        if (season or CURRENT_SEASON) == 9:
+            return None
+        raise FileNotFoundError(
+            f"{path} is missing -- draw the season's schedule first (python3 draw_schedule.py)")
+    with open(path) as f:
+        return json.load(f)
+
+
+def pod_round_games(kind, n, season=None):
+    """{group: [(home, away), ...]} (team names) for local Regional (kind
+    "R") or League ("L") round n, in every region or division.
+
+    From Season 10 "R n" means "the nth definition in this group's own drawn
+    order" (SEASON10_PLAN B10b), so every lookup of a Regional/League round
+    goes through here: _games_for_event, the Schedule tab and the test run."""
+    orders = schedule_orders(season)
+    if orders is None:
+        out = {}
+        for group, block in pod_blocks(kind, season).items():
+            sched = generate_pod_schedule({k: v["teams"] for k, v in block.items()}, season)
+            out[group] = list(sched[n])
+        return out
+    groups = orders["regions"] if kind == "R" else orders["divisions"]
+    return {group: [tuple(g) for g in data["games"][str(n)]] for group, data in groups.items()}
 
 
 # ---------------------------------------------------------------- RDS Cup --
@@ -1578,8 +1788,7 @@ def _rds_bracket_survivors(conn, season, cup, bracket):
 def _rds_seed_lookup(cup):
     """{team_name: seed} for one cup -- the permanent seeding both brackets
     share, which is what decides hosting in the shared stage."""
-    with open("cup_seeds_full.json") as f:
-        return {v: int(k) for k, v in json.load(f)[cup].items()}
+    return {v: int(k) for k, v in load_season_json("rds_seeds.json")[cup].items()}
 
 
 def _mutual_seed_lookup(cup):
@@ -2584,7 +2793,7 @@ RT_MATCHDAY_LABEL = {
 }
 
 
-WEEKLY_SCHEDULE = [
+_S9_WEEKLY_SCHEDULE = [
     {"week": 1, "Tue": None, "Thu": None, "Weekend": ("R", 1)},
     {"week": 2, "Tue": None, "Thu": None, "Weekend": ("R", 2)},
     {"week": 3, "Tue": ("RDS", "Draw", 1), "Thu": ("RDS", "Process", 1), "Weekend": ("R", 3)},
@@ -2639,6 +2848,29 @@ WEEKLY_SCHEDULE = [
     {"week": 32, "Tue": ("WC", "SF", 1), "Thu": ("WC", "SF", 2), "Weekend": ("WC", "SF", 3)},
     {"week": 33, "Tue": ("WC", "Final", 1), "Thu": ("WC", "Final", 2), "Weekend": ("WC", "Final", 3)},
 ]
+
+
+def weekly_schedule(season=None):
+    """The season's calendar. Season 9 is the literal table above, with its
+    one-time week-6 reconciliation. From Season 10 on (SEASON10_PLAN B10) the
+    original weeks 5 and 6 are restored -- PA Draw/Process 1 + R4, then L2 /
+    L3 / R5 -- and weeks 7-33 are identical to S9's. The slot count is the
+    same either way (S9's special week only re-ordered slots already played),
+    so both seasons run 95 rounds and RT9 is round 74 in both."""
+    season = season or CURRENT_SEASON
+    if season == 9:
+        return [dict(w) for w in _S9_WEEKLY_SCHEDULE]
+    out = []
+    for w in _S9_WEEKLY_SCHEDULE:
+        if w["week"] == "6 (special)":
+            out.append({"week": 5, "Tue": ("PA", "Draw", 1), "Thu": ("PA", "Process", 1), "Weekend": ("R", 4)})
+            out.append({"week": 6, "Tue": ("L", 2), "Thu": ("L", 3), "Weekend": ("R", 5)})
+        else:
+            out.append(dict(w))
+    return out
+
+
+WEEKLY_SCHEDULE = weekly_schedule()
 
 # Confirmed Regional/League round -> absolute `games.round` mapping (from
 # cross-checking every Archive row-block against the migrated data). Only
@@ -2837,8 +3069,7 @@ def _rds_round_games(conn, cup, bracket, target_round):
     """[(home,away)] (team names) for a given RDS Cup round, resolved
     through real winners for every prior round. Returns None if a prior
     round isn't fully complete yet. target_round 1-5."""
-    with open("cup_seeds_full.json") as f:
-        seeds = json.load(f)
+    seeds = load_season_json("rds_seeds.json")
     seed_to_team = {int(k): v for k, v in seeds[cup].items()}
     team_to_seed = {v: k for k, v in seed_to_team.items() if v not in (None, "bye")}
     entries = generate_cup_bracket(seed_to_team, bracket.lower())[1]
@@ -2925,8 +3156,7 @@ def _rds_cup_round_pairings(conn, cup, bracket):
     semifinal/final stage) -- that's a different resolution mechanism
     entirely (resolve_mutual_stage), not naive further bracketing, and
     isn't wired into a playable event yet (see _games_for_event)."""
-    with open("cup_seeds_full.json") as f:
-        seeds = json.load(f)
+    seeds = load_season_json("rds_seeds.json")
     seed_to_team = {int(k): v for k, v in seeds[cup].items()}
     team_to_seed = {v: k for k, v in seed_to_team.items() if v not in (None, "bye")}
     name_to_dex = {r["name"]: r["team_id"] for r in conn.execute("SELECT team_id, name FROM teams").fetchall()}
@@ -3183,15 +3413,13 @@ def _pa_round1_games(conn):
     the JSON files -- a team's seed never changes; conflict resolution
     only ever changes who each row is paired against (see
     resolve_pa_cup_conflicts)."""
-    with open("pa_cup_seeds.json") as f:
-        draw_seed_to_team = {int(k): v for k, v in json.load(f).items()}
-    with open("pa_process_real_seeds_v2.json") as f:
-        process_seed_to_team = {int(k): v for k, v in json.load(f).items()}
+    draw_seed_to_team = {int(k): v for k, v in load_season_json("pa_draw_seeds.json").items()}
+    process_seed_to_team = {int(k): v for k, v in load_season_json("pa_process_seeds.json").items()}
     team_region = {r["name"]: r["region"] for r in conn.execute("SELECT name, region FROM teams").fetchall()}
     team_division = {r["name"]: r["league_division"] for r in conn.execute("""
         SELECT t.name, ts.league_division FROM teams t
-        JOIN team_seasons ts ON ts.team_id = t.team_id AND ts.season = 9
-    """).fetchall()}
+        JOIN team_seasons ts ON ts.team_id = t.team_id AND ts.season = ?
+    """, (CURRENT_SEASON,)).fetchall()}
 
     draw_opponent_of = _pa_default_opponents(0)
     process_opponent_of = _pa_default_opponents(0)
@@ -3465,8 +3693,8 @@ def _pa_round_games(conn, bracket, target_round):
     team_region = {r["name"]: r["region"] for r in conn.execute("SELECT name, region FROM teams").fetchall()}
     team_division = {r["name"]: r["league_division"] for r in conn.execute("""
         SELECT t.name, ts.league_division FROM teams t
-        JOIN team_seasons ts ON ts.team_id = t.team_id AND ts.season = 9
-    """).fetchall()}
+        JOIN team_seasons ts ON ts.team_id = t.team_id AND ts.season = ?
+    """, (CURRENT_SEASON,)).fetchall()}
 
     if target_round <= 4:
         draw_pairs, process_pairs, _, _, _ = _pa_ladder_walk(conn, target_round, team_region, team_division)
@@ -3503,21 +3731,15 @@ def _games_for_event(season, event, week=None, day=None):
     if kind in ("R", "L"):
         _, rnd = event
         conn.close()
-        with open("conf_pods.json" if kind == "R" else "league_pods.json") as f:
-            pod_blocks = json.load(f)
         games = []
-        for group_name, pod_block in pod_blocks.items():
-            pods = {label: info["teams"] for label, info in pod_block.items()}
-            sched = generate_pod_schedule(pods)
-            for home, away in sched[rnd]:
+        for group_games in pod_round_games(kind, rnd, season).values():
+            for home, away in group_games:
                 games.append((name_to_dex[home], name_to_dex[away]))
         return games
 
     if kind == "RT":
         _, matchday = event
-        with open("conf_pods.json") as f:
-            pod_blocks = json.load(f)
-        regions = list(pod_blocks.keys())
+        regions = list(load_conf_pods().keys())
         conn.close()
         games = []
         for region in regions:
@@ -4016,8 +4238,8 @@ def pa_cup_round_preview(season, target_round):
         team_region = {r["name"]: r["region"] for r in conn.execute("SELECT name, region FROM teams").fetchall()}
         team_division = {r["name"]: r["league_division"] for r in conn.execute("""
             SELECT t.name, ts.league_division FROM teams t
-            JOIN team_seasons ts ON ts.team_id = t.team_id AND ts.season = 9
-        """).fetchall()}
+            JOIN team_seasons ts ON ts.team_id = t.team_id AND ts.season = ?
+        """, (CURRENT_SEASON,)).fetchall()}
         if target_round <= 4:
             _, _, _, _, swap_log = _pa_ladder_walk(conn, target_round, team_region, team_division)
         else:
@@ -4120,7 +4342,7 @@ def rank_elo_history(season):
     # Draw/Process only merge into one rank checkpoint within the historical
     # portion (matching the S9 workbook's own SC1/SC2 columns) -- every cup
     # round from here on gets its own column, same granularity as Elo.
-    historical_cutoff = max(_CONFIRMED_ABS_ROUND.values())
+    historical_cutoff = max(_CONFIRMED_ABS_ROUND.values(), default=0)
     elo_label_by_round = {cp["abs_round"]: cp["label"] for cp in elo_checkpoints}
 
     # "S8 End" -- the season-opening snapshot from Rankings!CT, copied
@@ -4128,7 +4350,10 @@ def rank_elo_history(season):
     # of its own (it predates round 1), so abs_round 0 is used as a sentinel
     # -- safe since verbatim_ranks always has an entry for this label, and
     # the lookup below never falls through to a real-round query for it.
-    rank_checkpoints = [{"label": "S8 End", "abs_round": 0}]
+    # From Season 10 the opening column is the previous season's final rank,
+    # read from its frozen record (archive/s<N-1>_final.json), never rebuilt.
+    opening = f"S{season - 1} End"
+    rank_checkpoints = [{"label": opening, "abs_round": 0}]
     sc_seq = 0
     i = 0
     while i < len(rounds):
@@ -4167,7 +4392,7 @@ def rank_elo_history(season):
     def ranks_at(abs_round):
         rows = conn.execute("""
             SELECT team_id FROM team_round_ratings
-            WHERE season=? AND round=? ORDER BY ovr DESC
+            WHERE season=? AND round=? ORDER BY COALESCE(ovr_blend, ovr) DESC
         """, (season, abs_round)).fetchall()
         return {row["team_id"]: i + 1 for i, row in enumerate(rows)}
 
@@ -4177,8 +4402,12 @@ def rank_elo_history(season):
     # own rank column was frozen at an older formula version, see CLAUDE.md).
     # SC2 (the last historical-labeled checkpoint) and everything after use
     # this engine's live computed rank, per explicit instruction.
-    with open("rank_history_verbatim.json") as f:
-        verbatim_ranks = json.load(f)
+    # Season 9 only: the other seasons' rank history is all live.
+    verbatim_path = season_file("rank_history_verbatim.json", season)
+    verbatim_ranks = json.load(open(verbatim_path)) if verbatim_path.exists() else {}
+    if opening not in verbatim_ranks:
+        verbatim_ranks[opening] = {t["name"]: t["rank"] for t in
+                                   frozen_season_data(season - 1)["DATA"]["teams"]}
 
     rank_by_round = {}
     for cp in rank_checkpoints:
@@ -4345,12 +4574,15 @@ def export_teams_for_deckfield(season):
 # Everything not in this dict gets the next sequential integer by walking
 # WEEKLY_SCHEDULE in order -- the same order next_matchday() uses -- so
 # "what absolute round is event X" stays consistent with "what's next".
-_CONFIRMED_ABS_ROUND = {
+_S9_CONFIRMED_ABS_ROUND = {
     ("R", 1): 1, ("R", 2): 2, ("R", 3): 3, ("R", 4): 6, ("R", 5): 9,
     ("L", 1): 7, ("L", 2): 8,
     ("RDS", "Draw", 1): 4, ("RDS", "Process", 1): 5,
     ("RDS", "Draw", 2): 10, ("RDS", "Process", 2): 11,
 }
+# Season 9 only. From S10 every round is numbered 1-95 in calendar order, with
+# no exceptions (SEASON10_PLAN B10).
+_CONFIRMED_ABS_ROUND = _S9_CONFIRMED_ABS_ROUND if CURRENT_SEASON == 9 else {}
 
 
 def _schedule_event_key(week, day, slot):
@@ -4375,7 +4607,7 @@ def full_schedule_abs_round_mapping():
     everywhere else. This is what determines which absolute round number
     to use when logging a new game via the CSV format."""
     mapping = dict(_CONFIRMED_ABS_ROUND)
-    next_abs = max(_CONFIRMED_ABS_ROUND.values()) + 1
+    next_abs = max(_CONFIRMED_ABS_ROUND.values(), default=0) + 1
     for week in WEEKLY_SCHEDULE:
         for day in ("Tue", "Thu", "Weekend"):
             slot = week[day]
@@ -5039,8 +5271,7 @@ def _wc_cup_projection(conn, season, rank_of):
     pa_losing_qf = by_seed([n for n in pa_quarterfinalists if n not in pa_semifinalists],
                            pa_seed_of)
 
-    with open("cup_seeds_full.json") as f:
-        cup_seeds = {c: {int(k): v for k, v in m.items()} for c, m in json.load(f).items()}
+    cup_seeds = {c: {int(k): v for k, v in m.items()} for c, m in load_season_json("rds_seeds.json").items()}
 
     # RDS: 2 alive per bracket reach that cup's mutual semifinal, and that
     # stage always seats exactly 2 in the final -- so every cup provides 2
