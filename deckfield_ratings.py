@@ -6266,8 +6266,13 @@ def hall_of_fame(season):
     conn.close()
 
     # World Championship: champion, finalist, then No. 3-16 by the stage each
-    # team went out in -- semifinal, quarterfinal, round of 16 -- and by
-    # bracket seed within a stage (the one reading chosen rather than given).
+    # team went out in -- semifinal, quarterfinal, round of 16 -- then by
+    # games won in that losing tie (a 1-2 series outranks a 0-2 sweep), then
+    # by seed (both tiebreaks chosen rather than given, per explicit
+    # instruction for the games-won one). `swept` is exactly "same team won
+    # both of legs 1-2", so a loser's own games won is 0 when swept and 1
+    # otherwise (every tie here is decided, so a split always means a leg 3
+    # was played and lost).
     wc = world_championship_overview(season)
     placings = None
     if wc.get("champion"):
@@ -6278,11 +6283,12 @@ def hall_of_fame(season):
         for stage in ("SF", "QF", "R16"):
             losers = []
             for tie in wc["bracket"].get(stage, []):
+                games_won = 0 if tie["swept"] else 1
                 if tie["winner"] == tie["better"]:
-                    losers.append((tie["worse_seed"], tie["worse"]))
+                    losers.append((-games_won, tie["worse_seed"], tie["worse"]))
                 else:
-                    losers.append((tie["better_seed"], tie["better"]))
-            placings += [t(n) for _sd, n in sorted(losers)]
+                    losers.append((-games_won, tie["better_seed"], tie["better"]))
+            placings += [t(n) for _gw, _sd, n in sorted(losers)]
 
     for key, teams in cur.items():
         hof["plaques"][key]["seasons"][s] = {"labels": HOF_CURRENT_LABELS[key], "teams": teams}
