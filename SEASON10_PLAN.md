@@ -371,6 +371,18 @@ Build notes:
 - Re-check every rule on the written file in the test run, rather than
   trusting the generator.
 
+### B10c. Dashboard changes for the per-group orders (per explicit request)
+- **Standings gets a third sub-tab** showing each group's round order for the
+  season, for the user's own reference: game 1-15 -> the round definition
+  (e.g. `Diag 1v3/2v4 at R`), per region and per division, marking the
+  pinned rounds (Rivalry Week; the L1 pod round, or which exception unpinned
+  it).
+- **The Schedule tab's round picker becomes 30 buttons**: `League 1 ... 15`
+  and `Regional 1 ... 15`, replacing the dropdown with its Pod / Across /
+  Diag labels (those labels no longer mean anything once every group has its
+  own order). It still opens on the most recently completed round
+  (`latestCompletedRound`).
+
 ### B11. Rules carried over unchanged
 - Tournament bonuses:
   - RDS 15 / 30
