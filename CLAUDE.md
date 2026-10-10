@@ -2505,6 +2505,22 @@ element. Measured: 0 names cut at 1920/1600/1400, 1 at 1240px with every slot
 filled, 13px between the FINAL label and its card and 20px from the card to
 the SEMIFINALS label.
 
+**The Final as the centrepiece, "Semifinals" under its column** (per explicit
+request, same day: "really set the final up more"). The FINAL / SEMIFINALS
+labels inside the column are gone: "Semifinals" is the middle column's name
+underneath, like every other round, and the Final names itself in its own
+card header ("World Championship Final"; just "Final" under 1400px). The card
+is 16px type with 38px score columns, a 2px gold frame, a gold-tinted gradient
+and a soft glow, sitting in a 1.6fr first row of a wider middle column
+(`flex-grow: 1.45`). Once decided the winner carries a **CHAMPION** mark;
+before its semifinals finish it shows two "Semifinal winner" rows rather than
+a bare TBD. The semifinal rows shrank to `.85fr` so they still centre inside
+the QF gutter verticals' span (measured 473px and 562px against 365-575px).
+Under 1400px the Final steps down (14.5px, 32px columns) and drops the
+CHAMPION mark, which was the one thing that overflowed there. Measured: 0
+names cut from 1400px up, 1 at 1240px (3px short, where the page already
+scrolls sideways).
+
 **Five columns is what makes it fit.** Seven needed the bracket to break out
 of main's 1600px cap and still cut names at 1600px; five fit the panel with
 room to spare -- **0 names ellipsised at 1920/1600/1400/1240px**, the bracket
