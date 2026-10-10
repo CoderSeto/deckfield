@@ -421,6 +421,19 @@ Build notes:
   own order). It still opens on the most recently completed round
   (`latestCompletedRound`).
 
+### B4a. Raw vs Blended view (per explicit request)
+A **fourth Rankings sub-tab** (beside Rankings / Rank History / Elo History),
+e.g. **"Raw vs Blended"**: one sortable row per team showing, for OVR, PF, PA,
+DSCR (raw 0-10) and Fatigue, the **raw S10 value, the S9 seed, and the blended
+value** that the game and the rankings use (B4). Rank follows blended OVR,
+matching B4. The header states the current weight, e.g. "Matchday 3: 2/8 S10,
+6/8 seed".
+
+**Shown during the blend window only (matchdays 1-8); the sub-tab is hidden
+from matchday 9 on**, when raw and blended are identical. Its data is
+derived (in the const manifest), and the button hides from the data rather
+than from a hardcoded round number.
+
 ### B11. Rules carried over unchanged
 - Tournament bonuses:
   - RDS 15 / 30
