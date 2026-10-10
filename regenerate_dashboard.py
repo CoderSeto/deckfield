@@ -567,8 +567,13 @@ def _js_string_literal(s):
 
 
 def _replace_const(content, var_name, value, is_array=False):
+    # The stored block can also be `null` -- NEXT_MATCHDAY_DATA goes there
+    # once the season's own schedule has nothing left to play, and a value
+    # that's an object today has to be replaceable once it reads null on a
+    # later run too (or every regenerate after a season ends would crash
+    # here instead of writing the thing it's trying to write).
     open_char, close_char = (r'\[', r'\]') if is_array else (r'\{', r'\}')
-    pattern = re.compile(rf'const {var_name} = {open_char}.*?{close_char};\n')
+    pattern = re.compile(rf'const {var_name} = (?:{open_char}.*?{close_char}|null);\n')
     new_content, n = pattern.subn(lambda m: f'const {var_name} = {json.dumps(value)};\n', content, count=1)
     if n != 1:
         raise RuntimeError(f"expected exactly one `const {var_name} = ...;` block, found {n}")
@@ -585,9 +590,11 @@ def main():
 
     content = _replace_const(content, "DATA", build_data())
 
-    next_md = build_next_matchday()
-    if next_md is not None:
-        content = _replace_const(content, "NEXT_MATCHDAY_DATA", next_md)
+    # Always rewritten, including to null once the season's own schedule has
+    # nothing left to play -- the old `if next_md is not None` guard left a
+    # played matchday showing as "next" forever once the last one was in,
+    # exactly the silent-staleness bug class this file keeps recording.
+    content = _replace_const(content, "NEXT_MATCHDAY_DATA", build_next_matchday())
 
     content = _replace_const(content, "CALENDAR_DATA", build_calendar(), is_array=True)
     content = _replace_const(content, "SCHEDULE_DATA", build_schedule_data())
