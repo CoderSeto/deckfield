@@ -278,6 +278,19 @@ Rules (per explicit instruction):
 4. **League:** the previous season's **Division 1 top three** may not meet
    each other in the first **8** games (game 9 or later).
 
+5. **League, same-region pairs:** two teams from the same region who also meet
+   in League play may not have that League game **within one week (7 days,
+   inclusive) before or after their Regional game**, on the season's real
+   calendar. Example: a Regional game in R11 (week 16 Weekend) rules out L11
+   (week 15 Weekend), L12 and L13 (week 17 Tue/Thu). R1 (week 1) and R15
+   (week 22) block nothing, because no League round falls within 7 days of
+   them.
+
+**Draw order: Regional first, then League** (per explicit instruction). The
+Regional draw has the tighter rules, and rule 5 depends on when each Regional
+game falls. 110 of S10's 1,200 League games are same-region pairs (8-16 per
+division; Division 8 has the most).
+
 The previous season's RT pairs come from the frozen archive (`RT_DATA`: MD6
 pairs = semifinals, MD8 = final). The Division 1 top three come from the
 archived final standings. For S9 that is Canalave City, Pueltown and National
@@ -308,6 +321,19 @@ it is identical for every region and for every division. **Draw uniformly
 from the valid set** using the counting walk (it tracks the last two rounds
 placed and each round's earliest allowed game number), not by trial and
 error, so every valid order is equally likely.
+
+**Trial draw with all five rules** (seed 10, a throwaway script; NOT the
+official draw): all 10 regions drew valid orders, and then every division
+still had millions of valid League orders: Division 1 7.2M (tightest, with
+rule 4 and 12 same-region pairs), the others 57M-304M. The uniform sampler was
+checked against the exact counts (opening-round frequency 24.9% drawn vs
+25.4% exact).
+
+One property of the cap of 2: the 1v2/3v4 pod round is hard to place
+mid-season without creating a third home or away game in a row. So about half
+of all valid League orders put it first or last, and 25-43% of each
+division's orders OPEN with it (7 of 10 divisions did in the trial). That is
+the rules, not a bug. Add a rule if it is unwanted.
 
 Build notes:
 - The draw is **seeded** (e.g. by season number) so it is reproducible. It is
@@ -380,7 +406,7 @@ Build notes:
    - R15 (Rivalry Week) is the pod round 1v2 / 3v4 (`1 at 2, 3 at 4`) in
      every region
    - every group's order passes all B10b rules (cap of 2, RT and Division 1
-     protections), and all orders are distinct
+     protections, the same-region one-week rule), and all orders are distinct
    - the roster at MD1 = 100% seed
    - Elo carried, pods generate
    - RDS and PA brackets generate from the new seeds with clean conflict
