@@ -222,7 +222,6 @@
      feed it. --wcb-gap is read by the connectors and must equal the gap. */
   .wcb { display: flex; gap: var(--wcb-gap); --wcb-gap: 18px; overflow-x: auto; padding-bottom: 4px; }
   .wcb-col { flex: 1 1 0; min-width: 200px; }
-  .wcb-col-title { text-align: center; margin: 10px 0 0; white-space: nowrap; }
   /* The middle column: the Final set up as the centrepiece (per explicit
      request, 2026-10-10) in a tall first row, the two semifinals stacked
      beneath it in shorter rows. Those rows centre at ~51% and ~72% of the
@@ -257,15 +256,16 @@
   .wcb-row > .wcb-team { padding: 5px 6px 5px 8px; text-align: left; white-space: nowrap;
     overflow: hidden; text-overflow: ellipsis; }
   .wcb-head > span { padding: 3px 0; font-size: 10px; letter-spacing: .06em; color: var(--text-dim); }
-  .wcb-head > .wcb-team { padding: 3px 8px; }
+  .wcb-head > .wcb-team { padding: 3px 8px; text-transform: uppercase; color: var(--accent-dim);
+    font-weight: 700; }
   .wcb-seed { display: inline-block; min-width: 2.3em; color: var(--text-dim); font-size: 11px; }
   .wcb-g { color: var(--text-dim); }
   .wcb-g.hi { color: var(--text); font-weight: 700; background: rgba(232, 163, 61, .18);
     box-shadow: inset 0 -2px 0 var(--accent); }
   .wcb-row.lost .wcb-team { opacity: .5; }
   .wcb-row.won .wcb-team { font-weight: 700; }
-  .wcb-card.tbd { padding: 22px 10px; text-align: center; border-style: dashed;
-    color: var(--text-dim); opacity: .7; }
+  .wcb-card.tbd { border-style: dashed; color: var(--text-dim); opacity: .75; }
+  .wcb-tbd-body { padding: 16px 10px 17px; text-align: center; }
   /* Connectors. On the left half they run out to the right; on the right
      half (.mirror) to the left. A QF-or-earlier card's own segment reaches
      the gutter midpoint, a vertical joins it to its partner, and the next
@@ -2021,17 +2021,20 @@ function wcPlayinHtml(d) {
 // score lit. Names are always region-coloured; once the tie is decided the
 // loser dims. Hover a score for who hosted it. `null` is a slot whose feeder
 // round is still being played -- a dashed TBD card, never a guess.
-function wcSeriesCardHtml(t, isFinal = false) {
-  // The Final is set up as the centrepiece (per explicit request,
-  // 2026-10-10): its own title in the header, the winner marked Champion,
+function wcSeriesCardHtml(t, label, isFinal = false) {
+  // Every box names its own round in the header's free corner, beside
+  // G1/G2/G3 (per explicit request, 2026-10-10) -- which is what let the
+  // round names under the columns go. The Final is set up as the
+  // centrepiece: "World Championship Final", the winner marked Champion,
   // and -- before the semifinals are done -- a proper empty card naming
   // where its two teams will come from rather than a bare TBD.
   const head = isFinal
     ? '<span class="wcb-team"><span class="wcb-final-long">World Championship </span>Final</span>'
-    : '<span class="wcb-team"></span>';
+    : `<span class="wcb-team">${label}</span>`;
   const headRow = `<div class="wcb-row wcb-head">${head}<span>G1</span><span>G2</span><span>G3</span></div>`;
   if (!t) {
-    if (!isFinal) return '<div class="wcb-card tbd">TBD</div>';
+    if (!isFinal) return `<div class="wcb-card tbd"><div class="wcb-row wcb-head">`
+      + `<span class="wcb-team">${label}</span></div><div class="wcb-tbd-body">TBD</div></div>`;
     const blank = label => `<div class="wcb-row"><span class="wcb-team"><span class="wcb-tbd-name">${label}</span></span>`
       + '<span class="wcb-g">&ndash;</span>'.repeat(3) + '</div>';
     return `<div class="wcb-card">${headRow}${blank('Semifinal winner')}${blank('Semifinal winner')}</div>`;
@@ -2082,7 +2085,7 @@ function wcBracketHtml(d) {
     return '<div class="qual-sub">The bracket is seeded by the Play-in, so it appears '
          + 'once seeds 1&ndash;16 are settled.</div>';
   }
-  const NAMES = {R16: 'Round of 16', QF: 'Quarterfinals'};
+  const NAMES = {R16: 'Round of 16', QF: 'Quarterfinal'};
   const tie = (stage, idx) => (d.bracket[stage] || [])[idx] || null;
   const slot = (row, span, card, lines, cls = '') =>
     `<div class="wcb-slot${cls}" style="grid-row:${row} / span ${span}">${card}${lines}</div>`;
@@ -2095,27 +2098,22 @@ function wcBracketHtml(d) {
       let lines = '<span class="wcb-line wcb-out"></span>'
         + `<span class="wcb-line wcb-v ${i % 2 === 0 ? 'down' : 'up'}"></span>`;
       if (stage === 'QF') lines += '<span class="wcb-line wcb-in"></span>';
-      return slot(i * span + 1, span, wcSeriesCardHtml(tie(stage, idx)), lines);
+      return slot(i * span + 1, span, wcSeriesCardHtml(tie(stage, idx), NAMES[stage]), lines);
     }).join('');
-    // Round names sit UNDER the columns (per explicit request, 2026-10-10),
-    // which leaves the top of the bracket clear for the Final.
     return `<div class="wcb-col${side === 'right' ? ' mirror' : ''}">
       <div class="wcb-col-grid">${slots}</div>
-      <h3 class="rds-bracket-title wcb-col-title">${NAMES[stage]}</h3>
     </div>`;
   };
 
   // Final in row 1, the tall one, as the centrepiece; the semifinal from the
   // left half in row 2 (its feed coming in from the left) and the one from
-  // the right half in row 3. Like the other rounds, "Semifinals" is named
-  // under the column; the Final names itself in its own header.
+  // the right half in row 3.
   const middle = `<div class="wcb-col middle">
     <div class="wcb-col-grid">
-      ${slot(1, 1, wcSeriesCardHtml(tie('Final', 0), true), '', ' final')}
-      ${slot(2, 1, wcSeriesCardHtml(tie('SF', 0)), '<span class="wcb-line wcb-in"></span>')}
-      ${slot(3, 1, wcSeriesCardHtml(tie('SF', 1)), '<span class="wcb-line wcb-in from-right"></span>')}
+      ${slot(1, 1, wcSeriesCardHtml(tie('Final', 0), 'Final', true), '', ' final')}
+      ${slot(2, 1, wcSeriesCardHtml(tie('SF', 0), 'Semifinal'), '<span class="wcb-line wcb-in"></span>')}
+      ${slot(3, 1, wcSeriesCardHtml(tie('SF', 1), 'Semifinal'), '<span class="wcb-line wcb-in from-right"></span>')}
     </div>
-    <h3 class="rds-bracket-title wcb-col-title">Semifinals</h3>
   </div>`;
 
   return `<div class="wcb">${outer('R16', 'left')}${outer('QF', 'left')}${middle}`

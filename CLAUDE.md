@@ -2521,6 +2521,14 @@ CHAMPION mark, which was the one thing that overflowed there. Measured: 0
 names cut from 1400px up, 1 at 1240px (3px short, where the page already
 scrolls sideways).
 
+**Each box names its own round** (per explicit request, same day). The
+header row's free corner beside G1/G2/G3 now reads **ROUND OF 16**,
+**QUARTERFINAL** or **SEMIFINAL** (the Final keeps "World Championship
+Final"), so the round names under the columns were removed outright --
+`.wcb-col-title` is gone. TBD boxes carry the label too, over a "TBD" body.
+Measured: every one of the 15 labels fits, no team name is cut from 1400px up
+(1 at 1240px), and the semifinal connectors still meet.
+
 **Five columns is what makes it fit.** Seven needed the bracket to break out
 of main's 1600px cap and still cut names at 1600px; five fit the panel with
 room to spare -- **0 names ellipsised at 1920/1600/1400/1240px**, the bracket
