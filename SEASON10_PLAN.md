@@ -257,6 +257,51 @@ side (L/R for Across and Diag, U/D for Same).
 - Fatigue follows automatically (hosting sets `host_region`).
 - S9's frozen record keeps Outline A; nothing about S9 is recomputed.
 
+### B10b. Each region and division gets its own round order, redrawn every season
+The 15 round definitions of the season's outline (B10a) are put in a
+**different order for every region and every division**, drawn fresh each
+season. Every round is self-contained and groups never play each other, so
+any order is a valid round robin; only WHEN each pairing happens changes. Who
+hosts each pairing is unchanged.
+
+Rules (per explicit instruction):
+1. **Regional R15 stays Rivalry Week** (the pod 1v2 / 3v4 round, B10a).
+   League L15 is not pinned.
+2. **No more than 3 home or 3 away games in a row**, counted separately for
+   Regional games and for League games (each sequence on its own, never
+   interleaved). S9's fixed order never exceeded 2; the cap is now 3.
+3. **Regional:** the previous season's Regional Tournament **finalists** may
+   not meet in the first **7** games (their game is game 8 or later), and each
+   previous **semifinal** pairing may not meet in the first **3** games.
+4. **League:** the previous season's **Division 1 top three** may not meet
+   each other in the first **8** games (game 9 or later).
+
+The previous season's RT pairs come from the frozen archive (`RT_DATA`: MD6
+pairs = semifinals, MD8 = final). The Division 1 top three come from the
+archived final standings. For S9 that is Canalave City, Pueltown and National
+Park, and all three stay in S10's Division 1.
+
+**Prototype run on S10's real inputs** (Outline B hosts, S9 RT results, the new
+Division 1 pods; a throwaway script, not committed), sampling random orders and
+keeping those that pass every rule:
+- Every region passes at **3.6%-7.9%** of random orders, so there are millions
+  of valid orders per region. Several protected pairs already meet in Rivalry
+  Week (e.g. Terastal's final Blueberry Terarium v Casseroya Lake), which
+  satisfies the rule automatically.
+- Division 1 passes at **0.41%**, the tightest group but still billions of
+  valid orders.
+- All 10 drawn regional orders came out distinct.
+
+Build notes:
+- The draw is **seeded** (e.g. by season number) so it is reproducible. It is
+  written to a committed per-season file (e.g. `schedule_orders_s10.json`:
+  group -> list of 15 round definitions) and never changes mid-season.
+- `R n` / `L n` then means "the nth round in this group's order". Every
+  lookup that uses pod rounds must go through the group's order:
+  `_games_for_event`, `SCHEDULE_DATA`, the Schedule tab and the test run.
+- Re-check every rule on the written file in the test run, rather than
+  trusting the generator.
+
 ### B11. Rules carried over unchanged
 - Tournament bonuses:
   - RDS 15 / 30
@@ -300,7 +345,8 @@ side (L/R for Across and Diag, U/D for Same).
 1. Make the season number a setting everywhere: `SEASON = 9` in
    `regenerate_dashboard.py` and `migrate_s9.py`, the CLI `--season` default,
    and the dashboard title/subtitle. Add a per-season `WEEKLY_SCHEDULE` (B10),
-   the season-parity schedule outline (B10a) and `results/s10/` naming (B12).
+   the season-parity schedule outline (B10a), the seeded per-group round
+   orders (B10b) and `results/s10/` naming (B12).
 2. Build S10's starting point from the archive: `team_seasons` rows (division
    B2, basclm B5, EX seed B6, starting fatigue B4), carryover seeds, Elo carry,
    S10 `league_pods.json`, and the cup seed files (B9).
@@ -316,6 +362,8 @@ side (L/R for Across and Diag, U/D for Same).
      reversed)
    - R15 (Rivalry Week) is the pod round 1v2 / 3v4 (`1 at 2, 3 at 4`) in
      every region
+   - every group's order passes all B10b rules (run cap, RT and Division 1
+     protections), and all orders are distinct
    - the roster at MD1 = 100% seed
    - Elo carried, pods generate
    - RDS and PA brackets generate from the new seeds with clean conflict
