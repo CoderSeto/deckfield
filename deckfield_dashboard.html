@@ -213,20 +213,17 @@
   .wc-grid table.scoreboard { width: 100%; margin: 0; }
   /* The Bracket sub-view: a two-sided tree (per explicit request, 2026-10-10)
      -- the top half of the draw (1/16, 8/9, 5/12, 4/13) runs left to right,
-     the bottom half right to left, and they meet at the Final in the middle.
-     Every column's grid spans the same 4 row-units (R16 4 x 1, QF 2 x 2,
-     SF 1 x 4, Final 1 x 4), which is what puts each card's centre exactly
-     between the two cards that feed it, so the connectors need no per-round
-     maths. --wcb-gap is read by the connectors and must equal the gap. */
-  .wcb { display: flex; gap: var(--wcb-gap); --wcb-gap: 14px; overflow-x: auto; padding-bottom: 4px;
-    /* Seven columns of names want more than main's 1600px cap, so on a wider
-       screen the bracket breaks out of the panel and uses the window (less a
-       scrollbar's worth); at 1600px and under this is just the panel. */
-    --wcb-w: min(calc(100vw - 80px), 1860px);
-    width: var(--wcb-w); margin-left: calc(50% - var(--wcb-w) / 2); }
-  .wcb-col { flex: 1 1 0; min-width: 170px; }
+     the bottom half right to left. The middle column holds the Final, up in
+     the empty space level with the top R16 matches, and the two Semifinals
+     stacked one above the other beneath it (per explicit request, same day)
+     -- five columns instead of seven, so the whole bracket fits the panel.
+     Every column's grid spans the same 4 row-units (R16 4 x 1, QF 2 x 2),
+     which puts each QF card's centre exactly between the two R16 cards that
+     feed it. --wcb-gap is read by the connectors and must equal the gap. */
+  .wcb { display: flex; gap: var(--wcb-gap); --wcb-gap: 18px; overflow-x: auto; padding-bottom: 4px; }
+  .wcb-col { flex: 1 1 0; min-width: 200px; }
   .wcb-col-title { text-align: center; margin: 0 0 8px; white-space: nowrap; }
-  .wcb-col-grid { display: grid; grid-template-rows: repeat(4, 1fr); height: 380px; }
+  .wcb-col-grid { display: grid; grid-template-rows: repeat(4, 1fr); height: 420px; }
   .wcb-slot { position: relative; display: flex; align-items: center; }
   /* The series card: one row per team, one column per game, the winning
      score of each game lit. */
@@ -248,25 +245,29 @@
   .wcb-row.won .wcb-team { font-weight: 700; }
   .wcb-card.tbd { padding: 22px 10px; text-align: center; border-style: dashed;
     color: var(--text-dim); opacity: .7; }
-  .wcb-final .wcb-card { border-color: var(--accent); }
+  .wcb-slot.final .wcb-card { border-color: var(--accent); }
+  /* "Semifinals" sits in the gap above the stacked pair. */
+  .wcb-tag { position: absolute; top: 0; left: 0; right: 0; text-align: center; font-size: 10px;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
   /* Connectors. On the left half they run out to the right; on the right
-     half (.mirror) to the left. A card's own segment reaches the gutter
-     midpoint, a vertical joins it to its partner, and the next round's card
-     carries the matching segment in. */
+     half (.mirror) to the left. A QF-or-earlier card's own segment reaches
+     the gutter midpoint, a vertical joins it to its partner, and the next
+     round's card carries the matching segment in. Each stacked semifinal
+     takes its segment in from its own half's side; the gutter vertical
+     between the two QFs spans 25%-75% of the column, so it meets both. */
   .wcb-line { position: absolute; background: var(--border); pointer-events: none; }
   .wcb-out { top: 50%; left: 100%; width: calc(var(--wcb-gap) / 2); height: 2px; margin-top: -1px; }
   .wcb-in { top: 50%; right: 100%; width: calc(var(--wcb-gap) / 2); height: 2px; margin-top: -1px; }
+  .wcb-in.from-right { right: auto; left: 100%; }
   .wcb-v { left: calc(100% + var(--wcb-gap) / 2 - 1px); width: 2px; height: 50%; }
   .wcb-v.down { top: 50%; } .wcb-v.up { top: 0; }
   .mirror .wcb-out { left: auto; right: 100%; }
   .mirror .wcb-in { right: auto; left: 100%; }
   .mirror .wcb-v { left: auto; right: calc(100% + var(--wcb-gap) / 2 - 1px); }
-  .wcb-final .wcb-in.from-right { right: auto; left: 100%; }
-  /* Under ~1800px the window can't give seven columns of 12.5px names their
-     room, so the cards tighten rather than ellipsise: measured clean down to
-     1700px, one name short at 1600px in the sandbox's (wider) fallback font. */
-  @media (max-width: 1800px) {
-    .wcb { --wcb-gap: 10px; }
+  /* Narrow windows: tighten the cards rather than ellipsise names. */
+  @media (max-width: 1400px) {
+    .wcb { --wcb-gap: 12px; }
+    .wcb-col { min-width: 180px; }
     .wcb-card { font-size: 11.5px; }
     .wcb-row { grid-template-columns: minmax(0, 1fr) repeat(3, 21px); }
     .wcb-row > .wcb-team { padding: 5px 4px 5px 6px; }
@@ -2034,12 +2035,14 @@ function wcSeriesCardHtml(t) {
 // the second right to left. Within a half the rows follow the classic
 // regional order the request named -- 1/16, 8/9, 5/12, 4/13 -- which only
 // swaps ties that feed the SAME next game, so every connector still joins
-// the right pair. Every column renders at full size from the moment seeds
-// 1-16 are set, TBD cards standing in for what is not yet decided.
+// the right pair. The middle column carries the Final level with the top
+// R16 matches and the two Semifinals stacked beneath it. Every slot renders
+// from the moment seeds 1-16 are set, TBD cards standing in for what is
+// not yet decided.
 let wcBracketView = {
   // Display order, as indexes into the engine's list for that stage.
-  left:  {R16: [0, 1, 3, 2], QF: [0, 1], SF: [0]},
-  right: {R16: [7, 6, 5, 4], QF: [3, 2], SF: [1]},
+  left:  {R16: [0, 1, 3, 2], QF: [0, 1]},
+  right: {R16: [7, 6, 5, 4], QF: [3, 2]},
 };
 
 function wcBracketHtml(d) {
@@ -2047,34 +2050,41 @@ function wcBracketHtml(d) {
     return '<div class="qual-sub">The bracket is seeded by the Play-in, so it appears '
          + 'once seeds 1&ndash;16 are settled.</div>';
   }
-  const NAMES = {R16: 'Round of 16', QF: 'Quarterfinals', SF: 'Semifinals', Final: 'Final'};
-  const column = (stage, side) => {
-    const ties = d.bracket[stage] || [];
-    const order = side === 'final' ? [0] : wcBracketView[side][stage];
+  const NAMES = {R16: 'Round of 16', QF: 'Quarterfinals'};
+  const tie = (stage, idx) => (d.bracket[stage] || [])[idx] || null;
+  const slot = (row, span, card, lines, cls = '') =>
+    `<div class="wcb-slot${cls}" style="grid-row:${row} / span ${span}">${card}${lines}</div>`;
+
+  const outer = (stage, side) => {
+    const order = wcBracketView[side][stage];
     const span = 4 / order.length;
     const slots = order.map((idx, i) => {
-      let lines = '';
-      if (side === 'final') {
-        lines = '<span class="wcb-line wcb-in"></span><span class="wcb-line wcb-in from-right"></span>';
-      } else {
-        if (stage !== 'R16') lines += '<span class="wcb-line wcb-in"></span>';
-        lines += '<span class="wcb-line wcb-out"></span>';
-        // SF feeds the Final straight across; earlier rounds join in pairs.
-        if (stage !== 'SF') lines += `<span class="wcb-line wcb-v ${i % 2 === 0 ? 'down' : 'up'}"></span>`;
-      }
-      return `<div class="wcb-slot" style="grid-row:${i * span + 1} / span ${span}">`
-        + `${wcSeriesCardHtml(ties[idx] || null)}${lines}</div>`;
+      // R16 and QF both feed the next round in pairs.
+      let lines = '<span class="wcb-line wcb-out"></span>'
+        + `<span class="wcb-line wcb-v ${i % 2 === 0 ? 'down' : 'up'}"></span>`;
+      if (stage === 'QF') lines += '<span class="wcb-line wcb-in"></span>';
+      return slot(i * span + 1, span, wcSeriesCardHtml(tie(stage, idx)), lines);
     }).join('');
-    const cls = side === 'right' ? ' mirror' : side === 'final' ? ' wcb-final' : '';
-    return `<div class="wcb-col${cls}">
+    return `<div class="wcb-col${side === 'right' ? ' mirror' : ''}">
       <h3 class="rds-bracket-title wcb-col-title">${NAMES[stage]}</h3>
       <div class="wcb-col-grid">${slots}</div>
     </div>`;
   };
-  const cols = [column('R16', 'left'), column('QF', 'left'), column('SF', 'left'),
-                column('Final', 'final'),
-                column('SF', 'right'), column('QF', 'right'), column('R16', 'right')];
-  return `<div class="wcb">${cols.join('')}</div>`;
+
+  // Final in row 1, the semifinal from the left half in row 2 (its feed
+  // coming in from the left) and the one from the right half in row 3.
+  const middle = `<div class="wcb-col">
+    <h3 class="rds-bracket-title wcb-col-title">Final</h3>
+    <div class="wcb-col-grid">
+      ${slot(1, 1, wcSeriesCardHtml(tie('Final', 0)), '', ' final')}
+      ${slot(2, 1, wcSeriesCardHtml(tie('SF', 0)),
+             '<span class="wcb-tag">Semifinals</span><span class="wcb-line wcb-in"></span>')}
+      ${slot(3, 1, wcSeriesCardHtml(tie('SF', 1)), '<span class="wcb-line wcb-in from-right"></span>')}
+    </div>
+  </div>`;
+
+  return `<div class="wcb">${outer('R16', 'left')}${outer('QF', 'left')}${middle}`
+    + `${outer('QF', 'right')}${outer('R16', 'right')}</div>`;
 }
 
 function renderWc() {
