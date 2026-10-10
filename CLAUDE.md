@@ -61,9 +61,14 @@ cross-referenced between conversations).
   record**, written once by `freeze_season.py` and `freeze_season_inputs.py`.
   Never edited, never regenerated; see "Season 9 is frozen" below.
 - `results/s9/` — every S9 matchday CSV from round 12 on (moved here from
-  `results/` when S9 was frozen). Kept as the audit trail, not the record.
+  `results/` when S9 was frozen). Kept as the audit trail, not the record. `export-results` now
+  defaults to `-o results/s9` (until the season becomes a setting), so a bare
+  run cannot scatter duplicates into `results/`.
 - `SEASON10_PLAN.md` — the agreed Season 10 turnover plan (every decision,
   with numbers and build order). **Read it before any S10 work.**
+- `prototypes/s10_schedule/` — the reference S10 schedule draw and its
+  independent checker (SEASON10_PLAN B10b). Not production code; build step 3
+  promotes it and must reproduce its trial draw.
 - `CLAUDE.md` — this file.
 
 ## Season 9 is frozen (2026-10-10, per explicit instruction)

@@ -244,8 +244,11 @@ def main():
                                "workbook migration, i.e. everything results/ is responsible for)")
     p_export.add_argument("--to", dest="to_round", type=int, default=None,
                           help="Last round to export (default: the latest with games)")
-    p_export.add_argument("--outdir", "-o", default="results",
-                          help="Directory to write the CSVs into (default: results)")
+    # S9's CSVs moved to results/s9/ when the season was frozen. Until the season
+    # becomes a real setting (SEASON10_PLAN C1), default to where they live so a
+    # bare export-results cannot scatter duplicates into results/.
+    p_export.add_argument("--outdir", "-o", default="results/s9",
+                          help="Directory to write the CSVs into (default: results/s9)")
     p_export.add_argument("--force", action="store_true",
                           help="Overwrite an existing file whose contents differ from the database")
     p_export.set_defaults(func=cmd_export_results)

@@ -407,6 +407,11 @@ rule 6 puts it at L1.
   `SCHEDULE_DATA`, the Schedule tab and the test run.
 - The independent checker is committed alongside the draw and run on the
   written file every season; never trust the generator alone.
+- **The reference implementation is committed** in `prototypes/s10_schedule/`
+  (`draw.py`, `draw_s10.py`, `check_s10.py`, `count2.py`, the trial JSON and
+  its report; see its README). Rerunning `draw_s10.py` from there reproduces
+  the trial byte for byte. Build step 3 promotes this method into the engine
+  and must still reproduce the trial.
 
 ### B10c. Dashboard changes for the per-group orders (per explicit request)
 - **Standings gets a third sub-tab** showing each group's order for the season,
@@ -468,9 +473,11 @@ rule 6 puts it at L1.
    `s9_inputs.json`): `team_seasons` rows (division B2, basclm B5, EX seed B6,
    starting fatigue B4), carryover seeds, Elo carry, S10 `league_pods.json`,
    and the cup seed files (B9).
-3. **The schedule draw** (B10b): the seeded draw, Regional then League,
-   written to `schedule_orders_s10.json`, plus the committed independent
-   checker.
+3. **The schedule draw** (B10b): promote `prototypes/s10_schedule/` into the
+   engine (the seeded draw, Regional then League), write
+   `schedule_orders_s10.json`, and commit the independent checker. The result
+   must equal `prototypes/s10_schedule/schedule_orders_s10_trial.json` unless a
+   rule has changed since.
 4. **Engine rules**: the square-root Cups (B8), `ovr_blend` + blended rank
    with RLStr and SOS kept raw (B4), Elo carry, the 400 DSCR tiebreak cap in
    `_standings_order` (B9a), and removing the Division One hardcode (A1).

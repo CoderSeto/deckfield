@@ -1,0 +1,10946 @@
+{
+ "season": 10,
+ "seed": 10,
+ "outline": "B",
+ "round_defs": {
+  "1": "Pod 1 at 4, 2 at 3",
+  "2": "Across 1v3/2v4 at R",
+  "3": "Across 1v4/2v3 at L",
+  "4": "Diag 1v3/2v4 at R",
+  "5": "Diag 1v4/2v3 at L",
+  "6": "Same 1v3/2v4 at U",
+  "7": "Same 1v4/2v3 at D",
+  "8": "Pod 3 at 1, 4 at 2",
+  "9": "Same 1v1 at U",
+  "10": "Same 1v2/3v4 at D",
+  "11": "Diag 1v1 at R",
+  "12": "Diag 1v2/3v4 at L",
+  "13": "Across 1v1 at R",
+  "14": "Across 1v2/3v4 at L",
+  "15": "Pod 1 at 2, 3 at 4"
+ },
+ "regions": {
+  "Indigo": {
+   "valid_orders": 66576384,
+   "order": [
+    9,
+    2,
+    10,
+    12,
+    11,
+    1,
+    5,
+    8,
+    13,
+    14,
+    4,
+    3,
+    7,
+    6,
+    15
+   ],
+   "games": {
+    "1": [
+     [
+      "Pewter City",
+      "Cinnabar Island"
+     ],
+     [
+      "Mount Moon",
+      "Pallet Town"
+     ],
+     [
+      "Viridian City",
+      "Fuchsia City"
+     ],
+     [
+      "Victory Road",
+      "Sevii Islands"
+     ],
+     [
+      "Celadon City",
+      "Lavender Town"
+     ],
+     [
+      "Cycling Road",
+      "Vermilion City"
+     ],
+     [
+      "Saffron City",
+      "Cerulean City"
+     ],
+     [
+      "Fighting Dojo",
+      "Cerulean Cape"
+     ]
+    ],
+    "2": [
+     [
+      "Saffron City",
+      "Pewter City"
+     ],
+     [
+      "Fighting Dojo",
+      "Mount Moon"
+     ],
+     [
+      "Celadon City",
+      "Viridian City"
+     ],
+     [
+      "Cycling Road",
+      "Victory Road"
+     ],
+     [
+      "Cerulean City",
+      "Cinnabar Island"
+     ],
+     [
+      "Cerulean Cape",
+      "Pallet Town"
+     ],
+     [
+      "Lavender Town",
+      "Fuchsia City"
+     ],
+     [
+      "Vermilion City",
+      "Sevii Islands"
+     ]
+    ],
+    "3": [
+     [
+      "Pallet Town",
+      "Pewter City"
+     ],
+     [
+      "Sevii Islands",
+      "Viridian City"
+     ],
+     [
+      "Cinnabar Island",
+      "Mount Moon"
+     ],
+     [
+      "Fuchsia City",
+      "Victory Road"
+     ],
+     [
+      "Vermilion City",
+      "Celadon City"
+     ],
+     [
+      "Cerulean Cape",
+      "Saffron City"
+     ],
+     [
+      "Lavender Town",
+      "Cycling Road"
+     ],
+     [
+      "Cerulean City",
+      "Fighting Dojo"
+     ]
+    ],
+    "4": [
+     [
+      "Pewter City",
+      "Vermilion City"
+     ],
+     [
+      "Viridian City",
+      "Cerulean Cape"
+     ],
+     [
+      "Mount Moon",
+      "Lavender Town"
+     ],
+     [
+      "Victory Road",
+      "Cerulean City"
+     ],
+     [
+      "Cinnabar Island",
+      "Cycling Road"
+     ],
+     [
+      "Fuchsia City",
+      "Fighting Dojo"
+     ],
+     [
+      "Pallet Town",
+      "Celadon City"
+     ],
+     [
+      "Sevii Islands",
+      "Saffron City"
+     ]
+    ],
+    "5": [
+     [
+      "Lavender Town",
+      "Pewter City"
+     ],
+     [
+      "Vermilion City",
+      "Mount Moon"
+     ],
+     [
+      "Cerulean City",
+      "Viridian City"
+     ],
+     [
+      "Cerulean Cape",
+      "Victory Road"
+     ],
+     [
+      "Celadon City",
+      "Cinnabar Island"
+     ],
+     [
+      "Cycling Road",
+      "Pallet Town"
+     ],
+     [
+      "Saffron City",
+      "Fuchsia City"
+     ],
+     [
+      "Fighting Dojo",
+      "Sevii Islands"
+     ]
+    ],
+    "6": [
+     [
+      "Victory Road",
+      "Pewter City"
+     ],
+     [
+      "Viridian City",
+      "Mount Moon"
+     ],
+     [
+      "Fighting Dojo",
+      "Celadon City"
+     ],
+     [
+      "Saffron City",
+      "Cycling Road"
+     ],
+     [
+      "Sevii Islands",
+      "Cinnabar Island"
+     ],
+     [
+      "Fuchsia City",
+      "Pallet Town"
+     ],
+     [
+      "Cerulean Cape",
+      "Lavender Town"
+     ],
+     [
+      "Cerulean City",
+      "Vermilion City"
+     ]
+    ],
+    "7": [
+     [
+      "Pewter City",
+      "Cerulean Cape"
+     ],
+     [
+      "Mount Moon",
+      "Cerulean City"
+     ],
+     [
+      "Victory Road",
+      "Lavender Town"
+     ],
+     [
+      "Viridian City",
+      "Vermilion City"
+     ],
+     [
+      "Cinnabar Island",
+      "Fighting Dojo"
+     ],
+     [
+      "Pallet Town",
+      "Saffron City"
+     ],
+     [
+      "Sevii Islands",
+      "Celadon City"
+     ],
+     [
+      "Fuchsia City",
+      "Cycling Road"
+     ]
+    ],
+    "8": [
+     [
+      "Pewter City",
+      "Viridian City"
+     ],
+     [
+      "Mount Moon",
+      "Victory Road"
+     ],
+     [
+      "Celadon City",
+      "Saffron City"
+     ],
+     [
+      "Cycling Road",
+      "Fighting Dojo"
+     ],
+     [
+      "Cinnabar Island",
+      "Fuchsia City"
+     ],
+     [
+      "Pallet Town",
+      "Sevii Islands"
+     ],
+     [
+      "Lavender Town",
+      "Cerulean City"
+     ],
+     [
+      "Vermilion City",
+      "Cerulean Cape"
+     ]
+    ],
+    "9": [
+     [
+      "Celadon City",
+      "Pewter City"
+     ],
+     [
+      "Cycling Road",
+      "Mount Moon"
+     ],
+     [
+      "Saffron City",
+      "Viridian City"
+     ],
+     [
+      "Fighting Dojo",
+      "Victory Road"
+     ],
+     [
+      "Lavender Town",
+      "Cinnabar Island"
+     ],
+     [
+      "Vermilion City",
+      "Pallet Town"
+     ],
+     [
+      "Cerulean City",
+      "Fuchsia City"
+     ],
+     [
+      "Cerulean Cape",
+      "Sevii Islands"
+     ]
+    ],
+    "10": [
+     [
+      "Pewter City",
+      "Cycling Road"
+     ],
+     [
+      "Viridian City",
+      "Fighting Dojo"
+     ],
+     [
+      "Mount Moon",
+      "Celadon City"
+     ],
+     [
+      "Victory Road",
+      "Saffron City"
+     ],
+     [
+      "Cinnabar Island",
+      "Vermilion City"
+     ],
+     [
+      "Fuchsia City",
+      "Cerulean Cape"
+     ],
+     [
+      "Pallet Town",
+      "Lavender Town"
+     ],
+     [
+      "Sevii Islands",
+      "Cerulean City"
+     ]
+    ],
+    "11": [
+     [
+      "Cerulean City",
+      "Pewter City"
+     ],
+     [
+      "Cerulean Cape",
+      "Mount Moon"
+     ],
+     [
+      "Lavender Town",
+      "Viridian City"
+     ],
+     [
+      "Vermilion City",
+      "Victory Road"
+     ],
+     [
+      "Saffron City",
+      "Cinnabar Island"
+     ],
+     [
+      "Fighting Dojo",
+      "Pallet Town"
+     ],
+     [
+      "Celadon City",
+      "Fuchsia City"
+     ],
+     [
+      "Cycling Road",
+      "Sevii Islands"
+     ]
+    ],
+    "12": [
+     [
+      "Pewter City",
+      "Fighting Dojo"
+     ],
+     [
+      "Mount Moon",
+      "Saffron City"
+     ],
+     [
+      "Victory Road",
+      "Celadon City"
+     ],
+     [
+      "Viridian City",
+      "Cycling Road"
+     ],
+     [
+      "Cinnabar Island",
+      "Cerulean Cape"
+     ],
+     [
+      "Pallet Town",
+      "Cerulean City"
+     ],
+     [
+      "Sevii Islands",
+      "Lavender Town"
+     ],
+     [
+      "Fuchsia City",
+      "Vermilion City"
+     ]
+    ],
+    "13": [
+     [
+      "Sevii Islands",
+      "Pewter City"
+     ],
+     [
+      "Fuchsia City",
+      "Mount Moon"
+     ],
+     [
+      "Cinnabar Island",
+      "Victory Road"
+     ],
+     [
+      "Pallet Town",
+      "Viridian City"
+     ],
+     [
+      "Cerulean Cape",
+      "Celadon City"
+     ],
+     [
+      "Cerulean City",
+      "Cycling Road"
+     ],
+     [
+      "Lavender Town",
+      "Fighting Dojo"
+     ],
+     [
+      "Vermilion City",
+      "Saffron City"
+     ]
+    ],
+    "14": [
+     [
+      "Pewter City",
+      "Fuchsia City"
+     ],
+     [
+      "Mount Moon",
+      "Sevii Islands"
+     ],
+     [
+      "Viridian City",
+      "Cinnabar Island"
+     ],
+     [
+      "Victory Road",
+      "Pallet Town"
+     ],
+     [
+      "Celadon City",
+      "Cerulean City"
+     ],
+     [
+      "Cycling Road",
+      "Cerulean Cape"
+     ],
+     [
+      "Saffron City",
+      "Lavender Town"
+     ],
+     [
+      "Fighting Dojo",
+      "Vermilion City"
+     ]
+    ],
+    "15": [
+     [
+      "Mount Moon",
+      "Pewter City"
+     ],
+     [
+      "Victory Road",
+      "Viridian City"
+     ],
+     [
+      "Cycling Road",
+      "Celadon City"
+     ],
+     [
+      "Fighting Dojo",
+      "Saffron City"
+     ],
+     [
+      "Pallet Town",
+      "Cinnabar Island"
+     ],
+     [
+      "Sevii Islands",
+      "Fuchsia City"
+     ],
+     [
+      "Vermilion City",
+      "Lavender Town"
+     ],
+     [
+      "Cerulean Cape",
+      "Cerulean City"
+     ]
+    ]
+   }
+  },
+  "Silver": {
+   "valid_orders": 54944064,
+   "order": [
+    1,
+    8,
+    7,
+    6,
+    13,
+    5,
+    10,
+    9,
+    12,
+    4,
+    11,
+    14,
+    3,
+    2,
+    15
+   ],
+   "games": {
+    "1": [
+     [
+      "National Park",
+      "Cianwood City"
+     ],
+     [
+      "Goldenrod City",
+      "Olivine City"
+     ],
+     [
+      "Mount Mortar",
+      "Mahogany Town"
+     ],
+     [
+      "Ecruteak City",
+      "Lake of Rage"
+     ],
+     [
+      "Ruins of Alph",
+      "Azalea Town"
+     ],
+     [
+      "Violet City",
+      "Ilex Forest"
+     ],
+     [
+      "Mount Silver",
+      "New Bark Town"
+     ],
+     [
+      "Blackthorn City",
+      "Cherrygrove City"
+     ]
+    ],
+    "2": [
+     [
+      "Cianwood City",
+      "Goldenrod City"
+     ],
+     [
+      "Olivine City",
+      "National Park"
+     ],
+     [
+      "Mahogany Town",
+      "Ecruteak City"
+     ],
+     [
+      "Lake of Rage",
+      "Mount Mortar"
+     ],
+     [
+      "Azalea Town",
+      "Violet City"
+     ],
+     [
+      "Ilex Forest",
+      "Ruins of Alph"
+     ],
+     [
+      "New Bark Town",
+      "Blackthorn City"
+     ],
+     [
+      "Cherrygrove City",
+      "Mount Silver"
+     ]
+    ],
+    "3": [
+     [
+      "Ruins of Alph",
+      "Cianwood City"
+     ],
+     [
+      "Violet City",
+      "Olivine City"
+     ],
+     [
+      "Azalea Town",
+      "National Park"
+     ],
+     [
+      "Ilex Forest",
+      "Goldenrod City"
+     ],
+     [
+      "Mount Silver",
+      "Mahogany Town"
+     ],
+     [
+      "Blackthorn City",
+      "Lake of Rage"
+     ],
+     [
+      "New Bark Town",
+      "Mount Mortar"
+     ],
+     [
+      "Cherrygrove City",
+      "Ecruteak City"
+     ]
+    ],
+    "4": [
+     [
+      "Cianwood City",
+      "Violet City"
+     ],
+     [
+      "Olivine City",
+      "Ruins of Alph"
+     ],
+     [
+      "Goldenrod City",
+      "Azalea Town"
+     ],
+     [
+      "National Park",
+      "Ilex Forest"
+     ],
+     [
+      "Mahogany Town",
+      "Blackthorn City"
+     ],
+     [
+      "Lake of Rage",
+      "Mount Silver"
+     ],
+     [
+      "Ecruteak City",
+      "New Bark Town"
+     ],
+     [
+      "Mount Mortar",
+      "Cherrygrove City"
+     ]
+    ],
+    "5": [
+     [
+      "Mahogany Town",
+      "Cianwood City"
+     ],
+     [
+      "Lake of Rage",
+      "Olivine City"
+     ],
+     [
+      "Ecruteak City",
+      "Goldenrod City"
+     ],
+     [
+      "Mount Mortar",
+      "National Park"
+     ],
+     [
+      "New Bark Town",
+      "Azalea Town"
+     ],
+     [
+      "Cherrygrove City",
+      "Ilex Forest"
+     ],
+     [
+      "Blackthorn City",
+      "Violet City"
+     ],
+     [
+      "Mount Silver",
+      "Ruins of Alph"
+     ]
+    ],
+    "6": [
+     [
+      "Cianwood City",
+      "Mount Silver"
+     ],
+     [
+      "Olivine City",
+      "Blackthorn City"
+     ],
+     [
+      "National Park",
+      "New Bark Town"
+     ],
+     [
+      "Goldenrod City",
+      "Cherrygrove City"
+     ],
+     [
+      "Azalea Town",
+      "Mount Mortar"
+     ],
+     [
+      "Ilex Forest",
+      "Ecruteak City"
+     ],
+     [
+      "Ruins of Alph",
+      "Mahogany Town"
+     ],
+     [
+      "Violet City",
+      "Lake of Rage"
+     ]
+    ],
+    "7": [
+     [
+      "Ilex Forest",
+      "Cianwood City"
+     ],
+     [
+      "Ruins of Alph",
+      "Goldenrod City"
+     ],
+     [
+      "Azalea Town",
+      "Olivine City"
+     ],
+     [
+      "Violet City",
+      "National Park"
+     ],
+     [
+      "Cherrygrove City",
+      "Mahogany Town"
+     ],
+     [
+      "Mount Silver",
+      "Ecruteak City"
+     ],
+     [
+      "New Bark Town",
+      "Lake of Rage"
+     ],
+     [
+      "Blackthorn City",
+      "Mount Mortar"
+     ]
+    ],
+    "8": [
+     [
+      "Cianwood City",
+      "Azalea Town"
+     ],
+     [
+      "Olivine City",
+      "Ilex Forest"
+     ],
+     [
+      "Goldenrod City",
+      "Violet City"
+     ],
+     [
+      "National Park",
+      "Ruins of Alph"
+     ],
+     [
+      "Mahogany Town",
+      "New Bark Town"
+     ],
+     [
+      "Lake of Rage",
+      "Cherrygrove City"
+     ],
+     [
+      "Ecruteak City",
+      "Blackthorn City"
+     ],
+     [
+      "Mount Mortar",
+      "Mount Silver"
+     ]
+    ],
+    "9": [
+     [
+      "Cianwood City",
+      "Cherrygrove City"
+     ],
+     [
+      "Goldenrod City",
+      "Mount Silver"
+     ],
+     [
+      "Olivine City",
+      "New Bark Town"
+     ],
+     [
+      "National Park",
+      "Blackthorn City"
+     ],
+     [
+      "Azalea Town",
+      "Lake of Rage"
+     ],
+     [
+      "Violet City",
+      "Mount Mortar"
+     ],
+     [
+      "Ilex Forest",
+      "Mahogany Town"
+     ],
+     [
+      "Ruins of Alph",
+      "Ecruteak City"
+     ]
+    ],
+    "10": [
+     [
+      "Blackthorn City",
+      "Cianwood City"
+     ],
+     [
+      "Mount Silver",
+      "Olivine City"
+     ],
+     [
+      "New Bark Town",
+      "Goldenrod City"
+     ],
+     [
+      "Cherrygrove City",
+      "National Park"
+     ],
+     [
+      "Ecruteak City",
+      "Azalea Town"
+     ],
+     [
+      "Mount Mortar",
+      "Ilex Forest"
+     ],
+     [
+      "Mahogany Town",
+      "Violet City"
+     ],
+     [
+      "Lake of Rage",
+      "Ruins of Alph"
+     ]
+    ],
+    "11": [
+     [
+      "New Bark Town",
+      "Cianwood City"
+     ],
+     [
+      "Cherrygrove City",
+      "Olivine City"
+     ],
+     [
+      "Blackthorn City",
+      "Goldenrod City"
+     ],
+     [
+      "Mount Silver",
+      "National Park"
+     ],
+     [
+      "Mahogany Town",
+      "Azalea Town"
+     ],
+     [
+      "Lake of Rage",
+      "Ilex Forest"
+     ],
+     [
+      "Ecruteak City",
+      "Violet City"
+     ],
+     [
+      "Mount Mortar",
+      "Ruins of Alph"
+     ]
+    ],
+    "12": [
+     [
+      "Cianwood City",
+      "Lake of Rage"
+     ],
+     [
+      "Goldenrod City",
+      "Mount Mortar"
+     ],
+     [
+      "Olivine City",
+      "Mahogany Town"
+     ],
+     [
+      "National Park",
+      "Ecruteak City"
+     ],
+     [
+      "Azalea Town",
+      "Cherrygrove City"
+     ],
+     [
+      "Violet City",
+      "Mount Silver"
+     ],
+     [
+      "Ilex Forest",
+      "New Bark Town"
+     ],
+     [
+      "Ruins of Alph",
+      "Blackthorn City"
+     ]
+    ],
+    "13": [
+     [
+      "Cianwood City",
+      "Mount Mortar"
+     ],
+     [
+      "Olivine City",
+      "Ecruteak City"
+     ],
+     [
+      "National Park",
+      "Mahogany Town"
+     ],
+     [
+      "Goldenrod City",
+      "Lake of Rage"
+     ],
+     [
+      "Azalea Town",
+      "Mount Silver"
+     ],
+     [
+      "Ilex Forest",
+      "Blackthorn City"
+     ],
+     [
+      "Ruins of Alph",
+      "New Bark Town"
+     ],
+     [
+      "Violet City",
+      "Cherrygrove City"
+     ]
+    ],
+    "14": [
+     [
+      "Ecruteak City",
+      "Cianwood City"
+     ],
+     [
+      "Mount Mortar",
+      "Olivine City"
+     ],
+     [
+      "Mahogany Town",
+      "Goldenrod City"
+     ],
+     [
+      "Lake of Rage",
+      "National Park"
+     ],
+     [
+      "Blackthorn City",
+      "Azalea Town"
+     ],
+     [
+      "Mount Silver",
+      "Ilex Forest"
+     ],
+     [
+      "New Bark Town",
+      "Violet City"
+     ],
+     [
+      "Cherrygrove City",
+      "Ruins of Alph"
+     ]
+    ],
+    "15": [
+     [
+      "Olivine City",
+      "Cianwood City"
+     ],
+     [
+      "National Park",
+      "Goldenrod City"
+     ],
+     [
+      "Lake of Rage",
+      "Mahogany Town"
+     ],
+     [
+      "Mount Mortar",
+      "Ecruteak City"
+     ],
+     [
+      "Ilex Forest",
+      "Azalea Town"
+     ],
+     [
+      "Ruins of Alph",
+      "Violet City"
+     ],
+     [
+      "Cherrygrove City",
+      "New Bark Town"
+     ],
+     [
+      "Mount Silver",
+      "Blackthorn City"
+     ]
+    ]
+   }
+  },
+  "Delta": {
+   "valid_orders": 43603344,
+   "order": [
+    6,
+    10,
+    3,
+    9,
+    11,
+    7,
+    12,
+    13,
+    8,
+    1,
+    2,
+    5,
+    4,
+    14,
+    15
+   ],
+   "games": {
+    "1": [
+     [
+      "Littleroot Town",
+      "Fallarbor Town"
+     ],
+     [
+      "Oldale Town",
+      "Lavaridge Town"
+     ],
+     [
+      "Dewford Town",
+      "Rustboro City"
+     ],
+     [
+      "Petalburg City",
+      "Verdanturf Town"
+     ],
+     [
+      "Mossdeep City",
+      "Lilycove City"
+     ],
+     [
+      "Pacifidlog Town",
+      "Slateport City"
+     ],
+     [
+      "Sootopolis City",
+      "Fortree City"
+     ],
+     [
+      "Ever Grande City",
+      "Mauville City"
+     ]
+    ],
+    "2": [
+     [
+      "Verdanturf Town",
+      "Littleroot Town"
+     ],
+     [
+      "Lavaridge Town",
+      "Dewford Town"
+     ],
+     [
+      "Rustboro City",
+      "Oldale Town"
+     ],
+     [
+      "Fallarbor Town",
+      "Petalburg City"
+     ],
+     [
+      "Mauville City",
+      "Mossdeep City"
+     ],
+     [
+      "Slateport City",
+      "Sootopolis City"
+     ],
+     [
+      "Fortree City",
+      "Pacifidlog Town"
+     ],
+     [
+      "Lilycove City",
+      "Ever Grande City"
+     ]
+    ],
+    "3": [
+     [
+      "Littleroot Town",
+      "Ever Grande City"
+     ],
+     [
+      "Oldale Town",
+      "Sootopolis City"
+     ],
+     [
+      "Petalburg City",
+      "Mossdeep City"
+     ],
+     [
+      "Dewford Town",
+      "Pacifidlog Town"
+     ],
+     [
+      "Rustboro City",
+      "Slateport City"
+     ],
+     [
+      "Verdanturf Town",
+      "Lilycove City"
+     ],
+     [
+      "Lavaridge Town",
+      "Fortree City"
+     ],
+     [
+      "Fallarbor Town",
+      "Mauville City"
+     ]
+    ],
+    "4": [
+     [
+      "Littleroot Town",
+      "Rustboro City"
+     ],
+     [
+      "Oldale Town",
+      "Verdanturf Town"
+     ],
+     [
+      "Dewford Town",
+      "Fallarbor Town"
+     ],
+     [
+      "Petalburg City",
+      "Lavaridge Town"
+     ],
+     [
+      "Mossdeep City",
+      "Fortree City"
+     ],
+     [
+      "Pacifidlog Town",
+      "Mauville City"
+     ],
+     [
+      "Sootopolis City",
+      "Lilycove City"
+     ],
+     [
+      "Ever Grande City",
+      "Slateport City"
+     ]
+    ],
+    "5": [
+     [
+      "Fortree City",
+      "Littleroot Town"
+     ],
+     [
+      "Mauville City",
+      "Oldale Town"
+     ],
+     [
+      "Lilycove City",
+      "Dewford Town"
+     ],
+     [
+      "Slateport City",
+      "Petalburg City"
+     ],
+     [
+      "Mossdeep City",
+      "Rustboro City"
+     ],
+     [
+      "Pacifidlog Town",
+      "Verdanturf Town"
+     ],
+     [
+      "Sootopolis City",
+      "Fallarbor Town"
+     ],
+     [
+      "Ever Grande City",
+      "Lavaridge Town"
+     ]
+    ],
+    "6": [
+     [
+      "Lavaridge Town",
+      "Littleroot Town"
+     ],
+     [
+      "Fallarbor Town",
+      "Oldale Town"
+     ],
+     [
+      "Rustboro City",
+      "Petalburg City"
+     ],
+     [
+      "Verdanturf Town",
+      "Dewford Town"
+     ],
+     [
+      "Slateport City",
+      "Mossdeep City"
+     ],
+     [
+      "Lilycove City",
+      "Pacifidlog Town"
+     ],
+     [
+      "Fortree City",
+      "Ever Grande City"
+     ],
+     [
+      "Mauville City",
+      "Sootopolis City"
+     ]
+    ],
+    "7": [
+     [
+      "Littleroot Town",
+      "Mauville City"
+     ],
+     [
+      "Dewford Town",
+      "Slateport City"
+     ],
+     [
+      "Oldale Town",
+      "Fortree City"
+     ],
+     [
+      "Petalburg City",
+      "Lilycove City"
+     ],
+     [
+      "Rustboro City",
+      "Pacifidlog Town"
+     ],
+     [
+      "Fallarbor Town",
+      "Ever Grande City"
+     ],
+     [
+      "Verdanturf Town",
+      "Mossdeep City"
+     ],
+     [
+      "Lavaridge Town",
+      "Sootopolis City"
+     ]
+    ],
+    "8": [
+     [
+      "Mossdeep City",
+      "Littleroot Town"
+     ],
+     [
+      "Pacifidlog Town",
+      "Oldale Town"
+     ],
+     [
+      "Sootopolis City",
+      "Dewford Town"
+     ],
+     [
+      "Ever Grande City",
+      "Petalburg City"
+     ],
+     [
+      "Fortree City",
+      "Rustboro City"
+     ],
+     [
+      "Mauville City",
+      "Verdanturf Town"
+     ],
+     [
+      "Lilycove City",
+      "Fallarbor Town"
+     ],
+     [
+      "Slateport City",
+      "Lavaridge Town"
+     ]
+    ],
+    "9": [
+     [
+      "Littleroot Town",
+      "Dewford Town"
+     ],
+     [
+      "Oldale Town",
+      "Petalburg City"
+     ],
+     [
+      "Mossdeep City",
+      "Sootopolis City"
+     ],
+     [
+      "Pacifidlog Town",
+      "Ever Grande City"
+     ],
+     [
+      "Rustboro City",
+      "Fallarbor Town"
+     ],
+     [
+      "Verdanturf Town",
+      "Lavaridge Town"
+     ],
+     [
+      "Fortree City",
+      "Lilycove City"
+     ],
+     [
+      "Mauville City",
+      "Slateport City"
+     ]
+    ],
+    "10": [
+     [
+      "Petalburg City",
+      "Littleroot Town"
+     ],
+     [
+      "Dewford Town",
+      "Oldale Town"
+     ],
+     [
+      "Ever Grande City",
+      "Mossdeep City"
+     ],
+     [
+      "Sootopolis City",
+      "Pacifidlog Town"
+     ],
+     [
+      "Lavaridge Town",
+      "Rustboro City"
+     ],
+     [
+      "Fallarbor Town",
+      "Verdanturf Town"
+     ],
+     [
+      "Slateport City",
+      "Fortree City"
+     ],
+     [
+      "Lilycove City",
+      "Mauville City"
+     ]
+    ],
+    "11": [
+     [
+      "Sootopolis City",
+      "Littleroot Town"
+     ],
+     [
+      "Ever Grande City",
+      "Oldale Town"
+     ],
+     [
+      "Mossdeep City",
+      "Dewford Town"
+     ],
+     [
+      "Pacifidlog Town",
+      "Petalburg City"
+     ],
+     [
+      "Lilycove City",
+      "Rustboro City"
+     ],
+     [
+      "Slateport City",
+      "Verdanturf Town"
+     ],
+     [
+      "Fortree City",
+      "Fallarbor Town"
+     ],
+     [
+      "Mauville City",
+      "Lavaridge Town"
+     ]
+    ],
+    "12": [
+     [
+      "Littleroot Town",
+      "Slateport City"
+     ],
+     [
+      "Oldale Town",
+      "Lilycove City"
+     ],
+     [
+      "Petalburg City",
+      "Fortree City"
+     ],
+     [
+      "Dewford Town",
+      "Mauville City"
+     ],
+     [
+      "Rustboro City",
+      "Ever Grande City"
+     ],
+     [
+      "Verdanturf Town",
+      "Sootopolis City"
+     ],
+     [
+      "Lavaridge Town",
+      "Mossdeep City"
+     ],
+     [
+      "Fallarbor Town",
+      "Pacifidlog Town"
+     ]
+    ],
+    "13": [
+     [
+      "Lilycove City",
+      "Littleroot Town"
+     ],
+     [
+      "Slateport City",
+      "Oldale Town"
+     ],
+     [
+      "Fortree City",
+      "Dewford Town"
+     ],
+     [
+      "Mauville City",
+      "Petalburg City"
+     ],
+     [
+      "Sootopolis City",
+      "Rustboro City"
+     ],
+     [
+      "Ever Grande City",
+      "Verdanturf Town"
+     ],
+     [
+      "Mossdeep City",
+      "Fallarbor Town"
+     ],
+     [
+      "Pacifidlog Town",
+      "Lavaridge Town"
+     ]
+    ],
+    "14": [
+     [
+      "Littleroot Town",
+      "Pacifidlog Town"
+     ],
+     [
+      "Dewford Town",
+      "Ever Grande City"
+     ],
+     [
+      "Oldale Town",
+      "Mossdeep City"
+     ],
+     [
+      "Petalburg City",
+      "Sootopolis City"
+     ],
+     [
+      "Rustboro City",
+      "Mauville City"
+     ],
+     [
+      "Fallarbor Town",
+      "Slateport City"
+     ],
+     [
+      "Verdanturf Town",
+      "Fortree City"
+     ],
+     [
+      "Lavaridge Town",
+      "Lilycove City"
+     ]
+    ],
+    "15": [
+     [
+      "Oldale Town",
+      "Littleroot Town"
+     ],
+     [
+      "Petalburg City",
+      "Dewford Town"
+     ],
+     [
+      "Pacifidlog Town",
+      "Mossdeep City"
+     ],
+     [
+      "Ever Grande City",
+      "Sootopolis City"
+     ],
+     [
+      "Verdanturf Town",
+      "Rustboro City"
+     ],
+     [
+      "Lavaridge Town",
+      "Fallarbor Town"
+     ],
+     [
+      "Mauville City",
+      "Fortree City"
+     ],
+     [
+      "Slateport City",
+      "Lilycove City"
+     ]
+    ]
+   }
+  },
+  "LilyValley": {
+   "valid_orders": 40862592,
+   "order": [
+    8,
+    13,
+    5,
+    10,
+    6,
+    7,
+    14,
+    9,
+    4,
+    12,
+    1,
+    11,
+    3,
+    2,
+    15
+   ],
+   "games": {
+    "1": [
+     [
+      "Twinleaf Town",
+      "Jubilife City"
+     ],
+     [
+      "Sandgem Town",
+      "Canalave City"
+     ],
+     [
+      "Sunyshore City",
+      "Celestic Town"
+     ],
+     [
+      "Veilstone City",
+      "Solaceon Town"
+     ],
+     [
+      "Eterna City",
+      "Snowpoint City"
+     ],
+     [
+      "Floaroma City",
+      "Battle Zone"
+     ],
+     [
+      "Oreburgh City",
+      "Pastoria City"
+     ],
+     [
+      "Hearthome City",
+      "Mossui Town"
+     ]
+    ],
+    "2": [
+     [
+      "Sunyshore City",
+      "Twinleaf Town"
+     ],
+     [
+      "Veilstone City",
+      "Sandgem Town"
+     ],
+     [
+      "Celestic Town",
+      "Jubilife City"
+     ],
+     [
+      "Solaceon Town",
+      "Canalave City"
+     ],
+     [
+      "Oreburgh City",
+      "Eterna City"
+     ],
+     [
+      "Hearthome City",
+      "Floaroma City"
+     ],
+     [
+      "Pastoria City",
+      "Snowpoint City"
+     ],
+     [
+      "Mossui Town",
+      "Battle Zone"
+     ]
+    ],
+    "3": [
+     [
+      "Twinleaf Town",
+      "Mossui Town"
+     ],
+     [
+      "Sandgem Town",
+      "Pastoria City"
+     ],
+     [
+      "Canalave City",
+      "Oreburgh City"
+     ],
+     [
+      "Jubilife City",
+      "Hearthome City"
+     ],
+     [
+      "Eterna City",
+      "Solaceon Town"
+     ],
+     [
+      "Floaroma City",
+      "Celestic Town"
+     ],
+     [
+      "Battle Zone",
+      "Sunyshore City"
+     ],
+     [
+      "Snowpoint City",
+      "Veilstone City"
+     ]
+    ],
+    "4": [
+     [
+      "Floaroma City",
+      "Twinleaf Town"
+     ],
+     [
+      "Battle Zone",
+      "Jubilife City"
+     ],
+     [
+      "Eterna City",
+      "Sandgem Town"
+     ],
+     [
+      "Snowpoint City",
+      "Canalave City"
+     ],
+     [
+      "Hearthome City",
+      "Sunyshore City"
+     ],
+     [
+      "Mossui Town",
+      "Celestic Town"
+     ],
+     [
+      "Oreburgh City",
+      "Veilstone City"
+     ],
+     [
+      "Pastoria City",
+      "Solaceon Town"
+     ]
+    ],
+    "5": [
+     [
+      "Twinleaf Town",
+      "Snowpoint City"
+     ],
+     [
+      "Sandgem Town",
+      "Battle Zone"
+     ],
+     [
+      "Jubilife City",
+      "Eterna City"
+     ],
+     [
+      "Canalave City",
+      "Floaroma City"
+     ],
+     [
+      "Sunyshore City",
+      "Pastoria City"
+     ],
+     [
+      "Veilstone City",
+      "Mossui Town"
+     ],
+     [
+      "Celestic Town",
+      "Oreburgh City"
+     ],
+     [
+      "Solaceon Town",
+      "Hearthome City"
+     ]
+    ],
+    "6": [
+     [
+      "Battle Zone",
+      "Twinleaf Town"
+     ],
+     [
+      "Snowpoint City",
+      "Sandgem Town"
+     ],
+     [
+      "Eterna City",
+      "Canalave City"
+     ],
+     [
+      "Floaroma City",
+      "Jubilife City"
+     ],
+     [
+      "Mossui Town",
+      "Sunyshore City"
+     ],
+     [
+      "Pastoria City",
+      "Veilstone City"
+     ],
+     [
+      "Oreburgh City",
+      "Solaceon Town"
+     ],
+     [
+      "Hearthome City",
+      "Celestic Town"
+     ]
+    ],
+    "7": [
+     [
+      "Twinleaf Town",
+      "Veilstone City"
+     ],
+     [
+      "Jubilife City",
+      "Solaceon Town"
+     ],
+     [
+      "Sandgem Town",
+      "Sunyshore City"
+     ],
+     [
+      "Canalave City",
+      "Celestic Town"
+     ],
+     [
+      "Eterna City",
+      "Hearthome City"
+     ],
+     [
+      "Snowpoint City",
+      "Mossui Town"
+     ],
+     [
+      "Floaroma City",
+      "Oreburgh City"
+     ],
+     [
+      "Battle Zone",
+      "Pastoria City"
+     ]
+    ],
+    "8": [
+     [
+      "Twinleaf Town",
+      "Eterna City"
+     ],
+     [
+      "Sandgem Town",
+      "Floaroma City"
+     ],
+     [
+      "Jubilife City",
+      "Snowpoint City"
+     ],
+     [
+      "Canalave City",
+      "Battle Zone"
+     ],
+     [
+      "Sunyshore City",
+      "Oreburgh City"
+     ],
+     [
+      "Veilstone City",
+      "Hearthome City"
+     ],
+     [
+      "Celestic Town",
+      "Pastoria City"
+     ],
+     [
+      "Solaceon Town",
+      "Mossui Town"
+     ]
+    ],
+    "9": [
+     [
+      "Pastoria City",
+      "Twinleaf Town"
+     ],
+     [
+      "Mossui Town",
+      "Sandgem Town"
+     ],
+     [
+      "Oreburgh City",
+      "Jubilife City"
+     ],
+     [
+      "Hearthome City",
+      "Canalave City"
+     ],
+     [
+      "Celestic Town",
+      "Eterna City"
+     ],
+     [
+      "Solaceon Town",
+      "Floaroma City"
+     ],
+     [
+      "Sunyshore City",
+      "Snowpoint City"
+     ],
+     [
+      "Veilstone City",
+      "Battle Zone"
+     ]
+    ],
+    "10": [
+     [
+      "Twinleaf Town",
+      "Hearthome City"
+     ],
+     [
+      "Jubilife City",
+      "Mossui Town"
+     ],
+     [
+      "Sandgem Town",
+      "Oreburgh City"
+     ],
+     [
+      "Canalave City",
+      "Pastoria City"
+     ],
+     [
+      "Eterna City",
+      "Veilstone City"
+     ],
+     [
+      "Snowpoint City",
+      "Solaceon Town"
+     ],
+     [
+      "Floaroma City",
+      "Sunyshore City"
+     ],
+     [
+      "Battle Zone",
+      "Celestic Town"
+     ]
+    ],
+    "11": [
+     [
+      "Canalave City",
+      "Twinleaf Town"
+     ],
+     [
+      "Jubilife City",
+      "Sandgem Town"
+     ],
+     [
+      "Solaceon Town",
+      "Sunyshore City"
+     ],
+     [
+      "Celestic Town",
+      "Veilstone City"
+     ],
+     [
+      "Battle Zone",
+      "Eterna City"
+     ],
+     [
+      "Snowpoint City",
+      "Floaroma City"
+     ],
+     [
+      "Mossui Town",
+      "Oreburgh City"
+     ],
+     [
+      "Pastoria City",
+      "Hearthome City"
+     ]
+    ],
+    "12": [
+     [
+      "Oreburgh City",
+      "Twinleaf Town"
+     ],
+     [
+      "Hearthome City",
+      "Sandgem Town"
+     ],
+     [
+      "Pastoria City",
+      "Jubilife City"
+     ],
+     [
+      "Mossui Town",
+      "Canalave City"
+     ],
+     [
+      "Sunyshore City",
+      "Eterna City"
+     ],
+     [
+      "Veilstone City",
+      "Floaroma City"
+     ],
+     [
+      "Celestic Town",
+      "Snowpoint City"
+     ],
+     [
+      "Solaceon Town",
+      "Battle Zone"
+     ]
+    ],
+    "13": [
+     [
+      "Twinleaf Town",
+      "Solaceon Town"
+     ],
+     [
+      "Sandgem Town",
+      "Celestic Town"
+     ],
+     [
+      "Canalave City",
+      "Sunyshore City"
+     ],
+     [
+      "Jubilife City",
+      "Veilstone City"
+     ],
+     [
+      "Eterna City",
+      "Mossui Town"
+     ],
+     [
+      "Floaroma City",
+      "Pastoria City"
+     ],
+     [
+      "Battle Zone",
+      "Oreburgh City"
+     ],
+     [
+      "Snowpoint City",
+      "Hearthome City"
+     ]
+    ],
+    "14": [
+     [
+      "Celestic Town",
+      "Twinleaf Town"
+     ],
+     [
+      "Solaceon Town",
+      "Sandgem Town"
+     ],
+     [
+      "Sunyshore City",
+      "Jubilife City"
+     ],
+     [
+      "Veilstone City",
+      "Canalave City"
+     ],
+     [
+      "Pastoria City",
+      "Eterna City"
+     ],
+     [
+      "Mossui Town",
+      "Floaroma City"
+     ],
+     [
+      "Oreburgh City",
+      "Snowpoint City"
+     ],
+     [
+      "Hearthome City",
+      "Battle Zone"
+     ]
+    ],
+    "15": [
+     [
+      "Sandgem Town",
+      "Twinleaf Town"
+     ],
+     [
+      "Canalave City",
+      "Jubilife City"
+     ],
+     [
+      "Veilstone City",
+      "Sunyshore City"
+     ],
+     [
+      "Solaceon Town",
+      "Celestic Town"
+     ],
+     [
+      "Floaroma City",
+      "Eterna City"
+     ],
+     [
+      "Battle Zone",
+      "Snowpoint City"
+     ],
+     [
+      "Hearthome City",
+      "Oreburgh City"
+     ],
+     [
+      "Mossui Town",
+      "Pastoria City"
+     ]
+    ]
+   }
+  },
+  "Vertress": {
+   "valid_orders": 54515520,
+   "order": [
+    8,
+    1,
+    2,
+    3,
+    12,
+    4,
+    14,
+    11,
+    5,
+    7,
+    9,
+    13,
+    10,
+    6,
+    15
+   ],
+   "games": {
+    "1": [
+     [
+      "Aspertia City",
+      "Anville Town"
+     ],
+     [
+      "Floccesy Town",
+      "Mistralton City"
+     ],
+     [
+      "Striaton City",
+      "Nacrene City"
+     ],
+     [
+      "Accumula Town",
+      "Castelia City"
+     ],
+     [
+      "Icirrus City",
+      "Virbank City"
+     ],
+     [
+      "Driftveil City",
+      "Nimbasa City"
+     ],
+     [
+      "Humilau City",
+      "Lacunosa Town"
+     ],
+     [
+      "Undella Town",
+      "Opelucid City"
+     ]
+    ],
+    "2": [
+     [
+      "Mistralton City",
+      "Aspertia City"
+     ],
+     [
+      "Anville Town",
+      "Floccesy Town"
+     ],
+     [
+      "Castelia City",
+      "Striaton City"
+     ],
+     [
+      "Nacrene City",
+      "Accumula Town"
+     ],
+     [
+      "Nimbasa City",
+      "Icirrus City"
+     ],
+     [
+      "Virbank City",
+      "Driftveil City"
+     ],
+     [
+      "Opelucid City",
+      "Humilau City"
+     ],
+     [
+      "Lacunosa Town",
+      "Undella Town"
+     ]
+    ],
+    "3": [
+     [
+      "Nacrene City",
+      "Aspertia City"
+     ],
+     [
+      "Castelia City",
+      "Floccesy Town"
+     ],
+     [
+      "Striaton City",
+      "Anville Town"
+     ],
+     [
+      "Accumula Town",
+      "Mistralton City"
+     ],
+     [
+      "Lacunosa Town",
+      "Icirrus City"
+     ],
+     [
+      "Opelucid City",
+      "Driftveil City"
+     ],
+     [
+      "Humilau City",
+      "Virbank City"
+     ],
+     [
+      "Undella Town",
+      "Nimbasa City"
+     ]
+    ],
+    "4": [
+     [
+      "Aspertia City",
+      "Castelia City"
+     ],
+     [
+      "Floccesy Town",
+      "Nacrene City"
+     ],
+     [
+      "Mistralton City",
+      "Striaton City"
+     ],
+     [
+      "Anville Town",
+      "Accumula Town"
+     ],
+     [
+      "Icirrus City",
+      "Opelucid City"
+     ],
+     [
+      "Driftveil City",
+      "Lacunosa Town"
+     ],
+     [
+      "Nimbasa City",
+      "Humilau City"
+     ],
+     [
+      "Virbank City",
+      "Undella Town"
+     ]
+    ],
+    "5": [
+     [
+      "Aspertia City",
+      "Undella Town"
+     ],
+     [
+      "Anville Town",
+      "Opelucid City"
+     ],
+     [
+      "Floccesy Town",
+      "Humilau City"
+     ],
+     [
+      "Mistralton City",
+      "Lacunosa Town"
+     ],
+     [
+      "Icirrus City",
+      "Accumula Town"
+     ],
+     [
+      "Virbank City",
+      "Castelia City"
+     ],
+     [
+      "Driftveil City",
+      "Striaton City"
+     ],
+     [
+      "Nimbasa City",
+      "Nacrene City"
+     ]
+    ],
+    "6": [
+     [
+      "Lacunosa Town",
+      "Aspertia City"
+     ],
+     [
+      "Opelucid City",
+      "Floccesy Town"
+     ],
+     [
+      "Humilau City",
+      "Anville Town"
+     ],
+     [
+      "Undella Town",
+      "Mistralton City"
+     ],
+     [
+      "Nacrene City",
+      "Icirrus City"
+     ],
+     [
+      "Castelia City",
+      "Driftveil City"
+     ],
+     [
+      "Striaton City",
+      "Virbank City"
+     ],
+     [
+      "Accumula Town",
+      "Nimbasa City"
+     ]
+    ],
+    "7": [
+     [
+      "Aspertia City",
+      "Accumula Town"
+     ],
+     [
+      "Anville Town",
+      "Castelia City"
+     ],
+     [
+      "Floccesy Town",
+      "Striaton City"
+     ],
+     [
+      "Mistralton City",
+      "Nacrene City"
+     ],
+     [
+      "Icirrus City",
+      "Undella Town"
+     ],
+     [
+      "Virbank City",
+      "Opelucid City"
+     ],
+     [
+      "Driftveil City",
+      "Humilau City"
+     ],
+     [
+      "Nimbasa City",
+      "Lacunosa Town"
+     ]
+    ],
+    "8": [
+     [
+      "Humilau City",
+      "Aspertia City"
+     ],
+     [
+      "Undella Town",
+      "Floccesy Town"
+     ],
+     [
+      "Lacunosa Town",
+      "Anville Town"
+     ],
+     [
+      "Opelucid City",
+      "Mistralton City"
+     ],
+     [
+      "Striaton City",
+      "Icirrus City"
+     ],
+     [
+      "Accumula Town",
+      "Driftveil City"
+     ],
+     [
+      "Nacrene City",
+      "Virbank City"
+     ],
+     [
+      "Castelia City",
+      "Nimbasa City"
+     ]
+    ],
+    "9": [
+     [
+      "Aspertia City",
+      "Opelucid City"
+     ],
+     [
+      "Floccesy Town",
+      "Lacunosa Town"
+     ],
+     [
+      "Mistralton City",
+      "Humilau City"
+     ],
+     [
+      "Anville Town",
+      "Undella Town"
+     ],
+     [
+      "Icirrus City",
+      "Castelia City"
+     ],
+     [
+      "Driftveil City",
+      "Nacrene City"
+     ],
+     [
+      "Nimbasa City",
+      "Striaton City"
+     ],
+     [
+      "Virbank City",
+      "Accumula Town"
+     ]
+    ],
+    "10": [
+     [
+      "Nimbasa City",
+      "Aspertia City"
+     ],
+     [
+      "Virbank City",
+      "Floccesy Town"
+     ],
+     [
+      "Icirrus City",
+      "Mistralton City"
+     ],
+     [
+      "Driftveil City",
+      "Anville Town"
+     ],
+     [
+      "Opelucid City",
+      "Striaton City"
+     ],
+     [
+      "Lacunosa Town",
+      "Accumula Town"
+     ],
+     [
+      "Humilau City",
+      "Castelia City"
+     ],
+     [
+      "Undella Town",
+      "Nacrene City"
+     ]
+    ],
+    "11": [
+     [
+      "Aspertia City",
+      "Icirrus City"
+     ],
+     [
+      "Floccesy Town",
+      "Driftveil City"
+     ],
+     [
+      "Anville Town",
+      "Virbank City"
+     ],
+     [
+      "Mistralton City",
+      "Nimbasa City"
+     ],
+     [
+      "Striaton City",
+      "Humilau City"
+     ],
+     [
+      "Accumula Town",
+      "Undella Town"
+     ],
+     [
+      "Nacrene City",
+      "Lacunosa Town"
+     ],
+     [
+      "Castelia City",
+      "Opelucid City"
+     ]
+    ],
+    "12": [
+     [
+      "Striaton City",
+      "Aspertia City"
+     ],
+     [
+      "Accumula Town",
+      "Floccesy Town"
+     ],
+     [
+      "Nacrene City",
+      "Anville Town"
+     ],
+     [
+      "Castelia City",
+      "Mistralton City"
+     ],
+     [
+      "Humilau City",
+      "Icirrus City"
+     ],
+     [
+      "Undella Town",
+      "Driftveil City"
+     ],
+     [
+      "Lacunosa Town",
+      "Virbank City"
+     ],
+     [
+      "Opelucid City",
+      "Nimbasa City"
+     ]
+    ],
+    "13": [
+     [
+      "Driftveil City",
+      "Aspertia City"
+     ],
+     [
+      "Nimbasa City",
+      "Anville Town"
+     ],
+     [
+      "Icirrus City",
+      "Floccesy Town"
+     ],
+     [
+      "Virbank City",
+      "Mistralton City"
+     ],
+     [
+      "Undella Town",
+      "Striaton City"
+     ],
+     [
+      "Opelucid City",
+      "Nacrene City"
+     ],
+     [
+      "Humilau City",
+      "Accumula Town"
+     ],
+     [
+      "Lacunosa Town",
+      "Castelia City"
+     ]
+    ],
+    "14": [
+     [
+      "Aspertia City",
+      "Virbank City"
+     ],
+     [
+      "Floccesy Town",
+      "Nimbasa City"
+     ],
+     [
+      "Anville Town",
+      "Icirrus City"
+     ],
+     [
+      "Mistralton City",
+      "Driftveil City"
+     ],
+     [
+      "Striaton City",
+      "Lacunosa Town"
+     ],
+     [
+      "Accumula Town",
+      "Opelucid City"
+     ],
+     [
+      "Nacrene City",
+      "Humilau City"
+     ],
+     [
+      "Castelia City",
+      "Undella Town"
+     ]
+    ],
+    "15": [
+     [
+      "Floccesy Town",
+      "Aspertia City"
+     ],
+     [
+      "Mistralton City",
+      "Anville Town"
+     ],
+     [
+      "Accumula Town",
+      "Striaton City"
+     ],
+     [
+      "Castelia City",
+      "Nacrene City"
+     ],
+     [
+      "Driftveil City",
+      "Icirrus City"
+     ],
+     [
+      "Nimbasa City",
+      "Virbank City"
+     ],
+     [
+      "Undella Town",
+      "Humilau City"
+     ],
+     [
+      "Opelucid City",
+      "Lacunosa Town"
+     ]
+    ]
+   }
+  },
+  "Kalosite": {
+   "valid_orders": 36441216,
+   "order": [
+    3,
+    13,
+    4,
+    14,
+    5,
+    2,
+    8,
+    1,
+    10,
+    9,
+    7,
+    6,
+    11,
+    12,
+    15
+   ],
+   "games": {
+    "1": [
+     [
+      "Ambrette Town",
+      "Dendemille Town"
+     ],
+     [
+      "Cyllage City",
+      "Anistar City"
+     ],
+     [
+      "Shalour City",
+      "Couriway Town"
+     ],
+     [
+      "Geosenge Town",
+      "Snowbelle City"
+     ],
+     [
+      "Laverre City",
+      "Aquacorde Town"
+     ],
+     [
+      "Lumiose City",
+      "Vaniville Town"
+     ],
+     [
+      "Camphrier Town",
+      "Kiloude City"
+     ],
+     [
+      "Coumarine City",
+      "Santalune City"
+     ]
+    ],
+    "2": [
+     [
+      "Couriway Town",
+      "Ambrette Town"
+     ],
+     [
+      "Snowbelle City",
+      "Cyllage City"
+     ],
+     [
+      "Anistar City",
+      "Geosenge Town"
+     ],
+     [
+      "Dendemille Town",
+      "Shalour City"
+     ],
+     [
+      "Kiloude City",
+      "Laverre City"
+     ],
+     [
+      "Santalune City",
+      "Lumiose City"
+     ],
+     [
+      "Vaniville Town",
+      "Coumarine City"
+     ],
+     [
+      "Aquacorde Town",
+      "Camphrier Town"
+     ]
+    ],
+    "3": [
+     [
+      "Vaniville Town",
+      "Ambrette Town"
+     ],
+     [
+      "Aquacorde Town",
+      "Cyllage City"
+     ],
+     [
+      "Kiloude City",
+      "Geosenge Town"
+     ],
+     [
+      "Santalune City",
+      "Shalour City"
+     ],
+     [
+      "Anistar City",
+      "Laverre City"
+     ],
+     [
+      "Dendemille Town",
+      "Lumiose City"
+     ],
+     [
+      "Couriway Town",
+      "Coumarine City"
+     ],
+     [
+      "Snowbelle City",
+      "Camphrier Town"
+     ]
+    ],
+    "4": [
+     [
+      "Ambrette Town",
+      "Snowbelle City"
+     ],
+     [
+      "Geosenge Town",
+      "Dendemille Town"
+     ],
+     [
+      "Cyllage City",
+      "Couriway Town"
+     ],
+     [
+      "Shalour City",
+      "Anistar City"
+     ],
+     [
+      "Laverre City",
+      "Santalune City"
+     ],
+     [
+      "Coumarine City",
+      "Aquacorde Town"
+     ],
+     [
+      "Lumiose City",
+      "Kiloude City"
+     ],
+     [
+      "Camphrier Town",
+      "Vaniville Town"
+     ]
+    ],
+    "5": [
+     [
+      "Ambrette Town",
+      "Aquacorde Town"
+     ],
+     [
+      "Cyllage City",
+      "Vaniville Town"
+     ],
+     [
+      "Shalour City",
+      "Kiloude City"
+     ],
+     [
+      "Geosenge Town",
+      "Santalune City"
+     ],
+     [
+      "Laverre City",
+      "Dendemille Town"
+     ],
+     [
+      "Lumiose City",
+      "Anistar City"
+     ],
+     [
+      "Camphrier Town",
+      "Couriway Town"
+     ],
+     [
+      "Coumarine City",
+      "Snowbelle City"
+     ]
+    ],
+    "6": [
+     [
+      "Anistar City",
+      "Ambrette Town"
+     ],
+     [
+      "Dendemille Town",
+      "Cyllage City"
+     ],
+     [
+      "Couriway Town",
+      "Geosenge Town"
+     ],
+     [
+      "Snowbelle City",
+      "Shalour City"
+     ],
+     [
+      "Vaniville Town",
+      "Laverre City"
+     ],
+     [
+      "Aquacorde Town",
+      "Lumiose City"
+     ],
+     [
+      "Kiloude City",
+      "Coumarine City"
+     ],
+     [
+      "Santalune City",
+      "Camphrier Town"
+     ]
+    ],
+    "7": [
+     [
+      "Ambrette Town",
+      "Geosenge Town"
+     ],
+     [
+      "Cyllage City",
+      "Shalour City"
+     ],
+     [
+      "Couriway Town",
+      "Anistar City"
+     ],
+     [
+      "Snowbelle City",
+      "Dendemille Town"
+     ],
+     [
+      "Laverre City",
+      "Coumarine City"
+     ],
+     [
+      "Lumiose City",
+      "Camphrier Town"
+     ],
+     [
+      "Kiloude City",
+      "Vaniville Town"
+     ],
+     [
+      "Santalune City",
+      "Aquacorde Town"
+     ]
+    ],
+    "8": [
+     [
+      "Shalour City",
+      "Ambrette Town"
+     ],
+     [
+      "Geosenge Town",
+      "Cyllage City"
+     ],
+     [
+      "Dendemille Town",
+      "Couriway Town"
+     ],
+     [
+      "Anistar City",
+      "Snowbelle City"
+     ],
+     [
+      "Camphrier Town",
+      "Laverre City"
+     ],
+     [
+      "Coumarine City",
+      "Lumiose City"
+     ],
+     [
+      "Aquacorde Town",
+      "Kiloude City"
+     ],
+     [
+      "Vaniville Town",
+      "Santalune City"
+     ]
+    ],
+    "9": [
+     [
+      "Lumiose City",
+      "Ambrette Town"
+     ],
+     [
+      "Camphrier Town",
+      "Geosenge Town"
+     ],
+     [
+      "Laverre City",
+      "Cyllage City"
+     ],
+     [
+      "Coumarine City",
+      "Shalour City"
+     ],
+     [
+      "Santalune City",
+      "Couriway Town"
+     ],
+     [
+      "Aquacorde Town",
+      "Anistar City"
+     ],
+     [
+      "Kiloude City",
+      "Snowbelle City"
+     ],
+     [
+      "Vaniville Town",
+      "Dendemille Town"
+     ]
+    ],
+    "10": [
+     [
+      "Ambrette Town",
+      "Laverre City"
+     ],
+     [
+      "Cyllage City",
+      "Lumiose City"
+     ],
+     [
+      "Geosenge Town",
+      "Coumarine City"
+     ],
+     [
+      "Shalour City",
+      "Camphrier Town"
+     ],
+     [
+      "Couriway Town",
+      "Kiloude City"
+     ],
+     [
+      "Snowbelle City",
+      "Santalune City"
+     ],
+     [
+      "Anistar City",
+      "Vaniville Town"
+     ],
+     [
+      "Dendemille Town",
+      "Aquacorde Town"
+     ]
+    ],
+    "11": [
+     [
+      "Camphrier Town",
+      "Ambrette Town"
+     ],
+     [
+      "Coumarine City",
+      "Cyllage City"
+     ],
+     [
+      "Laverre City",
+      "Shalour City"
+     ],
+     [
+      "Lumiose City",
+      "Geosenge Town"
+     ],
+     [
+      "Aquacorde Town",
+      "Couriway Town"
+     ],
+     [
+      "Vaniville Town",
+      "Snowbelle City"
+     ],
+     [
+      "Kiloude City",
+      "Dendemille Town"
+     ],
+     [
+      "Santalune City",
+      "Anistar City"
+     ]
+    ],
+    "12": [
+     [
+      "Ambrette Town",
+      "Coumarine City"
+     ],
+     [
+      "Cyllage City",
+      "Camphrier Town"
+     ],
+     [
+      "Geosenge Town",
+      "Laverre City"
+     ],
+     [
+      "Shalour City",
+      "Lumiose City"
+     ],
+     [
+      "Couriway Town",
+      "Vaniville Town"
+     ],
+     [
+      "Snowbelle City",
+      "Aquacorde Town"
+     ],
+     [
+      "Anistar City",
+      "Kiloude City"
+     ],
+     [
+      "Dendemille Town",
+      "Santalune City"
+     ]
+    ],
+    "13": [
+     [
+      "Kiloude City",
+      "Ambrette Town"
+     ],
+     [
+      "Santalune City",
+      "Cyllage City"
+     ],
+     [
+      "Vaniville Town",
+      "Geosenge Town"
+     ],
+     [
+      "Aquacorde Town",
+      "Shalour City"
+     ],
+     [
+      "Couriway Town",
+      "Laverre City"
+     ],
+     [
+      "Snowbelle City",
+      "Lumiose City"
+     ],
+     [
+      "Anistar City",
+      "Coumarine City"
+     ],
+     [
+      "Dendemille Town",
+      "Camphrier Town"
+     ]
+    ],
+    "14": [
+     [
+      "Ambrette Town",
+      "Santalune City"
+     ],
+     [
+      "Geosenge Town",
+      "Aquacorde Town"
+     ],
+     [
+      "Cyllage City",
+      "Kiloude City"
+     ],
+     [
+      "Shalour City",
+      "Vaniville Town"
+     ],
+     [
+      "Laverre City",
+      "Snowbelle City"
+     ],
+     [
+      "Coumarine City",
+      "Dendemille Town"
+     ],
+     [
+      "Lumiose City",
+      "Couriway Town"
+     ],
+     [
+      "Camphrier Town",
+      "Anistar City"
+     ]
+    ],
+    "15": [
+     [
+      "Cyllage City",
+      "Ambrette Town"
+     ],
+     [
+      "Shalour City",
+      "Geosenge Town"
+     ],
+     [
+      "Snowbelle City",
+      "Couriway Town"
+     ],
+     [
+      "Dendemille Town",
+      "Anistar City"
+     ],
+     [
+      "Lumiose City",
+      "Laverre City"
+     ],
+     [
+      "Camphrier Town",
+      "Coumarine City"
+     ],
+     [
+      "Santalune City",
+      "Kiloude City"
+     ],
+     [
+      "Aquacorde Town",
+      "Vaniville Town"
+     ]
+    ]
+   }
+  },
+  "Lanakila": {
+   "valid_orders": 50185728,
+   "order": [
+    3,
+    4,
+    12,
+    9,
+    7,
+    6,
+    13,
+    10,
+    14,
+    11,
+    5,
+    2,
+    1,
+    8,
+    15
+   ],
+   "games": {
+    "1": [
+     [
+      "Poni Meadow",
+      "Mount Hokulani"
+     ],
+     [
+      "Vast Poni Canyon",
+      "Malie City"
+     ],
+     [
+      "Exeggutor Island",
+      "Tapu Village"
+     ],
+     [
+      "Seafolk Village",
+      "Po Town"
+     ],
+     [
+      "Hau'oli City",
+      "Aether Paradise"
+     ],
+     [
+      "Iki Town",
+      "Konikoni City"
+     ],
+     [
+      "Ultra Megalopolis",
+      "Heahea City"
+     ],
+     [
+      "Kala'e Bay",
+      "Paniola Town"
+     ]
+    ],
+    "2": [
+     [
+      "Konikoni City",
+      "Poni Meadow"
+     ],
+     [
+      "Aether Paradise",
+      "Vast Poni Canyon"
+     ],
+     [
+      "Heahea City",
+      "Seafolk Village"
+     ],
+     [
+      "Paniola Town",
+      "Exeggutor Island"
+     ],
+     [
+      "Malie City",
+      "Hau'oli City"
+     ],
+     [
+      "Mount Hokulani",
+      "Iki Town"
+     ],
+     [
+      "Tapu Village",
+      "Kala'e Bay"
+     ],
+     [
+      "Po Town",
+      "Ultra Megalopolis"
+     ]
+    ],
+    "3": [
+     [
+      "Poni Meadow",
+      "Paniola Town"
+     ],
+     [
+      "Seafolk Village",
+      "Aether Paradise"
+     ],
+     [
+      "Vast Poni Canyon",
+      "Heahea City"
+     ],
+     [
+      "Exeggutor Island",
+      "Konikoni City"
+     ],
+     [
+      "Hau'oli City",
+      "Po Town"
+     ],
+     [
+      "Kala'e Bay",
+      "Mount Hokulani"
+     ],
+     [
+      "Iki Town",
+      "Tapu Village"
+     ],
+     [
+      "Ultra Megalopolis",
+      "Malie City"
+     ]
+    ],
+    "4": [
+     [
+      "Poni Meadow",
+      "Hau'oli City"
+     ],
+     [
+      "Vast Poni Canyon",
+      "Iki Town"
+     ],
+     [
+      "Seafolk Village",
+      "Kala'e Bay"
+     ],
+     [
+      "Exeggutor Island",
+      "Ultra Megalopolis"
+     ],
+     [
+      "Tapu Village",
+      "Heahea City"
+     ],
+     [
+      "Po Town",
+      "Paniola Town"
+     ],
+     [
+      "Malie City",
+      "Konikoni City"
+     ],
+     [
+      "Mount Hokulani",
+      "Aether Paradise"
+     ]
+    ],
+    "5": [
+     [
+      "Ultra Megalopolis",
+      "Poni Meadow"
+     ],
+     [
+      "Kala'e Bay",
+      "Vast Poni Canyon"
+     ],
+     [
+      "Hau'oli City",
+      "Exeggutor Island"
+     ],
+     [
+      "Iki Town",
+      "Seafolk Village"
+     ],
+     [
+      "Aether Paradise",
+      "Tapu Village"
+     ],
+     [
+      "Konikoni City",
+      "Po Town"
+     ],
+     [
+      "Heahea City",
+      "Mount Hokulani"
+     ],
+     [
+      "Paniola Town",
+      "Malie City"
+     ]
+    ],
+    "6": [
+     [
+      "Poni Meadow",
+      "Kala'e Bay"
+     ],
+     [
+      "Vast Poni Canyon",
+      "Ultra Megalopolis"
+     ],
+     [
+      "Seafolk Village",
+      "Hau'oli City"
+     ],
+     [
+      "Exeggutor Island",
+      "Iki Town"
+     ],
+     [
+      "Tapu Village",
+      "Konikoni City"
+     ],
+     [
+      "Po Town",
+      "Aether Paradise"
+     ],
+     [
+      "Malie City",
+      "Heahea City"
+     ],
+     [
+      "Mount Hokulani",
+      "Paniola Town"
+     ]
+    ],
+    "7": [
+     [
+      "Tapu Village",
+      "Poni Meadow"
+     ],
+     [
+      "Po Town",
+      "Vast Poni Canyon"
+     ],
+     [
+      "Malie City",
+      "Seafolk Village"
+     ],
+     [
+      "Mount Hokulani",
+      "Exeggutor Island"
+     ],
+     [
+      "Heahea City",
+      "Hau'oli City"
+     ],
+     [
+      "Paniola Town",
+      "Iki Town"
+     ],
+     [
+      "Konikoni City",
+      "Kala'e Bay"
+     ],
+     [
+      "Aether Paradise",
+      "Ultra Megalopolis"
+     ]
+    ],
+    "8": [
+     [
+      "Iki Town",
+      "Poni Meadow"
+     ],
+     [
+      "Ultra Megalopolis",
+      "Seafolk Village"
+     ],
+     [
+      "Hau'oli City",
+      "Vast Poni Canyon"
+     ],
+     [
+      "Kala'e Bay",
+      "Exeggutor Island"
+     ],
+     [
+      "Paniola Town",
+      "Tapu Village"
+     ],
+     [
+      "Aether Paradise",
+      "Malie City"
+     ],
+     [
+      "Heahea City",
+      "Po Town"
+     ],
+     [
+      "Konikoni City",
+      "Mount Hokulani"
+     ]
+    ],
+    "9": [
+     [
+      "Poni Meadow",
+      "Po Town"
+     ],
+     [
+      "Seafolk Village",
+      "Mount Hokulani"
+     ],
+     [
+      "Vast Poni Canyon",
+      "Tapu Village"
+     ],
+     [
+      "Exeggutor Island",
+      "Malie City"
+     ],
+     [
+      "Hau'oli City",
+      "Paniola Town"
+     ],
+     [
+      "Kala'e Bay",
+      "Aether Paradise"
+     ],
+     [
+      "Iki Town",
+      "Heahea City"
+     ],
+     [
+      "Ultra Megalopolis",
+      "Konikoni City"
+     ]
+    ],
+    "10": [
+     [
+      "Heahea City",
+      "Poni Meadow"
+     ],
+     [
+      "Paniola Town",
+      "Vast Poni Canyon"
+     ],
+     [
+      "Konikoni City",
+      "Seafolk Village"
+     ],
+     [
+      "Aether Paradise",
+      "Exeggutor Island"
+     ],
+     [
+      "Tapu Village",
+      "Hau'oli City"
+     ],
+     [
+      "Po Town",
+      "Iki Town"
+     ],
+     [
+      "Malie City",
+      "Kala'e Bay"
+     ],
+     [
+      "Mount Hokulani",
+      "Ultra Megalopolis"
+     ]
+    ],
+    "11": [
+     [
+      "Poni Meadow",
+      "Aether Paradise"
+     ],
+     [
+      "Vast Poni Canyon",
+      "Konikoni City"
+     ],
+     [
+      "Exeggutor Island",
+      "Heahea City"
+     ],
+     [
+      "Seafolk Village",
+      "Paniola Town"
+     ],
+     [
+      "Hau'oli City",
+      "Mount Hokulani"
+     ],
+     [
+      "Iki Town",
+      "Malie City"
+     ],
+     [
+      "Ultra Megalopolis",
+      "Tapu Village"
+     ],
+     [
+      "Kala'e Bay",
+      "Po Town"
+     ]
+    ],
+    "12": [
+     [
+      "Malie City",
+      "Poni Meadow"
+     ],
+     [
+      "Mount Hokulani",
+      "Vast Poni Canyon"
+     ],
+     [
+      "Tapu Village",
+      "Seafolk Village"
+     ],
+     [
+      "Po Town",
+      "Exeggutor Island"
+     ],
+     [
+      "Konikoni City",
+      "Hau'oli City"
+     ],
+     [
+      "Aether Paradise",
+      "Iki Town"
+     ],
+     [
+      "Heahea City",
+      "Kala'e Bay"
+     ],
+     [
+      "Paniola Town",
+      "Ultra Megalopolis"
+     ]
+    ],
+    "13": [
+     [
+      "Exeggutor Island",
+      "Poni Meadow"
+     ],
+     [
+      "Seafolk Village",
+      "Vast Poni Canyon"
+     ],
+     [
+      "Mount Hokulani",
+      "Tapu Village"
+     ],
+     [
+      "Malie City",
+      "Po Town"
+     ],
+     [
+      "Ultra Megalopolis",
+      "Hau'oli City"
+     ],
+     [
+      "Kala'e Bay",
+      "Iki Town"
+     ],
+     [
+      "Aether Paradise",
+      "Heahea City"
+     ],
+     [
+      "Konikoni City",
+      "Paniola Town"
+     ]
+    ],
+    "14": [
+     [
+      "Poni Meadow",
+      "Seafolk Village"
+     ],
+     [
+      "Vast Poni Canyon",
+      "Exeggutor Island"
+     ],
+     [
+      "Tapu Village",
+      "Malie City"
+     ],
+     [
+      "Po Town",
+      "Mount Hokulani"
+     ],
+     [
+      "Hau'oli City",
+      "Kala'e Bay"
+     ],
+     [
+      "Iki Town",
+      "Ultra Megalopolis"
+     ],
+     [
+      "Heahea City",
+      "Konikoni City"
+     ],
+     [
+      "Paniola Town",
+      "Aether Paradise"
+     ]
+    ],
+    "15": [
+     [
+      "Vast Poni Canyon",
+      "Poni Meadow"
+     ],
+     [
+      "Exeggutor Island",
+      "Seafolk Village"
+     ],
+     [
+      "Po Town",
+      "Tapu Village"
+     ],
+     [
+      "Mount Hokulani",
+      "Malie City"
+     ],
+     [
+      "Iki Town",
+      "Hau'oli City"
+     ],
+     [
+      "Ultra Megalopolis",
+      "Kala'e Bay"
+     ],
+     [
+      "Paniola Town",
+      "Heahea City"
+     ],
+     [
+      "Aether Paradise",
+      "Konikoni City"
+     ]
+    ]
+   }
+  },
+  "Dynamax": {
+   "valid_orders": 36441216,
+   "order": [
+    2,
+    5,
+    10,
+    9,
+    1,
+    8,
+    12,
+    11,
+    6,
+    7,
+    14,
+    4,
+    13,
+    3,
+    15
+   ],
+   "games": {
+    "1": [
+     [
+      "Wild Area",
+      "Wyndon North"
+     ],
+     [
+      "Crown Tundra",
+      "Wyndon South"
+     ],
+     [
+      "Postwick",
+      "Ballonlea"
+     ],
+     [
+      "Wedgehurst",
+      "Stow-on-Side"
+     ],
+     [
+      "Turffield",
+      "City of Circhester"
+     ],
+     [
+      "Hulbury",
+      "Circhester Bay"
+     ],
+     [
+      "Motostoke",
+      "Hammerlocke"
+     ],
+     [
+      "Isle of Armor",
+      "Spikemuth"
+     ]
+    ],
+    "2": [
+     [
+      "Wyndon North",
+      "Hulbury"
+     ],
+     [
+      "Wyndon South",
+      "Turffield"
+     ],
+     [
+      "Stow-on-Side",
+      "Motostoke"
+     ],
+     [
+      "Ballonlea",
+      "Isle of Armor"
+     ],
+     [
+      "City of Circhester",
+      "Crown Tundra"
+     ],
+     [
+      "Circhester Bay",
+      "Wild Area"
+     ],
+     [
+      "Spikemuth",
+      "Postwick"
+     ],
+     [
+      "Hammerlocke",
+      "Wedgehurst"
+     ]
+    ],
+    "3": [
+     [
+      "Circhester Bay",
+      "Wyndon North"
+     ],
+     [
+      "Spikemuth",
+      "Ballonlea"
+     ],
+     [
+      "City of Circhester",
+      "Wyndon South"
+     ],
+     [
+      "Hammerlocke",
+      "Stow-on-Side"
+     ],
+     [
+      "Isle of Armor",
+      "Postwick"
+     ],
+     [
+      "Hulbury",
+      "Wild Area"
+     ],
+     [
+      "Motostoke",
+      "Wedgehurst"
+     ],
+     [
+      "Turffield",
+      "Crown Tundra"
+     ]
+    ],
+    "4": [
+     [
+      "Wyndon North",
+      "City of Circhester"
+     ],
+     [
+      "Wyndon South",
+      "Circhester Bay"
+     ],
+     [
+      "Ballonlea",
+      "Hammerlocke"
+     ],
+     [
+      "Stow-on-Side",
+      "Spikemuth"
+     ],
+     [
+      "Postwick",
+      "Motostoke"
+     ],
+     [
+      "Wedgehurst",
+      "Isle of Armor"
+     ],
+     [
+      "Wild Area",
+      "Turffield"
+     ],
+     [
+      "Crown Tundra",
+      "Hulbury"
+     ]
+    ],
+    "5": [
+     [
+      "Stow-on-Side",
+      "Wyndon North"
+     ],
+     [
+      "Ballonlea",
+      "Wyndon South"
+     ],
+     [
+      "Crown Tundra",
+      "Postwick"
+     ],
+     [
+      "Wild Area",
+      "Wedgehurst"
+     ],
+     [
+      "Spikemuth",
+      "City of Circhester"
+     ],
+     [
+      "Hammerlocke",
+      "Circhester Bay"
+     ],
+     [
+      "Hulbury",
+      "Motostoke"
+     ],
+     [
+      "Turffield",
+      "Isle of Armor"
+     ]
+    ],
+    "6": [
+     [
+      "Wyndon North",
+      "Ballonlea"
+     ],
+     [
+      "Wyndon South",
+      "Stow-on-Side"
+     ],
+     [
+      "Postwick",
+      "Wild Area"
+     ],
+     [
+      "Wedgehurst",
+      "Crown Tundra"
+     ],
+     [
+      "City of Circhester",
+      "Hammerlocke"
+     ],
+     [
+      "Circhester Bay",
+      "Spikemuth"
+     ],
+     [
+      "Motostoke",
+      "Turffield"
+     ],
+     [
+      "Isle of Armor",
+      "Hulbury"
+     ]
+    ],
+    "7": [
+     [
+      "Wyndon North",
+      "Isle of Armor"
+     ],
+     [
+      "Ballonlea",
+      "Hulbury"
+     ],
+     [
+      "Wyndon South",
+      "Motostoke"
+     ],
+     [
+      "Stow-on-Side",
+      "Turffield"
+     ],
+     [
+      "City of Circhester",
+      "Wedgehurst"
+     ],
+     [
+      "Hammerlocke",
+      "Crown Tundra"
+     ],
+     [
+      "Circhester Bay",
+      "Postwick"
+     ],
+     [
+      "Spikemuth",
+      "Wild Area"
+     ]
+    ],
+    "8": [
+     [
+      "Motostoke",
+      "Wyndon North"
+     ],
+     [
+      "Isle of Armor",
+      "Wyndon South"
+     ],
+     [
+      "Turffield",
+      "Ballonlea"
+     ],
+     [
+      "Hulbury",
+      "Stow-on-Side"
+     ],
+     [
+      "Postwick",
+      "City of Circhester"
+     ],
+     [
+      "Wedgehurst",
+      "Circhester Bay"
+     ],
+     [
+      "Wild Area",
+      "Hammerlocke"
+     ],
+     [
+      "Crown Tundra",
+      "Spikemuth"
+     ]
+    ],
+    "9": [
+     [
+      "Wyndon North",
+      "Hammerlocke"
+     ],
+     [
+      "Wyndon South",
+      "Spikemuth"
+     ],
+     [
+      "Ballonlea",
+      "City of Circhester"
+     ],
+     [
+      "Stow-on-Side",
+      "Circhester Bay"
+     ],
+     [
+      "Postwick",
+      "Turffield"
+     ],
+     [
+      "Wedgehurst",
+      "Hulbury"
+     ],
+     [
+      "Wild Area",
+      "Motostoke"
+     ],
+     [
+      "Crown Tundra",
+      "Isle of Armor"
+     ]
+    ],
+    "10": [
+     [
+      "Spikemuth",
+      "Wyndon North"
+     ],
+     [
+      "Hammerlocke",
+      "Wyndon South"
+     ],
+     [
+      "City of Circhester",
+      "Stow-on-Side"
+     ],
+     [
+      "Circhester Bay",
+      "Ballonlea"
+     ],
+     [
+      "Hulbury",
+      "Postwick"
+     ],
+     [
+      "Turffield",
+      "Wedgehurst"
+     ],
+     [
+      "Motostoke",
+      "Crown Tundra"
+     ],
+     [
+      "Isle of Armor",
+      "Wild Area"
+     ]
+    ],
+    "11": [
+     [
+      "Wyndon North",
+      "Wedgehurst"
+     ],
+     [
+      "Ballonlea",
+      "Crown Tundra"
+     ],
+     [
+      "Wyndon South",
+      "Postwick"
+     ],
+     [
+      "Stow-on-Side",
+      "Wild Area"
+     ],
+     [
+      "City of Circhester",
+      "Isle of Armor"
+     ],
+     [
+      "Hammerlocke",
+      "Hulbury"
+     ],
+     [
+      "Circhester Bay",
+      "Motostoke"
+     ],
+     [
+      "Spikemuth",
+      "Turffield"
+     ]
+    ],
+    "12": [
+     [
+      "Turffield",
+      "Wyndon North"
+     ],
+     [
+      "Hulbury",
+      "Wyndon South"
+     ],
+     [
+      "Motostoke",
+      "Ballonlea"
+     ],
+     [
+      "Isle of Armor",
+      "Stow-on-Side"
+     ],
+     [
+      "Wild Area",
+      "City of Circhester"
+     ],
+     [
+      "Crown Tundra",
+      "Circhester Bay"
+     ],
+     [
+      "Postwick",
+      "Hammerlocke"
+     ],
+     [
+      "Wedgehurst",
+      "Spikemuth"
+     ]
+    ],
+    "13": [
+     [
+      "Postwick",
+      "Wyndon North"
+     ],
+     [
+      "Wedgehurst",
+      "Wyndon South"
+     ],
+     [
+      "Wild Area",
+      "Ballonlea"
+     ],
+     [
+      "Crown Tundra",
+      "Stow-on-Side"
+     ],
+     [
+      "Motostoke",
+      "City of Circhester"
+     ],
+     [
+      "Isle of Armor",
+      "Circhester Bay"
+     ],
+     [
+      "Turffield",
+      "Hammerlocke"
+     ],
+     [
+      "Hulbury",
+      "Spikemuth"
+     ]
+    ],
+    "14": [
+     [
+      "Wyndon North",
+      "Crown Tundra"
+     ],
+     [
+      "Wyndon South",
+      "Wild Area"
+     ],
+     [
+      "Stow-on-Side",
+      "Postwick"
+     ],
+     [
+      "Ballonlea",
+      "Wedgehurst"
+     ],
+     [
+      "City of Circhester",
+      "Hulbury"
+     ],
+     [
+      "Circhester Bay",
+      "Turffield"
+     ],
+     [
+      "Spikemuth",
+      "Motostoke"
+     ],
+     [
+      "Hammerlocke",
+      "Isle of Armor"
+     ]
+    ],
+    "15": [
+     [
+      "Wyndon South",
+      "Wyndon North"
+     ],
+     [
+      "Stow-on-Side",
+      "Ballonlea"
+     ],
+     [
+      "Wedgehurst",
+      "Postwick"
+     ],
+     [
+      "Crown Tundra",
+      "Wild Area"
+     ],
+     [
+      "Circhester Bay",
+      "City of Circhester"
+     ],
+     [
+      "Spikemuth",
+      "Hammerlocke"
+     ],
+     [
+      "Isle of Armor",
+      "Motostoke"
+     ],
+     [
+      "Hulbury",
+      "Turffield"
+     ]
+    ]
+   }
+  },
+  "Phoenix": {
+   "valid_orders": 43603344,
+   "order": [
+    12,
+    7,
+    2,
+    5,
+    8,
+    1,
+    11,
+    3,
+    9,
+    13,
+    14,
+    4,
+    10,
+    6,
+    15
+   ],
+   "games": {
+    "1": [
+     [
+      "Phenac City",
+      "Dolce Island"
+     ],
+     [
+      "Agate Village",
+      "Tilt Village"
+     ],
+     [
+      "Pyrite Town",
+      "Cocona Village"
+     ],
+     [
+      "Gateon Port",
+      "Aqua Resort"
+     ],
+     [
+      "Fall City",
+      "Vientown"
+     ],
+     [
+      "Summerland",
+      "Boyleland"
+     ],
+     [
+      "Ringtown",
+      "Pueltown"
+     ],
+     [
+      "Wintown",
+      "Haruba Village"
+     ]
+    ],
+    "2": [
+     [
+      "Wintown",
+      "Phenac City"
+     ],
+     [
+      "Summerland",
+      "Pyrite Town"
+     ],
+     [
+      "Fall City",
+      "Gateon Port"
+     ],
+     [
+      "Ringtown",
+      "Agate Village"
+     ],
+     [
+      "Tilt Village",
+      "Pueltown"
+     ],
+     [
+      "Aqua Resort",
+      "Vientown"
+     ],
+     [
+      "Cocona Village",
+      "Boyleland"
+     ],
+     [
+      "Dolce Island",
+      "Haruba Village"
+     ]
+    ],
+    "3": [
+     [
+      "Haruba Village",
+      "Phenac City"
+     ],
+     [
+      "Boyleland",
+      "Pyrite Town"
+     ],
+     [
+      "Pueltown",
+      "Agate Village"
+     ],
+     [
+      "Vientown",
+      "Gateon Port"
+     ],
+     [
+      "Aqua Resort",
+      "Fall City"
+     ],
+     [
+      "Tilt Village",
+      "Ringtown"
+     ],
+     [
+      "Cocona Village",
+      "Summerland"
+     ],
+     [
+      "Dolce Island",
+      "Wintown"
+     ]
+    ],
+    "4": [
+     [
+      "Phenac City",
+      "Tilt Village"
+     ],
+     [
+      "Pyrite Town",
+      "Aqua Resort"
+     ],
+     [
+      "Gateon Port",
+      "Cocona Village"
+     ],
+     [
+      "Agate Village",
+      "Dolce Island"
+     ],
+     [
+      "Fall City",
+      "Boyleland"
+     ],
+     [
+      "Ringtown",
+      "Haruba Village"
+     ],
+     [
+      "Wintown",
+      "Pueltown"
+     ],
+     [
+      "Summerland",
+      "Vientown"
+     ]
+    ],
+    "5": [
+     [
+      "Phenac City",
+      "Agate Village"
+     ],
+     [
+      "Pyrite Town",
+      "Gateon Port"
+     ],
+     [
+      "Pueltown",
+      "Haruba Village"
+     ],
+     [
+      "Vientown",
+      "Boyleland"
+     ],
+     [
+      "Fall City",
+      "Summerland"
+     ],
+     [
+      "Ringtown",
+      "Wintown"
+     ],
+     [
+      "Cocona Village",
+      "Aqua Resort"
+     ],
+     [
+      "Dolce Island",
+      "Tilt Village"
+     ]
+    ],
+    "6": [
+     [
+      "Gateon Port",
+      "Phenac City"
+     ],
+     [
+      "Agate Village",
+      "Pyrite Town"
+     ],
+     [
+      "Boyleland",
+      "Pueltown"
+     ],
+     [
+      "Haruba Village",
+      "Vientown"
+     ],
+     [
+      "Wintown",
+      "Fall City"
+     ],
+     [
+      "Summerland",
+      "Ringtown"
+     ],
+     [
+      "Tilt Village",
+      "Cocona Village"
+     ],
+     [
+      "Aqua Resort",
+      "Dolce Island"
+     ]
+    ],
+    "7": [
+     [
+      "Cocona Village",
+      "Phenac City"
+     ],
+     [
+      "Dolce Island",
+      "Pyrite Town"
+     ],
+     [
+      "Aqua Resort",
+      "Agate Village"
+     ],
+     [
+      "Tilt Village",
+      "Gateon Port"
+     ],
+     [
+      "Pueltown",
+      "Fall City"
+     ],
+     [
+      "Vientown",
+      "Ringtown"
+     ],
+     [
+      "Haruba Village",
+      "Summerland"
+     ],
+     [
+      "Boyleland",
+      "Wintown"
+     ]
+    ],
+    "8": [
+     [
+      "Phenac City",
+      "Boyleland"
+     ],
+     [
+      "Pyrite Town",
+      "Haruba Village"
+     ],
+     [
+      "Gateon Port",
+      "Pueltown"
+     ],
+     [
+      "Agate Village",
+      "Vientown"
+     ],
+     [
+      "Fall City",
+      "Tilt Village"
+     ],
+     [
+      "Ringtown",
+      "Aqua Resort"
+     ],
+     [
+      "Wintown",
+      "Cocona Village"
+     ],
+     [
+      "Summerland",
+      "Dolce Island"
+     ]
+    ],
+    "9": [
+     [
+      "Phenac City",
+      "Fall City"
+     ],
+     [
+      "Pyrite Town",
+      "Ringtown"
+     ],
+     [
+      "Agate Village",
+      "Summerland"
+     ],
+     [
+      "Gateon Port",
+      "Wintown"
+     ],
+     [
+      "Pueltown",
+      "Cocona Village"
+     ],
+     [
+      "Vientown",
+      "Dolce Island"
+     ],
+     [
+      "Haruba Village",
+      "Aqua Resort"
+     ],
+     [
+      "Boyleland",
+      "Tilt Village"
+     ]
+    ],
+    "10": [
+     [
+      "Pueltown",
+      "Phenac City"
+     ],
+     [
+      "Vientown",
+      "Pyrite Town"
+     ],
+     [
+      "Haruba Village",
+      "Agate Village"
+     ],
+     [
+      "Boyleland",
+      "Gateon Port"
+     ],
+     [
+      "Cocona Village",
+      "Fall City"
+     ],
+     [
+      "Dolce Island",
+      "Ringtown"
+     ],
+     [
+      "Aqua Resort",
+      "Summerland"
+     ],
+     [
+      "Tilt Village",
+      "Wintown"
+     ]
+    ],
+    "11": [
+     [
+      "Phenac City",
+      "Vientown"
+     ],
+     [
+      "Agate Village",
+      "Boyleland"
+     ],
+     [
+      "Pyrite Town",
+      "Pueltown"
+     ],
+     [
+      "Gateon Port",
+      "Haruba Village"
+     ],
+     [
+      "Fall City",
+      "Dolce Island"
+     ],
+     [
+      "Summerland",
+      "Tilt Village"
+     ],
+     [
+      "Ringtown",
+      "Cocona Village"
+     ],
+     [
+      "Wintown",
+      "Aqua Resort"
+     ]
+    ],
+    "12": [
+     [
+      "Aqua Resort",
+      "Phenac City"
+     ],
+     [
+      "Tilt Village",
+      "Pyrite Town"
+     ],
+     [
+      "Cocona Village",
+      "Agate Village"
+     ],
+     [
+      "Dolce Island",
+      "Gateon Port"
+     ],
+     [
+      "Haruba Village",
+      "Fall City"
+     ],
+     [
+      "Boyleland",
+      "Ringtown"
+     ],
+     [
+      "Pueltown",
+      "Summerland"
+     ],
+     [
+      "Vientown",
+      "Wintown"
+     ]
+    ],
+    "13": [
+     [
+      "Ringtown",
+      "Phenac City"
+     ],
+     [
+      "Wintown",
+      "Agate Village"
+     ],
+     [
+      "Fall City",
+      "Pyrite Town"
+     ],
+     [
+      "Summerland",
+      "Gateon Port"
+     ],
+     [
+      "Dolce Island",
+      "Pueltown"
+     ],
+     [
+      "Tilt Village",
+      "Haruba Village"
+     ],
+     [
+      "Cocona Village",
+      "Vientown"
+     ],
+     [
+      "Aqua Resort",
+      "Boyleland"
+     ]
+    ],
+    "14": [
+     [
+      "Phenac City",
+      "Summerland"
+     ],
+     [
+      "Pyrite Town",
+      "Wintown"
+     ],
+     [
+      "Agate Village",
+      "Fall City"
+     ],
+     [
+      "Gateon Port",
+      "Ringtown"
+     ],
+     [
+      "Pueltown",
+      "Aqua Resort"
+     ],
+     [
+      "Vientown",
+      "Tilt Village"
+     ],
+     [
+      "Haruba Village",
+      "Cocona Village"
+     ],
+     [
+      "Boyleland",
+      "Dolce Island"
+     ]
+    ],
+    "15": [
+     [
+      "Pyrite Town",
+      "Phenac City"
+     ],
+     [
+      "Gateon Port",
+      "Agate Village"
+     ],
+     [
+      "Vientown",
+      "Pueltown"
+     ],
+     [
+      "Boyleland",
+      "Haruba Village"
+     ],
+     [
+      "Ringtown",
+      "Fall City"
+     ],
+     [
+      "Wintown",
+      "Summerland"
+     ],
+     [
+      "Dolce Island",
+      "Cocona Village"
+     ],
+     [
+      "Tilt Village",
+      "Aqua Resort"
+     ]
+    ]
+   }
+  },
+  "Terastal": {
+   "valid_orders": 94164480,
+   "order": [
+    10,
+    9,
+    2,
+    12,
+    1,
+    11,
+    3,
+    8,
+    4,
+    5,
+    13,
+    14,
+    6,
+    7,
+    15
+   ],
+   "games": {
+    "1": [
+     [
+      "Cascarrafa",
+      "Montenevera"
+     ],
+     [
+      "Medali",
+      "Casseroya Lake"
+     ],
+     [
+      "Porto Marinada",
+      "Glaseado Mountain"
+     ],
+     [
+      "Tagtree Thicket",
+      "Blueberry Terarium"
+     ],
+     [
+      "Cortondo",
+      "Zapapico"
+     ],
+     [
+      "Cabo Poco",
+      "Levincia"
+     ],
+     [
+      "Alfornada",
+      "Artazon"
+     ],
+     [
+      "Los Platos",
+      "Mesagoza"
+     ]
+    ],
+    "2": [
+     [
+      "Montenevera",
+      "Porto Marinada"
+     ],
+     [
+      "Glaseado Mountain",
+      "Cascarrafa"
+     ],
+     [
+      "Casseroya Lake",
+      "Tagtree Thicket"
+     ],
+     [
+      "Blueberry Terarium",
+      "Medali"
+     ],
+     [
+      "Zapapico",
+      "Alfornada"
+     ],
+     [
+      "Artazon",
+      "Cortondo"
+     ],
+     [
+      "Levincia",
+      "Los Platos"
+     ],
+     [
+      "Mesagoza",
+      "Cabo Poco"
+     ]
+    ],
+    "3": [
+     [
+      "Levincia",
+      "Montenevera"
+     ],
+     [
+      "Mesagoza",
+      "Glaseado Mountain"
+     ],
+     [
+      "Zapapico",
+      "Casseroya Lake"
+     ],
+     [
+      "Artazon",
+      "Blueberry Terarium"
+     ],
+     [
+      "Los Platos",
+      "Porto Marinada"
+     ],
+     [
+      "Cabo Poco",
+      "Cascarrafa"
+     ],
+     [
+      "Alfornada",
+      "Tagtree Thicket"
+     ],
+     [
+      "Cortondo",
+      "Medali"
+     ]
+    ],
+    "4": [
+     [
+      "Montenevera",
+      "Cortondo"
+     ],
+     [
+      "Casseroya Lake",
+      "Cabo Poco"
+     ],
+     [
+      "Glaseado Mountain",
+      "Alfornada"
+     ],
+     [
+      "Blueberry Terarium",
+      "Los Platos"
+     ],
+     [
+      "Porto Marinada",
+      "Artazon"
+     ],
+     [
+      "Tagtree Thicket",
+      "Mesagoza"
+     ],
+     [
+      "Cascarrafa",
+      "Zapapico"
+     ],
+     [
+      "Medali",
+      "Levincia"
+     ]
+    ],
+    "5": [
+     [
+      "Blueberry Terarium",
+      "Montenevera"
+     ],
+     [
+      "Casseroya Lake",
+      "Glaseado Mountain"
+     ],
+     [
+      "Mesagoza",
+      "Zapapico"
+     ],
+     [
+      "Levincia",
+      "Artazon"
+     ],
+     [
+      "Medali",
+      "Porto Marinada"
+     ],
+     [
+      "Tagtree Thicket",
+      "Cascarrafa"
+     ],
+     [
+      "Cabo Poco",
+      "Alfornada"
+     ],
+     [
+      "Los Platos",
+      "Cortondo"
+     ]
+    ],
+    "6": [
+     [
+      "Alfornada",
+      "Montenevera"
+     ],
+     [
+      "Cortondo",
+      "Glaseado Mountain"
+     ],
+     [
+      "Los Platos",
+      "Casseroya Lake"
+     ],
+     [
+      "Cabo Poco",
+      "Blueberry Terarium"
+     ],
+     [
+      "Zapapico",
+      "Porto Marinada"
+     ],
+     [
+      "Artazon",
+      "Cascarrafa"
+     ],
+     [
+      "Levincia",
+      "Tagtree Thicket"
+     ],
+     [
+      "Mesagoza",
+      "Medali"
+     ]
+    ],
+    "7": [
+     [
+      "Montenevera",
+      "Mesagoza"
+     ],
+     [
+      "Glaseado Mountain",
+      "Levincia"
+     ],
+     [
+      "Blueberry Terarium",
+      "Zapapico"
+     ],
+     [
+      "Casseroya Lake",
+      "Artazon"
+     ],
+     [
+      "Porto Marinada",
+      "Cabo Poco"
+     ],
+     [
+      "Cascarrafa",
+      "Los Platos"
+     ],
+     [
+      "Medali",
+      "Alfornada"
+     ],
+     [
+      "Tagtree Thicket",
+      "Cortondo"
+     ]
+    ],
+    "8": [
+     [
+      "Montenevera",
+      "Casseroya Lake"
+     ],
+     [
+      "Glaseado Mountain",
+      "Blueberry Terarium"
+     ],
+     [
+      "Zapapico",
+      "Levincia"
+     ],
+     [
+      "Artazon",
+      "Mesagoza"
+     ],
+     [
+      "Porto Marinada",
+      "Tagtree Thicket"
+     ],
+     [
+      "Cascarrafa",
+      "Medali"
+     ],
+     [
+      "Alfornada",
+      "Los Platos"
+     ],
+     [
+      "Cortondo",
+      "Cabo Poco"
+     ]
+    ],
+    "9": [
+     [
+      "Los Platos",
+      "Montenevera"
+     ],
+     [
+      "Cabo Poco",
+      "Glaseado Mountain"
+     ],
+     [
+      "Alfornada",
+      "Casseroya Lake"
+     ],
+     [
+      "Cortondo",
+      "Blueberry Terarium"
+     ],
+     [
+      "Levincia",
+      "Porto Marinada"
+     ],
+     [
+      "Mesagoza",
+      "Cascarrafa"
+     ],
+     [
+      "Zapapico",
+      "Tagtree Thicket"
+     ],
+     [
+      "Artazon",
+      "Medali"
+     ]
+    ],
+    "10": [
+     [
+      "Montenevera",
+      "Cabo Poco"
+     ],
+     [
+      "Glaseado Mountain",
+      "Los Platos"
+     ],
+     [
+      "Blueberry Terarium",
+      "Alfornada"
+     ],
+     [
+      "Casseroya Lake",
+      "Cortondo"
+     ],
+     [
+      "Porto Marinada",
+      "Mesagoza"
+     ],
+     [
+      "Cascarrafa",
+      "Levincia"
+     ],
+     [
+      "Medali",
+      "Zapapico"
+     ],
+     [
+      "Tagtree Thicket",
+      "Artazon"
+     ]
+    ],
+    "11": [
+     [
+      "Zapapico",
+      "Montenevera"
+     ],
+     [
+      "Artazon",
+      "Glaseado Mountain"
+     ],
+     [
+      "Levincia",
+      "Casseroya Lake"
+     ],
+     [
+      "Mesagoza",
+      "Blueberry Terarium"
+     ],
+     [
+      "Alfornada",
+      "Porto Marinada"
+     ],
+     [
+      "Cortondo",
+      "Cascarrafa"
+     ],
+     [
+      "Los Platos",
+      "Tagtree Thicket"
+     ],
+     [
+      "Cabo Poco",
+      "Medali"
+     ]
+    ],
+    "12": [
+     [
+      "Montenevera",
+      "Artazon"
+     ],
+     [
+      "Casseroya Lake",
+      "Mesagoza"
+     ],
+     [
+      "Glaseado Mountain",
+      "Zapapico"
+     ],
+     [
+      "Blueberry Terarium",
+      "Levincia"
+     ],
+     [
+      "Porto Marinada",
+      "Cortondo"
+     ],
+     [
+      "Tagtree Thicket",
+      "Cabo Poco"
+     ],
+     [
+      "Cascarrafa",
+      "Alfornada"
+     ],
+     [
+      "Medali",
+      "Los Platos"
+     ]
+    ],
+    "13": [
+     [
+      "Montenevera",
+      "Tagtree Thicket"
+     ],
+     [
+      "Glaseado Mountain",
+      "Medali"
+     ],
+     [
+      "Casseroya Lake",
+      "Porto Marinada"
+     ],
+     [
+      "Blueberry Terarium",
+      "Cascarrafa"
+     ],
+     [
+      "Zapapico",
+      "Los Platos"
+     ],
+     [
+      "Artazon",
+      "Cabo Poco"
+     ],
+     [
+      "Levincia",
+      "Alfornada"
+     ],
+     [
+      "Mesagoza",
+      "Cortondo"
+     ]
+    ],
+    "14": [
+     [
+      "Medali",
+      "Montenevera"
+     ],
+     [
+      "Tagtree Thicket",
+      "Glaseado Mountain"
+     ],
+     [
+      "Porto Marinada",
+      "Blueberry Terarium"
+     ],
+     [
+      "Cascarrafa",
+      "Casseroya Lake"
+     ],
+     [
+      "Cabo Poco",
+      "Zapapico"
+     ],
+     [
+      "Los Platos",
+      "Artazon"
+     ],
+     [
+      "Alfornada",
+      "Mesagoza"
+     ],
+     [
+      "Cortondo",
+      "Levincia"
+     ]
+    ],
+    "15": [
+     [
+      "Glaseado Mountain",
+      "Montenevera"
+     ],
+     [
+      "Blueberry Terarium",
+      "Casseroya Lake"
+     ],
+     [
+      "Artazon",
+      "Zapapico"
+     ],
+     [
+      "Mesagoza",
+      "Levincia"
+     ],
+     [
+      "Cascarrafa",
+      "Porto Marinada"
+     ],
+     [
+      "Medali",
+      "Tagtree Thicket"
+     ],
+     [
+      "Cortondo",
+      "Alfornada"
+     ],
+     [
+      "Cabo Poco",
+      "Los Platos"
+     ]
+    ]
+   }
+  }
+ },
+ "divisions": {
+  "1": {
+   "valid_orders": 3102504,
+   "order": [
+    15,
+    7,
+    6,
+    3,
+    4,
+    12,
+    14,
+    2,
+    13,
+    5,
+    11,
+    10,
+    9,
+    8,
+    1
+   ],
+   "l1_pinned": true,
+   "unpinned_because": [],
+   "pods": {
+    "UL": [
+     "Canalave City",
+     "Ultra Megalopolis",
+     "Aqua Resort",
+     "Camphrier Town"
+    ],
+    "UR": [
+     "Pueltown",
+     "Cianwood City",
+     "Vermilion City",
+     "Pyrite Town"
+    ],
+    "LL": [
+     "Anville Town",
+     "Virbank City",
+     "Lumiose City",
+     "Mesagoza"
+    ],
+    "LR": [
+     "National Park",
+     "Agate Village",
+     "Nimbasa City",
+     "Cinnabar Island"
+    ]
+   },
+   "games": {
+    "1": [
+     [
+      "Ultra Megalopolis",
+      "Canalave City"
+     ],
+     [
+      "Camphrier Town",
+      "Aqua Resort"
+     ],
+     [
+      "Cianwood City",
+      "Pueltown"
+     ],
+     [
+      "Pyrite Town",
+      "Vermilion City"
+     ],
+     [
+      "Virbank City",
+      "Anville Town"
+     ],
+     [
+      "Mesagoza",
+      "Lumiose City"
+     ],
+     [
+      "Agate Village",
+      "National Park"
+     ],
+     [
+      "Cinnabar Island",
+      "Nimbasa City"
+     ]
+    ],
+    "2": [
+     [
+      "Mesagoza",
+      "Canalave City"
+     ],
+     [
+      "Lumiose City",
+      "Ultra Megalopolis"
+     ],
+     [
+      "Anville Town",
+      "Camphrier Town"
+     ],
+     [
+      "Virbank City",
+      "Aqua Resort"
+     ],
+     [
+      "Cinnabar Island",
+      "Pueltown"
+     ],
+     [
+      "Nimbasa City",
+      "Cianwood City"
+     ],
+     [
+      "National Park",
+      "Pyrite Town"
+     ],
+     [
+      "Agate Village",
+      "Vermilion City"
+     ]
+    ],
+    "3": [
+     [
+      "Canalave City",
+      "Lumiose City"
+     ],
+     [
+      "Ultra Megalopolis",
+      "Mesagoza"
+     ],
+     [
+      "Aqua Resort",
+      "Anville Town"
+     ],
+     [
+      "Camphrier Town",
+      "Virbank City"
+     ],
+     [
+      "Pueltown",
+      "Nimbasa City"
+     ],
+     [
+      "Cianwood City",
+      "Cinnabar Island"
+     ],
+     [
+      "Vermilion City",
+      "National Park"
+     ],
+     [
+      "Pyrite Town",
+      "Agate Village"
+     ]
+    ],
+    "4": [
+     [
+      "Canalave City",
+      "Pyrite Town"
+     ],
+     [
+      "Ultra Megalopolis",
+      "Vermilion City"
+     ],
+     [
+      "Camphrier Town",
+      "Pueltown"
+     ],
+     [
+      "Aqua Resort",
+      "Cianwood City"
+     ],
+     [
+      "Anville Town",
+      "Cinnabar Island"
+     ],
+     [
+      "Virbank City",
+      "Nimbasa City"
+     ],
+     [
+      "Mesagoza",
+      "National Park"
+     ],
+     [
+      "Lumiose City",
+      "Agate Village"
+     ]
+    ],
+    "5": [
+     [
+      "Nimbasa City",
+      "Canalave City"
+     ],
+     [
+      "Cinnabar Island",
+      "Ultra Megalopolis"
+     ],
+     [
+      "National Park",
+      "Aqua Resort"
+     ],
+     [
+      "Agate Village",
+      "Camphrier Town"
+     ],
+     [
+      "Vermilion City",
+      "Anville Town"
+     ],
+     [
+      "Pyrite Town",
+      "Virbank City"
+     ],
+     [
+      "Pueltown",
+      "Lumiose City"
+     ],
+     [
+      "Cianwood City",
+      "Mesagoza"
+     ]
+    ],
+    "6": [
+     [
+      "Canalave City",
+      "Agate Village"
+     ],
+     [
+      "Aqua Resort",
+      "Cinnabar Island"
+     ],
+     [
+      "Ultra Megalopolis",
+      "National Park"
+     ],
+     [
+      "Camphrier Town",
+      "Nimbasa City"
+     ],
+     [
+      "Anville Town",
+      "Cianwood City"
+     ],
+     [
+      "Lumiose City",
+      "Pyrite Town"
+     ],
+     [
+      "Virbank City",
+      "Pueltown"
+     ],
+     [
+      "Mesagoza",
+      "Vermilion City"
+     ]
+    ],
+    "7": [
+     [
+      "Canalave City",
+      "Cianwood City"
+     ],
+     [
+      "Aqua Resort",
+      "Pyrite Town"
+     ],
+     [
+      "Ultra Megalopolis",
+      "Pueltown"
+     ],
+     [
+      "Camphrier Town",
+      "Vermilion City"
+     ],
+     [
+      "Anville Town",
+      "Agate Village"
+     ],
+     [
+      "Lumiose City",
+      "Cinnabar Island"
+     ],
+     [
+      "Virbank City",
+      "National Park"
+     ],
+     [
+      "Mesagoza",
+      "Nimbasa City"
+     ]
+    ],
+    "8": [
+     [
+      "Vermilion City",
+      "Canalave City"
+     ],
+     [
+      "Pyrite Town",
+      "Ultra Megalopolis"
+     ],
+     [
+      "Pueltown",
+      "Aqua Resort"
+     ],
+     [
+      "Cianwood City",
+      "Camphrier Town"
+     ],
+     [
+      "Nimbasa City",
+      "Anville Town"
+     ],
+     [
+      "Cinnabar Island",
+      "Virbank City"
+     ],
+     [
+      "National Park",
+      "Lumiose City"
+     ],
+     [
+      "Agate Village",
+      "Mesagoza"
+     ]
+    ],
+    "9": [
+     [
+      "Pueltown",
+      "Canalave City"
+     ],
+     [
+      "Cianwood City",
+      "Ultra Megalopolis"
+     ],
+     [
+      "Vermilion City",
+      "Aqua Resort"
+     ],
+     [
+      "Pyrite Town",
+      "Camphrier Town"
+     ],
+     [
+      "National Park",
+      "Anville Town"
+     ],
+     [
+      "Agate Village",
+      "Virbank City"
+     ],
+     [
+      "Nimbasa City",
+      "Lumiose City"
+     ],
+     [
+      "Cinnabar Island",
+      "Mesagoza"
+     ]
+    ],
+    "10": [
+     [
+      "Canalave City",
+      "Cinnabar Island"
+     ],
+     [
+      "Ultra Megalopolis",
+      "Nimbasa City"
+     ],
+     [
+      "Camphrier Town",
+      "National Park"
+     ],
+     [
+      "Aqua Resort",
+      "Agate Village"
+     ],
+     [
+      "Anville Town",
+      "Pyrite Town"
+     ],
+     [
+      "Virbank City",
+      "Vermilion City"
+     ],
+     [
+      "Mesagoza",
+      "Pueltown"
+     ],
+     [
+      "Lumiose City",
+      "Cianwood City"
+     ]
+    ],
+    "11": [
+     [
+      "National Park",
+      "Canalave City"
+     ],
+     [
+      "Agate Village",
+      "Ultra Megalopolis"
+     ],
+     [
+      "Nimbasa City",
+      "Aqua Resort"
+     ],
+     [
+      "Cinnabar Island",
+      "Camphrier Town"
+     ],
+     [
+      "Pueltown",
+      "Anville Town"
+     ],
+     [
+      "Cianwood City",
+      "Virbank City"
+     ],
+     [
+      "Vermilion City",
+      "Lumiose City"
+     ],
+     [
+      "Pyrite Town",
+      "Mesagoza"
+     ]
+    ],
+    "12": [
+     [
+      "Virbank City",
+      "Canalave City"
+     ],
+     [
+      "Mesagoza",
+      "Aqua Resort"
+     ],
+     [
+      "Anville Town",
+      "Ultra Megalopolis"
+     ],
+     [
+      "Lumiose City",
+      "Camphrier Town"
+     ],
+     [
+      "Agate Village",
+      "Pueltown"
+     ],
+     [
+      "Cinnabar Island",
+      "Vermilion City"
+     ],
+     [
+      "National Park",
+      "Cianwood City"
+     ],
+     [
+      "Nimbasa City",
+      "Pyrite Town"
+     ]
+    ],
+    "13": [
+     [
+      "Canalave City",
+      "Anville Town"
+     ],
+     [
+      "Ultra Megalopolis",
+      "Virbank City"
+     ],
+     [
+      "Aqua Resort",
+      "Lumiose City"
+     ],
+     [
+      "Camphrier Town",
+      "Mesagoza"
+     ],
+     [
+      "Pueltown",
+      "National Park"
+     ],
+     [
+      "Cianwood City",
+      "Agate Village"
+     ],
+     [
+      "Vermilion City",
+      "Nimbasa City"
+     ],
+     [
+      "Pyrite Town",
+      "Cinnabar Island"
+     ]
+    ],
+    "14": [
+     [
+      "Canalave City",
+      "Aqua Resort"
+     ],
+     [
+      "Ultra Megalopolis",
+      "Camphrier Town"
+     ],
+     [
+      "Pueltown",
+      "Vermilion City"
+     ],
+     [
+      "Cianwood City",
+      "Pyrite Town"
+     ],
+     [
+      "Anville Town",
+      "Lumiose City"
+     ],
+     [
+      "Virbank City",
+      "Mesagoza"
+     ],
+     [
+      "National Park",
+      "Nimbasa City"
+     ],
+     [
+      "Agate Village",
+      "Cinnabar Island"
+     ]
+    ],
+    "15": [
+     [
+      "Camphrier Town",
+      "Canalave City"
+     ],
+     [
+      "Aqua Resort",
+      "Ultra Megalopolis"
+     ],
+     [
+      "Pyrite Town",
+      "Pueltown"
+     ],
+     [
+      "Vermilion City",
+      "Cianwood City"
+     ],
+     [
+      "Mesagoza",
+      "Anville Town"
+     ],
+     [
+      "Lumiose City",
+      "Virbank City"
+     ],
+     [
+      "Cinnabar Island",
+      "National Park"
+     ],
+     [
+      "Nimbasa City",
+      "Agate Village"
+     ]
+    ]
+   }
+  },
+  "2": {
+   "valid_orders": 54433728,
+   "order": [
+    15,
+    9,
+    10,
+    4,
+    6,
+    7,
+    13,
+    3,
+    14,
+    2,
+    12,
+    11,
+    1,
+    5,
+    8
+   ],
+   "l1_pinned": true,
+   "unpinned_because": [],
+   "pods": {
+    "UL": [
+     "Porto Marinada",
+     "Veilstone City",
+     "Motostoke",
+     "Anistar City"
+    ],
+    "UR": [
+     "Mount Silver",
+     "Malie City",
+     "Cocona Village",
+     "Petalburg City"
+    ],
+    "LL": [
+     "Striaton City",
+     "Cyllage City",
+     "Vaniville Town",
+     "Snowpoint City"
+    ],
+    "LR": [
+     "Mount Moon",
+     "Seafolk Village",
+     "Postwick",
+     "Po Town"
+    ]
+   },
+   "games": {
+    "1": [
+     [
+      "Veilstone City",
+      "Porto Marinada"
+     ],
+     [
+      "Anistar City",
+      "Motostoke"
+     ],
+     [
+      "Malie City",
+      "Mount Silver"
+     ],
+     [
+      "Petalburg City",
+      "Cocona Village"
+     ],
+     [
+      "Cyllage City",
+      "Striaton City"
+     ],
+     [
+      "Snowpoint City",
+      "Vaniville Town"
+     ],
+     [
+      "Seafolk Village",
+      "Mount Moon"
+     ],
+     [
+      "Po Town",
+      "Postwick"
+     ]
+    ],
+    "2": [
+     [
+      "Porto Marinada",
+      "Striaton City"
+     ],
+     [
+      "Veilstone City",
+      "Cyllage City"
+     ],
+     [
+      "Motostoke",
+      "Vaniville Town"
+     ],
+     [
+      "Anistar City",
+      "Snowpoint City"
+     ],
+     [
+      "Mount Silver",
+      "Mount Moon"
+     ],
+     [
+      "Malie City",
+      "Seafolk Village"
+     ],
+     [
+      "Cocona Village",
+      "Postwick"
+     ],
+     [
+      "Petalburg City",
+      "Po Town"
+     ]
+    ],
+    "3": [
+     [
+      "Cyllage City",
+      "Porto Marinada"
+     ],
+     [
+      "Snowpoint City",
+      "Motostoke"
+     ],
+     [
+      "Striaton City",
+      "Veilstone City"
+     ],
+     [
+      "Vaniville Town",
+      "Anistar City"
+     ],
+     [
+      "Seafolk Village",
+      "Mount Silver"
+     ],
+     [
+      "Po Town",
+      "Cocona Village"
+     ],
+     [
+      "Mount Moon",
+      "Malie City"
+     ],
+     [
+      "Postwick",
+      "Petalburg City"
+     ]
+    ],
+    "4": [
+     [
+      "Postwick",
+      "Porto Marinada"
+     ],
+     [
+      "Po Town",
+      "Veilstone City"
+     ],
+     [
+      "Mount Moon",
+      "Motostoke"
+     ],
+     [
+      "Seafolk Village",
+      "Anistar City"
+     ],
+     [
+      "Cocona Village",
+      "Striaton City"
+     ],
+     [
+      "Petalburg City",
+      "Cyllage City"
+     ],
+     [
+      "Mount Silver",
+      "Vaniville Town"
+     ],
+     [
+      "Malie City",
+      "Snowpoint City"
+     ]
+    ],
+    "5": [
+     [
+      "Porto Marinada",
+      "Vaniville Town"
+     ],
+     [
+      "Veilstone City",
+      "Snowpoint City"
+     ],
+     [
+      "Motostoke",
+      "Striaton City"
+     ],
+     [
+      "Anistar City",
+      "Cyllage City"
+     ],
+     [
+      "Mount Silver",
+      "Postwick"
+     ],
+     [
+      "Malie City",
+      "Po Town"
+     ],
+     [
+      "Cocona Village",
+      "Mount Moon"
+     ],
+     [
+      "Petalburg City",
+      "Seafolk Village"
+     ]
+    ],
+    "6": [
+     [
+      "Snowpoint City",
+      "Porto Marinada"
+     ],
+     [
+      "Vaniville Town",
+      "Veilstone City"
+     ],
+     [
+      "Striaton City",
+      "Anistar City"
+     ],
+     [
+      "Cyllage City",
+      "Motostoke"
+     ],
+     [
+      "Po Town",
+      "Mount Silver"
+     ],
+     [
+      "Postwick",
+      "Malie City"
+     ],
+     [
+      "Mount Moon",
+      "Petalburg City"
+     ],
+     [
+      "Seafolk Village",
+      "Cocona Village"
+     ]
+    ],
+    "7": [
+     [
+      "Mount Silver",
+      "Porto Marinada"
+     ],
+     [
+      "Malie City",
+      "Veilstone City"
+     ],
+     [
+      "Cocona Village",
+      "Motostoke"
+     ],
+     [
+      "Petalburg City",
+      "Anistar City"
+     ],
+     [
+      "Mount Moon",
+      "Striaton City"
+     ],
+     [
+      "Seafolk Village",
+      "Cyllage City"
+     ],
+     [
+      "Postwick",
+      "Vaniville Town"
+     ],
+     [
+      "Po Town",
+      "Snowpoint City"
+     ]
+    ],
+    "8": [
+     [
+      "Porto Marinada",
+      "Petalburg City"
+     ],
+     [
+      "Veilstone City",
+      "Cocona Village"
+     ],
+     [
+      "Anistar City",
+      "Mount Silver"
+     ],
+     [
+      "Motostoke",
+      "Malie City"
+     ],
+     [
+      "Striaton City",
+      "Po Town"
+     ],
+     [
+      "Cyllage City",
+      "Postwick"
+     ],
+     [
+      "Snowpoint City",
+      "Mount Moon"
+     ],
+     [
+      "Vaniville Town",
+      "Seafolk Village"
+     ]
+    ],
+    "9": [
+     [
+      "Porto Marinada",
+      "Malie City"
+     ],
+     [
+      "Motostoke",
+      "Petalburg City"
+     ],
+     [
+      "Veilstone City",
+      "Mount Silver"
+     ],
+     [
+      "Anistar City",
+      "Cocona Village"
+     ],
+     [
+      "Striaton City",
+      "Seafolk Village"
+     ],
+     [
+      "Vaniville Town",
+      "Po Town"
+     ],
+     [
+      "Cyllage City",
+      "Mount Moon"
+     ],
+     [
+      "Snowpoint City",
+      "Postwick"
+     ]
+    ],
+    "10": [
+     [
+      "Cocona Village",
+      "Porto Marinada"
+     ],
+     [
+      "Petalburg City",
+      "Veilstone City"
+     ],
+     [
+      "Mount Silver",
+      "Motostoke"
+     ],
+     [
+      "Malie City",
+      "Anistar City"
+     ],
+     [
+      "Postwick",
+      "Striaton City"
+     ],
+     [
+      "Po Town",
+      "Cyllage City"
+     ],
+     [
+      "Mount Moon",
+      "Vaniville Town"
+     ],
+     [
+      "Seafolk Village",
+      "Snowpoint City"
+     ]
+    ],
+    "11": [
+     [
+      "Porto Marinada",
+      "Seafolk Village"
+     ],
+     [
+      "Motostoke",
+      "Po Town"
+     ],
+     [
+      "Veilstone City",
+      "Mount Moon"
+     ],
+     [
+      "Anistar City",
+      "Postwick"
+     ],
+     [
+      "Striaton City",
+      "Malie City"
+     ],
+     [
+      "Vaniville Town",
+      "Petalburg City"
+     ],
+     [
+      "Cyllage City",
+      "Mount Silver"
+     ],
+     [
+      "Snowpoint City",
+      "Cocona Village"
+     ]
+    ],
+    "12": [
+     [
+      "Mount Moon",
+      "Porto Marinada"
+     ],
+     [
+      "Seafolk Village",
+      "Veilstone City"
+     ],
+     [
+      "Postwick",
+      "Motostoke"
+     ],
+     [
+      "Po Town",
+      "Anistar City"
+     ],
+     [
+      "Mount Silver",
+      "Striaton City"
+     ],
+     [
+      "Malie City",
+      "Cyllage City"
+     ],
+     [
+      "Cocona Village",
+      "Vaniville Town"
+     ],
+     [
+      "Petalburg City",
+      "Snowpoint City"
+     ]
+    ],
+    "13": [
+     [
+      "Anistar City",
+      "Porto Marinada"
+     ],
+     [
+      "Motostoke",
+      "Veilstone City"
+     ],
+     [
+      "Petalburg City",
+      "Mount Silver"
+     ],
+     [
+      "Cocona Village",
+      "Malie City"
+     ],
+     [
+      "Snowpoint City",
+      "Striaton City"
+     ],
+     [
+      "Vaniville Town",
+      "Cyllage City"
+     ],
+     [
+      "Po Town",
+      "Mount Moon"
+     ],
+     [
+      "Postwick",
+      "Seafolk Village"
+     ]
+    ],
+    "14": [
+     [
+      "Porto Marinada",
+      "Po Town"
+     ],
+     [
+      "Veilstone City",
+      "Postwick"
+     ],
+     [
+      "Anistar City",
+      "Mount Moon"
+     ],
+     [
+      "Motostoke",
+      "Seafolk Village"
+     ],
+     [
+      "Striaton City",
+      "Petalburg City"
+     ],
+     [
+      "Cyllage City",
+      "Cocona Village"
+     ],
+     [
+      "Snowpoint City",
+      "Mount Silver"
+     ],
+     [
+      "Vaniville Town",
+      "Malie City"
+     ]
+    ],
+    "15": [
+     [
+      "Porto Marinada",
+      "Motostoke"
+     ],
+     [
+      "Veilstone City",
+      "Anistar City"
+     ],
+     [
+      "Mount Silver",
+      "Cocona Village"
+     ],
+     [
+      "Malie City",
+      "Petalburg City"
+     ],
+     [
+      "Striaton City",
+      "Vaniville Town"
+     ],
+     [
+      "Cyllage City",
+      "Snowpoint City"
+     ],
+     [
+      "Mount Moon",
+      "Postwick"
+     ],
+     [
+      "Seafolk Village",
+      "Po Town"
+     ]
+    ]
+   }
+  },
+  "3": {
+   "valid_orders": 15385230,
+   "order": [
+    15,
+    14,
+    11,
+    8,
+    1,
+    3,
+    2,
+    13,
+    12,
+    4,
+    9,
+    7,
+    10,
+    6,
+    5
+   ],
+   "l1_pinned": true,
+   "unpinned_because": [],
+   "pods": {
+    "UL": [
+     "Cortondo",
+     "Wild Area",
+     "Lilycove City",
+     "Blueberry Terarium"
+    ],
+    "UR": [
+     "Spikemuth",
+     "Floaroma City",
+     "Sunyshore City",
+     "Cabo Poco"
+    ],
+    "LL": [
+     "Wyndon South",
+     "Olivine City",
+     "Sandgem Town",
+     "Mistralton City"
+    ],
+    "LR": [
+     "Kala'e Bay",
+     "Fallarbor Town",
+     "Shalour City",
+     "Casseroya Lake"
+    ]
+   },
+   "games": {
+    "1": [
+     [
+      "Wild Area",
+      "Cortondo"
+     ],
+     [
+      "Blueberry Terarium",
+      "Lilycove City"
+     ],
+     [
+      "Floaroma City",
+      "Spikemuth"
+     ],
+     [
+      "Cabo Poco",
+      "Sunyshore City"
+     ],
+     [
+      "Olivine City",
+      "Wyndon South"
+     ],
+     [
+      "Mistralton City",
+      "Sandgem Town"
+     ],
+     [
+      "Fallarbor Town",
+      "Kala'e Bay"
+     ],
+     [
+      "Casseroya Lake",
+      "Shalour City"
+     ]
+    ],
+    "2": [
+     [
+      "Cortondo",
+      "Floaroma City"
+     ],
+     [
+      "Lilycove City",
+      "Cabo Poco"
+     ],
+     [
+      "Wild Area",
+      "Spikemuth"
+     ],
+     [
+      "Blueberry Terarium",
+      "Sunyshore City"
+     ],
+     [
+      "Wyndon South",
+      "Fallarbor Town"
+     ],
+     [
+      "Sandgem Town",
+      "Casseroya Lake"
+     ],
+     [
+      "Olivine City",
+      "Kala'e Bay"
+     ],
+     [
+      "Mistralton City",
+      "Shalour City"
+     ]
+    ],
+    "3": [
+     [
+      "Kala'e Bay",
+      "Cortondo"
+     ],
+     [
+      "Fallarbor Town",
+      "Wild Area"
+     ],
+     [
+      "Shalour City",
+      "Lilycove City"
+     ],
+     [
+      "Casseroya Lake",
+      "Blueberry Terarium"
+     ],
+     [
+      "Spikemuth",
+      "Wyndon South"
+     ],
+     [
+      "Floaroma City",
+      "Olivine City"
+     ],
+     [
+      "Sunyshore City",
+      "Sandgem Town"
+     ],
+     [
+      "Cabo Poco",
+      "Mistralton City"
+     ]
+    ],
+    "4": [
+     [
+      "Cortondo",
+      "Lilycove City"
+     ],
+     [
+      "Wild Area",
+      "Blueberry Terarium"
+     ],
+     [
+      "Spikemuth",
+      "Sunyshore City"
+     ],
+     [
+      "Floaroma City",
+      "Cabo Poco"
+     ],
+     [
+      "Wyndon South",
+      "Sandgem Town"
+     ],
+     [
+      "Olivine City",
+      "Mistralton City"
+     ],
+     [
+      "Kala'e Bay",
+      "Shalour City"
+     ],
+     [
+      "Fallarbor Town",
+      "Casseroya Lake"
+     ]
+    ],
+    "5": [
+     [
+      "Blueberry Terarium",
+      "Cortondo"
+     ],
+     [
+      "Lilycove City",
+      "Wild Area"
+     ],
+     [
+      "Cabo Poco",
+      "Spikemuth"
+     ],
+     [
+      "Sunyshore City",
+      "Floaroma City"
+     ],
+     [
+      "Mistralton City",
+      "Wyndon South"
+     ],
+     [
+      "Sandgem Town",
+      "Olivine City"
+     ],
+     [
+      "Casseroya Lake",
+      "Kala'e Bay"
+     ],
+     [
+      "Shalour City",
+      "Fallarbor Town"
+     ]
+    ],
+    "6": [
+     [
+      "Cortondo",
+      "Cabo Poco"
+     ],
+     [
+      "Wild Area",
+      "Sunyshore City"
+     ],
+     [
+      "Blueberry Terarium",
+      "Spikemuth"
+     ],
+     [
+      "Lilycove City",
+      "Floaroma City"
+     ],
+     [
+      "Wyndon South",
+      "Casseroya Lake"
+     ],
+     [
+      "Olivine City",
+      "Shalour City"
+     ],
+     [
+      "Mistralton City",
+      "Kala'e Bay"
+     ],
+     [
+      "Sandgem Town",
+      "Fallarbor Town"
+     ]
+    ],
+    "7": [
+     [
+      "Sunyshore City",
+      "Cortondo"
+     ],
+     [
+      "Cabo Poco",
+      "Wild Area"
+     ],
+     [
+      "Spikemuth",
+      "Lilycove City"
+     ],
+     [
+      "Floaroma City",
+      "Blueberry Terarium"
+     ],
+     [
+      "Shalour City",
+      "Wyndon South"
+     ],
+     [
+      "Casseroya Lake",
+      "Olivine City"
+     ],
+     [
+      "Kala'e Bay",
+      "Sandgem Town"
+     ],
+     [
+      "Fallarbor Town",
+      "Mistralton City"
+     ]
+    ],
+    "8": [
+     [
+      "Spikemuth",
+      "Cortondo"
+     ],
+     [
+      "Floaroma City",
+      "Wild Area"
+     ],
+     [
+      "Sunyshore City",
+      "Lilycove City"
+     ],
+     [
+      "Cabo Poco",
+      "Blueberry Terarium"
+     ],
+     [
+      "Kala'e Bay",
+      "Wyndon South"
+     ],
+     [
+      "Fallarbor Town",
+      "Olivine City"
+     ],
+     [
+      "Shalour City",
+      "Sandgem Town"
+     ],
+     [
+      "Casseroya Lake",
+      "Mistralton City"
+     ]
+    ],
+    "9": [
+     [
+      "Cortondo",
+      "Fallarbor Town"
+     ],
+     [
+      "Lilycove City",
+      "Casseroya Lake"
+     ],
+     [
+      "Wild Area",
+      "Kala'e Bay"
+     ],
+     [
+      "Blueberry Terarium",
+      "Shalour City"
+     ],
+     [
+      "Wyndon South",
+      "Floaroma City"
+     ],
+     [
+      "Sandgem Town",
+      "Cabo Poco"
+     ],
+     [
+      "Olivine City",
+      "Spikemuth"
+     ],
+     [
+      "Mistralton City",
+      "Sunyshore City"
+     ]
+    ],
+    "10": [
+     [
+      "Shalour City",
+      "Cortondo"
+     ],
+     [
+      "Casseroya Lake",
+      "Wild Area"
+     ],
+     [
+      "Kala'e Bay",
+      "Lilycove City"
+     ],
+     [
+      "Fallarbor Town",
+      "Blueberry Terarium"
+     ],
+     [
+      "Sunyshore City",
+      "Wyndon South"
+     ],
+     [
+      "Cabo Poco",
+      "Olivine City"
+     ],
+     [
+      "Spikemuth",
+      "Sandgem Town"
+     ],
+     [
+      "Floaroma City",
+      "Mistralton City"
+     ]
+    ],
+    "11": [
+     [
+      "Cortondo",
+      "Wyndon South"
+     ],
+     [
+      "Wild Area",
+      "Olivine City"
+     ],
+     [
+      "Lilycove City",
+      "Sandgem Town"
+     ],
+     [
+      "Blueberry Terarium",
+      "Mistralton City"
+     ],
+     [
+      "Spikemuth",
+      "Kala'e Bay"
+     ],
+     [
+      "Floaroma City",
+      "Fallarbor Town"
+     ],
+     [
+      "Sunyshore City",
+      "Shalour City"
+     ],
+     [
+      "Cabo Poco",
+      "Casseroya Lake"
+     ]
+    ],
+    "12": [
+     [
+      "Mistralton City",
+      "Cortondo"
+     ],
+     [
+      "Sandgem Town",
+      "Wild Area"
+     ],
+     [
+      "Wyndon South",
+      "Blueberry Terarium"
+     ],
+     [
+      "Olivine City",
+      "Lilycove City"
+     ],
+     [
+      "Casseroya Lake",
+      "Spikemuth"
+     ],
+     [
+      "Shalour City",
+      "Floaroma City"
+     ],
+     [
+      "Kala'e Bay",
+      "Cabo Poco"
+     ],
+     [
+      "Fallarbor Town",
+      "Sunyshore City"
+     ]
+    ],
+    "13": [
+     [
+      "Olivine City",
+      "Cortondo"
+     ],
+     [
+      "Mistralton City",
+      "Lilycove City"
+     ],
+     [
+      "Wyndon South",
+      "Wild Area"
+     ],
+     [
+      "Sandgem Town",
+      "Blueberry Terarium"
+     ],
+     [
+      "Fallarbor Town",
+      "Spikemuth"
+     ],
+     [
+      "Casseroya Lake",
+      "Sunyshore City"
+     ],
+     [
+      "Kala'e Bay",
+      "Floaroma City"
+     ],
+     [
+      "Shalour City",
+      "Cabo Poco"
+     ]
+    ],
+    "14": [
+     [
+      "Cortondo",
+      "Sandgem Town"
+     ],
+     [
+      "Wild Area",
+      "Mistralton City"
+     ],
+     [
+      "Lilycove City",
+      "Wyndon South"
+     ],
+     [
+      "Blueberry Terarium",
+      "Olivine City"
+     ],
+     [
+      "Spikemuth",
+      "Shalour City"
+     ],
+     [
+      "Floaroma City",
+      "Casseroya Lake"
+     ],
+     [
+      "Sunyshore City",
+      "Kala'e Bay"
+     ],
+     [
+      "Cabo Poco",
+      "Fallarbor Town"
+     ]
+    ],
+    "15": [
+     [
+      "Cortondo",
+      "Casseroya Lake"
+     ],
+     [
+      "Wild Area",
+      "Shalour City"
+     ],
+     [
+      "Blueberry Terarium",
+      "Kala'e Bay"
+     ],
+     [
+      "Lilycove City",
+      "Fallarbor Town"
+     ],
+     [
+      "Wyndon South",
+      "Cabo Poco"
+     ],
+     [
+      "Olivine City",
+      "Sunyshore City"
+     ],
+     [
+      "Mistralton City",
+      "Spikemuth"
+     ],
+     [
+      "Sandgem Town",
+      "Floaroma City"
+     ]
+    ]
+   }
+  },
+  "4": {
+   "valid_orders": 86376576,
+   "order": [
+    15,
+    10,
+    6,
+    7,
+    5,
+    2,
+    14,
+    4,
+    11,
+    3,
+    1,
+    8,
+    13,
+    12,
+    9
+   ],
+   "l1_pinned": true,
+   "unpinned_because": [],
+   "pods": {
+    "UL": [
+     "Castelia City",
+     "Fortree City",
+     "Crown Tundra",
+     "Mossui Town"
+    ],
+    "UR": [
+     "Exeggutor Island",
+     "Fall City",
+     "Sootopolis City",
+     "Stow-on-Side"
+    ],
+    "LL": [
+     "Cherrygrove City",
+     "Santalune City",
+     "Konikoni City",
+     "Celestic Town"
+    ],
+    "LR": [
+     "Ever Grande City",
+     "Glaseado Mountain",
+     "Accumula Town",
+     "Ringtown"
+    ]
+   },
+   "games": {
+    "1": [
+     [
+      "Fortree City",
+      "Castelia City"
+     ],
+     [
+      "Mossui Town",
+      "Crown Tundra"
+     ],
+     [
+      "Fall City",
+      "Exeggutor Island"
+     ],
+     [
+      "Stow-on-Side",
+      "Sootopolis City"
+     ],
+     [
+      "Santalune City",
+      "Cherrygrove City"
+     ],
+     [
+      "Celestic Town",
+      "Konikoni City"
+     ],
+     [
+      "Glaseado Mountain",
+      "Ever Grande City"
+     ],
+     [
+      "Ringtown",
+      "Accumula Town"
+     ]
+    ],
+    "2": [
+     [
+      "Santalune City",
+      "Castelia City"
+     ],
+     [
+      "Celestic Town",
+      "Crown Tundra"
+     ],
+     [
+      "Cherrygrove City",
+      "Fortree City"
+     ],
+     [
+      "Konikoni City",
+      "Mossui Town"
+     ],
+     [
+      "Glaseado Mountain",
+      "Exeggutor Island"
+     ],
+     [
+      "Ringtown",
+      "Sootopolis City"
+     ],
+     [
+      "Ever Grande City",
+      "Fall City"
+     ],
+     [
+      "Accumula Town",
+      "Stow-on-Side"
+     ]
+    ],
+    "3": [
+     [
+      "Castelia City",
+      "Konikoni City"
+     ],
+     [
+      "Fortree City",
+      "Celestic Town"
+     ],
+     [
+      "Crown Tundra",
+      "Cherrygrove City"
+     ],
+     [
+      "Mossui Town",
+      "Santalune City"
+     ],
+     [
+      "Exeggutor Island",
+      "Accumula Town"
+     ],
+     [
+      "Fall City",
+      "Ringtown"
+     ],
+     [
+      "Sootopolis City",
+      "Ever Grande City"
+     ],
+     [
+      "Stow-on-Side",
+      "Glaseado Mountain"
+     ]
+    ],
+    "4": [
+     [
+      "Celestic Town",
+      "Castelia City"
+     ],
+     [
+      "Konikoni City",
+      "Fortree City"
+     ],
+     [
+      "Cherrygrove City",
+      "Mossui Town"
+     ],
+     [
+      "Santalune City",
+      "Crown Tundra"
+     ],
+     [
+      "Ringtown",
+      "Exeggutor Island"
+     ],
+     [
+      "Accumula Town",
+      "Fall City"
+     ],
+     [
+      "Ever Grande City",
+      "Stow-on-Side"
+     ],
+     [
+      "Glaseado Mountain",
+      "Sootopolis City"
+     ]
+    ],
+    "5": [
+     [
+      "Castelia City",
+      "Ringtown"
+     ],
+     [
+      "Fortree City",
+      "Accumula Town"
+     ],
+     [
+      "Mossui Town",
+      "Ever Grande City"
+     ],
+     [
+      "Crown Tundra",
+      "Glaseado Mountain"
+     ],
+     [
+      "Cherrygrove City",
+      "Stow-on-Side"
+     ],
+     [
+      "Santalune City",
+      "Sootopolis City"
+     ],
+     [
+      "Celestic Town",
+      "Exeggutor Island"
+     ],
+     [
+      "Konikoni City",
+      "Fall City"
+     ]
+    ],
+    "6": [
+     [
+      "Sootopolis City",
+      "Castelia City"
+     ],
+     [
+      "Stow-on-Side",
+      "Fortree City"
+     ],
+     [
+      "Exeggutor Island",
+      "Crown Tundra"
+     ],
+     [
+      "Fall City",
+      "Mossui Town"
+     ],
+     [
+      "Accumula Town",
+      "Cherrygrove City"
+     ],
+     [
+      "Ringtown",
+      "Santalune City"
+     ],
+     [
+      "Ever Grande City",
+      "Konikoni City"
+     ],
+     [
+      "Glaseado Mountain",
+      "Celestic Town"
+     ]
+    ],
+    "7": [
+     [
+      "Castelia City",
+      "Fall City"
+     ],
+     [
+      "Crown Tundra",
+      "Stow-on-Side"
+     ],
+     [
+      "Fortree City",
+      "Exeggutor Island"
+     ],
+     [
+      "Mossui Town",
+      "Sootopolis City"
+     ],
+     [
+      "Cherrygrove City",
+      "Glaseado Mountain"
+     ],
+     [
+      "Konikoni City",
+      "Ringtown"
+     ],
+     [
+      "Santalune City",
+      "Ever Grande City"
+     ],
+     [
+      "Celestic Town",
+      "Accumula Town"
+     ]
+    ],
+    "8": [
+     [
+      "Accumula Town",
+      "Castelia City"
+     ],
+     [
+      "Ringtown",
+      "Fortree City"
+     ],
+     [
+      "Ever Grande City",
+      "Crown Tundra"
+     ],
+     [
+      "Glaseado Mountain",
+      "Mossui Town"
+     ],
+     [
+      "Sootopolis City",
+      "Cherrygrove City"
+     ],
+     [
+      "Stow-on-Side",
+      "Santalune City"
+     ],
+     [
+      "Exeggutor Island",
+      "Konikoni City"
+     ],
+     [
+      "Fall City",
+      "Celestic Town"
+     ]
+    ],
+    "9": [
+     [
+      "Ever Grande City",
+      "Castelia City"
+     ],
+     [
+      "Glaseado Mountain",
+      "Fortree City"
+     ],
+     [
+      "Accumula Town",
+      "Crown Tundra"
+     ],
+     [
+      "Ringtown",
+      "Mossui Town"
+     ],
+     [
+      "Exeggutor Island",
+      "Cherrygrove City"
+     ],
+     [
+      "Fall City",
+      "Santalune City"
+     ],
+     [
+      "Sootopolis City",
+      "Konikoni City"
+     ],
+     [
+      "Stow-on-Side",
+      "Celestic Town"
+     ]
+    ],
+    "10": [
+     [
+      "Castelia City",
+      "Stow-on-Side"
+     ],
+     [
+      "Fortree City",
+      "Sootopolis City"
+     ],
+     [
+      "Mossui Town",
+      "Exeggutor Island"
+     ],
+     [
+      "Crown Tundra",
+      "Fall City"
+     ],
+     [
+      "Cherrygrove City",
+      "Ringtown"
+     ],
+     [
+      "Santalune City",
+      "Accumula Town"
+     ],
+     [
+      "Celestic Town",
+      "Ever Grande City"
+     ],
+     [
+      "Konikoni City",
+      "Glaseado Mountain"
+     ]
+    ],
+    "11": [
+     [
+      "Mossui Town",
+      "Castelia City"
+     ],
+     [
+      "Crown Tundra",
+      "Fortree City"
+     ],
+     [
+      "Stow-on-Side",
+      "Exeggutor Island"
+     ],
+     [
+      "Sootopolis City",
+      "Fall City"
+     ],
+     [
+      "Celestic Town",
+      "Cherrygrove City"
+     ],
+     [
+      "Konikoni City",
+      "Santalune City"
+     ],
+     [
+      "Ringtown",
+      "Ever Grande City"
+     ],
+     [
+      "Accumula Town",
+      "Glaseado Mountain"
+     ]
+    ],
+    "12": [
+     [
+      "Castelia City",
+      "Crown Tundra"
+     ],
+     [
+      "Fortree City",
+      "Mossui Town"
+     ],
+     [
+      "Exeggutor Island",
+      "Sootopolis City"
+     ],
+     [
+      "Fall City",
+      "Stow-on-Side"
+     ],
+     [
+      "Cherrygrove City",
+      "Konikoni City"
+     ],
+     [
+      "Santalune City",
+      "Celestic Town"
+     ],
+     [
+      "Ever Grande City",
+      "Accumula Town"
+     ],
+     [
+      "Glaseado Mountain",
+      "Ringtown"
+     ]
+    ],
+    "13": [
+     [
+      "Exeggutor Island",
+      "Castelia City"
+     ],
+     [
+      "Fall City",
+      "Fortree City"
+     ],
+     [
+      "Sootopolis City",
+      "Crown Tundra"
+     ],
+     [
+      "Stow-on-Side",
+      "Mossui Town"
+     ],
+     [
+      "Ever Grande City",
+      "Cherrygrove City"
+     ],
+     [
+      "Glaseado Mountain",
+      "Santalune City"
+     ],
+     [
+      "Accumula Town",
+      "Konikoni City"
+     ],
+     [
+      "Ringtown",
+      "Celestic Town"
+     ]
+    ],
+    "14": [
+     [
+      "Castelia City",
+      "Glaseado Mountain"
+     ],
+     [
+      "Crown Tundra",
+      "Ringtown"
+     ],
+     [
+      "Fortree City",
+      "Ever Grande City"
+     ],
+     [
+      "Mossui Town",
+      "Accumula Town"
+     ],
+     [
+      "Cherrygrove City",
+      "Fall City"
+     ],
+     [
+      "Konikoni City",
+      "Stow-on-Side"
+     ],
+     [
+      "Santalune City",
+      "Exeggutor Island"
+     ],
+     [
+      "Celestic Town",
+      "Sootopolis City"
+     ]
+    ],
+    "15": [
+     [
+      "Castelia City",
+      "Cherrygrove City"
+     ],
+     [
+      "Fortree City",
+      "Santalune City"
+     ],
+     [
+      "Crown Tundra",
+      "Konikoni City"
+     ],
+     [
+      "Mossui Town",
+      "Celestic Town"
+     ],
+     [
+      "Exeggutor Island",
+      "Ever Grande City"
+     ],
+     [
+      "Fall City",
+      "Glaseado Mountain"
+     ],
+     [
+      "Sootopolis City",
+      "Accumula Town"
+     ],
+     [
+      "Stow-on-Side",
+      "Ringtown"
+     ]
+    ]
+   }
+  },
+  "5": {
+   "valid_orders": 38950656,
+   "order": [
+    15,
+    5,
+    2,
+    10,
+    6,
+    9,
+    7,
+    4,
+    12,
+    11,
+    13,
+    3,
+    8,
+    1,
+    14
+   ],
+   "l1_pinned": true,
+   "unpinned_because": [],
+   "pods": {
+    "UL": [
+     "Cascarrafa",
+     "Tagtree Thicket",
+     "Wintown",
+     "Violet City"
+    ],
+    "UR": [
+     "Zapapico",
+     "Opelucid City",
+     "Victory Road",
+     "Dolce Island"
+    ],
+    "LL": [
+     "Rustboro City",
+     "Ballonlea",
+     "Littleroot Town",
+     "Hearthome City"
+    ],
+    "LR": [
+     "Goldenrod City",
+     "Driftveil City",
+     "Lake of Rage",
+     "Dendemille Town"
+    ]
+   },
+   "games": {
+    "1": [
+     [
+      "Tagtree Thicket",
+      "Cascarrafa"
+     ],
+     [
+      "Violet City",
+      "Wintown"
+     ],
+     [
+      "Opelucid City",
+      "Zapapico"
+     ],
+     [
+      "Dolce Island",
+      "Victory Road"
+     ],
+     [
+      "Ballonlea",
+      "Rustboro City"
+     ],
+     [
+      "Hearthome City",
+      "Littleroot Town"
+     ],
+     [
+      "Driftveil City",
+      "Goldenrod City"
+     ],
+     [
+      "Dendemille Town",
+      "Lake of Rage"
+     ]
+    ],
+    "2": [
+     [
+      "Cascarrafa",
+      "Dendemille Town"
+     ],
+     [
+      "Tagtree Thicket",
+      "Lake of Rage"
+     ],
+     [
+      "Violet City",
+      "Goldenrod City"
+     ],
+     [
+      "Wintown",
+      "Driftveil City"
+     ],
+     [
+      "Rustboro City",
+      "Dolce Island"
+     ],
+     [
+      "Ballonlea",
+      "Victory Road"
+     ],
+     [
+      "Hearthome City",
+      "Zapapico"
+     ],
+     [
+      "Littleroot Town",
+      "Opelucid City"
+     ]
+    ],
+    "3": [
+     [
+      "Victory Road",
+      "Cascarrafa"
+     ],
+     [
+      "Dolce Island",
+      "Tagtree Thicket"
+     ],
+     [
+      "Zapapico",
+      "Wintown"
+     ],
+     [
+      "Opelucid City",
+      "Violet City"
+     ],
+     [
+      "Lake of Rage",
+      "Rustboro City"
+     ],
+     [
+      "Dendemille Town",
+      "Ballonlea"
+     ],
+     [
+      "Goldenrod City",
+      "Littleroot Town"
+     ],
+     [
+      "Driftveil City",
+      "Hearthome City"
+     ]
+    ],
+    "4": [
+     [
+      "Ballonlea",
+      "Cascarrafa"
+     ],
+     [
+      "Hearthome City",
+      "Wintown"
+     ],
+     [
+      "Rustboro City",
+      "Tagtree Thicket"
+     ],
+     [
+      "Littleroot Town",
+      "Violet City"
+     ],
+     [
+      "Driftveil City",
+      "Zapapico"
+     ],
+     [
+      "Dendemille Town",
+      "Victory Road"
+     ],
+     [
+      "Goldenrod City",
+      "Opelucid City"
+     ],
+     [
+      "Lake of Rage",
+      "Dolce Island"
+     ]
+    ],
+    "5": [
+     [
+      "Cascarrafa",
+      "Littleroot Town"
+     ],
+     [
+      "Tagtree Thicket",
+      "Hearthome City"
+     ],
+     [
+      "Wintown",
+      "Rustboro City"
+     ],
+     [
+      "Violet City",
+      "Ballonlea"
+     ],
+     [
+      "Zapapico",
+      "Lake of Rage"
+     ],
+     [
+      "Opelucid City",
+      "Dendemille Town"
+     ],
+     [
+      "Victory Road",
+      "Goldenrod City"
+     ],
+     [
+      "Dolce Island",
+      "Driftveil City"
+     ]
+    ],
+    "6": [
+     [
+      "Cascarrafa",
+      "Rustboro City"
+     ],
+     [
+      "Tagtree Thicket",
+      "Ballonlea"
+     ],
+     [
+      "Wintown",
+      "Littleroot Town"
+     ],
+     [
+      "Violet City",
+      "Hearthome City"
+     ],
+     [
+      "Zapapico",
+      "Goldenrod City"
+     ],
+     [
+      "Opelucid City",
+      "Driftveil City"
+     ],
+     [
+      "Victory Road",
+      "Lake of Rage"
+     ],
+     [
+      "Dolce Island",
+      "Dendemille Town"
+     ]
+    ],
+    "7": [
+     [
+      "Hearthome City",
+      "Cascarrafa"
+     ],
+     [
+      "Littleroot Town",
+      "Tagtree Thicket"
+     ],
+     [
+      "Rustboro City",
+      "Violet City"
+     ],
+     [
+      "Ballonlea",
+      "Wintown"
+     ],
+     [
+      "Dendemille Town",
+      "Zapapico"
+     ],
+     [
+      "Lake of Rage",
+      "Opelucid City"
+     ],
+     [
+      "Goldenrod City",
+      "Dolce Island"
+     ],
+     [
+      "Driftveil City",
+      "Victory Road"
+     ]
+    ],
+    "8": [
+     [
+      "Lake of Rage",
+      "Cascarrafa"
+     ],
+     [
+      "Dendemille Town",
+      "Tagtree Thicket"
+     ],
+     [
+      "Goldenrod City",
+      "Wintown"
+     ],
+     [
+      "Driftveil City",
+      "Violet City"
+     ],
+     [
+      "Victory Road",
+      "Rustboro City"
+     ],
+     [
+      "Dolce Island",
+      "Ballonlea"
+     ],
+     [
+      "Zapapico",
+      "Littleroot Town"
+     ],
+     [
+      "Opelucid City",
+      "Hearthome City"
+     ]
+    ],
+    "9": [
+     [
+      "Cascarrafa",
+      "Driftveil City"
+     ],
+     [
+      "Wintown",
+      "Dendemille Town"
+     ],
+     [
+      "Tagtree Thicket",
+      "Goldenrod City"
+     ],
+     [
+      "Violet City",
+      "Lake of Rage"
+     ],
+     [
+      "Rustboro City",
+      "Opelucid City"
+     ],
+     [
+      "Littleroot Town",
+      "Dolce Island"
+     ],
+     [
+      "Ballonlea",
+      "Zapapico"
+     ],
+     [
+      "Hearthome City",
+      "Victory Road"
+     ]
+    ],
+    "10": [
+     [
+      "Goldenrod City",
+      "Cascarrafa"
+     ],
+     [
+      "Driftveil City",
+      "Tagtree Thicket"
+     ],
+     [
+      "Lake of Rage",
+      "Wintown"
+     ],
+     [
+      "Dendemille Town",
+      "Violet City"
+     ],
+     [
+      "Zapapico",
+      "Rustboro City"
+     ],
+     [
+      "Opelucid City",
+      "Ballonlea"
+     ],
+     [
+      "Victory Road",
+      "Littleroot Town"
+     ],
+     [
+      "Dolce Island",
+      "Hearthome City"
+     ]
+    ],
+    "11": [
+     [
+      "Zapapico",
+      "Cascarrafa"
+     ],
+     [
+      "Opelucid City",
+      "Tagtree Thicket"
+     ],
+     [
+      "Victory Road",
+      "Wintown"
+     ],
+     [
+      "Dolce Island",
+      "Violet City"
+     ],
+     [
+      "Goldenrod City",
+      "Rustboro City"
+     ],
+     [
+      "Driftveil City",
+      "Ballonlea"
+     ],
+     [
+      "Lake of Rage",
+      "Littleroot Town"
+     ],
+     [
+      "Dendemille Town",
+      "Hearthome City"
+     ]
+    ],
+    "12": [
+     [
+      "Cascarrafa",
+      "Dolce Island"
+     ],
+     [
+      "Tagtree Thicket",
+      "Victory Road"
+     ],
+     [
+      "Violet City",
+      "Zapapico"
+     ],
+     [
+      "Wintown",
+      "Opelucid City"
+     ],
+     [
+      "Rustboro City",
+      "Dendemille Town"
+     ],
+     [
+      "Ballonlea",
+      "Lake of Rage"
+     ],
+     [
+      "Hearthome City",
+      "Goldenrod City"
+     ],
+     [
+      "Littleroot Town",
+      "Driftveil City"
+     ]
+    ],
+    "13": [
+     [
+      "Cascarrafa",
+      "Wintown"
+     ],
+     [
+      "Tagtree Thicket",
+      "Violet City"
+     ],
+     [
+      "Zapapico",
+      "Victory Road"
+     ],
+     [
+      "Opelucid City",
+      "Dolce Island"
+     ],
+     [
+      "Rustboro City",
+      "Littleroot Town"
+     ],
+     [
+      "Ballonlea",
+      "Hearthome City"
+     ],
+     [
+      "Goldenrod City",
+      "Lake of Rage"
+     ],
+     [
+      "Driftveil City",
+      "Dendemille Town"
+     ]
+    ],
+    "14": [
+     [
+      "Violet City",
+      "Cascarrafa"
+     ],
+     [
+      "Wintown",
+      "Tagtree Thicket"
+     ],
+     [
+      "Dolce Island",
+      "Zapapico"
+     ],
+     [
+      "Victory Road",
+      "Opelucid City"
+     ],
+     [
+      "Hearthome City",
+      "Rustboro City"
+     ],
+     [
+      "Littleroot Town",
+      "Ballonlea"
+     ],
+     [
+      "Dendemille Town",
+      "Goldenrod City"
+     ],
+     [
+      "Lake of Rage",
+      "Driftveil City"
+     ]
+    ],
+    "15": [
+     [
+      "Cascarrafa",
+      "Opelucid City"
+     ],
+     [
+      "Wintown",
+      "Dolce Island"
+     ],
+     [
+      "Tagtree Thicket",
+      "Zapapico"
+     ],
+     [
+      "Violet City",
+      "Victory Road"
+     ],
+     [
+      "Rustboro City",
+      "Driftveil City"
+     ],
+     [
+      "Littleroot Town",
+      "Dendemille Town"
+     ],
+     [
+      "Ballonlea",
+      "Goldenrod City"
+     ],
+     [
+      "Hearthome City",
+      "Lake of Rage"
+     ]
+    ]
+   }
+  },
+  "6": {
+   "valid_orders": 18954192,
+   "order": [
+    15,
+    10,
+    6,
+    11,
+    12,
+    7,
+    9,
+    8,
+    1,
+    13,
+    14,
+    4,
+    5,
+    2,
+    3
+   ],
+   "l1_pinned": true,
+   "unpinned_because": [],
+   "pods": {
+    "UL": [
+     "Pastoria City",
+     "Eterna City",
+     "Isle of Armor",
+     "Mount Hokulani"
+    ],
+    "UR": [
+     "Hammerlocke",
+     "Ruins of Alph",
+     "Levincia",
+     "Pacifidlog Town"
+    ],
+    "LL": [
+     "Aether Paradise",
+     "Los Platos",
+     "Tapu Village",
+     "Pallet Town"
+    ],
+    "LR": [
+     "Fuchsia City",
+     "Sevii Islands",
+     "Undella Town",
+     "Celadon City"
+    ]
+   },
+   "games": {
+    "1": [
+     [
+      "Eterna City",
+      "Pastoria City"
+     ],
+     [
+      "Mount Hokulani",
+      "Isle of Armor"
+     ],
+     [
+      "Ruins of Alph",
+      "Hammerlocke"
+     ],
+     [
+      "Pacifidlog Town",
+      "Levincia"
+     ],
+     [
+      "Los Platos",
+      "Aether Paradise"
+     ],
+     [
+      "Pallet Town",
+      "Tapu Village"
+     ],
+     [
+      "Sevii Islands",
+      "Fuchsia City"
+     ],
+     [
+      "Celadon City",
+      "Undella Town"
+     ]
+    ],
+    "2": [
+     [
+      "Los Platos",
+      "Pastoria City"
+     ],
+     [
+      "Pallet Town",
+      "Isle of Armor"
+     ],
+     [
+      "Aether Paradise",
+      "Eterna City"
+     ],
+     [
+      "Tapu Village",
+      "Mount Hokulani"
+     ],
+     [
+      "Sevii Islands",
+      "Hammerlocke"
+     ],
+     [
+      "Celadon City",
+      "Levincia"
+     ],
+     [
+      "Fuchsia City",
+      "Ruins of Alph"
+     ],
+     [
+      "Undella Town",
+      "Pacifidlog Town"
+     ]
+    ],
+    "3": [
+     [
+      "Pastoria City",
+      "Tapu Village"
+     ],
+     [
+      "Eterna City",
+      "Pallet Town"
+     ],
+     [
+      "Isle of Armor",
+      "Aether Paradise"
+     ],
+     [
+      "Mount Hokulani",
+      "Los Platos"
+     ],
+     [
+      "Hammerlocke",
+      "Undella Town"
+     ],
+     [
+      "Ruins of Alph",
+      "Celadon City"
+     ],
+     [
+      "Levincia",
+      "Fuchsia City"
+     ],
+     [
+      "Pacifidlog Town",
+      "Sevii Islands"
+     ]
+    ],
+    "4": [
+     [
+      "Fuchsia City",
+      "Pastoria City"
+     ],
+     [
+      "Sevii Islands",
+      "Eterna City"
+     ],
+     [
+      "Undella Town",
+      "Isle of Armor"
+     ],
+     [
+      "Celadon City",
+      "Mount Hokulani"
+     ],
+     [
+      "Hammerlocke",
+      "Aether Paradise"
+     ],
+     [
+      "Ruins of Alph",
+      "Los Platos"
+     ],
+     [
+      "Levincia",
+      "Tapu Village"
+     ],
+     [
+      "Pacifidlog Town",
+      "Pallet Town"
+     ]
+    ],
+    "5": [
+     [
+      "Pastoria City",
+      "Sevii Islands"
+     ],
+     [
+      "Isle of Armor",
+      "Celadon City"
+     ],
+     [
+      "Eterna City",
+      "Fuchsia City"
+     ],
+     [
+      "Mount Hokulani",
+      "Undella Town"
+     ],
+     [
+      "Aether Paradise",
+      "Ruins of Alph"
+     ],
+     [
+      "Tapu Village",
+      "Pacifidlog Town"
+     ],
+     [
+      "Los Platos",
+      "Hammerlocke"
+     ],
+     [
+      "Pallet Town",
+      "Levincia"
+     ]
+    ],
+    "6": [
+     [
+      "Pallet Town",
+      "Pastoria City"
+     ],
+     [
+      "Tapu Village",
+      "Eterna City"
+     ],
+     [
+      "Aether Paradise",
+      "Mount Hokulani"
+     ],
+     [
+      "Los Platos",
+      "Isle of Armor"
+     ],
+     [
+      "Celadon City",
+      "Hammerlocke"
+     ],
+     [
+      "Undella Town",
+      "Ruins of Alph"
+     ],
+     [
+      "Fuchsia City",
+      "Pacifidlog Town"
+     ],
+     [
+      "Sevii Islands",
+      "Levincia"
+     ]
+    ],
+    "7": [
+     [
+      "Pastoria City",
+      "Aether Paradise"
+     ],
+     [
+      "Eterna City",
+      "Los Platos"
+     ],
+     [
+      "Isle of Armor",
+      "Tapu Village"
+     ],
+     [
+      "Mount Hokulani",
+      "Pallet Town"
+     ],
+     [
+      "Hammerlocke",
+      "Fuchsia City"
+     ],
+     [
+      "Ruins of Alph",
+      "Sevii Islands"
+     ],
+     [
+      "Levincia",
+      "Undella Town"
+     ],
+     [
+      "Pacifidlog Town",
+      "Celadon City"
+     ]
+    ],
+    "8": [
+     [
+      "Pastoria City",
+      "Isle of Armor"
+     ],
+     [
+      "Eterna City",
+      "Mount Hokulani"
+     ],
+     [
+      "Hammerlocke",
+      "Levincia"
+     ],
+     [
+      "Ruins of Alph",
+      "Pacifidlog Town"
+     ],
+     [
+      "Aether Paradise",
+      "Tapu Village"
+     ],
+     [
+      "Los Platos",
+      "Pallet Town"
+     ],
+     [
+      "Fuchsia City",
+      "Undella Town"
+     ],
+     [
+      "Sevii Islands",
+      "Celadon City"
+     ]
+    ],
+    "9": [
+     [
+      "Mount Hokulani",
+      "Pastoria City"
+     ],
+     [
+      "Isle of Armor",
+      "Eterna City"
+     ],
+     [
+      "Pacifidlog Town",
+      "Hammerlocke"
+     ],
+     [
+      "Levincia",
+      "Ruins of Alph"
+     ],
+     [
+      "Pallet Town",
+      "Aether Paradise"
+     ],
+     [
+      "Tapu Village",
+      "Los Platos"
+     ],
+     [
+      "Celadon City",
+      "Fuchsia City"
+     ],
+     [
+      "Undella Town",
+      "Sevii Islands"
+     ]
+    ],
+    "10": [
+     [
+      "Hammerlocke",
+      "Pastoria City"
+     ],
+     [
+      "Ruins of Alph",
+      "Eterna City"
+     ],
+     [
+      "Levincia",
+      "Isle of Armor"
+     ],
+     [
+      "Pacifidlog Town",
+      "Mount Hokulani"
+     ],
+     [
+      "Fuchsia City",
+      "Aether Paradise"
+     ],
+     [
+      "Sevii Islands",
+      "Los Platos"
+     ],
+     [
+      "Undella Town",
+      "Tapu Village"
+     ],
+     [
+      "Celadon City",
+      "Pallet Town"
+     ]
+    ],
+    "11": [
+     [
+      "Pastoria City",
+      "Ruins of Alph"
+     ],
+     [
+      "Isle of Armor",
+      "Pacifidlog Town"
+     ],
+     [
+      "Eterna City",
+      "Hammerlocke"
+     ],
+     [
+      "Mount Hokulani",
+      "Levincia"
+     ],
+     [
+      "Aether Paradise",
+      "Sevii Islands"
+     ],
+     [
+      "Tapu Village",
+      "Celadon City"
+     ],
+     [
+      "Los Platos",
+      "Fuchsia City"
+     ],
+     [
+      "Pallet Town",
+      "Undella Town"
+     ]
+    ],
+    "12": [
+     [
+      "Undella Town",
+      "Pastoria City"
+     ],
+     [
+      "Celadon City",
+      "Eterna City"
+     ],
+     [
+      "Fuchsia City",
+      "Isle of Armor"
+     ],
+     [
+      "Sevii Islands",
+      "Mount Hokulani"
+     ],
+     [
+      "Levincia",
+      "Aether Paradise"
+     ],
+     [
+      "Pacifidlog Town",
+      "Los Platos"
+     ],
+     [
+      "Hammerlocke",
+      "Tapu Village"
+     ],
+     [
+      "Ruins of Alph",
+      "Pallet Town"
+     ]
+    ],
+    "13": [
+     [
+      "Pastoria City",
+      "Celadon City"
+     ],
+     [
+      "Eterna City",
+      "Undella Town"
+     ],
+     [
+      "Mount Hokulani",
+      "Fuchsia City"
+     ],
+     [
+      "Isle of Armor",
+      "Sevii Islands"
+     ],
+     [
+      "Aether Paradise",
+      "Pacifidlog Town"
+     ],
+     [
+      "Los Platos",
+      "Levincia"
+     ],
+     [
+      "Pallet Town",
+      "Hammerlocke"
+     ],
+     [
+      "Tapu Village",
+      "Ruins of Alph"
+     ]
+    ],
+    "14": [
+     [
+      "Levincia",
+      "Pastoria City"
+     ],
+     [
+      "Pacifidlog Town",
+      "Eterna City"
+     ],
+     [
+      "Hammerlocke",
+      "Isle of Armor"
+     ],
+     [
+      "Ruins of Alph",
+      "Mount Hokulani"
+     ],
+     [
+      "Undella Town",
+      "Aether Paradise"
+     ],
+     [
+      "Celadon City",
+      "Los Platos"
+     ],
+     [
+      "Fuchsia City",
+      "Tapu Village"
+     ],
+     [
+      "Sevii Islands",
+      "Pallet Town"
+     ]
+    ],
+    "15": [
+     [
+      "Pastoria City",
+      "Pacifidlog Town"
+     ],
+     [
+      "Eterna City",
+      "Levincia"
+     ],
+     [
+      "Mount Hokulani",
+      "Hammerlocke"
+     ],
+     [
+      "Isle of Armor",
+      "Ruins of Alph"
+     ],
+     [
+      "Aether Paradise",
+      "Celadon City"
+     ],
+     [
+      "Los Platos",
+      "Undella Town"
+     ],
+     [
+      "Pallet Town",
+      "Fuchsia City"
+     ],
+     [
+      "Tapu Village",
+      "Sevii Islands"
+     ]
+    ]
+   }
+  },
+  "7": {
+   "valid_orders": 34476288,
+   "order": [
+    15,
+    10,
+    9,
+    14,
+    11,
+    12,
+    6,
+    7,
+    8,
+    1,
+    2,
+    5,
+    13,
+    4,
+    3
+   ],
+   "l1_pinned": true,
+   "unpinned_because": [],
+   "pods": {
+    "UL": [
+     "Slateport City",
+     "Geosenge Town",
+     "Humilau City",
+     "Wedgehurst"
+    ],
+    "UR": [
+     "Hulbury",
+     "Phenac City",
+     "Kiloude City",
+     "Vast Poni Canyon"
+    ],
+    "LL": [
+     "Oldale Town",
+     "Battle Zone",
+     "Wyndon North",
+     "Paniola Town"
+    ],
+    "LR": [
+     "Lavender Town",
+     "Ilex Forest",
+     "Couriway Town",
+     "Aspertia City"
+    ]
+   },
+   "games": {
+    "1": [
+     [
+      "Geosenge Town",
+      "Slateport City"
+     ],
+     [
+      "Wedgehurst",
+      "Humilau City"
+     ],
+     [
+      "Phenac City",
+      "Hulbury"
+     ],
+     [
+      "Vast Poni Canyon",
+      "Kiloude City"
+     ],
+     [
+      "Battle Zone",
+      "Oldale Town"
+     ],
+     [
+      "Paniola Town",
+      "Wyndon North"
+     ],
+     [
+      "Ilex Forest",
+      "Lavender Town"
+     ],
+     [
+      "Aspertia City",
+      "Couriway Town"
+     ]
+    ],
+    "2": [
+     [
+      "Battle Zone",
+      "Slateport City"
+     ],
+     [
+      "Paniola Town",
+      "Humilau City"
+     ],
+     [
+      "Oldale Town",
+      "Geosenge Town"
+     ],
+     [
+      "Wyndon North",
+      "Wedgehurst"
+     ],
+     [
+      "Ilex Forest",
+      "Hulbury"
+     ],
+     [
+      "Aspertia City",
+      "Kiloude City"
+     ],
+     [
+      "Lavender Town",
+      "Phenac City"
+     ],
+     [
+      "Couriway Town",
+      "Vast Poni Canyon"
+     ]
+    ],
+    "3": [
+     [
+      "Slateport City",
+      "Oldale Town"
+     ],
+     [
+      "Geosenge Town",
+      "Battle Zone"
+     ],
+     [
+      "Humilau City",
+      "Wyndon North"
+     ],
+     [
+      "Wedgehurst",
+      "Paniola Town"
+     ],
+     [
+      "Hulbury",
+      "Lavender Town"
+     ],
+     [
+      "Phenac City",
+      "Ilex Forest"
+     ],
+     [
+      "Kiloude City",
+      "Couriway Town"
+     ],
+     [
+      "Vast Poni Canyon",
+      "Aspertia City"
+     ]
+    ],
+    "4": [
+     [
+      "Slateport City",
+      "Phenac City"
+     ],
+     [
+      "Humilau City",
+      "Vast Poni Canyon"
+     ],
+     [
+      "Geosenge Town",
+      "Hulbury"
+     ],
+     [
+      "Wedgehurst",
+      "Kiloude City"
+     ],
+     [
+      "Oldale Town",
+      "Ilex Forest"
+     ],
+     [
+      "Wyndon North",
+      "Aspertia City"
+     ],
+     [
+      "Battle Zone",
+      "Lavender Town"
+     ],
+     [
+      "Paniola Town",
+      "Couriway Town"
+     ]
+    ],
+    "5": [
+     [
+      "Lavender Town",
+      "Slateport City"
+     ],
+     [
+      "Ilex Forest",
+      "Geosenge Town"
+     ],
+     [
+      "Couriway Town",
+      "Humilau City"
+     ],
+     [
+      "Aspertia City",
+      "Wedgehurst"
+     ],
+     [
+      "Hulbury",
+      "Oldale Town"
+     ],
+     [
+      "Phenac City",
+      "Battle Zone"
+     ],
+     [
+      "Kiloude City",
+      "Wyndon North"
+     ],
+     [
+      "Vast Poni Canyon",
+      "Paniola Town"
+     ]
+    ],
+    "6": [
+     [
+      "Slateport City",
+      "Ilex Forest"
+     ],
+     [
+      "Humilau City",
+      "Aspertia City"
+     ],
+     [
+      "Geosenge Town",
+      "Lavender Town"
+     ],
+     [
+      "Wedgehurst",
+      "Couriway Town"
+     ],
+     [
+      "Oldale Town",
+      "Phenac City"
+     ],
+     [
+      "Wyndon North",
+      "Vast Poni Canyon"
+     ],
+     [
+      "Battle Zone",
+      "Hulbury"
+     ],
+     [
+      "Paniola Town",
+      "Kiloude City"
+     ]
+    ],
+    "7": [
+     [
+      "Slateport City",
+      "Wyndon North"
+     ],
+     [
+      "Geosenge Town",
+      "Paniola Town"
+     ],
+     [
+      "Humilau City",
+      "Oldale Town"
+     ],
+     [
+      "Wedgehurst",
+      "Battle Zone"
+     ],
+     [
+      "Hulbury",
+      "Couriway Town"
+     ],
+     [
+      "Phenac City",
+      "Aspertia City"
+     ],
+     [
+      "Kiloude City",
+      "Lavender Town"
+     ],
+     [
+      "Vast Poni Canyon",
+      "Ilex Forest"
+     ]
+    ],
+    "8": [
+     [
+      "Paniola Town",
+      "Slateport City"
+     ],
+     [
+      "Wyndon North",
+      "Geosenge Town"
+     ],
+     [
+      "Oldale Town",
+      "Wedgehurst"
+     ],
+     [
+      "Battle Zone",
+      "Humilau City"
+     ],
+     [
+      "Aspertia City",
+      "Hulbury"
+     ],
+     [
+      "Couriway Town",
+      "Phenac City"
+     ],
+     [
+      "Lavender Town",
+      "Vast Poni Canyon"
+     ],
+     [
+      "Ilex Forest",
+      "Kiloude City"
+     ]
+    ],
+    "9": [
+     [
+      "Slateport City",
+      "Humilau City"
+     ],
+     [
+      "Geosenge Town",
+      "Wedgehurst"
+     ],
+     [
+      "Hulbury",
+      "Kiloude City"
+     ],
+     [
+      "Phenac City",
+      "Vast Poni Canyon"
+     ],
+     [
+      "Oldale Town",
+      "Wyndon North"
+     ],
+     [
+      "Battle Zone",
+      "Paniola Town"
+     ],
+     [
+      "Lavender Town",
+      "Couriway Town"
+     ],
+     [
+      "Ilex Forest",
+      "Aspertia City"
+     ]
+    ],
+    "10": [
+     [
+      "Wedgehurst",
+      "Slateport City"
+     ],
+     [
+      "Humilau City",
+      "Geosenge Town"
+     ],
+     [
+      "Vast Poni Canyon",
+      "Hulbury"
+     ],
+     [
+      "Kiloude City",
+      "Phenac City"
+     ],
+     [
+      "Paniola Town",
+      "Oldale Town"
+     ],
+     [
+      "Wyndon North",
+      "Battle Zone"
+     ],
+     [
+      "Aspertia City",
+      "Lavender Town"
+     ],
+     [
+      "Couriway Town",
+      "Ilex Forest"
+     ]
+    ],
+    "11": [
+     [
+      "Kiloude City",
+      "Slateport City"
+     ],
+     [
+      "Vast Poni Canyon",
+      "Geosenge Town"
+     ],
+     [
+      "Hulbury",
+      "Humilau City"
+     ],
+     [
+      "Phenac City",
+      "Wedgehurst"
+     ],
+     [
+      "Couriway Town",
+      "Oldale Town"
+     ],
+     [
+      "Aspertia City",
+      "Battle Zone"
+     ],
+     [
+      "Lavender Town",
+      "Wyndon North"
+     ],
+     [
+      "Ilex Forest",
+      "Paniola Town"
+     ]
+    ],
+    "12": [
+     [
+      "Slateport City",
+      "Aspertia City"
+     ],
+     [
+      "Geosenge Town",
+      "Couriway Town"
+     ],
+     [
+      "Wedgehurst",
+      "Lavender Town"
+     ],
+     [
+      "Humilau City",
+      "Ilex Forest"
+     ],
+     [
+      "Oldale Town",
+      "Vast Poni Canyon"
+     ],
+     [
+      "Battle Zone",
+      "Kiloude City"
+     ],
+     [
+      "Paniola Town",
+      "Hulbury"
+     ],
+     [
+      "Wyndon North",
+      "Phenac City"
+     ]
+    ],
+    "13": [
+     [
+      "Hulbury",
+      "Slateport City"
+     ],
+     [
+      "Phenac City",
+      "Geosenge Town"
+     ],
+     [
+      "Kiloude City",
+      "Humilau City"
+     ],
+     [
+      "Vast Poni Canyon",
+      "Wedgehurst"
+     ],
+     [
+      "Lavender Town",
+      "Oldale Town"
+     ],
+     [
+      "Ilex Forest",
+      "Battle Zone"
+     ],
+     [
+      "Couriway Town",
+      "Wyndon North"
+     ],
+     [
+      "Aspertia City",
+      "Paniola Town"
+     ]
+    ],
+    "14": [
+     [
+      "Couriway Town",
+      "Slateport City"
+     ],
+     [
+      "Aspertia City",
+      "Geosenge Town"
+     ],
+     [
+      "Lavender Town",
+      "Humilau City"
+     ],
+     [
+      "Ilex Forest",
+      "Wedgehurst"
+     ],
+     [
+      "Kiloude City",
+      "Oldale Town"
+     ],
+     [
+      "Vast Poni Canyon",
+      "Battle Zone"
+     ],
+     [
+      "Hulbury",
+      "Wyndon North"
+     ],
+     [
+      "Phenac City",
+      "Paniola Town"
+     ]
+    ],
+    "15": [
+     [
+      "Slateport City",
+      "Vast Poni Canyon"
+     ],
+     [
+      "Geosenge Town",
+      "Kiloude City"
+     ],
+     [
+      "Wedgehurst",
+      "Hulbury"
+     ],
+     [
+      "Humilau City",
+      "Phenac City"
+     ],
+     [
+      "Oldale Town",
+      "Aspertia City"
+     ],
+     [
+      "Battle Zone",
+      "Couriway Town"
+     ],
+     [
+      "Paniola Town",
+      "Lavender Town"
+     ],
+     [
+      "Wyndon North",
+      "Ilex Forest"
+     ]
+    ]
+   }
+  },
+  "8": {
+   "valid_orders": 20463928,
+   "order": [
+    15,
+    14,
+    13,
+    12,
+    7,
+    2,
+    6,
+    5,
+    4,
+    10,
+    9,
+    8,
+    1,
+    11,
+    3
+   ],
+   "l1_pinned": true,
+   "unpinned_because": [],
+   "pods": {
+    "UL": [
+     "Cerulean Cape",
+     "Mossdeep City",
+     "New Bark Town",
+     "Mahogany Town"
+    ],
+    "UR": [
+     "Nacrene City",
+     "Pewter City",
+     "Coumarine City",
+     "Icirrus City"
+    ],
+    "LL": [
+     "Snowbelle City",
+     "Aquacorde Town",
+     "Cerulean City",
+     "Heahea City"
+    ],
+    "LR": [
+     "Lavaridge Town",
+     "Mount Mortar",
+     "Floccesy Town",
+     "Blackthorn City"
+    ]
+   },
+   "games": {
+    "1": [
+     [
+      "Mossdeep City",
+      "Cerulean Cape"
+     ],
+     [
+      "Mahogany Town",
+      "New Bark Town"
+     ],
+     [
+      "Pewter City",
+      "Nacrene City"
+     ],
+     [
+      "Icirrus City",
+      "Coumarine City"
+     ],
+     [
+      "Aquacorde Town",
+      "Snowbelle City"
+     ],
+     [
+      "Heahea City",
+      "Cerulean City"
+     ],
+     [
+      "Mount Mortar",
+      "Lavaridge Town"
+     ],
+     [
+      "Blackthorn City",
+      "Floccesy Town"
+     ]
+    ],
+    "2": [
+     [
+      "Cerulean Cape",
+      "Pewter City"
+     ],
+     [
+      "New Bark Town",
+      "Icirrus City"
+     ],
+     [
+      "Mossdeep City",
+      "Nacrene City"
+     ],
+     [
+      "Mahogany Town",
+      "Coumarine City"
+     ],
+     [
+      "Snowbelle City",
+      "Mount Mortar"
+     ],
+     [
+      "Cerulean City",
+      "Blackthorn City"
+     ],
+     [
+      "Aquacorde Town",
+      "Lavaridge Town"
+     ],
+     [
+      "Heahea City",
+      "Floccesy Town"
+     ]
+    ],
+    "3": [
+     [
+      "Nacrene City",
+      "Cerulean Cape"
+     ],
+     [
+      "Pewter City",
+      "Mossdeep City"
+     ],
+     [
+      "Coumarine City",
+      "New Bark Town"
+     ],
+     [
+      "Icirrus City",
+      "Mahogany Town"
+     ],
+     [
+      "Lavaridge Town",
+      "Snowbelle City"
+     ],
+     [
+      "Mount Mortar",
+      "Aquacorde Town"
+     ],
+     [
+      "Floccesy Town",
+      "Cerulean City"
+     ],
+     [
+      "Blackthorn City",
+      "Heahea City"
+     ]
+    ],
+    "4": [
+     [
+      "Cerulean Cape",
+      "Mount Mortar"
+     ],
+     [
+      "New Bark Town",
+      "Blackthorn City"
+     ],
+     [
+      "Mossdeep City",
+      "Lavaridge Town"
+     ],
+     [
+      "Mahogany Town",
+      "Floccesy Town"
+     ],
+     [
+      "Snowbelle City",
+      "Pewter City"
+     ],
+     [
+      "Cerulean City",
+      "Icirrus City"
+     ],
+     [
+      "Aquacorde Town",
+      "Nacrene City"
+     ],
+     [
+      "Heahea City",
+      "Coumarine City"
+     ]
+    ],
+    "5": [
+     [
+      "Heahea City",
+      "Cerulean Cape"
+     ],
+     [
+      "Cerulean City",
+      "Mossdeep City"
+     ],
+     [
+      "Snowbelle City",
+      "Mahogany Town"
+     ],
+     [
+      "Aquacorde Town",
+      "New Bark Town"
+     ],
+     [
+      "Blackthorn City",
+      "Nacrene City"
+     ],
+     [
+      "Floccesy Town",
+      "Pewter City"
+     ],
+     [
+      "Lavaridge Town",
+      "Icirrus City"
+     ],
+     [
+      "Mount Mortar",
+      "Coumarine City"
+     ]
+    ],
+    "6": [
+     [
+      "Coumarine City",
+      "Cerulean Cape"
+     ],
+     [
+      "Icirrus City",
+      "Mossdeep City"
+     ],
+     [
+      "Nacrene City",
+      "New Bark Town"
+     ],
+     [
+      "Pewter City",
+      "Mahogany Town"
+     ],
+     [
+      "Floccesy Town",
+      "Snowbelle City"
+     ],
+     [
+      "Blackthorn City",
+      "Aquacorde Town"
+     ],
+     [
+      "Lavaridge Town",
+      "Cerulean City"
+     ],
+     [
+      "Mount Mortar",
+      "Heahea City"
+     ]
+    ],
+    "7": [
+     [
+      "Cerulean Cape",
+      "Cerulean City"
+     ],
+     [
+      "Mossdeep City",
+      "Heahea City"
+     ],
+     [
+      "New Bark Town",
+      "Snowbelle City"
+     ],
+     [
+      "Mahogany Town",
+      "Aquacorde Town"
+     ],
+     [
+      "Nacrene City",
+      "Floccesy Town"
+     ],
+     [
+      "Pewter City",
+      "Blackthorn City"
+     ],
+     [
+      "Coumarine City",
+      "Lavaridge Town"
+     ],
+     [
+      "Icirrus City",
+      "Mount Mortar"
+     ]
+    ],
+    "8": [
+     [
+      "Cerulean Cape",
+      "Blackthorn City"
+     ],
+     [
+      "Mossdeep City",
+      "Floccesy Town"
+     ],
+     [
+      "Mahogany Town",
+      "Lavaridge Town"
+     ],
+     [
+      "New Bark Town",
+      "Mount Mortar"
+     ],
+     [
+      "Snowbelle City",
+      "Icirrus City"
+     ],
+     [
+      "Aquacorde Town",
+      "Coumarine City"
+     ],
+     [
+      "Heahea City",
+      "Nacrene City"
+     ],
+     [
+      "Cerulean City",
+      "Pewter City"
+     ]
+    ],
+    "9": [
+     [
+      "Floccesy Town",
+      "Cerulean Cape"
+     ],
+     [
+      "Blackthorn City",
+      "Mossdeep City"
+     ],
+     [
+      "Lavaridge Town",
+      "New Bark Town"
+     ],
+     [
+      "Mount Mortar",
+      "Mahogany Town"
+     ],
+     [
+      "Coumarine City",
+      "Snowbelle City"
+     ],
+     [
+      "Icirrus City",
+      "Aquacorde Town"
+     ],
+     [
+      "Nacrene City",
+      "Cerulean City"
+     ],
+     [
+      "Pewter City",
+      "Heahea City"
+     ]
+    ],
+    "10": [
+     [
+      "Aquacorde Town",
+      "Cerulean Cape"
+     ],
+     [
+      "Heahea City",
+      "New Bark Town"
+     ],
+     [
+      "Snowbelle City",
+      "Mossdeep City"
+     ],
+     [
+      "Cerulean City",
+      "Mahogany Town"
+     ],
+     [
+      "Mount Mortar",
+      "Nacrene City"
+     ],
+     [
+      "Blackthorn City",
+      "Coumarine City"
+     ],
+     [
+      "Lavaridge Town",
+      "Pewter City"
+     ],
+     [
+      "Floccesy Town",
+      "Icirrus City"
+     ]
+    ],
+    "11": [
+     [
+      "Cerulean Cape",
+      "Snowbelle City"
+     ],
+     [
+      "Mossdeep City",
+      "Aquacorde Town"
+     ],
+     [
+      "New Bark Town",
+      "Cerulean City"
+     ],
+     [
+      "Mahogany Town",
+      "Heahea City"
+     ],
+     [
+      "Nacrene City",
+      "Lavaridge Town"
+     ],
+     [
+      "Pewter City",
+      "Mount Mortar"
+     ],
+     [
+      "Coumarine City",
+      "Floccesy Town"
+     ],
+     [
+      "Icirrus City",
+      "Blackthorn City"
+     ]
+    ],
+    "12": [
+     [
+      "Cerulean Cape",
+      "New Bark Town"
+     ],
+     [
+      "Mossdeep City",
+      "Mahogany Town"
+     ],
+     [
+      "Nacrene City",
+      "Coumarine City"
+     ],
+     [
+      "Pewter City",
+      "Icirrus City"
+     ],
+     [
+      "Snowbelle City",
+      "Cerulean City"
+     ],
+     [
+      "Aquacorde Town",
+      "Heahea City"
+     ],
+     [
+      "Lavaridge Town",
+      "Floccesy Town"
+     ],
+     [
+      "Mount Mortar",
+      "Blackthorn City"
+     ]
+    ],
+    "13": [
+     [
+      "Mahogany Town",
+      "Cerulean Cape"
+     ],
+     [
+      "New Bark Town",
+      "Mossdeep City"
+     ],
+     [
+      "Icirrus City",
+      "Nacrene City"
+     ],
+     [
+      "Coumarine City",
+      "Pewter City"
+     ],
+     [
+      "Heahea City",
+      "Snowbelle City"
+     ],
+     [
+      "Cerulean City",
+      "Aquacorde Town"
+     ],
+     [
+      "Blackthorn City",
+      "Lavaridge Town"
+     ],
+     [
+      "Floccesy Town",
+      "Mount Mortar"
+     ]
+    ],
+    "14": [
+     [
+      "Lavaridge Town",
+      "Cerulean Cape"
+     ],
+     [
+      "Mount Mortar",
+      "Mossdeep City"
+     ],
+     [
+      "Floccesy Town",
+      "New Bark Town"
+     ],
+     [
+      "Blackthorn City",
+      "Mahogany Town"
+     ],
+     [
+      "Nacrene City",
+      "Snowbelle City"
+     ],
+     [
+      "Pewter City",
+      "Aquacorde Town"
+     ],
+     [
+      "Coumarine City",
+      "Cerulean City"
+     ],
+     [
+      "Icirrus City",
+      "Heahea City"
+     ]
+    ],
+    "15": [
+     [
+      "Cerulean Cape",
+      "Icirrus City"
+     ],
+     [
+      "Mossdeep City",
+      "Coumarine City"
+     ],
+     [
+      "Mahogany Town",
+      "Nacrene City"
+     ],
+     [
+      "New Bark Town",
+      "Pewter City"
+     ],
+     [
+      "Snowbelle City",
+      "Blackthorn City"
+     ],
+     [
+      "Aquacorde Town",
+      "Floccesy Town"
+     ],
+     [
+      "Heahea City",
+      "Lavaridge Town"
+     ],
+     [
+      "Cerulean City",
+      "Mount Mortar"
+     ]
+    ]
+   }
+  },
+  "9": {
+   "valid_orders": 21820696,
+   "order": [
+    15,
+    14,
+    2,
+    6,
+    5,
+    7,
+    4,
+    3,
+    11,
+    12,
+    1,
+    8,
+    9,
+    10,
+    13
+   ],
+   "l1_pinned": true,
+   "unpinned_because": [],
+   "pods": {
+    "UL": [
+     "Boyleland",
+     "Saffron City",
+     "Viridian City",
+     "Twinleaf Town"
+    ],
+    "UR": [
+     "Montenevera",
+     "Cycling Road",
+     "Gateon Port",
+     "Fighting Dojo"
+    ],
+    "LL": [
+     "Vientown",
+     "Oreburgh City",
+     "Circhester Bay",
+     "Ambrette Town"
+    ],
+    "LR": [
+     "Haruba Village",
+     "Poni Meadow",
+     "Dewford Town",
+     "Laverre City"
+    ]
+   },
+   "games": {
+    "1": [
+     [
+      "Saffron City",
+      "Boyleland"
+     ],
+     [
+      "Twinleaf Town",
+      "Viridian City"
+     ],
+     [
+      "Cycling Road",
+      "Montenevera"
+     ],
+     [
+      "Fighting Dojo",
+      "Gateon Port"
+     ],
+     [
+      "Oreburgh City",
+      "Vientown"
+     ],
+     [
+      "Ambrette Town",
+      "Circhester Bay"
+     ],
+     [
+      "Poni Meadow",
+      "Haruba Village"
+     ],
+     [
+      "Laverre City",
+      "Dewford Town"
+     ]
+    ],
+    "2": [
+     [
+      "Boyleland",
+      "Cycling Road"
+     ],
+     [
+      "Viridian City",
+      "Fighting Dojo"
+     ],
+     [
+      "Saffron City",
+      "Montenevera"
+     ],
+     [
+      "Twinleaf Town",
+      "Gateon Port"
+     ],
+     [
+      "Vientown",
+      "Poni Meadow"
+     ],
+     [
+      "Circhester Bay",
+      "Laverre City"
+     ],
+     [
+      "Oreburgh City",
+      "Haruba Village"
+     ],
+     [
+      "Ambrette Town",
+      "Dewford Town"
+     ]
+    ],
+    "3": [
+     [
+      "Gateon Port",
+      "Boyleland"
+     ],
+     [
+      "Fighting Dojo",
+      "Saffron City"
+     ],
+     [
+      "Montenevera",
+      "Viridian City"
+     ],
+     [
+      "Cycling Road",
+      "Twinleaf Town"
+     ],
+     [
+      "Dewford Town",
+      "Vientown"
+     ],
+     [
+      "Laverre City",
+      "Oreburgh City"
+     ],
+     [
+      "Haruba Village",
+      "Circhester Bay"
+     ],
+     [
+      "Poni Meadow",
+      "Ambrette Town"
+     ]
+    ],
+    "4": [
+     [
+      "Boyleland",
+      "Circhester Bay"
+     ],
+     [
+      "Saffron City",
+      "Ambrette Town"
+     ],
+     [
+      "Viridian City",
+      "Vientown"
+     ],
+     [
+      "Twinleaf Town",
+      "Oreburgh City"
+     ],
+     [
+      "Montenevera",
+      "Dewford Town"
+     ],
+     [
+      "Cycling Road",
+      "Laverre City"
+     ],
+     [
+      "Gateon Port",
+      "Haruba Village"
+     ],
+     [
+      "Fighting Dojo",
+      "Poni Meadow"
+     ]
+    ],
+    "5": [
+     [
+      "Boyleland",
+      "Laverre City"
+     ],
+     [
+      "Saffron City",
+      "Dewford Town"
+     ],
+     [
+      "Twinleaf Town",
+      "Haruba Village"
+     ],
+     [
+      "Viridian City",
+      "Poni Meadow"
+     ],
+     [
+      "Vientown",
+      "Fighting Dojo"
+     ],
+     [
+      "Oreburgh City",
+      "Gateon Port"
+     ],
+     [
+      "Ambrette Town",
+      "Montenevera"
+     ],
+     [
+      "Circhester Bay",
+      "Cycling Road"
+     ]
+    ],
+    "6": [
+     [
+      "Ambrette Town",
+      "Boyleland"
+     ],
+     [
+      "Circhester Bay",
+      "Saffron City"
+     ],
+     [
+      "Vientown",
+      "Twinleaf Town"
+     ],
+     [
+      "Oreburgh City",
+      "Viridian City"
+     ],
+     [
+      "Laverre City",
+      "Montenevera"
+     ],
+     [
+      "Dewford Town",
+      "Cycling Road"
+     ],
+     [
+      "Haruba Village",
+      "Fighting Dojo"
+     ],
+     [
+      "Poni Meadow",
+      "Gateon Port"
+     ]
+    ],
+    "7": [
+     [
+      "Dewford Town",
+      "Boyleland"
+     ],
+     [
+      "Laverre City",
+      "Saffron City"
+     ],
+     [
+      "Haruba Village",
+      "Viridian City"
+     ],
+     [
+      "Poni Meadow",
+      "Twinleaf Town"
+     ],
+     [
+      "Gateon Port",
+      "Vientown"
+     ],
+     [
+      "Fighting Dojo",
+      "Oreburgh City"
+     ],
+     [
+      "Montenevera",
+      "Circhester Bay"
+     ],
+     [
+      "Cycling Road",
+      "Ambrette Town"
+     ]
+    ],
+    "8": [
+     [
+      "Boyleland",
+      "Fighting Dojo"
+     ],
+     [
+      "Saffron City",
+      "Gateon Port"
+     ],
+     [
+      "Twinleaf Town",
+      "Montenevera"
+     ],
+     [
+      "Viridian City",
+      "Cycling Road"
+     ],
+     [
+      "Vientown",
+      "Laverre City"
+     ],
+     [
+      "Oreburgh City",
+      "Dewford Town"
+     ],
+     [
+      "Ambrette Town",
+      "Haruba Village"
+     ],
+     [
+      "Circhester Bay",
+      "Poni Meadow"
+     ]
+    ],
+    "9": [
+     [
+      "Haruba Village",
+      "Boyleland"
+     ],
+     [
+      "Poni Meadow",
+      "Saffron City"
+     ],
+     [
+      "Dewford Town",
+      "Viridian City"
+     ],
+     [
+      "Laverre City",
+      "Twinleaf Town"
+     ],
+     [
+      "Montenevera",
+      "Vientown"
+     ],
+     [
+      "Cycling Road",
+      "Oreburgh City"
+     ],
+     [
+      "Gateon Port",
+      "Circhester Bay"
+     ],
+     [
+      "Fighting Dojo",
+      "Ambrette Town"
+     ]
+    ],
+    "10": [
+     [
+      "Boyleland",
+      "Poni Meadow"
+     ],
+     [
+      "Viridian City",
+      "Laverre City"
+     ],
+     [
+      "Saffron City",
+      "Haruba Village"
+     ],
+     [
+      "Twinleaf Town",
+      "Dewford Town"
+     ],
+     [
+      "Vientown",
+      "Cycling Road"
+     ],
+     [
+      "Circhester Bay",
+      "Fighting Dojo"
+     ],
+     [
+      "Oreburgh City",
+      "Montenevera"
+     ],
+     [
+      "Ambrette Town",
+      "Gateon Port"
+     ]
+    ],
+    "11": [
+     [
+      "Twinleaf Town",
+      "Boyleland"
+     ],
+     [
+      "Viridian City",
+      "Saffron City"
+     ],
+     [
+      "Fighting Dojo",
+      "Montenevera"
+     ],
+     [
+      "Gateon Port",
+      "Cycling Road"
+     ],
+     [
+      "Ambrette Town",
+      "Vientown"
+     ],
+     [
+      "Circhester Bay",
+      "Oreburgh City"
+     ],
+     [
+      "Laverre City",
+      "Haruba Village"
+     ],
+     [
+      "Dewford Town",
+      "Poni Meadow"
+     ]
+    ],
+    "12": [
+     [
+      "Boyleland",
+      "Viridian City"
+     ],
+     [
+      "Saffron City",
+      "Twinleaf Town"
+     ],
+     [
+      "Montenevera",
+      "Gateon Port"
+     ],
+     [
+      "Cycling Road",
+      "Fighting Dojo"
+     ],
+     [
+      "Vientown",
+      "Circhester Bay"
+     ],
+     [
+      "Oreburgh City",
+      "Ambrette Town"
+     ],
+     [
+      "Haruba Village",
+      "Dewford Town"
+     ],
+     [
+      "Poni Meadow",
+      "Laverre City"
+     ]
+    ],
+    "13": [
+     [
+      "Boyleland",
+      "Vientown"
+     ],
+     [
+      "Saffron City",
+      "Oreburgh City"
+     ],
+     [
+      "Viridian City",
+      "Circhester Bay"
+     ],
+     [
+      "Twinleaf Town",
+      "Ambrette Town"
+     ],
+     [
+      "Montenevera",
+      "Haruba Village"
+     ],
+     [
+      "Cycling Road",
+      "Poni Meadow"
+     ],
+     [
+      "Gateon Port",
+      "Dewford Town"
+     ],
+     [
+      "Fighting Dojo",
+      "Laverre City"
+     ]
+    ],
+    "14": [
+     [
+      "Oreburgh City",
+      "Boyleland"
+     ],
+     [
+      "Ambrette Town",
+      "Viridian City"
+     ],
+     [
+      "Vientown",
+      "Saffron City"
+     ],
+     [
+      "Circhester Bay",
+      "Twinleaf Town"
+     ],
+     [
+      "Poni Meadow",
+      "Montenevera"
+     ],
+     [
+      "Laverre City",
+      "Gateon Port"
+     ],
+     [
+      "Haruba Village",
+      "Cycling Road"
+     ],
+     [
+      "Dewford Town",
+      "Fighting Dojo"
+     ]
+    ],
+    "15": [
+     [
+      "Montenevera",
+      "Boyleland"
+     ],
+     [
+      "Cycling Road",
+      "Saffron City"
+     ],
+     [
+      "Gateon Port",
+      "Viridian City"
+     ],
+     [
+      "Fighting Dojo",
+      "Twinleaf Town"
+     ],
+     [
+      "Haruba Village",
+      "Vientown"
+     ],
+     [
+      "Poni Meadow",
+      "Oreburgh City"
+     ],
+     [
+      "Dewford Town",
+      "Circhester Bay"
+     ],
+     [
+      "Laverre City",
+      "Ambrette Town"
+     ]
+    ]
+   }
+  },
+  "10": {
+   "valid_orders": 45641808,
+   "order": [
+    15,
+    4,
+    5,
+    11,
+    7,
+    14,
+    6,
+    2,
+    12,
+    3,
+    13,
+    10,
+    9,
+    8,
+    1
+   ],
+   "l1_pinned": true,
+   "unpinned_because": [],
+   "pods": {
+    "UL": [
+     "Verdanturf Town",
+     "Iki Town",
+     "Artazon",
+     "Hau'oli City"
+    ],
+    "UR": [
+     "Azalea Town",
+     "Tilt Village",
+     "City of Circhester",
+     "Summerland"
+    ],
+    "LL": [
+     "Mauville City",
+     "Alfornada",
+     "Ecruteak City",
+     "Lacunosa Town"
+    ],
+    "LR": [
+     "Jubilife City",
+     "Solaceon Town",
+     "Medali",
+     "Turffield"
+    ]
+   },
+   "games": {
+    "1": [
+     [
+      "Iki Town",
+      "Verdanturf Town"
+     ],
+     [
+      "Hau'oli City",
+      "Artazon"
+     ],
+     [
+      "Tilt Village",
+      "Azalea Town"
+     ],
+     [
+      "Summerland",
+      "City of Circhester"
+     ],
+     [
+      "Alfornada",
+      "Mauville City"
+     ],
+     [
+      "Lacunosa Town",
+      "Ecruteak City"
+     ],
+     [
+      "Solaceon Town",
+      "Jubilife City"
+     ],
+     [
+      "Turffield",
+      "Medali"
+     ]
+    ],
+    "2": [
+     [
+      "Medali",
+      "Verdanturf Town"
+     ],
+     [
+      "Turffield",
+      "Iki Town"
+     ],
+     [
+      "Jubilife City",
+      "Artazon"
+     ],
+     [
+      "Solaceon Town",
+      "Hau'oli City"
+     ],
+     [
+      "City of Circhester",
+      "Mauville City"
+     ],
+     [
+      "Summerland",
+      "Alfornada"
+     ],
+     [
+      "Azalea Town",
+      "Ecruteak City"
+     ],
+     [
+      "Tilt Village",
+      "Lacunosa Town"
+     ]
+    ],
+    "3": [
+     [
+      "Verdanturf Town",
+      "Turffield"
+     ],
+     [
+      "Iki Town",
+      "Medali"
+     ],
+     [
+      "Hau'oli City",
+      "Jubilife City"
+     ],
+     [
+      "Artazon",
+      "Solaceon Town"
+     ],
+     [
+      "Mauville City",
+      "Summerland"
+     ],
+     [
+      "Alfornada",
+      "City of Circhester"
+     ],
+     [
+      "Lacunosa Town",
+      "Azalea Town"
+     ],
+     [
+      "Ecruteak City",
+      "Tilt Village"
+     ]
+    ],
+    "4": [
+     [
+      "Jubilife City",
+      "Verdanturf Town"
+     ],
+     [
+      "Solaceon Town",
+      "Iki Town"
+     ],
+     [
+      "Medali",
+      "Artazon"
+     ],
+     [
+      "Turffield",
+      "Hau'oli City"
+     ],
+     [
+      "Azalea Town",
+      "Mauville City"
+     ],
+     [
+      "Tilt Village",
+      "Alfornada"
+     ],
+     [
+      "City of Circhester",
+      "Ecruteak City"
+     ],
+     [
+      "Summerland",
+      "Lacunosa Town"
+     ]
+    ],
+    "5": [
+     [
+      "Lacunosa Town",
+      "Verdanturf Town"
+     ],
+     [
+      "Ecruteak City",
+      "Iki Town"
+     ],
+     [
+      "Mauville City",
+      "Hau'oli City"
+     ],
+     [
+      "Alfornada",
+      "Artazon"
+     ],
+     [
+      "Turffield",
+      "Azalea Town"
+     ],
+     [
+      "Medali",
+      "Tilt Village"
+     ],
+     [
+      "Jubilife City",
+      "Summerland"
+     ],
+     [
+      "Solaceon Town",
+      "City of Circhester"
+     ]
+    ],
+    "6": [
+     [
+      "Verdanturf Town",
+      "Tilt Village"
+     ],
+     [
+      "Artazon",
+      "Summerland"
+     ],
+     [
+      "Iki Town",
+      "Azalea Town"
+     ],
+     [
+      "Hau'oli City",
+      "City of Circhester"
+     ],
+     [
+      "Mauville City",
+      "Solaceon Town"
+     ],
+     [
+      "Ecruteak City",
+      "Turffield"
+     ],
+     [
+      "Alfornada",
+      "Jubilife City"
+     ],
+     [
+      "Lacunosa Town",
+      "Medali"
+     ]
+    ],
+    "7": [
+     [
+      "Verdanturf Town",
+      "Ecruteak City"
+     ],
+     [
+      "Iki Town",
+      "Lacunosa Town"
+     ],
+     [
+      "Artazon",
+      "Mauville City"
+     ],
+     [
+      "Hau'oli City",
+      "Alfornada"
+     ],
+     [
+      "Azalea Town",
+      "Medali"
+     ],
+     [
+      "Tilt Village",
+      "Turffield"
+     ],
+     [
+      "City of Circhester",
+      "Jubilife City"
+     ],
+     [
+      "Summerland",
+      "Solaceon Town"
+     ]
+    ],
+    "8": [
+     [
+      "City of Circhester",
+      "Verdanturf Town"
+     ],
+     [
+      "Summerland",
+      "Iki Town"
+     ],
+     [
+      "Azalea Town",
+      "Artazon"
+     ],
+     [
+      "Tilt Village",
+      "Hau'oli City"
+     ],
+     [
+      "Medali",
+      "Mauville City"
+     ],
+     [
+      "Turffield",
+      "Alfornada"
+     ],
+     [
+      "Jubilife City",
+      "Ecruteak City"
+     ],
+     [
+      "Solaceon Town",
+      "Lacunosa Town"
+     ]
+    ],
+    "9": [
+     [
+      "Verdanturf Town",
+      "Solaceon Town"
+     ],
+     [
+      "Artazon",
+      "Turffield"
+     ],
+     [
+      "Iki Town",
+      "Jubilife City"
+     ],
+     [
+      "Hau'oli City",
+      "Medali"
+     ],
+     [
+      "Mauville City",
+      "Tilt Village"
+     ],
+     [
+      "Ecruteak City",
+      "Summerland"
+     ],
+     [
+      "Alfornada",
+      "Azalea Town"
+     ],
+     [
+      "Lacunosa Town",
+      "City of Circhester"
+     ]
+    ],
+    "10": [
+     [
+      "Verdanturf Town",
+      "Summerland"
+     ],
+     [
+      "Iki Town",
+      "City of Circhester"
+     ],
+     [
+      "Hau'oli City",
+      "Azalea Town"
+     ],
+     [
+      "Artazon",
+      "Tilt Village"
+     ],
+     [
+      "Mauville City",
+      "Turffield"
+     ],
+     [
+      "Alfornada",
+      "Medali"
+     ],
+     [
+      "Lacunosa Town",
+      "Jubilife City"
+     ],
+     [
+      "Ecruteak City",
+      "Solaceon Town"
+     ]
+    ],
+    "11": [
+     [
+      "Azalea Town",
+      "Verdanturf Town"
+     ],
+     [
+      "Tilt Village",
+      "Iki Town"
+     ],
+     [
+      "City of Circhester",
+      "Artazon"
+     ],
+     [
+      "Summerland",
+      "Hau'oli City"
+     ],
+     [
+      "Jubilife City",
+      "Mauville City"
+     ],
+     [
+      "Solaceon Town",
+      "Alfornada"
+     ],
+     [
+      "Medali",
+      "Ecruteak City"
+     ],
+     [
+      "Turffield",
+      "Lacunosa Town"
+     ]
+    ],
+    "12": [
+     [
+      "Alfornada",
+      "Verdanturf Town"
+     ],
+     [
+      "Lacunosa Town",
+      "Artazon"
+     ],
+     [
+      "Mauville City",
+      "Iki Town"
+     ],
+     [
+      "Ecruteak City",
+      "Hau'oli City"
+     ],
+     [
+      "Solaceon Town",
+      "Azalea Town"
+     ],
+     [
+      "Turffield",
+      "City of Circhester"
+     ],
+     [
+      "Jubilife City",
+      "Tilt Village"
+     ],
+     [
+      "Medali",
+      "Summerland"
+     ]
+    ],
+    "13": [
+     [
+      "Verdanturf Town",
+      "Mauville City"
+     ],
+     [
+      "Iki Town",
+      "Alfornada"
+     ],
+     [
+      "Artazon",
+      "Ecruteak City"
+     ],
+     [
+      "Hau'oli City",
+      "Lacunosa Town"
+     ],
+     [
+      "Azalea Town",
+      "Jubilife City"
+     ],
+     [
+      "Tilt Village",
+      "Solaceon Town"
+     ],
+     [
+      "City of Circhester",
+      "Medali"
+     ],
+     [
+      "Summerland",
+      "Turffield"
+     ]
+    ],
+    "14": [
+     [
+      "Verdanturf Town",
+      "Artazon"
+     ],
+     [
+      "Iki Town",
+      "Hau'oli City"
+     ],
+     [
+      "Azalea Town",
+      "City of Circhester"
+     ],
+     [
+      "Tilt Village",
+      "Summerland"
+     ],
+     [
+      "Mauville City",
+      "Ecruteak City"
+     ],
+     [
+      "Alfornada",
+      "Lacunosa Town"
+     ],
+     [
+      "Jubilife City",
+      "Medali"
+     ],
+     [
+      "Solaceon Town",
+      "Turffield"
+     ]
+    ],
+    "15": [
+     [
+      "Hau'oli City",
+      "Verdanturf Town"
+     ],
+     [
+      "Artazon",
+      "Iki Town"
+     ],
+     [
+      "Summerland",
+      "Azalea Town"
+     ],
+     [
+      "City of Circhester",
+      "Tilt Village"
+     ],
+     [
+      "Lacunosa Town",
+      "Mauville City"
+     ],
+     [
+      "Ecruteak City",
+      "Alfornada"
+     ],
+     [
+      "Turffield",
+      "Jubilife City"
+     ],
+     [
+      "Medali",
+      "Solaceon Town"
+     ]
+    ]
+   }
+  }
+ }
+}
