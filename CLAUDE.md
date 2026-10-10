@@ -2663,8 +2663,21 @@ Championship Final Placings**, No. 3-16 per season.
   ("Swiss Cup - from S7"). The sheet's "2* Div." is normalised to "2nd Div.".
 - **Shading marks consecutive winners** (the user's definition of the sheet's
   shading), tinted in the winner's region colour; computed, not copied.
-- **No. 3-16 ordering, confirmed by the user 2026-10-05**: by the
-  stage a team went out in (SF, QF, R16), then bracket seed within a stage.
+- **No. 3-16 ordering**: by the stage a team went out in (SF, QF, R16), then
+  by games won in that losing tie -- a 1-2 series outranks a 0-2 sweep,
+  per explicit instruction 2026-10-10 -- then by seed. First set
+  2026-10-05 as stage-then-seed only; the games-won tiebreak was inserted
+  between them the same week. `hall_of_fame()`'s `swept` flag is exactly
+  "same team won both of legs 1-2", so a loser's own games won is 0 when
+  swept and 1 otherwise -- every tie here is decided by the time this runs,
+  so a split always means a leg 3 was played and lost, never an in-progress
+  tie. Verified on the real field: QF's old order (seed only) read
+  Snowpoint City(2), Mesagoza(4), Blueberry Terarium(6), Canalave City(8)
+  -- all four losers' seeds -- and now reads Blueberry Terarium(6),
+  Canalave City(8), Snowpoint City(2), Mesagoza(4), since the first two lost
+  1-2 and the last two were swept 0-2. Regenerating moved only `HOF_DATA`
+  and `TEAMS_EXPORT_TSV`; every rating, seeding and bracket constant held,
+  confirming this is presentation-only.
 - **Every regional plaque starts at S1** (per explicit request, 2026-10-05):
   seasons before a region existed get a greyed, dashed "Did not exist" filler
   plate, so seasons line up across plaques at a glance. The title plaques had
