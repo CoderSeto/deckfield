@@ -191,6 +191,39 @@ TOT outlier (Casseroya Lake's S9 TOT of 1421).
 - PA conflict resolution (the 5 steps, the region checks through round 6, the
   half-boundary rule) runs unchanged on these seeds.
 
+### B9a. DSCR tiebreaker: each game capped at 400 (S10 onward)
+**Problem found 2026-10-10:** the game's per-game DSCR multiplies by the score
+ratio (`winnerScore / loserScore`, or the full `winnerScore` when the loser
+scores 0; `computeDMAX` in `deckfield.html`). So a shutout or near-shutout
+scores 20-70x a normal game: Lavender Town's 42-0 = 5,265.6 against a typical
+37.4. Averaged over 15 games, one freak game decided the uncapped tiebreaker
+(Lavender Town 196 on the Standings tab; 59 without that game). OVR was never
+affected: its DSCR is `min(10, sqrt(average))`.
+
+**Rule (per explicit instruction): each game's DSCR is capped at 400 (= 20^2)
+before averaging, for the TIEBREAKER only.** On the displayed `sqrt(avg) x 10`
+scale, no single game can then count for more than 200. It applies to:
+- the S10 Regional and League standings tiebreak (W-L, H2H, then DSCR). That
+  also feeds RT seeding, promotion/relegation and the WC division bids;
+- the Regional DSCR step of S10's RDS seeding (B9), computed from S9 games.
+
+It does NOT apply to OVR's DSCR component, the roster's DSCR or S9's frozen
+standings.
+
+Measured on S9 (Regional): 12 of 2,400 team-games exceed 400. The top
+tiebreaker goes 196 -> 122 (Mistralton City, two capped blowouts), the median
+74 -> 74, teams above 120 5 -> 1. Lavender Town 196 -> 77, Mossdeep City 163
+-> 82, Floaroma City 135 -> 74, Casseroya Lake 159 -> 107. League: 8 team-games
+over 400, top 238 -> 105. S10 RDS seeding changes in just 2 places (Ribbon:
+Mossdeep City #21 -> #22, Ruins of Alph #22 -> #21). Caps of 200 and a trimmed
+mean (drop each team's highest and lowest game) were compared and not chosen.
+
+Build notes: the cap lives in BOTH ports of the standings sort, which must
+stay in step: `_standings_order` in the engine (it averages
+`dscr_a`/`dscr_b`) and `tbOf` in the dashboard, which needs a capped average
+in `DATA` (`dscr_regional_avg` / `dscr_league_avg` are uncapped today). The
+seeding preview in B9 was computed uncapped; recompute it with the cap.
+
 ### B10. Calendar
 33 weeks, 98 rounds numbered 1-98 in order. **No `_CONFIRMED_ABS_ROUND`
 exceptions and no week-6 special case for S10.** Original weeks 5 and 6 are
