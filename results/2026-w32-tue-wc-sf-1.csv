@@ -1,0 +1,3 @@
+round,game_type,team_a,team_b,result_a,pf_a,pa_a,raw_goal_a,raw_goal_b,spread_a,interest,dscr_a,dscr_b,elo_a_after,elo_b_after,home,ex_a,ex_b,cup_name,cup_bracket,cup_round
+90,F,55,20,3,44,12,3.63,4.00,11.3376,96.43,137.4,10.7,2327,2257,A,2,0,WC,SF,1
+90,F,151,69,3,48,8,3.89,2.67,6.5066,101.03,203.9,0.6,2482,2359,A,2,0,WC,SF,1
