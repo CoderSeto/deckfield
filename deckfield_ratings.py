@@ -3641,11 +3641,22 @@ def wc_playin_scores(season):
 
 
 def _wc_playin_adv_by_dex(season, games):
-    """{(home_dex, away_dex): adv} for a Play-in matchday: home Play-in score
-    minus away. Signed -- on matchday 2 the host is set by the ladder, not by
-    the score, so the visitor can be the better side."""
+    """{(home_dex, away_dex): adv} for a Play-in or knockout matchday: home
+    Play-in score minus away. Signed -- Play-in matchday 2's host is set by
+    the ladder, and a knockout tie's leg 2 is hosted by the worse seed, so
+    the visitor can be the better side."""
     score = wc_playin_scores(season)
     return {(h, a): round(score[h] - score[a], 3) for h, a in games}
+
+
+def _wc_bracket_adv_by_dex(season, games):
+    """{(home_dex, away_dex): adv} for a knockout matchday (R16/QF/SF/Final).
+    The bracket keeps the Play-in score unchanged, and its Adv is HALF the
+    home-minus-away difference (both per explicit instruction, 2026-10-10).
+    Signed: leg 2 is hosted by the worse seed, so the visitor is usually the
+    better side."""
+    score = wc_playin_scores(season)
+    return {(h, a): round((score[h] - score[a]) / 2, 3) for h, a in games}
 
 
 def _event_adv_by_dex(season, event, games):
@@ -3656,6 +3667,8 @@ def _event_adv_by_dex(season, event, games):
         return _wc_group_adv_by_dex(season, games)
     if event[0] == "WC" and event[1] == "Play-in":
         return _wc_playin_adv_by_dex(season, games)
+    if event[0] == "WC" and event[1] in WC_BRACKET_STAGES:
+        return _wc_bracket_adv_by_dex(season, games)
     return {}
 
 
@@ -5834,10 +5847,11 @@ def world_championship_overview(season, round_num=None):
     if seeds is None:
         conn.close()
         return out
-    # The playoff seeding score is frozen at the field's round and carries
-    # unchanged into the bracket -- it is the same score_of already used for
-    # the group boxes and the Play-in, not recomputed here.
-    out["bracket_seeds"] = {str(k): {"name": v, "dex": dex.get(v), "score": score_of.get(v)}
+    # The bracket carries the Play-in score forward unchanged (per explicit
+    # instruction, 2026-10-10): the playoff seeding score plus half the group
+    # points earned -- the same pin_score the Play-in shows, and the one the
+    # knockout games' Adv is built from (_event_adv_by_dex).
+    out["bracket_seeds"] = {str(k): {"name": v, "dex": dex.get(v), "score": round(pin_score[v], 2)}
                              for k, v in seeds.items()}
     seed_of = {name: seed for seed, name in seeds.items()}
 
@@ -5864,7 +5878,7 @@ def world_championship_overview(season, round_num=None):
                 "better": better, "worse": worse,
                 "better_seed": seed_of[better], "worse_seed": seed_of[worse],
                 "better_dex": dex.get(better), "worse_dex": dex.get(worse),
-                "better_score": score_of.get(better), "worse_score": score_of.get(worse),
+                "better_score": round(pin_score[better], 2), "worse_score": round(pin_score[worse], 2),
                 "legs": legs, "swept": bool(w1 and w2 and w1 == w2),
                 "winner": _wc_tie_winner(conn, season, stage, better, worse),
             })
