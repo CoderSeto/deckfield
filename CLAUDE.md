@@ -2004,7 +2004,8 @@ game carries home score minus away score as DECKFIELD's Adv
 (`_wc_group_adv_by_dex`, wired through `_event_adv_by_dex` alongside the RT
 modifier), unrounded scores at the field's round, three decimals. The higher
 seed always hosts, so it is never negative; MD1 runs up to +8.618 (seed 1 v
-seed 48). Play-in and knockout games carry none.
+seed 48). (The Play-in and the knockout bracket carry their own Adv -- see
+"The Play-in" and "The knockout bracket" below.)
 The score shows in small brackets after each name in the group boxes and as a
 sortable **Playoff Score** column on the Qualification tab (opens best-first).
 
@@ -2278,6 +2279,19 @@ the quarterfinal instead; that exact mistake is what `_bracket_seed_pairs`
 exists to prevent, and this file records it happening twice (RDS round 1,
 then the PA champions bracket).
 
+**The Play-in score carries into the bracket, and every knockout game's Adv
+is HALF the difference** (both per explicit instruction, 2026-10-10). The
+score is exactly the Play-in's -- frozen playoff seeding score plus half the
+group points earned, unchanged by anything in the bracket -- and
+`_wc_bracket_adv_by_dex` (wired through `_event_adv_by_dex` for R16/QF/SF/
+Final) returns `(home - away) / 2`, three decimals. Signed: leg 2 is hosted by
+the worse seed, so it is usually negative. Real R16 leg 1 runs -0.074 to
++4.778 (Casseroya Lake 36.15 v Lake of Rage 26.59). Before this the bracket
+carried NO Adv and `WC_DATA`'s bracket scores were the bare pre-group
+playoff score; both now read the Play-in score. Verified on a played-through
+scratch copy: every R16/QF/SF/Final leg 1-2 Adv equals half the hand-computed
+difference.
+
 **Hosting is the REVERSE of the Regional Tournament / RDS convention, and
 that is deliberate:**
 
@@ -2509,7 +2523,7 @@ the SEMIFINALS label.
 request, same day: "really set the final up more"). The FINAL / SEMIFINALS
 labels inside the column are gone: "Semifinals" is the middle column's name
 underneath, like every other round, and the Final names itself in its own
-card header ("World Championship Final"; just "Final" under 1400px). The card
+card header (now just "World Championship" -- see below). The card
 is 16px type with 38px score columns, a 2px gold frame, a gold-tinted gradient
 and a soft glow, sitting in a 1.6fr first row of a wider middle column
 (`flex-grow: 1.45`). Once decided the winner carries a **CHAMPION** mark;
@@ -2523,11 +2537,33 @@ scrolls sideways).
 
 **Each box names its own round** (per explicit request, same day). The
 header row's free corner beside G1/G2/G3 now reads **ROUND OF 16**,
-**QUARTERFINAL** or **SEMIFINAL** (the Final keeps "World Championship
-Final"), so the round names under the columns were removed outright --
+**QUARTERFINAL** or **SEMIFINAL** (the Final's reads "World Championship"), so the round names under the columns were removed outright --
 `.wcb-col-title` is gone. TBD boxes carry the label too, over a "TBD" body.
 Measured: every one of the 15 labels fits, no team name is cut from 1400px up
 (1 at 1240px), and the semifinal connectors still meet.
+
+**The Play-in score beside every name, and the bracket never scrolls** (per
+explicit instruction, same day: "no scrolling, please, ever"). Each name
+carries its Play-in score in small brackets, which widens every row:
+
+- above 1600px the bracket may widen past main's 1600px cap, to at most
+  1720px, re-centred on the panel (`--wcb-w`);
+- at 1700px and under the cards tighten (12px type, 22px score columns,
+  12px gaps, the middle column's `flex-grow` 1.45 -> 1.3, CHAMPION hidden);
+- at 1500px and under a row may **wrap** -- the score drops under the name,
+  then a long name breaks between words -- and the columns grow to 500px
+  tall to hold the taller boxes, instead of cutting anything;
+- the Final's header is now just **"World Championship"** (per explicit
+  instruction), and the header labels shrink under 1240px / 1100px.
+
+`.wcb` no longer has `overflow-x` and the columns have `min-width: 0`, so the
+bracket always fits the window. Measured on the real dashboard and on
+scratch copies mid-QF and finished: **0 cut names or labels, 0 boxes spilling
+their slot, 0 overlaps and no bracket scroll at every width from 1920px down
+to 1000px**; at 900px two or three round labels clip, below what the rest of
+the dashboard is laid out for. A CSS gotcha cost a round here: the
+narrow-window `@media` blocks must come AFTER the rules they override -- the
+first ≤1700px block sat above `.wcb-col.middle` and silently did nothing.
 
 **Five columns is what makes it fit.** Seven needed the bracket to break out
 of main's 1600px cap and still cut names at 1600px; five fit the panel with
