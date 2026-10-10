@@ -294,15 +294,19 @@ Rules (per explicit instruction):
    draws freely at game 9 or later, and L1 is drawn like any other round. In
    S10 the top three are all position 1 in different pods, so they never meet
    in a pod round and every division's L1 is pinned.
-7. **Safeguard for rule 6** (per explicit instruction): L1 is week 4, exactly
-   7 days from R3 (week 3) and R4 (week 5). So any same-region pair that meets
-   in its division's 1v2/3v4 pod round must have its **Regional game outside
-   games 3 and 4**. This is enforced in the Regional draw, since the division
-   pods are known before anything is drawn. S10 has 7 such pairs: Virbank City
-   v Anville Town (Div 1), Tagtree Thicket v Cascarrafa (5), Eterna City v
-   Pastoria City and Sevii Islands v Fuchsia City (6), Mahogany Town v New
-   Bark Town and Aquacorde Town v Snowbelle City (8), Solaceon Town v Jubilife
-   City (10).
+7. **Rule 6 yields to the one-week rule** (per explicit instruction: it
+   changes the League schedule, never the Regional one). L1 is week 4, exactly
+   7 days from R3 (week 3) and R4 (week 5). If a same-region pair meets in its
+   division's 1v2/3v4 pod round AND their Regional game was drawn in R3 or R4,
+   that division **loses the L1 pin for the season**, like the D1 exception:
+   its pod round is drawn freely under rule 5, and L1 is drawn like any other
+   round. The Regional draw is never adjusted for this. S10 has 7 pairs that
+   could trigger it: Virbank City v Anville Town (Div 1), Tagtree Thicket v
+   Cascarrafa (5), Eterna City v Pastoria City and Sevii Islands v Fuchsia
+   City (6), Mahogany Town v New Bark Town and Aquacorde Town v Snowbelle City
+   (8), Solaceon Town v Jubilife City (10). Each has roughly a 1-in-7 chance,
+   so expect about 1-2 unpinned divisions in most seasons. A Regional-side
+   safeguard (keeping these pairs off R3/R4) was considered and rejected.
 
 **Draw order: Regional first, then League** (per explicit instruction). The
 Regional draw has the tighter rules, and rule 5 depends on when each Regional
@@ -347,9 +351,9 @@ rule 4 and 12 same-region pairs), the others 57M-304M. The uniform sampler was
 checked against the exact counts (opening-round frequency 24.9% drawn vs
 25.4% exact).
 
-**Trial with rules 6 and 7 added** (same seed, still not official): every
-region still has 28.8M-78.7M valid orders, and every division, with L1
-pinned, 3.3M (Division 1) to 67.9M (Division 4).
+**Trial with rules 6 and 7 added** (same seed, still not official; Regional
+draw untouched): none of the 7 pairs drew R3/R4, so all 10 divisions kept the
+L1 pin, with 3.1M (Division 1) to 86.4M (Division 4) valid orders each.
 
 Superseded by rule 6, kept for the record. One property of the cap of 2: the 1v2/3v4 pod round is hard to place
 mid-season without creating a third home or away game in a row. So about half
@@ -429,8 +433,8 @@ Build notes:
      every region
    - every group's order passes all B10b rules (cap of 2, RT and Division 1
      protections, the same-region one-week rule, L1 = pod 1v2/3v4 unless
-     the D1 exception applies, the R3/R4 safeguard), and all orders are
-     distinct
+     the D1 or rule-7 exception applies), and all orders are distinct;
+     report which divisions lost the L1 pin and why
    - the roster at MD1 = 100% seed
    - Elo carried, pods generate
    - RDS and PA brackets generate from the new seeds with clean conflict
