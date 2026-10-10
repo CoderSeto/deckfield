@@ -1,8 +1,10 @@
 """One-shot extraction of the workbook's HOF sheet into hall_of_fame.json.
 
 Seasons 1-8 are history and never change, so they live in a static file the
-engine reads (the same arrangement as rank_history_verbatim.json); Season 9
-onward is derived from real results by deckfield_ratings.hall_of_fame().
+engine reads (the same arrangement as rank_history_verbatim.json). Each later
+season is derived from real results by deckfield_ratings.hall_of_fame() while
+it is played, and appended here from its frozen record once it is over (S9
+from archive/s9_final.json), so the running season is the only live one.
 
 Each name keeps the REGION IT HELD AT THE TIME, read from the cell's font
 colour -- the sheet colours every name by region, and a team that has since
@@ -106,6 +108,25 @@ def main(path):
             places = [team(cells[c]) for c in sorted(header, key=lambda c: openpyxl.utils.column_index_from_string(c))]
             if any(places):
                 out["placings"][season] = places
+
+    # Every season frozen since the workbook (archive/s<N>_final.json) is
+    # appended from its own HOF_DATA, where that season was the live, derived
+    # one -- so re-running this extraction reproduces the committed file
+    # rather than dropping the seasons after S8 (SEASON10_PLAN A2).
+    import glob
+    import os
+    for path in sorted(glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                              "archive", "s*_final.json"))):
+        hof = json.load(open(path))["data"]["HOF_DATA"]
+        s = str(hof["current_season"])
+        for key, plaque in hof["plaques"].items():
+            if s in plaque["seasons"]:
+                out["plaques"][key]["seasons"][s] = plaque["seasons"][s]
+        for region, seasons in hof["regions"].items():
+            if s in seasons:
+                out["regions"].setdefault(region, {})[s] = seasons[s]
+        if s in hof["placings"]:
+            out["placings"][s] = hof["placings"][s]
 
     with open("hall_of_fame.json", "w") as f:
         json.dump(out, f, indent=1)
