@@ -286,6 +286,24 @@ Rules (per explicit instruction):
    (week 22) block nothing, because no League round falls within 7 days of
    them.
 
+6. **League L1 is always the pod 1v2 / 3v4 round** (per explicit
+   instruction), the same round definition as Regional Rivalry Week. League
+   pod pairings change every season with promotion/relegation, so unlike the
+   Regional ones it does not keep repeating. **Sole exception:** if the
+   Division 1 top three (rule 4) meet in that round, it cannot be L1. Then it
+   draws freely at game 9 or later, and L1 is drawn like any other round. In
+   S10 the top three are all position 1 in different pods, so they never meet
+   in a pod round and every division's L1 is pinned.
+7. **Safeguard for rule 6** (per explicit instruction): L1 is week 4, exactly
+   7 days from R3 (week 3) and R4 (week 5). So any same-region pair that meets
+   in its division's 1v2/3v4 pod round must have its **Regional game outside
+   games 3 and 4**. This is enforced in the Regional draw, since the division
+   pods are known before anything is drawn. S10 has 7 such pairs: Virbank City
+   v Anville Town (Div 1), Tagtree Thicket v Cascarrafa (5), Eterna City v
+   Pastoria City and Sevii Islands v Fuchsia City (6), Mahogany Town v New
+   Bark Town and Aquacorde Town v Snowbelle City (8), Solaceon Town v Jubilife
+   City (10).
+
 **Draw order: Regional first, then League** (per explicit instruction). The
 Regional draw has the tighter rules, and rule 5 depends on when each Regional
 game falls. 110 of S10's 1,200 League games are same-region pairs (8-16 per
@@ -329,11 +347,15 @@ rule 4 and 12 same-region pairs), the others 57M-304M. The uniform sampler was
 checked against the exact counts (opening-round frequency 24.9% drawn vs
 25.4% exact).
 
-One property of the cap of 2: the 1v2/3v4 pod round is hard to place
+**Trial with rules 6 and 7 added** (same seed, still not official): every
+region still has 28.8M-78.7M valid orders, and every division, with L1
+pinned, 3.3M (Division 1) to 67.9M (Division 4).
+
+Superseded by rule 6, kept for the record. One property of the cap of 2: the 1v2/3v4 pod round is hard to place
 mid-season without creating a third home or away game in a row. So about half
 of all valid League orders put it first or last, and 25-43% of each
 division's orders OPEN with it (7 of 10 divisions did in the trial). That is
-the rules, not a bug. Add a rule if it is unwanted.
+the rules, not a bug. This is what led to rule 6.
 
 Build notes:
 - The draw is **seeded** (e.g. by season number) so it is reproducible. It is
@@ -406,7 +428,9 @@ Build notes:
    - R15 (Rivalry Week) is the pod round 1v2 / 3v4 (`1 at 2, 3 at 4`) in
      every region
    - every group's order passes all B10b rules (cap of 2, RT and Division 1
-     protections, the same-region one-week rule), and all orders are distinct
+     protections, the same-region one-week rule, L1 = pod 1v2/3v4 unless
+     the D1 exception applies, the R3/R4 safeguard), and all orders are
+     distinct
    - the roster at MD1 = 100% seed
    - Elo carried, pods generate
    - RDS and PA brackets generate from the new seeds with clean conflict
