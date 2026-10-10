@@ -2459,6 +2459,50 @@ Play-in header printed `seeds 13-18` for the third-place block, from
 `seed_base + 6`. That subset only seeds FOUR of its six. `wcSeedRange` now
 reads the range off the real slots and names the eliminations.
 
+### The Bracket view: a two-sided tree of series boxes (2026-10-10, per explicit request)
+
+Built on PR #148 (another session's first cut: region colours, playoff scores
+in `WC_DATA`'s bracket entries, and a one-directional tree). Two changes on top:
+
+- **Split into its two halves.** The top half of the draw runs left to right
+  (R16, QF, SF), the bottom half right to left, and they meet at the Final in
+  the middle -- seven columns. The engine's tie order IS the bracket
+  (`_bracket_seed_pairs(16)`: 1/16, 8/9, 4/13, 5/12, 2/15, 7/10, 3/14, 6/11), so
+  each stage's list is cut down the middle. Within a half the rows follow the
+  classic regional order the request named -- **1/16, 8/9, 5/12, 4/13** on the
+  left and **6/11, 3/14, 7/10, 2/15** on the right -- which only ever swaps
+  ties that feed the SAME next game, so every connector still joins the right
+  pair. `wcBracketView` (a `let`, not in the manifest) holds those display
+  orders as indexes into the engine's lists.
+- **A series box per tie** (`wcSeriesCardHtml`): a row per team (better seed
+  on top), a column per game (G1/G2/G3), and the **winning score of each game
+  lit** (bold on an accent tint with an accent underline). Names are always
+  region-coloured; once the tie is decided the loser dims and the winner goes
+  bold. Hovering a score names the host ("G2 at Pueltown"). An unplayed game
+  reads `-`; a G3 that a 2-0 sweep made unnecessary reads `·` ("No decider
+  needed"). The playoff score is not on the cards -- the requested box was
+  seed, name, G1-G3, and seven columns have no room for it.
+
+**Width is the constraint.** Seven columns of names cannot fit main's 1600px
+cap, so `.wcb` breaks out of the panel and uses the window
+(`min(100vw - 80px, 1860px)`, re-centred with a negative margin); at 1600px
+and under it is simply the panel. Below 1800px the cards tighten (11.5px type,
+21px score columns, 10px gaps). Measured with every slot filled: **0 names
+ellipsised from 1700px up**, 1 at 1600px in the sandbox's wider fallback font;
+below ~1560px the page already scrolls sideways (the 12-tab nav). A cut name
+keeps its full text in the tooltip. #148's `WC_STAGE_SIZE`/`WC_STAGE_NAMES`
+top-level consts and their `STATIC_CONSTS` entries were removed with the
+layout they served.
+
+Verified on scratch databases at three states -- the real one (R16 not yet
+played), part-way through the QF, and a finished tournament: columns hold
+4/2/1/1/1/2/4 cards with TBDs exactly where a feeder is undecided, 0 overlaps,
+**one lit cell per played game** (25 and 36, matching `WC_DATA`), 8 and 15
+decided ties marked, all 34 connector segments drawn, and zero `pageerror`
+on all 12 tabs. Regenerating against a clean rebuild (3488 games through round
+83) left every constant byte-identical to #148's committed dashboard except
+`TEAMS_EXPORT_TSV`.
+
 ### The Rank/Elo History tab folded into Rankings (2026-09-16, per explicit request)
 
 The standalone `Rank/Elo History` tab is gone. Rankings now carries three
