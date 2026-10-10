@@ -60,14 +60,17 @@ DASHBOARD_PATH = sys.argv[1] if len(sys.argv) > 1 else "deckfield_dashboard.html
 # ------------------------------------------------------- frozen seasons --
 # A finished season is frozen by freeze_season.py into a byte-for-byte copy
 # of its final dashboard (deckfield_dashboard_s<N>.html) and a numbers-only
-# archive/s<N>_final.json, both listed in archive/SHA256SUMS. Those are the
+# archive/s<N>_final.json, plus freeze_season_inputs.py's archive/s<N>_inputs.json
+# (what the next season needs that the dashboard never showed), all listed in
+# archive/SHA256SUMS. Those are the
 # season's record -- the engine will change under later seasons, so they are
 # never rebuilt. This runs before anything is written and refuses to go on if
 # a frozen file has changed, gone missing, or appeared unlisted, or if it has
 # been pointed at a frozen dashboard as its target.
 _HERE = os.path.dirname(os.path.abspath(__file__))
 FROZEN_SUMS = os.path.join(_HERE, "archive", "SHA256SUMS")
-FROZEN_GLOBS = ("deckfield_dashboard_s*.html", os.path.join("archive", "s*_final.json"))
+FROZEN_GLOBS = ("deckfield_dashboard_s*.html", os.path.join("archive", "s*_final.json"),
+                os.path.join("archive", "s*_inputs.json"))
 
 
 def _check_frozen_archive(target_path):

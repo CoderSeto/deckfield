@@ -57,9 +57,9 @@ cross-referenced between conversations).
   the workbook's `HOF` sheet by `extract_hall_of_fame.py` (static history; see
   "Hall of Fame tab").
 - `deckfield_dashboard_s9.html`, `archive/s9_final.json`,
-  `archive/SHA256SUMS` — **Season 9's frozen record**, written once by
-  `freeze_season.py`. Never edited, never regenerated; see "Season 9 is
-  frozen" below.
+  `archive/s9_inputs.json`, `archive/SHA256SUMS` — **Season 9's frozen
+  record**, written once by `freeze_season.py` and `freeze_season_inputs.py`.
+  Never edited, never regenerated; see "Season 9 is frozen" below.
 - `results/s9/` — every S9 matchday CSV from round 12 on (moved here from
   `results/` when S9 was frozen). Kept as the audit trail, not the record.
 - `SEASON10_PLAN.md` — the agreed Season 10 turnover plan (every decision,
@@ -104,6 +104,32 @@ zero `pageerror` and all 26 archived constants equal the live page's values.
 The one difference is `DATA.teams[].plusminus`, which the page computes on
 load (`ovr` minus the mean OVR) rather than storing. All 83 CSVs report
 "already up to date" from `results/s9/`.
+
+**`archive/s9_inputs.json` — what S10 needs that the dashboard never showed**
+(added the same day, written by `freeze_season_inputs.py 9`). The dashboard
+froze what it DISPLAYED, and several S10 inputs were never displayed in usable
+form:
+- raw 0-10 DSCR (the carryover seed; the archive's `dscr` is the 0-100
+  component);
+- Primary Type and base climate (workbook only);
+- stored and end-of-season accolades;
+- the 400-capped DSCR averages for the S10 tiebreak (SEASON10_PLAN B9a),
+  which need game-level data;
+- the final regional and division standings ORDER, which the page only works
+  out in the browser.
+
+It is written from the faithful rebuild and **refuses to write unless every
+overlapping value agrees with the frozen record**: OVR, PF, PA, fatigue, TOT,
+climate, both DSCR averages (against `s9_final.json`), and raw DSCR, Primary
+Type and accolades (against the frozen roster export), all 160 teams. Then
+verified in Chromium: all 10 regional and 10 division orders are identical to
+what the frozen page's own `standingsOrder()` produces, and all RT seeds agree
+with the regional order.
+
+One false alarm worth remembering: the roster carries DSCR to 2dp, and
+re-rounding 7.55 to 1dp in binary floating point gives 7.5 while the true
+7.5538 gives 7.6. Compare at the source's own precision. The guard's globs
+cover `archive/s*_inputs.json` too.
 
 `freeze_season.py <N>` is reusable at the end of any season. It refuses to
 overwrite an existing freeze and appends to `SHA256SUMS`.
