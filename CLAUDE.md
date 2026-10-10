@@ -2450,7 +2450,8 @@ bracket scratch database), not just the empty real one: 6 group boxes of 8 with
 records and points, dividers on places 2 and 3, the Play-in's three blocks with
 real scores and the third-place block reading `seeds 13-16, 2 eliminated`, all
 four bracket stages at 8/4/2/1 ties, the Final's three legs in their true
-orientations with the champion banner, and 6 ties marked as swept. All 11 tabs
+orientations with the champion banner (since removed -- see "The Bracket
+view" below), and 6 ties marked as swept. All 11 tabs
 and every sub-view at 1920/1600/1400/1240/1000px, zero `pageerror` events on
 either file.
 
@@ -2488,6 +2489,21 @@ in `WC_DATA`'s bracket entries, and a one-directional tree). Two changes on top:
   reads `-`; a G3 that a 2-0 sweep made unnecessary reads `·` ("No decider
   needed"). The playoff score is not on the cards -- the requested box was
   seed, name, G1-G3, and seven columns have no room for it.
+
+**Round names under the columns, a bigger Final, no banner** (per explicit
+request, same day). The R16/QF names moved below their columns, which
+clears the top of the bracket for the Final: it carries its own **FINAL** label,
+sits in a taller first row of a slightly wider middle column (rows
+`1.3fr 1fr 1fr .7fr`, `flex-grow: 1.3`, eased to 1.1 under 1400px) and is
+drawn larger (14.5px type, 32px score columns, an accent ring). The
+semifinal rows still centre inside the 25-75% span of the QF gutter verticals
+(measured 431px and 536px against 347-557px), so the connectors still meet.
+**The World Champion banner is gone** (`#wc-champion` and its code removed;
+the Final's box already shows who won), and **the tab's info text moved
+below the content** -- for all three sub-views, since it is one shared
+element. Measured: 0 names cut at 1920/1600/1400, 1 at 1240px with every slot
+filled, 13px between the FINAL label and its card and 20px from the card to
+the SEMIFINALS label.
 
 **Five columns is what makes it fit.** Seven needed the bracket to break out
 of main's 1600px cap and still cut names at 1600px; five fit the panel with

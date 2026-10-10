@@ -222,7 +222,20 @@
      feed it. --wcb-gap is read by the connectors and must equal the gap. */
   .wcb { display: flex; gap: var(--wcb-gap); --wcb-gap: 18px; overflow-x: auto; padding-bottom: 4px; }
   .wcb-col { flex: 1 1 0; min-width: 200px; }
-  .wcb-col-title { text-align: center; margin: 0 0 8px; white-space: nowrap; }
+  .wcb-col-title { text-align: center; margin: 10px 0 0; white-space: nowrap; }
+  /* The middle column is a touch wider, and its Final row taller, so the
+     Final can be drawn bigger. The two semifinal rows still centre at 37%
+     and 62% of the column, inside the 25-75% the QF gutter verticals span. */
+  .wcb-col.middle { flex-grow: 1.3; }
+  .wcb-col.middle .wcb-col-grid { grid-template-rows: 1.3fr 1fr 1fr .7fr; }
+  .wcb-slot.final { padding-top: 8px; }
+  .wcb-slot.final .wcb-card { font-size: 14.5px; border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent); }
+  .wcb-slot.final .wcb-row { grid-template-columns: minmax(0, 1fr) repeat(3, 32px); }
+  .wcb-slot.final .wcb-row > span { padding: 8px 0; }
+  .wcb-slot.final .wcb-row > .wcb-team { padding: 8px 8px 8px 10px; }
+  .wcb-slot.final .wcb-head > span { padding: 4px 0; font-size: 11px; }
+  .wcb-slot.final .wcb-seed { font-size: 12px; }
   .wcb-col-grid { display: grid; grid-template-rows: repeat(4, 1fr); height: 420px; }
   .wcb-slot { position: relative; display: flex; align-items: center; }
   /* The series card: one row per team, one column per game, the winning
@@ -245,10 +258,10 @@
   .wcb-row.won .wcb-team { font-weight: 700; }
   .wcb-card.tbd { padding: 22px 10px; text-align: center; border-style: dashed;
     color: var(--text-dim); opacity: .7; }
-  .wcb-slot.final .wcb-card { border-color: var(--accent); }
   /* "Semifinals" sits in the gap above the stacked pair. */
   .wcb-tag { position: absolute; top: 0; left: 0; right: 0; text-align: center; font-size: 10px;
     letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .wcb-slot.final .wcb-tag { font-size: 13px; font-weight: 700; }
   /* Connectors. On the left half they run out to the right; on the right
      half (.mirror) to the left. A QF-or-earlier card's own segment reaches
      the gutter midpoint, a vertical joins it to its partner, and the next
@@ -272,6 +285,7 @@
     .wcb-row { grid-template-columns: minmax(0, 1fr) repeat(3, 21px); }
     .wcb-row > .wcb-team { padding: 5px 4px 5px 6px; }
     .wcb-seed { min-width: 2em; font-size: 10px; }
+    .wcb-col.middle { flex-grow: 1.1; }
   }
   .schedule-columns { display: flex; gap: 20px; align-items: flex-start; }
   .schedule-columns .table-scroll { flex: 1; min-width: 0; }
@@ -759,9 +773,8 @@
         <button data-view="bracket">Bracket</button>
       </div>
     </div>
-    <div class="meta-note" style="margin-top:0" id="wc-note"></div>
-    <div id="wc-champion"></div>
     <div id="wc-body"></div>
+    <div class="meta-note" style="margin-top:22px" id="wc-note"></div>
   </section>
   <section id="panel-hof" class="panel">
     <h2 class="hof-h">Champions</h2>
@@ -2065,18 +2078,21 @@ function wcBracketHtml(d) {
       if (stage === 'QF') lines += '<span class="wcb-line wcb-in"></span>';
       return slot(i * span + 1, span, wcSeriesCardHtml(tie(stage, idx)), lines);
     }).join('');
+    // Round names sit UNDER the columns (per explicit request, 2026-10-10),
+    // which leaves the top of the bracket clear for the Final.
     return `<div class="wcb-col${side === 'right' ? ' mirror' : ''}">
-      <h3 class="rds-bracket-title wcb-col-title">${NAMES[stage]}</h3>
       <div class="wcb-col-grid">${slots}</div>
+      <h3 class="rds-bracket-title wcb-col-title">${NAMES[stage]}</h3>
     </div>`;
   };
 
-  // Final in row 1, the semifinal from the left half in row 2 (its feed
-  // coming in from the left) and the one from the right half in row 3.
-  const middle = `<div class="wcb-col">
-    <h3 class="rds-bracket-title wcb-col-title">Final</h3>
+  // Final in row 1, at the very top, drawn bigger; the semifinal from the
+  // left half in row 2 (its feed coming in from the left) and the one from
+  // the right half in row 3. Each carries its own label, so the middle column
+  // needs no name underneath.
+  const middle = `<div class="wcb-col middle">
     <div class="wcb-col-grid">
-      ${slot(1, 1, wcSeriesCardHtml(tie('Final', 0)), '', ' final')}
+      ${slot(1, 1, wcSeriesCardHtml(tie('Final', 0)), '<span class="wcb-tag">Final</span>', ' final')}
       ${slot(2, 1, wcSeriesCardHtml(tie('SF', 0)),
              '<span class="wcb-tag">Semifinals</span><span class="wcb-line wcb-in"></span>')}
       ${slot(3, 1, wcSeriesCardHtml(tie('SF', 1)), '<span class="wcb-line wcb-in from-right"></span>')}
@@ -2090,7 +2106,6 @@ function wcBracketHtml(d) {
 function renderWc() {
   const d = WC_DATA;
   const note = document.getElementById('wc-note');
-  const champ = document.getElementById('wc-champion');
   const body = document.getElementById('wc-body');
 
   note.innerHTML = `48 teams, seeded 1&ndash;48 by playoff seeding score (shown in brackets) and snaked into six groups of eight. `
@@ -2106,13 +2121,6 @@ function renderWc() {
           + `(round ${d.field_frozen_at_round}), so this draw no longer moves.`
         : ` <strong>The field is still projected</strong> and moves with every result; it freezes `
           + `at the conclusion of week 26, once the Regional Tournaments are done.`);
-
-  champ.innerHTML = d.champion
-    ? `<div class="mini-standings" style="padding:12px 14px;margin-bottom:16px">
-         <div class="qual-sub">World Champion</div>
-         <div style="font-size:20px;font-weight:700">${winnerNameHtml(d.champion)}</div>
-       </div>`
-    : '';
 
   body.innerHTML = wcView === 'groups' ? wcGroupsHtml(d)
                  : wcView === 'playin' ? wcPlayinHtml(d)
