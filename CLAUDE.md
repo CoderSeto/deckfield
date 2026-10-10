@@ -2450,7 +2450,8 @@ bracket scratch database), not just the empty real one: 6 group boxes of 8 with
 records and points, dividers on places 2 and 3, the Play-in's three blocks with
 real scores and the third-place block reading `seeds 13-16, 2 eliminated`, all
 four bracket stages at 8/4/2/1 ties, the Final's three legs in their true
-orientations with the champion banner, and 6 ties marked as swept. All 11 tabs
+orientations with the champion banner (since removed -- see "The Bracket
+view" below), and 6 ties marked as swept. All 11 tabs
 and every sub-view at 1920/1600/1400/1240/1000px, zero `pageerror` events on
 either file.
 
@@ -2458,6 +2459,92 @@ either file.
 Play-in header printed `seeds 13-18` for the third-place block, from
 `seed_base + 6`. That subset only seeds FOUR of its six. `wcSeedRange` now
 reads the range off the real slots and names the eliminations.
+
+### The Bracket view: a two-sided tree of series boxes (2026-10-10, per explicit request)
+
+Built on PR #148 (another session's first cut: region colours, playoff scores
+in `WC_DATA`'s bracket entries, and a one-directional tree). Two changes on top:
+
+- **Split into its two halves, five columns.** The top half of the draw runs
+  left to right (R16, QF), the bottom half right to left, and the middle
+  column holds the **Final up in the empty space level with the top R16
+  matches, with the two Semifinals stacked beneath it** (per explicit
+  request, same day -- it was seven columns for a few hours, Final dead
+  centre between two SF columns). Each stacked semifinal takes its feed from
+  its own half's side; the gutter vertical between a half's two QFs spans
+  25-75% of the column, so it meets the semifinal in row 2 (left) or row 3
+  (right) without any extra geometry. The engine's tie order IS the bracket
+  (`_bracket_seed_pairs(16)`: 1/16, 8/9, 4/13, 5/12, 2/15, 7/10, 3/14, 6/11),
+  so each stage's list is cut down the middle. Within a half the rows follow
+  the classic regional order the request named -- **1/16, 8/9, 5/12, 4/13**
+  on the left and **6/11, 3/14, 7/10, 2/15** on the right -- which only ever
+  swaps ties that feed the SAME next game, so every connector still joins the
+  right pair. `wcBracketView` (a `let`, not in the manifest) holds those
+  display orders as indexes into the engine's lists.
+- **A series box per tie** (`wcSeriesCardHtml`): a row per team (better seed
+  on top), a column per game (G1/G2/G3), and the **winning score of each game
+  lit** (bold on an accent tint with an accent underline). Names are always
+  region-coloured; once the tie is decided the loser dims and the winner goes
+  bold. Hovering a score names the host ("G2 at Pueltown"). An unplayed game
+  reads `-`; a G3 that a 2-0 sweep made unnecessary reads `·` ("No decider
+  needed"). The playoff score is not on the cards -- the requested box was
+  seed, name, G1-G3, and seven columns have no room for it.
+
+**Round names under the columns, a bigger Final, no banner** (per explicit
+request, same day). The R16/QF names moved below their columns, which
+clears the top of the bracket for the Final: it carries its own **FINAL** label,
+sits in a taller first row of a slightly wider middle column (rows
+`1.3fr 1fr 1fr .7fr`, `flex-grow: 1.3`, eased to 1.1 under 1400px) and is
+drawn larger (14.5px type, 32px score columns, an accent ring). The
+semifinal rows still centre inside the 25-75% span of the QF gutter verticals
+(measured 431px and 536px against 347-557px), so the connectors still meet.
+**The World Champion banner is gone** (`#wc-champion` and its code removed;
+the Final's box already shows who won), and **the tab's info text moved
+below the content** -- for all three sub-views, since it is one shared
+element. Measured: 0 names cut at 1920/1600/1400, 1 at 1240px with every slot
+filled, 13px between the FINAL label and its card and 20px from the card to
+the SEMIFINALS label.
+
+**The Final as the centrepiece, "Semifinals" under its column** (per explicit
+request, same day: "really set the final up more"). The FINAL / SEMIFINALS
+labels inside the column are gone: "Semifinals" is the middle column's name
+underneath, like every other round, and the Final names itself in its own
+card header ("World Championship Final"; just "Final" under 1400px). The card
+is 16px type with 38px score columns, a 2px gold frame, a gold-tinted gradient
+and a soft glow, sitting in a 1.6fr first row of a wider middle column
+(`flex-grow: 1.45`). Once decided the winner carries a **CHAMPION** mark;
+before its semifinals finish it shows two "Semifinal winner" rows rather than
+a bare TBD. The semifinal rows shrank to `.85fr` so they still centre inside
+the QF gutter verticals' span (measured 473px and 562px against 365-575px).
+Under 1400px the Final steps down (14.5px, 32px columns) and drops the
+CHAMPION mark, which was the one thing that overflowed there. Measured: 0
+names cut from 1400px up, 1 at 1240px (3px short, where the page already
+scrolls sideways).
+
+**Each box names its own round** (per explicit request, same day). The
+header row's free corner beside G1/G2/G3 now reads **ROUND OF 16**,
+**QUARTERFINAL** or **SEMIFINAL** (the Final keeps "World Championship
+Final"), so the round names under the columns were removed outright --
+`.wcb-col-title` is gone. TBD boxes carry the label too, over a "TBD" body.
+Measured: every one of the 15 labels fits, no team name is cut from 1400px up
+(1 at 1240px), and the semifinal connectors still meet.
+
+**Five columns is what makes it fit.** Seven needed the bracket to break out
+of main's 1600px cap and still cut names at 1600px; five fit the panel with
+room to spare -- **0 names ellipsised at 1920/1600/1400/1240px**, the bracket
+itself never scrolls, and below 1400px the cards tighten (11.5px type, 21px
+score columns). Below ~1560px the page already scrolls sideways (the 12-tab
+nav). #148's `WC_STAGE_SIZE`/`WC_STAGE_NAMES` top-level consts and their
+`STATIC_CONSTS` entries were removed with the layout they served.
+
+Verified on scratch databases at three states -- the real one (R16 not yet
+played), part-way through the QF, and a finished tournament: columns hold
+4/2/3/2/4 cards with TBDs exactly where a feeder is undecided, 0 overlaps,
+**one lit cell per played game** (25 and 36, matching `WC_DATA`), 8 and 15
+decided ties marked, all 30 connector segments drawn, and zero `pageerror`
+on all 12 tabs. Regenerating against a clean rebuild (3488 games through round
+83) left every constant byte-identical to #148's committed dashboard except
+`TEAMS_EXPORT_TSV`.
 
 ### The Rank/Elo History tab folded into Rankings (2026-09-16, per explicit request)
 

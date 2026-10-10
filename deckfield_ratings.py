@@ -5830,11 +5830,15 @@ def world_championship_overview(season, round_num=None):
     out["playin"] = playin
 
     seeds, eliminated = wc_bracket_seeds(season, round_num)
-    out["eliminated"] = [{"name": n, "dex": dex.get(n)} for n in eliminated]
+    out["eliminated"] = [{"name": n, "dex": dex.get(n), "score": score_of.get(n)} for n in eliminated]
     if seeds is None:
         conn.close()
         return out
-    out["bracket_seeds"] = {str(k): {"name": v, "dex": dex.get(v)} for k, v in seeds.items()}
+    # The playoff seeding score is frozen at the field's round and carries
+    # unchanged into the bracket -- it is the same score_of already used for
+    # the group boxes and the Play-in, not recomputed here.
+    out["bracket_seeds"] = {str(k): {"name": v, "dex": dex.get(v), "score": score_of.get(v)}
+                             for k, v in seeds.items()}
     seed_of = {name: seed for seed, name in seeds.items()}
 
     # ---- Bracket: each stage appears only once it resolves ---------------
@@ -5860,6 +5864,7 @@ def world_championship_overview(season, round_num=None):
                 "better": better, "worse": worse,
                 "better_seed": seed_of[better], "worse_seed": seed_of[worse],
                 "better_dex": dex.get(better), "worse_dex": dex.get(worse),
+                "better_score": score_of.get(better), "worse_score": score_of.get(worse),
                 "legs": legs, "swept": bool(w1 and w2 and w1 == w2),
                 "winner": _wc_tie_winner(conn, season, stage, better, worse),
             })
