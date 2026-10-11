@@ -16,8 +16,9 @@ a week, so a game's "Elo after" is its team's figure for that week and the
 game's K is the change.
 
 Hosts: S3 recorded H/A for most games; its 224 unrecorded conference games
-take the pod schedule's host ("schedule", see pod_hosts), which first has to
-reproduce every recorded conference host. S1 and S2 recorded none; their hosts
+take the pod schedule's host ("schedule", see pod_hosts) and its 28 unrecorded
+cup round-1 games the cups' seeding ("seed", see cup_hosts) -- each rule first
+has to reproduce every host S3 did record. S1 and S2 recorded none; their hosts
 are rebuilt from the season's own schedule documents under rules the user set
 (2026-10-11), and each game says which in `host_source`:
 
@@ -583,5 +584,74 @@ def pod_hosts(wb, cfg, teams, games):
         else:
             g["home_away"] = "H" if host == a else "A"
             g["host_source"] = "schedule"
+            filled += 1
+    return filled, errors
+
+
+# ---------------------------------------------------------------------------
+# S3: the conference cups (the CCC tab)
+# ---------------------------------------------------------------------------
+
+CUP_LANES = [[16, 9, 8, 1], [15, 10, 7, 2], [14, 11, 6, 3], [13, 12, 5, 4]]
+
+
+def read_cup_seeds(wb):
+    """CCC: each cup's 16 teams ("Pod - Team"), with the team's seed in each
+    round's column it played (blank or "x" before it entered: seeds 9-16 play
+    round 1, 5-8 enter in round 2, 1-4 at the quarterfinal)."""
+    rows = list(wb["CCC"].iter_rows(min_row=1, max_row=37, values_only=True))
+
+    def cell(r, c):
+        row = rows[r - 1]
+        return row[c] if c < len(row) else None
+    seeds = {}
+    for hr in (2, 20):
+        for c in (1, 10, 19, 28):
+            head = cell(hr, c)
+            if not (isinstance(head, str) and head.endswith(" Cup")):
+                continue
+            cup = CUPS[head.split(" - ")[1][:-len(" Cup")]]
+            for r in range(hr + 1, hr + 17):
+                name = cell(r, c)
+                nums = [cell(r, c + k) for k in range(3, 8)]
+                seed = next((v for v in nums if isinstance(v, int)), None)
+                if not isinstance(name, str) or seed is None or any(
+                        isinstance(v, int) and v != seed for v in nums):
+                    raise ValueError(f"CCC row {r}: unreadable cup entry {name!r} {nums}")
+                seeds[name.split(" - ", 1)[1]] = (cup, seed)
+    return seeds
+
+
+def cup_hosts(wb, games):
+    """S3's conference cups are a cup in the modern Regional Tournament's
+    shape (per the user): lanes 16-9-8-1 / 15-10-7-2 / 14-11-6-3 / 13-12-5-4,
+    round 1 a single game hosted by the better seed, rounds 2 and the
+    quarterfinal single games (better seed), the semifinal and final two legs
+    (worse seed leg 1, better seed leg 2). A recorded host must agree; a game
+    with none takes the rule's. Returns (filled, errors)."""
+    seeds = read_cup_seeds(wb)
+    lane = {s: i for i, l in enumerate(CUP_LANES) for s in l}
+    filled, errors = 0, []
+    for g in games:
+        if g["w"][1] != "C":
+            continue
+        a, b = g["winner_name"], g["loser_name"]
+        cup, stage = g["event"]["code"].split("-", 1)
+        (ca, sa), (cb, sb) = seeds[a], seeds[b]
+        if ca != cup or cb != cup:
+            errors.append(f"row {g['row']}: {a} v {b} is not a {cup} pairing in CCC")
+            continue
+        if stage == "R1" and not (lane[sa] == lane[sb] and sa + sb == 25):
+            errors.append(f"row {g['row']}: round 1 {a} (#{sa}) v {b} (#{sb}) is not a lane pairing")
+            continue
+        better, worse = (a, b) if sa < sb else (b, a)
+        host = worse if stage.endswith("-1") else better
+        if g["home_away"]:
+            recorded = a if g["home_away"] == "H" else b
+            if recorded != host:
+                errors.append(f"row {g['row']}: recorded host {recorded}, cup rule says {host}")
+        else:
+            g["home_away"] = "H" if host == a else "A"
+            g["host_source"] = "seed"
             filled += 1
     return filled, errors

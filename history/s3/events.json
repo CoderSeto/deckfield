@@ -11,9 +11,9 @@
   }
  ],
  "host_sources": {
-  "": 28,
   "recorded": 1080,
-  "schedule": 224
+  "schedule": 224,
+  "seed": 28
  },
  "games": 1332,
  "walkovers": 0,

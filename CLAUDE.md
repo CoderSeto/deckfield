@@ -487,9 +487,19 @@ of all 13 weeks fits its pattern, and all 280 recorded conference hosts
 disagreement (mutation-tested: a flipped host side, flipped intrapod hosts,
 reversed positions and swapped left/right pods all refuse). The first-set host
 sides (U, R, L) cannot be checked against a recorded week -- none survives --
-but the layout they act on is pinned by the second set. The 28 cup round-1
-games stay blank: the recorded cup rounds follow no "better rank hosts" rule
-(17 of 28 in round 2, 14 of 28 in the quarterfinals). S1 and S2 recorded no
+but the layout they act on is pinned by the second set. **The 28 cup round-1
+games take the cups' own rule**: per the user, each conference cup "is the
+modern regional championship bracket in disguise" -- still a cup (type C),
+seeded in the CCC tab (a team's seed in each round column it played: 9-16 in
+round 1, 5-8 from round 2, 1-4 from the quarterfinal), on the lanes 16-9-8-1 /
+15-10-7-2 / 14-11-6-3 / 13-12-5-4. Proved first: all 28 round-1 games are lane
+pairings (16v9 ... 13v12), and all 70 recorded cup games follow the modern
+hosting -- single games (round 2, quarterfinal) at the better seed, two-legged
+ties (semifinal, final) at the worse seed in leg 1 and the better seed in leg
+2. So round 1, a single game, goes to the better seed (`cup_hosts`, mutation-
+tested). (Ranks going in do NOT predict these hosts -- 17 of 28 in round 2 --
+which is why the seeds were needed.) **Every S3 game now has a host**, and the
+config no longer allows a blank. S1 and S2 recorded no
 hosts, so they were rebuilt under the user's rules (2026-10-11), and
 `host_source` says which rule:
 
@@ -5464,8 +5474,8 @@ page errors on either path.
 - **Historical archive:** all eight seasons extracted (2026-10-11). **No
   relitigation layer** -- per the user (2026-10-11), the gaps the early seasons
   never recorded (per-team EX, raw goal scores, S1-S2 spread/interest/DSCR)
-  stay blank, as do the hosts of S3's 28 conference-cup round-1 games (no rule
-  for them). Next: an all-time database or dashboard tab.
+  stay blank. Every game in all eight seasons has a host. Next: an all-time
+  database or dashboard tab.
 - **End of S10 (B13):** append its Legacy column to `legacy_points.json` and its
   Hall of Fame season, then `freeze_season.py 10` and
   `freeze_season_inputs.py 10`; S11 is `prepare_season.py 11` +
