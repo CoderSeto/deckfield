@@ -90,7 +90,9 @@ database holds one season. See "Season 10" below.
 - `history/` — the **historical archive** of Seasons 1-8 (see "The historical
   archive" below). `history/s<N>/` holds that season's workbook and what
   `extract_history.py <N> <workbook>` writes from it; `history/teams.json` is
-  the cross-season team identity map. S8 done 2026-10-11; S7 and earlier next.
+  the cross-season team identity map. S8 and S7 done 2026-10-11; S6 and
+  earlier next. Each season is extracted only after the one after it (its
+  final ranks and Elo are checked against how the next season opened).
 - `CLAUDE.md` — this file.
 
 ## The historical archive (Seasons 1-8, begun 2026-10-11)
@@ -122,11 +124,27 @@ strings of every game mirror each other and name the right teams; each team's
 W-L per bucket (R/L/Swiss/playoff+finals) equals the workbook's Rankings F..M,
 byes included; the Elo chain holds game by game from each team's opening
 Elo (winner +K, loser -K, exactly); each team's last game Elo equals its final
-Elo; goals never exceed points; the final rank
-equals the next season's recorded end-of-season checkpoint; the Hall of Fame's
-World, cup and all ten regional titles follow from the games; and Regional and
-League are complete round robins (every pair once, never across groups, every
-team every matchday). Each check was mutation-tested (a dropped bye, a one-sided
+Elo; goals never exceed points; the final rank AND final Elo equal how the
+NEXT season opened (its archived `opening_rank`/`opening_elo`; for S8, S9's
+verbatim "S8 End"); the Hall of Fame's World, cup and all ten regional titles
+follow from the games; and Regional and League are complete round robins
+(every pair once, never across groups, every team every matchday).
+
+**Opening Elo comes from the games**, never from a sheet column: the first
+game's Elo less the K gained (or plus the K lost). Where a sheet also kept the
+carried-in Elo and it can be trusted (S8's Rankings FV), it must agree; S7's
+block (headed "NOT FIXED") disagrees for all 160 and is not read.
+
+**A recorded inconsistency is accepted only when listed** -- per season, in
+`SEASONS[n]["anomalies"]`, by Archive row, check and reason -- and it lands in
+`events.json`. Anything unlisted still refuses, and a listed anomaly that no
+longer occurs refuses too (the list cannot go stale).
+
+**Event labels**: a title opens with two ALL-CAPS words; a round/leg label
+refines it, and a second round/leg label within one title opens the next part
+of that stage (S7's Championship Swiss round 3); anything else -- matchday
+names, the sheet's changelog notes -- is kept as the event's `notes`. Column A's
+play dates ("D1 5/22", S7 on) become the event's `date`. Each check was mutation-tested (a dropped bye, a one-sided
 score typo, a bad host flag, a missing WC game, the identity swap undone, a
 flipped regional final, a K off by one, an opening Elo off by 5, goals above
 points) and fails as it should. A re-run is byte-identical.
@@ -166,6 +184,38 @@ S8's structure, as the Archive lays it out (event codes in `events.json`):
 - **OT**: Regional, League and Grand Swiss OT games are 2/1 as now; Playoff and
   Finals OT games were scored **3/0** -- confirmed as S8's rule. Recorded as
   played; `ot` flags them all.
+
+### Season 7 (extracted 2026-10-11)
+
+**Complete as well -- nothing to simulate.** 3,442 games in 85 events, the same
+recorded fields as S8 plus play dates (26 days, "D1 5/22" to "D26 2/25") and
+game IDs (column C, e.g. `S06R01G01` -- prefixed S06 though they are S7 games;
+kept verbatim). Same 160 teams with the same dex, names and regions as S8. No
+Primary Type column; accolades span two columns (joined with "; ").
+
+The user described S7 as S8 "except the WC, which had odd swiss brackets to
+start". The Archive shows that plus two smaller differences:
+- **Grand Swiss rounds 7-8 were 48 games**, not 64 (96 teams, not 128); every
+  other round, the byes (80 + 40, scored as wins) and the 24-team bracket match.
+- **The Championship play-in was two two-legged rounds** (WC-PI1, WC-PI2, 8
+  ties each), typed **Playoffs (P)**, not Finals.
+- **Championship Swiss**: rounds 1-2 single games (16 each); round 3 split --
+  8 single games (WC-S3) and 8 two-legged ties (WC-S3-1/2, Calcs gives every
+  team two SW3 slots); rounds 4 and 5 two-legged (12 and 6 ties). No finals
+  play-in; straight to a best-of-three R16, QF, SF and Final.
+- Pueltown won both the Grand Swiss (over Cortondo) and the World
+  Championship (over Canalave City).
+
+The sheet's changelog notes are kept: at R1 "Base-2 Scoring System",
+"Increased !#$+ value", "New League System", "New Bonus System", "New OVR
+Balance", "Modified HomeAdv"; at GS7 "EYE formula fixed", "PF formula
+adjusted", "Scoring table formula adjusted"; at L14 "Five month hiatus
+(corrupted file)" (the dates jump from 9/14 to 2/8 there).
+
+**One listed anomaly**: Archive row 3222 (Delta playoff SF leg 1, Fallarbor
+Town at Lavaridge Town) moved Elo by 40 each way while its K column says 22.
+Every later game chains correctly from the recorded Elo. Recorded as written;
+which number is right was put to the user.
 
 ## Season 9 is frozen (2026-10-10, per explicit instruction)
 
@@ -5092,7 +5142,7 @@ page errors on either path.
 
 ## Known open items
 
-- **Historical archive:** S8 extracted; S7 and earlier to come, each needing
+- **Historical archive:** S8 and S7 extracted; S6 and earlier to come, each needing
   its own `SEASONS` layout in `extract_history.py`. No all-time database or
   dashboard tab yet -- that waits until a few seasons are in.
 - **End of S10 (B13):** append its Legacy column to `legacy_points.json` and its

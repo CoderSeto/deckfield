@@ -22,16 +22,21 @@ What it writes, all under history/s<N>/:
 - walkovers.csv  byes the season scored as wins (S8: the Grand Swiss
                  round-1/round-2 byes, from Calcs' "3S-" cells).
 - teams.csv      each team as it stood that season: its own dex, canonical id,
-                 name, region, division, final rank / OVR / Elo, accolades.
+                 name, region, division, opening rank and Elo (where it stood
+                 coming in), final rank / OVR / Elo, accolades.
 - events.json    every event in play order with its game count (an event with
                  no games, like a leg 3 nobody had to play, is listed and
-                 marked empty), plus the source workbook's SHA-256.
+                 marked empty), its play date where the sheet kept one, the
+                 changelog notes the sheet wrote beside it, any listed
+                 anomalies, and the source workbook's SHA-256.
 
 It also adds the season to history/teams.json, the cross-season identity map.
 
 It refuses to write unless every check against the workbook's own totals and
-against later records passes -- see validate(). Season-specific layout lives in
-SEASONS; S8 is the only one so far.
+against later records passes -- see validate(). A recorded inconsistency the
+season really contains is accepted only when it is listed, row by row with its
+reason, in that season's "anomalies"; anything unlisted still refuses.
+Season-specific layout lives in SEASONS.
 """
 import csv
 import hashlib
@@ -71,19 +76,38 @@ RENAMED_SINCE = {
     "Fight Area": "Cabo Poco",
 }
 
+# Rankings columns are 0-based. Common to S7 and S8: A dex, B region, C name,
+# F..M the W-L the workbook kept per bucket, AQ OVR, BL Elo, BQ base climate,
+# BV division, CG the name keying the rank-checkpoint block (checked equal to C).
 SEASONS = {
     8: {
-        # Rankings columns (0-based): A dex, B region, C name, AN rank,
-        # AQ OVR, BL Elo, BQ base climate, BV division, BY primary type,
-        # CA accolades, CK the FINAL rank checkpoint, FV the Elo carried in
-        # from S7 (proved: it is each team's Elo before its first S8 game).
-        "rankings": dict(dex=0, region=1, name=2, rank=39, ovr=42, elo=63,
-                         basclm=68, division=73, primary=76, accolades=78,
-                         final_rank=88, opening_elo=177),
-        # Rankings F..M: the W-L the workbook itself kept per bucket.
+        # BY primary type, CA accolades, CK the FINAL rank checkpoint, EU
+        # "S7 End", FV the Elo carried in from S7 (checked against the Elo the
+        # games imply before each team's first game: equal for all 160).
+        "rankings": dict(dex=0, region=1, name=2, ovr=42, elo=63, basclm=68,
+                         division=73, primary=76, accolades=[78], checkpoint_name=84,
+                         final_rank=88, opening_rank=150, opening_elo=177),
         "record_cols": dict(RW=5, RL=6, LW=7, LL=8, SW=9, SL=10, pW=11, pL=12),
         # Calcs: per-team game grid, column L onward in play order.
         "calcs_first_col": 12,
+        "anomalies": {},
+    },
+    7: {
+        # No primary type column. Accolades in CA and CB. CK the final rank
+        # checkpoint, ER "S6 End". Its carried-in Elo block (FR..GN, headed
+        # "NOT FIXED") disagrees with the games for all 160 teams and is not
+        # read; opening Elo comes from the games alone.
+        "rankings": dict(dex=0, region=1, name=2, ovr=42, elo=63, basclm=68,
+                         division=73, primary=None, accolades=[78, 79], checkpoint_name=84,
+                         final_rank=88, opening_rank=147, opening_elo=None),
+        "record_cols": dict(RW=5, RL=6, LW=7, LL=8, SW=9, SL=10, pW=11, pL=12),
+        "calcs_first_col": 12,
+        "anomalies": {
+            3222: ("Elo", "Delta playoff SF leg 1, Fallarbor Town (57) won at Lavaridge "
+                          "Town (25): Elo moved 40 each way (1879->1919, 2041->2001) "
+                          "though the K column says 22. Recorded as written; the chain "
+                          "continues from the recorded Elo and every later game holds."),
+        },
     },
 }
 
@@ -92,15 +116,20 @@ SEASONS = {
 # Events
 # ---------------------------------------------------------------------------
 
+STRUCTURAL = re.compile(r'\b(Leg|Round|Game|Quarterfinal|Semifinal|Championship|Play-in)\b', re.I)
+
+
 def _is_title(label):
-    """An event title is ALL-CAPS ("GRAND SWISS FINAL - First Leg" starts with
-    one); a sub-label ("First Leg", "The Overhaul") refines the current one."""
-    first = label.split()[0]
-    return first.isupper() and len(first) > 1
+    """An event title opens with two ALL-CAPS words ("GRAND SWISS FINAL - First
+    Leg"); anything else refines the current event ("First Leg") or annotates
+    it ("The Overhaul", and S7's "EYE formula fixed", whose first word alone
+    is capitals)."""
+    words = label.split()
+    return len(words) >= 2 and all(w.isupper() and len(w) > 1 for w in words[:2])
 
 
 def _event_code(title, sub):
-    """A short, stable code for an S8 event, from its Archive labels."""
+    """A short, stable code for an event, from its Archive labels."""
     t = title.strip().upper()
     s = (sub or "").strip()
     leg = re.search(r'(First|Second) Leg', s + " " + title, re.I)
@@ -114,10 +143,13 @@ def _event_code(title, sub):
     m = re.match(r'GRAND SWISS ROUND (\w+)$', t)
     if m and m.group(1) in NUMBER_WORDS:
         return f"GS{NUMBER_WORDS[m.group(1)]}"
+    if t == "CHAMPIONSHIP PLAY-IN":
+        # S8: one two-legged round ("First Leg"); S7: two ("First Round - ...").
+        rm = re.match(r'(First|Second) Round', s, re.I)
+        return f"WC-PI{1 if rm.group(1).lower() == 'first' else 2}-{leg_n}" if rm else f"WC-PI-{leg_n}"
     stage = {
         "GRAND SWISS PLAY-IN ROUND": "GS-PI", "GRAND SWISS ROUND OF SIXTEEN": "GS-R16",
         "GRAND SWISS QUARTERFINAL": "GS-QF", "GRAND SWISS SEMIFINAL": "GS-SF",
-        "CHAMPIONSHIP PLAY-IN": "WC-PI",
     }.get(t)
     if stage:
         return f"{stage}-{leg_n}"
@@ -127,10 +159,14 @@ def _event_code(title, sub):
         rnd = {"Quarterfinal": "QF", "Semifinal": "SF", "Championship": "F"}[s.split(" - ")[0]]
         return f"RP-{rnd}-{leg_n}"
     if t == "CHAMPIONSHIP SWISS":
-        return f"WC-S{NUMBER_WORDS[s.split()[-1].upper()]}"
+        # "Round One" (S8), "Round 3" (S7), "Round 3 - First Leg" (S7's
+        # two-legged brackets).
+        rm = re.match(r'Round (\w+)', s)
+        n = int(rm.group(1)) if rm.group(1).isdigit() else NUMBER_WORDS[rm.group(1).upper()]
+        return f"WC-S{n}" + (f"-{leg_n}" if leg_n else "")
     if t == "CHAMPIONSHIP FINALS":
-        rnd = {"Play-in": "FPI", "Round of Sixteen": "R16", "Quarterfinal": "QF",
-               "Semifinal": "SF"}[s.split(" - ")[0]]
+        rnd = {"Play-in": "FPI", "Round of Sixteen": "R16", "Round of 16": "R16",
+               "Quarterfinal": "QF", "Semifinal": "SF"}[s.split(" - ")[0]]
         return f"WC-{rnd}-{leg_n or game_n}"
     if t.startswith("WORLD CHAMPIONSHIP - GAME"):
         return f"WC-F-{game_n}"
@@ -144,21 +180,43 @@ def _event_code(title, sub):
 def read_teams(wb, cfg):
     c = cfg["rankings"]
     teams = {}
-    for r in wb["Rankings"].iter_rows(min_row=2, max_row=161, values_only=True):
+    for rownum, r in enumerate(wb["Rankings"].iter_rows(min_row=2, max_row=161, values_only=True), 2):
         if r[c["dex"]] is None:
             continue
+        if r[c["checkpoint_name"]] != r[c["name"]]:
+            raise ValueError(f"Rankings row {rownum}: rank checkpoints are keyed to "
+                             f"{r[c['checkpoint_name']]!r}, not {r[c['name']]!r}")
         region = r[c["region"]]
+        accolades = [str(r[i]).strip() for i in c["accolades"]
+                     if r[i] not in (None, "", "-")]
         teams[r[c["dex"]]] = {
             "dex": r[c["dex"]], "name": r[c["name"]],
             "region": REGION_NAME_FIX.get(region, region),
             "division": LEAGUE_DIVISION_MAP[r[c["division"]]],
-            "primary_type": r[c["primary"]], "basclm": r[c["basclm"]],
+            "primary_type": r[c["primary"]] if c["primary"] is not None else "",
+            "basclm": r[c["basclm"]],
+            "opening_rank": r[c["opening_rank"]],
+            "sheet_opening_elo": r[c["opening_elo"]] if c["opening_elo"] is not None else None,
             "final_rank": r[c["final_rank"]], "final_ovr": r[c["ovr"]],
-            "final_elo": r[c["elo"]], "opening_elo": r[c["opening_elo"]],
-            "accolades": r[c["accolades"]] or "",
+            "final_elo": r[c["elo"]],
+            "accolades": "; ".join(accolades),
             "record": {k: r[i] for k, i in cfg["record_cols"].items()},
         }
     return teams
+
+
+def opening_elos(games, teams):
+    """Each team's Elo before its first game, from that game: Elo after, less
+    the K it gained (winner) or plus the K it lost (loser)."""
+    name_to_dex = {t["name"]: d for d, t in teams.items()}
+    out = {}
+    for g in games:
+        k = float(g["elo_k"])
+        for name, s, sign in ((g["winner_name"], g["w"], -1), (g["loser_name"], g["l"], 1)):
+            d = name_to_dex[name]
+            if d not in out:
+                out[d] = float(s[9]) + sign * k
+    return out
 
 
 def read_games(wb):
@@ -166,16 +224,34 @@ def read_games(wb):
     rows = list(wb["Archive"].iter_rows(min_row=1, max_col=23, values_only=True))
     events, games = [], []
     cur = None
+
+    def new_event(title, rownum, sub=None):
+        e = {"title": title, "sub": sub, "row": rownum, "games": 0, "notes": [], "date": None}
+        events.append(e)
+        return e
+
     for rownum, r in enumerate(rows, start=1):
         if rownum == 1:
             continue
         label = r[1]
         if isinstance(label, str) and label.strip():
+            label = label.strip()
             if _is_title(label):
-                cur = {"title": label.strip(), "sub": None, "row": rownum, "games": 0}
-                events.append(cur)
-            elif cur is not None and cur["sub"] is None:
-                cur["sub"] = label.strip()
+                cur = new_event(label, rownum)
+            elif cur is not None and STRUCTURAL.search(label):
+                # A round/leg label. The first one refines the event; a second
+                # opens the next part of the same stage (S7's Championship Swiss
+                # "Round 3" single games, then "Round 3 - First Leg").
+                if cur["sub"] is None:
+                    cur["sub"] = label
+                else:
+                    cur = new_event(cur["title"], rownum, sub=label)
+            elif cur is not None:
+                # A changelog note or a matchday's name ("Base-2 Scoring
+                # System", "The Overhaul").
+                cur["notes"].append(label)
+        if isinstance(r[0], str) and r[0].strip() and cur is not None and cur["date"] is None:
+            cur["date"] = r[0].strip()
         if not r[15]:
             continue
         w, l = GAME_PATTERN.match(str(r[15])), GAME_PATTERN.match(str(r[16]))
@@ -193,6 +269,7 @@ def read_games(wb):
             "home_away": str(r[6]).strip().upper(), "w": w.groups(), "l": l.groups(),
             "ex": ex, "mark": r[17] or "", "note": r[19] or "",
             "rank_w": r[7], "rank_l": r[12], "elo_k": r[4], "goals": r[13],
+            "game_id": r[2] or "",
         })
     for i, e in enumerate(events, start=1):
         e["round"] = i
@@ -280,7 +357,7 @@ def build_game_rows(games, name_to_dex, canon):
             "goals_a": goals_h, "goals_b": goals_a, "elo_k": g["elo_k"],
             "rank_a": rank_h, "rank_b": rank_a,
             "ot": int(ot), "mark": g["mark"], "note": g["note"].replace("\n", " "),
-            "source_row": g["row"], "raw_winner": "".join(_raw(w)), "raw_loser": "".join(_raw(l)),
+            "source_row": g["row"], "game_id": g["game_id"], "raw_winner": "".join(_raw(w)), "raw_loser": "".join(_raw(l)),
         })
     return rows
 
@@ -294,13 +371,16 @@ GAME_FIELDS = ["seq", "round", "event", "game_type", "team_a", "team_b", "result
                "pf_a", "pa_a", "raw_goal_a", "raw_goal_b", "spread_a", "interest",
                "dscr_a", "dscr_b", "elo_a_after", "elo_b_after", "home", "ex_a", "ex_b",
                "ex_winner_diff", "winner", "goals_a", "goals_b", "elo_k", "rank_a", "rank_b",
-               "ot", "mark", "note", "source_row", "raw_winner", "raw_loser"]
+               "ot", "mark", "note", "source_row", "game_id", "raw_winner", "raw_loser"]
 
 
-def validate(season, teams, games, walkovers, canon, events):
-    """Every check must pass or nothing is written."""
+def validate(season, teams, games, walkovers, canon, events, anomalies=None):
+    """Every check must pass or nothing is written. Returns (errors, accepted):
+    an error on a row listed in `anomalies` under its check is accepted, and
+    so is reported rather than refused."""
     errors = []
     name_to_dex = {t["name"]: d for d, t in teams.items()}
+    opening = opening_elos(games, teams)
 
     # 1. Both sides of every game agree, and the strings name the right teams.
     for g in games:
@@ -343,14 +423,19 @@ def validate(season, teams, games, walkovers, canon, events):
 
     # 3. The Elo chain: from each team's opening Elo, every game moves the
     #    winner up and the loser down by exactly that game's Elo K (Archive E,
-    #    the points exchanged).
-    elo = {d: float(t["opening_elo"]) for d, t in teams.items()}
+    #    the points exchanged). Where the sheet also kept the carried-in Elo,
+    #    the opening Elo the games imply must equal it.
+    for d, t in teams.items():
+        if t["sheet_opening_elo"] is not None and float(t["sheet_opening_elo"]) != opening.get(d):
+            errors.append(f"{t['name']}: opening Elo {opening.get(d)} from the games, "
+                          f"{t['sheet_opening_elo']} in the sheet")
+    elo = dict(opening)
     for g in games:
         wd, ld = name_to_dex[g["winner_name"]], name_to_dex[g["loser_name"]]
         k = float(g["elo_k"]) if isinstance(g["elo_k"], (int, float)) else None
         if k is not None and (abs(elo[wd] + k - float(g["w"][9])) > 0.5
                               or abs(elo[ld] - k - float(g["l"][9])) > 0.5):
-            errors.append(f"row {g['row']}: Elo {elo[wd]:.0f}/{elo[ld]:.0f} +/- K {k} != "
+            errors.append(f"row {g['row']}: Elo {elo[wd]:.0f}/{elo[ld]:.0f} +/- K {k:g} != "
                           f"{g['w'][9]}/{g['l'][9]}")
         elo[wd], elo[ld] = float(g["w"][9]), float(g["l"][9])
 
@@ -363,16 +448,18 @@ def validate(season, teams, games, walkovers, canon, events):
         if last.get(dex) != float(t["final_elo"]):
             errors.append(f"{t['name']}: last game Elo {last.get(dex)} != final {t['final_elo']}")
 
-    # 4. The next season's own record of how this one ended: S9's "S8 End"
-    #    ranks (copied verbatim from S9's workbook) by canonical name. This is
-    #    what proves RENAMED_SINCE.
-    if season == 8:
-        s8_end = json.load(open(os.path.join(ROOT, "seasons", "s9", "rank_history_verbatim.json")))["S8 End"]
-        s9_names = json.load(open(os.path.join(ROOT, "archive", "s9_inputs.json")))["teams"]
-        for dex, t in teams.items():
-            nm = s9_names[str(canon[dex])]["name"]
-            if s8_end.get(nm) != t["final_rank"]:
-                errors.append(f"{t['name']} -> {nm}: final rank {t['final_rank']}, S9's S8 End says {s8_end.get(nm)}")
+    # 4. The next season's own record of how this one ended: its opening rank
+    #    and opening Elo, by canonical id. For S8 that is S9's "S8 End" ranks
+    #    (copied verbatim from S9's workbook), which is what proves
+    #    RENAMED_SINCE; for earlier seasons the next season's archived
+    #    teams.csv. Required: a season is extracted only after the one after it.
+    nxt = _next_season_record(season)
+    for dex, t in teams.items():
+        rank, elo_in = nxt[canon[dex]]
+        if rank != t["final_rank"]:
+            errors.append(f"{t['name']}: final rank {t['final_rank']}, S{season + 1} opened it at {rank}")
+        if elo_in is not None and elo_in != float(t["final_elo"]):
+            errors.append(f"{t['name']}: final Elo {t['final_elo']}, S{season + 1} opened it at {elo_in}")
 
     # 5. The Hall of Fame's titles for this season follow from the games.
     errors += _check_hall_of_fame(season, games, teams, events)
@@ -399,7 +486,33 @@ def validate(season, teams, games, walkovers, canon, events):
             if len(c) != len(teams) or set(c.values()) != {1}:
                 errors.append(f"{code}: not every team played exactly once")
 
-    return errors
+    # Listed anomalies: accepted, but each must actually occur -- a listed
+    # anomaly that no longer fires means the list is stale.
+    anomalies = anomalies or {}
+    accepted, fired = [], set()
+    for e in errors:
+        m = re.match(r'row (\d+): (\w+)', e)
+        if m and int(m.group(1)) in anomalies and m.group(2) == anomalies[int(m.group(1))][0]:
+            accepted.append(e)
+            fired.add(int(m.group(1)))
+    errors = [e for e in errors if e not in accepted]
+    for row in anomalies:
+        if row not in fired:
+            errors.append(f"listed anomaly at row {row} did not occur")
+    return errors, accepted
+
+
+def _next_season_record(season):
+    """{canonical id: (rank, Elo or None)} for how the NEXT season opened."""
+    if season == 8:
+        s8_end = json.load(open(os.path.join(ROOT, "seasons", "s9", "rank_history_verbatim.json")))["S8 End"]
+        s9 = json.load(open(os.path.join(ROOT, "archive", "s9_inputs.json")))["teams"]
+        return {int(d): (s8_end[t["name"]], None) for d, t in s9.items()}
+    path = os.path.join(HISTORY, f"s{season + 1}", "teams.csv")
+    if not os.path.exists(path):
+        raise SystemExit(f"S{season + 1} must be extracted before S{season} (needs {os.path.relpath(path, ROOT)})")
+    return {int(r["team"]): (int(r["opening_rank"]), float(r["opening_elo"]))
+            for r in csv.DictReader(open(path))}
 
 
 def _tie_winner(games):
@@ -478,6 +591,11 @@ def _check_hall_of_fame(season, games, teams, events):
 
 # ---------------------------------------------------------------------------
 
+def _num(x):
+    """Write a whole-number float as an int (1834.0 -> 1834), as the sheet does."""
+    return int(x) if float(x).is_integer() else x
+
+
 def write_csv(path, fields, rows):
     with open(path, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields, lineterminator="\n")
@@ -493,7 +611,10 @@ def main(season, workbook):
     walkovers = read_walkovers(wb, cfg, events)
     canon, canon_names = canonical_ids(teams)
 
-    errors = validate(season, teams, games, walkovers, canon, events)
+    anomalies = cfg["anomalies"]
+    errors, accepted = validate(season, teams, games, walkovers, canon, events, anomalies)
+    for e in accepted:
+        print("  accepted (listed anomaly): " + e)
     if errors:
         print(f"REFUSING to write S{season}: {len(errors)} check(s) failed")
         for e in errors[:50]:
@@ -510,12 +631,14 @@ def main(season, workbook):
               [{"round": w["round"], "event": w["event"], "team": canon[w["dex"]],
                 "game_type": w["game_type"], "result": w["result"]}
                for w in sorted(walkovers, key=lambda w: (w["round"], canon[w["dex"]]))])
+    opening = opening_elos(games, teams)
     team_fields = ["team", "season_dex", "name", "region", "division", "primary_type",
-                   "basclm", "opening_elo", "final_rank", "final_ovr", "final_elo", "accolades"]
+                   "basclm", "opening_rank", "opening_elo", "final_rank", "final_ovr",
+                   "final_elo", "accolades"]
     write_csv(os.path.join(out, "teams.csv"), team_fields, [
         {"team": canon[d], "season_dex": d, "name": t["name"], "region": t["region"],
          "division": t["division"], "primary_type": t["primary_type"], "basclm": t["basclm"],
-         "opening_elo": t["opening_elo"], "final_rank": t["final_rank"], "final_ovr": t["final_ovr"], "final_elo": t["final_elo"],
+         "opening_rank": t["opening_rank"], "opening_elo": _num(opening[d]), "final_rank": t["final_rank"], "final_ovr": t["final_ovr"], "final_elo": t["final_elo"],
          "accolades": t["accolades"].replace("\n", " ")}
         for d, t in sorted(teams.items(), key=lambda kv: canon[kv[0]])])
 
@@ -528,8 +651,11 @@ def main(season, workbook):
             "games": len(games), "walkovers": len(walkovers),
             "titles": {"world": titles["world"], "grand_swiss": titles["swiss"],
                        "regions": {r: v[:2] for r, v in sorted(titles["regions"].items())}},
+            "anomalies": [{"source_row": r, "check": c, "reason": why}
+                          for r, (c, why) in sorted(anomalies.items())],
             "events": [{"round": e["round"], "code": e["code"], "title": e["title"],
-                        "sub": e["sub"], "games": e["games"], "empty": e["games"] == 0,
+                        "sub": e["sub"], "date": e["date"], "notes": e["notes"],
+                        "games": e["games"], "empty": e["games"] == 0,
                         "source_row": e["row"]} for e in events],
         }, f, indent=1)
         f.write("\n")
