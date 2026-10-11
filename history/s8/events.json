@@ -58,7 +58,38 @@
    ]
   }
  },
- "anomalies": [],
+ "anomalies": [
+  {
+   "source_row": 3122,
+   "check": "interest",
+   "reason": "Regional matchday 14: the interest column reads 6 more than the game string (82 v 76). The string's value is archived."
+  },
+  {
+   "source_row": 3123,
+   "check": "interest",
+   "reason": "Regional matchday 14: the interest column reads 6 more than the game string (85 v 79). The string's value is archived."
+  },
+  {
+   "source_row": 3124,
+   "check": "interest",
+   "reason": "Regional matchday 14: the interest column reads 6 more than the game string (83 v 77). The string's value is archived."
+  },
+  {
+   "source_row": 3125,
+   "check": "interest",
+   "reason": "Regional matchday 14: the interest column reads 6 more than the game string (87 v 81). The string's value is archived."
+  },
+  {
+   "source_row": 3126,
+   "check": "interest",
+   "reason": "Regional matchday 14: the interest column reads 6 more than the game string (85 v 79). The string's value is archived."
+  },
+  {
+   "source_row": 3127,
+   "check": "interest",
+   "reason": "Regional matchday 14: the interest column reads 6 more than the game string (88 v 82). The string's value is archived."
+  }
+ ],
  "corrections": [],
  "events": [
   {

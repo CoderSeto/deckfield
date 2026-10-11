@@ -90,8 +90,8 @@ database holds one season. See "Season 10" below.
 - `history/` — the **historical archive** of Seasons 1-8 (see "The historical
   archive" below). `history/s<N>/` holds that season's workbook and what
   `extract_history.py <N> <workbook>` writes from it; `history/teams.json` is
-  the cross-season team identity map. S8, S7 and S6 done 2026-10-11; S5 and
-  earlier next. Each season is extracted only after the one after it (its
+  the cross-season team identity map. S8-S5 done 2026-10-11; S4 and earlier
+  next. Each season is extracted only after the one after it (its
   final ranks and Elo are checked against how the next season opened).
 - `CLAUDE.md` — this file.
 
@@ -130,7 +130,10 @@ hold it exactly); goals never exceed points; the final rank AND final Elo equal 
 NEXT season opened (its archived `opening_rank`/`opening_elo`; for S8, S9's
 verbatim "S8 End"); the Hall of Fame's World, cup and all ten regional titles
 follow from the games; and Regional and League are complete round robins
-(every pair once, never across groups, every team every matchday).
+(every pair once, never across groups, every team every matchday). Also:
+wherever a full game string exists, the row's own score / spread / interest /
+DSCR columns must agree with it (this is what lets S5's short-form games be
+trusted), and every event's games are of one game type.
 
 **Opening Elo comes from the games**, never from a sheet column: the first
 game's Elo less the K gained (or plus the K lost). Where a sheet also kept the
@@ -146,7 +149,13 @@ the sheet's value, the corrected value, the reason), applied before validation
 and written to `events.json`; it refuses if the sheet no longer holds the value
 the correction names.
 
-**Event labels**: a title opens with two ALL-CAPS words; a round/leg label
+**Columns that disagree with their own game string** (found by that check,
+2026-10-11): S8 Regional matchday 14, six games whose interest column reads 6
+over the string; S7 one Grand Swiss R16 spread; S6 three World Championship
+interest values. All listed as anomalies; the STRING's value is what is archived.
+
+**Event labels**: a title opens with two ALL-CAPS words (tokens without a letter,
+like "-", skipped); a round/leg label
 refines it, and a second round/leg label within one title opens the next part
 of that stage (S7's Championship Swiss round 3); anything else -- matchday
 names, the sheet's changelog notes -- is kept as the event's `notes`. A label
@@ -265,6 +274,66 @@ What differed (per the user, and as the Archive shows):
   SF and Final. Canalave City beat Striaton City.
 - One label fused a note into a round name ("formula 12.3>12.4 Semifinal -
   Game Three", Archive row 3516) and is split by `label_overrides`.
+
+### Season 5 (extracted 2026-10-11)
+
+**Complete after all -- but only because of Calcs.** 3,043 games in 84 events.
+The Archive's first 608 games (Regional 1-4, the WCS preliminary and first
+rounds, League 1-2) are SHORT-FORM: their game string is only `3R` / `0R` (one
+cell reads `OR`, a letter O). Their score, host, ranks, spread, interest, DSCR,
+goals and K are in the row's columns; their full strings, Elo after included,
+are in **Calcs**, the per-team game grid (columns L..CR), which holds every
+game. `fill_short_from_calcs` completes them; `string_source` in `games.csv`
+says which sheet each game's strings came from. Then:
+
+- **S5's "^" is GOALS** (equal to column M in all 2,435 full strings), not the
+  modern raw goal score, so `raw_goal_a/b` are blank. No per-game EX column.
+- **The Archive has no Game ID column**, so every column from the spread on
+  sits one place left (`archive_cols` is per season).
+- **Rankings' Regional W-L disagrees with the Archive for 26 teams, and the
+  Archive is right.** Rankings was computed from Calcs, whose R11 column is
+  MISFILED: the same 160 strings as the Archive's R11, about half in the wrong
+  team's row (Undella Town's slot holds Wedgehurst's game; Rustboro City's even
+  names a team from another region). Proved exactly: Calcs' records equal
+  Rankings' for all 160, and Calcs' R11 equals the Archive's R11 as a multiset.
+  So S5's records check is Rankings == Calcs, plus every Archive game ==
+  its Calcs strings (own rows, or anywhere in the misfiled column), plus every
+  Calcs string used once (`records_from_calcs`, `calcs_misfiled`).
+- **Elo was applied out of Archive order**, so the game-by-game chain is off
+  for S5 (`elo_chain: False`): e.g. the second WCS First Round Nature block's
+  Elo reached teams only after Regional matchday 5 (Kiloude City's +31). It is
+  conserved: the total is 288,000 at the end of the season, the opening Elo
+  (first game, from Calcs) totals exactly 288,000, and the final Elo matches
+  S6's opening for all 160. Elo was NOT reset at the "GREAT RESET" (only 1 of
+  160 back-solves to 1,800). Six games' Elo differs by 3-16 between Calcs and
+  the Archive (WCS R5 Justice, Regional 10): listed, the Archive's kept.
+- **Renamed before S6** (same dex, Terastal): South Kalos -> Blueberry
+  Terarium, East Paldea -> Mossui Town (`RENAMED_SINCE`; proved by S6's
+  "S5 End"). **32 teams first appear in S5** -- "S4 End" is blank for all 16
+  Terastal teams and 8 each in Indigo and Silver, matching the Hall of Fame's
+  regional plaques (Silver and Terastal begin at S5). S4 had 128 teams.
+
+Structure (per the user: no Swiss; the WCS with a draw/process-style pair of
+brackets, Nature and Justice; the league pyramid with LPO):
+- **Regional R1-R15, League L1-L15** -- R1-R4 titled "Matchday One/Two/Three/
+  Six" (the sixth matchday overall; mapped by `event_code_overrides`). The
+  "GREAT RESET" note sits on League matchday 1, after a 3.5-month break.
+- **WCS**: a preliminary round (32 games per bracket), first round (64, written
+  as two blocks per bracket and merged), rounds 2-5 (32/16/8/4), two-legged
+  quarterfinals (2 per bracket), each bracket's two-legged final (the "WCS
+  SEMIFINAL"), and a two-legged "Second Place" tie between their losers.
+  Resort Area won both brackets' finals (champion); Cinnabar Island won Second
+  Place (runner-up). Games typed `W`.
+- **League Playoffs**: semifinals and finals, two legs each (LP-SF/LP-F).
+- **Regional Playoffs**: a single-game first round (RP-R1), then two-legged
+  QF, SF and Championship.
+- **World Championship by class**: Great Class and Ultra Class playoffs (four
+  rounds each, WC-G/WC-U, plus a one-game "Great Class Fourth Round Reset"),
+  then the Masters Tournament: best-of-three QF and SF (WC-M) and Championship
+  (WC-F). Slateport City beat Cianwood City 2-1.
+- **MGGG promotion playoffs**: single games written one row at a time among
+  the other events (`inline_events`), each its own event (MGGG-R1/R2, legs 1-2;
+  a later second tie of the same leg gets ".2").
 
 ## Season 9 is frozen (2026-10-10, per explicit instruction)
 
@@ -5191,7 +5260,8 @@ page errors on either path.
 
 ## Known open items
 
-- **Historical archive:** S8, S7 and S6 extracted; S5 and earlier to come, each needing
+- **Historical archive:** S8-S5 extracted; S4 and earlier to come (S4 had 128
+  teams, so the extractor's one-to-one-onto-160 identity check must relax), each needing
   its own `SEASONS` layout in `extract_history.py`. No all-time database or
   dashboard tab yet -- that waits until a few seasons are in.
 - **End of S10 (B13):** append its Legacy column to `legacy_points.json` and its

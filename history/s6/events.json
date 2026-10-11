@@ -58,7 +58,23 @@
    ]
   }
  },
- "anomalies": [],
+ "anomalies": [
+  {
+   "source_row": 3341,
+   "check": "interest",
+   "reason": "Regional playoff SF leg 2: interest column 92, game string 90. The string's value is archived."
+  },
+  {
+   "source_row": 3443,
+   "check": "interest",
+   "reason": "Championship Swiss round 3 leg 2: interest column 103, game string 101. The string's value is archived."
+  },
+  {
+   "source_row": 3496,
+   "check": "interest",
+   "reason": "Championship R16 leg 2: interest column 101, game string 99. The string's value is archived."
+  }
+ ],
  "corrections": [],
  "events": [
   {

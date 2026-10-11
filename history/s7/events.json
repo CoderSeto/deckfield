@@ -58,7 +58,13 @@
    ]
   }
  },
- "anomalies": [],
+ "anomalies": [
+  {
+   "source_row": 2591,
+   "check": "spread",
+   "reason": "Grand Swiss R16 leg 1: the spread column reads -3.584 while the game string says -4.08. The string's value is archived."
+  }
+ ],
  "corrections": [
   {
    "source_row": 3222,

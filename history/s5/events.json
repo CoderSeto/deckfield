@@ -1,0 +1,1233 @@
+{
+ "season": 5,
+ "source": {
+  "workbook": "history/s5/Dice Game S5.xlsx",
+  "sha256": "ea2f1cc13f49c91faca828e2df2ffd0b4b1c14522d6d284604340f6c472be7cf"
+ },
+ "games": 3043,
+ "walkovers": 0,
+ "titles": {
+  "world": [
+   "Slateport City",
+   "Cianwood City"
+  ],
+  "wcs": [
+   "Resort Area",
+   "Cinnabar Island"
+  ],
+  "regions": {
+   "Delta": [
+    "Slateport City",
+    "Lilycove City"
+   ],
+   "Dynamax": [
+    "Spikemuth",
+    "Postwick"
+   ],
+   "Indigo": [
+    "Cinnabar Island",
+    "Mount Moon"
+   ],
+   "Kalosite": [
+    "Couriway Town",
+    "Lumiose City"
+   ],
+   "Lanakila": [
+    "Ultra Megalopolis",
+    "Seafolk Village"
+   ],
+   "LilyValley": [
+    "Resort Area",
+    "Oreburgh City"
+   ],
+   "Phoenix": [
+    "Pyrite Town",
+    "Fall City"
+   ],
+   "Silver": [
+    "Mount Silver",
+    "Cianwood City"
+   ],
+   "Terastal": [
+    "Cortondo",
+    "Cascarrafa"
+   ],
+   "Vertress": [
+    "Striaton City",
+    "Driftveil City"
+   ]
+  }
+ },
+ "anomalies": [
+  {
+   "source_row": 1750,
+   "check": "calcs",
+   "reason": "WCS fifth round (Justice): Calcs gives the winner's Elo as 2352, the Archive 2349. The Archive's is archived."
+  },
+  {
+   "source_row": 1751,
+   "check": "calcs",
+   "reason": "WCS fifth round (Justice): Calcs gives the winner's Elo as 2144, the Archive 2128. The Archive's is archived."
+  },
+  {
+   "source_row": 1752,
+   "check": "calcs",
+   "reason": "WCS fifth round (Justice): Calcs gives the winner's Elo as 2280, the Archive 2267. The Archive's is archived."
+  },
+  {
+   "source_row": 1775,
+   "check": "calcs",
+   "reason": "Regional matchday 10: Calcs gives the winner's Elo as 2282, the Archive 2269. The Archive's is archived."
+  },
+  {
+   "source_row": 1778,
+   "check": "calcs",
+   "reason": "Regional matchday 10: Calcs gives the winner's Elo as 2353, the Archive 2350. The Archive's is archived."
+  },
+  {
+   "source_row": 1822,
+   "check": "calcs",
+   "reason": "Regional matchday 10: Calcs gives the loser's Elo as 2123, the Archive 2107. The Archive's is archived."
+  },
+  {
+   "source_row": 2898,
+   "check": "interest",
+   "reason": "Regional SF leg 2, Wild Area v Spikemuth, decided in aggregate OT: the interest column reads 99.15 while the game string's interest is 95. Both kept as written."
+  }
+ ],
+ "corrections": [],
+ "events": [
+  {
+   "round": 1,
+   "code": "R1",
+   "title": "Matchday One",
+   "sub": null,
+   "dates": [
+    "D1 8/22"
+   ],
+   "notes": [
+    "New scoring modifications",
+    "D-Score Modifications"
+   ],
+   "games": 80,
+   "empty": false,
+   "source_row": 2
+  },
+  {
+   "round": 2,
+   "code": "R2",
+   "title": "Matchday Two",
+   "sub": null,
+   "dates": [
+    "D2 8/25",
+    "D3 8/26"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 82
+  },
+  {
+   "round": 3,
+   "code": "R3",
+   "title": "Matchday Three",
+   "sub": null,
+   "dates": [
+    "D4 8/27",
+    "D5 9/3"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 162
+  },
+  {
+   "round": 4,
+   "code": "WCS-PR-N",
+   "title": "WCS Preliminary Round - Nature",
+   "sub": null,
+   "dates": [
+    "D6 9/9",
+    "D7 9/16"
+   ],
+   "notes": [],
+   "games": 32,
+   "empty": false,
+   "source_row": 242
+  },
+  {
+   "round": 5,
+   "code": "WCS-PR-J",
+   "title": "WCS Preliminary Round - Justice",
+   "sub": null,
+   "dates": [
+    "D7 9/16",
+    "D8 10/10"
+   ],
+   "notes": [],
+   "games": 32,
+   "empty": false,
+   "source_row": 274
+  },
+  {
+   "round": 6,
+   "code": "R4",
+   "title": "Matchday Six",
+   "sub": null,
+   "dates": [
+    "D8 10/10",
+    "D9 10/14",
+    "D10 10/15",
+    "D11 10/21"
+   ],
+   "notes": [
+    "added type matchups"
+   ],
+   "games": 80,
+   "empty": false,
+   "source_row": 306
+  },
+  {
+   "round": 7,
+   "code": "WCS-R1-N",
+   "title": "WCS First Round - Nature",
+   "sub": null,
+   "dates": [
+    "D11 10/21",
+    "D12 12/25",
+    "D13 12/27",
+    "D14 12/31",
+    "D15 1/3"
+   ],
+   "notes": [],
+   "games": 64,
+   "empty": false,
+   "source_row": 386
+  },
+  {
+   "round": 8,
+   "code": "L1",
+   "title": "LEAGUE MATCHDAY ONE",
+   "sub": null,
+   "dates": [
+    "D16 2/25",
+    "D17 2/26"
+   ],
+   "notes": [
+    "GREAT RESET"
+   ],
+   "games": 80,
+   "empty": false,
+   "source_row": 450
+  },
+  {
+   "round": 9,
+   "code": "L2",
+   "title": "LEAGUE MATCHDAY TWO",
+   "sub": null,
+   "dates": [
+    "D18 2/28",
+    "D19 3/2"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 530
+  },
+  {
+   "round": 10,
+   "code": "R5",
+   "title": "REGIONAL MATCHDAY FIVE",
+   "sub": null,
+   "dates": [
+    "D19 3/2",
+    "D20 3/5"
+   ],
+   "notes": [
+    "Special Week Two"
+   ],
+   "games": 80,
+   "empty": false,
+   "source_row": 610
+  },
+  {
+   "round": 11,
+   "code": "L3",
+   "title": "LEAGUE MATCHDAY THREE",
+   "sub": null,
+   "dates": [
+    "D21 3/9",
+    "D22 3/13"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 690
+  },
+  {
+   "round": 12,
+   "code": "WCS-R1-J",
+   "title": "WCS First Round - Justice",
+   "sub": null,
+   "dates": [
+    "D23 3/14",
+    "D24 3/17"
+   ],
+   "notes": [],
+   "games": 64,
+   "empty": false,
+   "source_row": 770
+  },
+  {
+   "round": 13,
+   "code": "R6",
+   "title": "REGIONAL MATCHDAY SIX",
+   "sub": null,
+   "dates": [
+    "D25 3/21",
+    "D26 3/23"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 834
+  },
+  {
+   "round": 14,
+   "code": "L4",
+   "title": "LEAGUE MATCHDAY FOUR",
+   "sub": null,
+   "dates": [
+    "D27 3/26",
+    "D28 3/27"
+   ],
+   "notes": [
+    "changed divisor to 11.25+(x/24)"
+   ],
+   "games": 80,
+   "empty": false,
+   "source_row": 914
+  },
+  {
+   "round": 15,
+   "code": "L5",
+   "title": "LEAGUE MATCHDAY FIVE",
+   "sub": null,
+   "dates": [
+    "D29 3/31"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 994
+  },
+  {
+   "round": 16,
+   "code": "R7",
+   "title": "REGIONAL MATCHDAY SEVEN",
+   "sub": null,
+   "dates": [
+    "D30 4/1"
+   ],
+   "notes": [
+    "changed divisor to 11.5+(x/24)"
+   ],
+   "games": 80,
+   "empty": false,
+   "source_row": 1074
+  },
+  {
+   "round": 17,
+   "code": "WCS-R2-N",
+   "title": "WCS SECOND ROUND",
+   "sub": "Nature",
+   "dates": [
+    "D31 4/2"
+   ],
+   "notes": [],
+   "games": 32,
+   "empty": false,
+   "source_row": 1154
+  },
+  {
+   "round": 18,
+   "code": "WCS-R2-J",
+   "title": "WCS SECOND ROUND",
+   "sub": "Justice",
+   "dates": [
+    "D31 4/2"
+   ],
+   "notes": [],
+   "games": 32,
+   "empty": false,
+   "source_row": 1186
+  },
+  {
+   "round": 19,
+   "code": "L6",
+   "title": "LEAGUE MATCHDAY SIX",
+   "sub": null,
+   "dates": [
+    "D32 4/6"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 1218
+  },
+  {
+   "round": 20,
+   "code": "WCS-R3-N",
+   "title": "WCS THIRD ROUND",
+   "sub": "Nature",
+   "dates": [
+    "D33 4/8"
+   ],
+   "notes": [],
+   "games": 16,
+   "empty": false,
+   "source_row": 1298
+  },
+  {
+   "round": 21,
+   "code": "WCS-R3-J",
+   "title": "WCS THIRD ROUND",
+   "sub": "Justice",
+   "dates": [
+    "D33 4/8"
+   ],
+   "notes": [],
+   "games": 16,
+   "empty": false,
+   "source_row": 1314
+  },
+  {
+   "round": 22,
+   "code": "R8",
+   "title": "REGIONAL MATCHDAY EIGHT",
+   "sub": null,
+   "dates": [
+    "D34 4/10"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 1330
+  },
+  {
+   "round": 23,
+   "code": "L7",
+   "title": "LEAGUE MATCHDAY SEVEN",
+   "sub": null,
+   "dates": [
+    "D35 4/17",
+    "D36 4/18"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 1410
+  },
+  {
+   "round": 24,
+   "code": "L8",
+   "title": "LEAGUE MATCHDAY EIGHT",
+   "sub": null,
+   "dates": [
+    "D37 5/5",
+    "D38 5/7",
+    "D39 5/8"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 1490
+  },
+  {
+   "round": 25,
+   "code": "R9",
+   "title": "REGIONAL MATCHDAY NINE",
+   "sub": null,
+   "dates": [
+    "D39 5/8"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 1570
+  },
+  {
+   "round": 26,
+   "code": "WCS-R4-N",
+   "title": "WCS FOURTH ROUND",
+   "sub": "Nature",
+   "dates": [
+    "D40 5/14"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1650
+  },
+  {
+   "round": 27,
+   "code": "WCS-R4-J",
+   "title": "WCS FOURTH ROUND",
+   "sub": "Justice",
+   "dates": [
+    "D40 5/14"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1658
+  },
+  {
+   "round": 28,
+   "code": "L9",
+   "title": "LEAGUE MATCHDAY NINE",
+   "sub": null,
+   "dates": [
+    "D40 5/14",
+    "D41 5/15"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 1666
+  },
+  {
+   "round": 29,
+   "code": "WCS-R5-N",
+   "title": "WCS FIFTH ROUND",
+   "sub": "Nature",
+   "dates": [
+    "D42 5/17"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1746
+  },
+  {
+   "round": 30,
+   "code": "WCS-R5-J",
+   "title": "WCS FIFTH ROUND",
+   "sub": "Justice",
+   "dates": [
+    "D42 5/17",
+    "D43 5/18"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1750
+  },
+  {
+   "round": 31,
+   "code": "R10",
+   "title": "REGIONAL MATCHDAY TEN",
+   "sub": null,
+   "dates": [
+    "D44 5/23"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 1754
+  },
+  {
+   "round": 32,
+   "code": "L10",
+   "title": "LEAGUE MATCHDAY TEN",
+   "sub": null,
+   "dates": [
+    "D44 5/23"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 1834
+  },
+  {
+   "round": 33,
+   "code": "L11",
+   "title": "LEAGUE MATCHDAY ELEVEN",
+   "sub": null,
+   "dates": [
+    "D45 5/26"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 1914
+  },
+  {
+   "round": 34,
+   "code": "R11",
+   "title": "REGIONAL MATCHDAY ELEVEN",
+   "sub": null,
+   "dates": [
+    "D46 5/27",
+    "D47 5/28"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 1994
+  },
+  {
+   "round": 35,
+   "code": "WCS-QF-N-1",
+   "title": "WCS QUARTERFINAL",
+   "sub": "Nature - First Leg",
+   "dates": [
+    "D48 6/2"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 2074
+  },
+  {
+   "round": 36,
+   "code": "WCS-QF-J-1",
+   "title": "WCS QUARTERFINAL",
+   "sub": "Justice - First Leg",
+   "dates": [
+    "D48 6/2"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 2076
+  },
+  {
+   "round": 37,
+   "code": "L12",
+   "title": "LEAGUE MATCHDAY TWELVE",
+   "sub": null,
+   "dates": [
+    "D49 6/3"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 2078
+  },
+  {
+   "round": 38,
+   "code": "WCS-QF-N-2",
+   "title": "WCS QUARTERFINAL",
+   "sub": "Nature - Second Leg",
+   "dates": [
+    "D49 6/3"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 2158
+  },
+  {
+   "round": 39,
+   "code": "WCS-QF-J-2",
+   "title": "WCS QUARTERFINAL",
+   "sub": "Justice - Second Leg",
+   "dates": [
+    "D49 6/3"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 2160
+  },
+  {
+   "round": 40,
+   "code": "R12",
+   "title": "REGIONAL MATCHDAY TWELVE",
+   "sub": null,
+   "dates": [
+    "D49 6/3"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 2162
+  },
+  {
+   "round": 41,
+   "code": "L13",
+   "title": "LEAGUE MATCHDAY THIRTEEN",
+   "sub": null,
+   "dates": [
+    "D49 6/3"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 2242
+  },
+  {
+   "round": 42,
+   "code": "L14",
+   "title": "LEAGUE MATCHDAY FOURTEEN",
+   "sub": null,
+   "dates": [
+    "D50 6/4"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 2322
+  },
+  {
+   "round": 43,
+   "code": "R13",
+   "title": "REGIONAL MATCHDAY THIRTEEN",
+   "sub": null,
+   "dates": [
+    "D51 6/5"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 2402
+  },
+  {
+   "round": 44,
+   "code": "WCS-SF-1",
+   "title": "WCS SEMIFINAL - First Leg",
+   "sub": null,
+   "dates": [
+    "D52 6/6"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 2482
+  },
+  {
+   "round": 45,
+   "code": "L15",
+   "title": "LEAGUE MATCHDAY FIFTEEN",
+   "sub": null,
+   "dates": [
+    "D52 6/6"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 2484
+  },
+  {
+   "round": 46,
+   "code": "WCS-SF-2",
+   "title": "WCS SEMIFINAL - Second Leg",
+   "sub": null,
+   "dates": [
+    "D52 6/6"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 2564
+  },
+  {
+   "round": 47,
+   "code": "R14",
+   "title": "REGIONAL MATCHDAY FOURTEEN",
+   "sub": null,
+   "dates": [
+    "D52 6/6"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 2566
+  },
+  {
+   "round": 48,
+   "code": "WCS-2P-1",
+   "title": "WCS Second Place - First Leg",
+   "sub": null,
+   "dates": [
+    "D53 6/18"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 2646
+  },
+  {
+   "round": 49,
+   "code": "WCS-2P-2",
+   "title": "WCS Second Place - Second Leg",
+   "sub": null,
+   "dates": [
+    "D53 6/18"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 2647
+  },
+  {
+   "round": 50,
+   "code": "R15",
+   "title": "REGIONAL MATCHDAY FIFTEEN",
+   "sub": null,
+   "dates": [
+    "D54 6/19"
+   ],
+   "notes": [
+    "Rivalry Week"
+   ],
+   "games": 80,
+   "empty": false,
+   "source_row": 2648
+  },
+  {
+   "round": 51,
+   "code": "LP-SF-1",
+   "title": "LEAGUE PLAYOFFS",
+   "sub": "Semifinal - First Leg",
+   "dates": [
+    "D55 6/21",
+    "D56 6/22"
+   ],
+   "notes": [],
+   "games": 20,
+   "empty": false,
+   "source_row": 2728
+  },
+  {
+   "round": 52,
+   "code": "LP-SF-2",
+   "title": "LEAGUE PLAYOFFS",
+   "sub": "Semifinal - Second Leg",
+   "dates": [
+    "D56 6/22"
+   ],
+   "notes": [],
+   "games": 20,
+   "empty": false,
+   "source_row": 2748
+  },
+  {
+   "round": 53,
+   "code": "LP-F-1",
+   "title": "LEAGUE PLAYOFFS",
+   "sub": "Final - First Leg",
+   "dates": [
+    "D57 6/23"
+   ],
+   "notes": [],
+   "games": 18,
+   "empty": false,
+   "source_row": 2768
+  },
+  {
+   "round": 54,
+   "code": "LP-F-2",
+   "title": "LEAGUE PLAYOFFS",
+   "sub": "Final - Second Leg",
+   "dates": [
+    "D57 6/23"
+   ],
+   "notes": [],
+   "games": 18,
+   "empty": false,
+   "source_row": 2786
+  },
+  {
+   "round": 55,
+   "code": "RP-R1",
+   "title": "REGIONAL PLAYOFFS",
+   "sub": "First Round",
+   "dates": [
+    "D58 6/27"
+   ],
+   "notes": [],
+   "games": 21,
+   "empty": false,
+   "source_row": 2804
+  },
+  {
+   "round": 56,
+   "code": "MGGG-R1-1",
+   "title": "MGGG Playoff - R1 First Leg",
+   "sub": null,
+   "dates": [
+    "D58 6/27"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 2825
+  },
+  {
+   "round": 57,
+   "code": "RP-QF-1",
+   "title": "REGIONAL PLAYOFFS",
+   "sub": "Quarterfinal - First Leg",
+   "dates": [
+    "D59 6/29"
+   ],
+   "notes": [],
+   "games": 20,
+   "empty": false,
+   "source_row": 2826
+  },
+  {
+   "round": 58,
+   "code": "RP-QF-2",
+   "title": "REGIONAL PLAYOFFS",
+   "sub": "Quarterfinal - Second Leg",
+   "dates": [
+    "D59 6/29"
+   ],
+   "notes": [],
+   "games": 20,
+   "empty": false,
+   "source_row": 2846
+  },
+  {
+   "round": 59,
+   "code": "RP-SF-1",
+   "title": "REGIONAL PLAYOFFS",
+   "sub": "Semifinal - First Leg",
+   "dates": [
+    "D59 6/29"
+   ],
+   "notes": [],
+   "games": 20,
+   "empty": false,
+   "source_row": 2866
+  },
+  {
+   "round": 60,
+   "code": "RP-SF-2",
+   "title": "REGIONAL PLAYOFFS",
+   "sub": "Semifinal - Second Leg",
+   "dates": [
+    "D59 6/29"
+   ],
+   "notes": [],
+   "games": 20,
+   "empty": false,
+   "source_row": 2886
+  },
+  {
+   "round": 61,
+   "code": "RP-F-1",
+   "title": "REGIONAL PLAYOFFS",
+   "sub": "Championship - First Leg",
+   "dates": [
+    "D60 7/2"
+   ],
+   "notes": [],
+   "games": 10,
+   "empty": false,
+   "source_row": 2906
+  },
+  {
+   "round": 62,
+   "code": "MGGG-R1-2",
+   "title": "MGGG Playoff - R1 Second Leg",
+   "sub": null,
+   "dates": [
+    "D60 7/2"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 2916
+  },
+  {
+   "round": 63,
+   "code": "RP-F-2",
+   "title": "REGIONAL PLAYOFFS",
+   "sub": "Championship - Second Leg",
+   "dates": [
+    "D60 7/2"
+   ],
+   "notes": [],
+   "games": 10,
+   "empty": false,
+   "source_row": 2917
+  },
+  {
+   "round": 64,
+   "code": "WC-G-R1",
+   "title": "FINALS - GREAT CLASS PLAYOFFS",
+   "sub": "First Round",
+   "dates": [
+    "D61 7/9"
+   ],
+   "notes": [],
+   "games": 16,
+   "empty": false,
+   "source_row": 2927
+  },
+  {
+   "round": 65,
+   "code": "WC-G-R2",
+   "title": "FINALS - GREAT CLASS PLAYOFFS",
+   "sub": "Second Round",
+   "dates": [
+    "D61 7/9"
+   ],
+   "notes": [],
+   "games": 16,
+   "empty": false,
+   "source_row": 2943
+  },
+  {
+   "round": 66,
+   "code": "WC-G-R3",
+   "title": "FINALS - GREAT CLASS PLAYOFFS",
+   "sub": "Third Round",
+   "dates": [
+    "D61 7/9"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 2959
+  },
+  {
+   "round": 67,
+   "code": "WC-G-R4",
+   "title": "FINALS - GREAT CLASS PLAYOFFS",
+   "sub": "Fourth Round",
+   "dates": [
+    "D61 7/9"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 2967
+  },
+  {
+   "round": 68,
+   "code": "MGGG-R1-1.2",
+   "title": "MGGG Playoff - R1 First Leg",
+   "sub": null,
+   "dates": [
+    "D61 7/9"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 2975
+  },
+  {
+   "round": 69,
+   "code": "WC-G-R4R",
+   "title": "GREAT CLASS - Fourth Round Reset",
+   "sub": null,
+   "dates": [
+    "D61 7/9"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 2976
+  },
+  {
+   "round": 70,
+   "code": "MGGG-R1-2.2",
+   "title": "MGGG Playoff - R1 Second Leg",
+   "sub": null,
+   "dates": [
+    "D61 7/9"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 2977
+  },
+  {
+   "round": 71,
+   "code": "WC-U-R1",
+   "title": "FINALS - ULTRA CLASS PLAYOFFS",
+   "sub": "First Round",
+   "dates": [
+    "D62 7/26"
+   ],
+   "notes": [],
+   "games": 16,
+   "empty": false,
+   "source_row": 2978
+  },
+  {
+   "round": 72,
+   "code": "MGGG-R2-1",
+   "title": "MGGG Playoff - R2 First Leg",
+   "sub": null,
+   "dates": [
+    "D62 7/26"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 2994
+  },
+  {
+   "round": 73,
+   "code": "WC-U-R2",
+   "title": "FINALS - ULTRA CLASS PLAYOFFS",
+   "sub": "Second Round",
+   "dates": [
+    "D63 7/27"
+   ],
+   "notes": [],
+   "games": 16,
+   "empty": false,
+   "source_row": 2995
+  },
+  {
+   "round": 74,
+   "code": "MGGG-R2-2",
+   "title": "MGGG Playoff - R2 Second Leg",
+   "sub": null,
+   "dates": [
+    "D63 7/27"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 3011
+  },
+  {
+   "round": 75,
+   "code": "WC-U-R3",
+   "title": "FINALS - ULTRA CLASS PLAYOFFS",
+   "sub": "Third Round",
+   "dates": [
+    "D63 7/27"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 3012
+  },
+  {
+   "round": 76,
+   "code": "WC-U-R4",
+   "title": "FINALS - ULTRA CLASS PLAYOFFS",
+   "sub": "Fourth Round",
+   "dates": [
+    "D63 7/27"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 3020
+  },
+  {
+   "round": 77,
+   "code": "WC-M-QF-1",
+   "title": "FINALS - MASTERS TOURNAMENT",
+   "sub": "Quarterfinal - Game One",
+   "dates": [
+    "D64 7/28"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 3028
+  },
+  {
+   "round": 78,
+   "code": "WC-M-QF-2",
+   "title": "FINALS - MASTERS TOURNAMENT",
+   "sub": "Quarterfinal - Game Two",
+   "dates": [
+    "D64 7/28"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 3032
+  },
+  {
+   "round": 79,
+   "code": "WC-M-QF-3",
+   "title": "FINALS - MASTERS TOURNAMENT",
+   "sub": "Quarterfinal - Game Three",
+   "dates": [
+    "D64 7/28"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 3036
+  },
+  {
+   "round": 80,
+   "code": "WC-M-SF-1",
+   "title": "FINALS - MASTERS TOURNAMENT",
+   "sub": "Semifinal - Game One",
+   "dates": [
+    "D64 7/28"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 3038
+  },
+  {
+   "round": 81,
+   "code": "WC-M-SF-2",
+   "title": "FINALS - MASTERS TOURNAMENT",
+   "sub": "Semifinal - Game Two",
+   "dates": [
+    "D64 7/28"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 3040
+  },
+  {
+   "round": 82,
+   "code": "WC-F-1",
+   "title": "CHAMPIONSHIP - Game One",
+   "sub": null,
+   "dates": [
+    "D64 7/28"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 3042
+  },
+  {
+   "round": 83,
+   "code": "WC-F-2",
+   "title": "CHAMPIONSHIP - Game Two",
+   "sub": null,
+   "dates": [
+    "D64 7/28"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 3043
+  },
+  {
+   "round": 84,
+   "code": "WC-F-3",
+   "title": "CHAMPIONSHIP - Game Three",
+   "sub": null,
+   "dates": [
+    "D64 7/28"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 3044
+  }
+ ]
+}
