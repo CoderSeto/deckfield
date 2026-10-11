@@ -226,7 +226,7 @@ def build_data():
             "dscr_league_avg": _dscr_avg(conn, r["team_id"], latest_round, "L"),
             "tot": round(r["tot"]), "elo_raw": round(_raw_elo(conn, r["team_id"], latest_round) or 0),
             "ovr": round(r["ovr"], 2), "rw": _r(r["rw"], 2), "lw": _r(r["lw"], 2),
-            "pf": round(r["pf_norm"], 2), "pa": round(r["pa_norm"], 2), "pdg": _r(r["pdg"], 2),
+            "pf": _r(r["pf_norm"], 2), "pa": _r(r["pa_norm"], 2), "pdg": _r(r["pdg"], 2),
             "sos": _r(r["sos"], 2), "sov": _r(r["sov"], 2), "dscr": _r(r["dscr_comp"], 2),
             "eye": _r(r["eye"], 2), "elo_comp": _r(r["elo_comp"], 2), "cups": _r(r["cups"], 2),
             "ex": _r(r["ex_norm"], 2), "fatigue": round(r["fatigue_after"], 1) if r["fatigue_after"] is not None else None,
@@ -250,9 +250,9 @@ def build_data():
                 "pa": [_r(r["pa_norm"], 2) if latest_round else None, round(sd["pa_seed"], 2), round(bl["pa"], 2)],
                 "dscr": [_r(r["d_sqrt_raw"], 2) if latest_round else None, round(sd["dscr_seed"], 2),
                          round(bl["dscr"], 2)],
-                # The fatigue seed IS the season's starting fatigue, already
-                # inside the raw value, so the game is handed raw fatigue.
-                "fatigue": [_r(r["fatigue_after"], 1), round(sd["fatigue_seed"], 1), _r(r["fatigue_after"], 1)],
+                # No fatigue: it is never blended. The season starts from last
+                # season's final fatigue divided by 5 (rounded up) and every
+                # game's travel is added on from there.
             }
     conn.close()
     out = {"season": SEASON, "round": latest_round, "ex_taper_n": taper_n(latest_round), "teams": teams_out}
@@ -552,7 +552,8 @@ def build_strength_data():
 
     def _fmt(breakdown):
         return {
-            g: {k: round(v, 4 if k in ("weighted", "final") else 2) for k, v in vals.items()}
+            g: {k: v if k == "x" else round(v, 4 if k in ("weighted", "final", "raw", "seed") else 2)
+                for k, v in vals.items()}
             for g, vals in breakdown.items()
         }
 
@@ -595,8 +596,6 @@ DERIVED_CONSTS = {
 # that depends on standings, ratings, results or a generator function
 # belongs in DERIVED, not here.
 STATIC_CONSTS = {
-    "S9_HISTORY": "Season 9's frozen record (archive/s9_final.json + its standings order); "
-                  "a finished season never changes -- checked against the archive every run",
     "PROMO_RELEGATION": "league promotion/relegation rules, not results",
     "RANK_BY_DEX": "computed client-side from DATA, so it follows it automatically",
     "REGION_BY_NAME": "region name lookup table",
@@ -607,47 +606,24 @@ STATIC_CONSTS = {
 }
 
 
-# The finished seasons whose history tab this dashboard carries, and what each
-# tab reads: the frozen record's constants (archive/s<N>_final.json) plus the
-# final standings ORDER (archive/s<N>_inputs.json), which the frozen page only
-# ever worked out in the browser and the history tab, by rule, cannot re-derive
-# with the live renderers (SEASON10_PLAN A3).
+# The finished seasons whose history tab this dashboard carries. Each tab frames
+# that season's frozen page (deckfield_dashboard_s<N>.html) unchanged, so it
+# looks exactly as it did; the frozen page is checksummed in archive/SHA256SUMS
+# and _check_frozen_archive guards its bytes.
 HISTORY_SEASONS = (9,)
-HISTORY_KEYS = (
-    "DATA", "SCHEDULE_DATA", "STRENGTH_DATA", "CUP_BRACKET_DATA", "CUP_REAL_RESULTS",
-    "RDS_ROUND_PAIRINGS", "RDS_MUTUAL_STAGE", "PA_CUP_DATA", "PA_REAL_RESULTS",
-    "PA_ROUND_PAIRINGS", "PA_MUTUAL_STAGE", "PA_SWAP_LOG", "RT_DATA", "QUALIFICATION_DATA",
-    "WC_DATA", "RANK_ELO_HISTORY", "PROMO_RELEGATION",
-)
 
 
-def season_history_const(season):
-    """The value of S<N>_HISTORY: numbers only, from the frozen archive."""
-    with open(os.path.join(ROOT, "archive", f"s{season}_final.json")) as f:
-        final = json.load(f)
-    with open(os.path.join(ROOT, "archive", f"s{season}_inputs.json")) as f:
-        inputs = json.load(f)
-    return {
-        "season": season,
-        "through_round": final["meta"]["through_round"],
-        "frozen_on": final["meta"]["frozen_on"],
-        **{k: final["data"][k] for k in HISTORY_KEYS},
-        "standings": {"region": inputs["regional_standings"], "division": inputs["division_standings"]},
-    }
-
-
-def _check_history_consts(content):
-    """Each S<N>_HISTORY constant is STATIC -- written once, never regenerated
-    -- and must still equal its frozen archive. A hand edit, or a change that
-    regenerated it, fails the run here."""
+def _check_history_frames(content):
+    """Each history tab must frame its season's frozen page, and that page must
+    be one of the checksummed frozen files."""
+    with open(os.path.join(ROOT, "archive", "SHA256SUMS")) as f:
+        frozen = {line.split("  ", 1)[1].strip() for line in f if line.strip()}
     for season in HISTORY_SEASONS:
-        name = f"S{season}_HISTORY"
-        m = re.search(rf'^const {name} = (.*);$', content, re.M)
-        if m is None:
-            raise RuntimeError(f"{name} is missing from the dashboard")
-        if json.loads(m.group(1)) != season_history_const(season):
-            raise RuntimeError(f"{name} no longer equals archive/s{season}_final.json -- restore it "
-                               f"from git; a finished season's history is never edited")
+        page = f"deckfield_dashboard_s{season}.html"
+        if f'id="s{season}-frame" data-src="{page}"' not in content:
+            raise RuntimeError(f"the Season {season} tab no longer frames {page}")
+        if page not in frozen:
+            raise RuntimeError(f"{page} is not a checksummed frozen page (archive/SHA256SUMS)")
 
 
 def _check_const_manifest(content):
@@ -750,7 +726,7 @@ def main():
     # Before touching anything: every data constant in the file must be
     # declared either derived (rebuilt below) or static (with a reason).
     _check_const_manifest(content)
-    _check_history_consts(content)
+    _check_history_frames(content)
 
     content = _replace_const(content, "DATA", build_data())
 

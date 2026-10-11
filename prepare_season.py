@@ -14,7 +14,8 @@ seasons/s<N>/:
                         the final division standings, seeded 1-16 by old
                         division then finishing position, in the usual pods
     start.json          each team's division, base climate (B5), EX seed (B6),
-                        carryover seeds (B4), starting fatigue and Elo
+                        carryover seeds (B4), starting fatigue and Elo, and the
+                        Regional/League Strength seeds the strength blend uses
     accolades.json      the stored accolade history entering the season (A1/A2)
     rds_seeds.json      Ribbon / Dream / Star seeding (B9)
     pa_draw_seeds.json  PA Draw seeding: previous final Elo, ties by OVR (B9)
@@ -161,6 +162,20 @@ def build(season):
         items = accolade_items(t["accolades_stored"], exported_titles + wc_titles.get(name, []), prev)
         accolades[name] = raw_accolades(items)
 
+    # ---- Regional and League Strength seeds (per explicit instruction,
+    # 2026-10-11: "Regional and League Strength is a blended value" -> blend it
+    # with an S9 seed). A region keeps its own final Regional Strength. A
+    # division is rebuilt by promotion/relegation, so its seed is the mean of
+    # its 16 members' final League Strength (each from the division they
+    # finished the previous season in).
+    strength = final["STRENGTH_DATA"]
+    old_div = {t["name"]: str(t["division"]) for t in final["DATA"]["teams"]}
+    strength_seeds = {
+        "regional": {g: v["final"] for g, v in strength["regional"].items()},
+        "league": {str(d): sum(strength["league"][old_div[n]]["final"] for _, _, n in members) / len(members)
+                   for d, members in divisions.items()},
+    }
+
     # ---- B9: cup seeding
     elo = {t["name"]: t["final_elo"] for t in teams.values()}
     ovr = {t["name"]: t["final_ovr"] for t in teams.values()}
@@ -191,6 +206,7 @@ def build(season):
         "start.json": {"season": season, "from_season": prev,
                        "source": f"archive/s{prev}_final.json, archive/s{prev}_inputs.json, legacy_points.json",
                        "ex_seed_scale": {"tot_min": tlo, "tot_max": thi, "ovr_min": olo, "ovr_max": ohi},
+                       "strength_seeds": strength_seeds,
                        "teams": start},
         "accolades.json": accolades,
         "rds_seeds.json": rds,

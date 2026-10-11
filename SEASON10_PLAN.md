@@ -119,6 +119,11 @@ No renames, region moves, additions or removals. Same 160 teams.
     DSCR. These exist only in the export; the engine never reads them back.
   - **SOS stays on RAW prior OVR.** Using blended OVR would leak the seed into
     the raw components.
+- **Regional and League Strength are blended too, and for real** (added
+  2026-10-11 per explicit instruction): each region's/division's Strength =
+  (S10 formula x X + S9 seed x (8-X)) / 8, which RLStr -- and so SOS and OVR --
+  uses. Seeds: a region's S9 final Regional Strength; a rebuilt division's, the
+  mean of its members' S9 final League Strength (`start.json`).
 - **Rank follows blended OVR** during matchdays 1-8: in the roster (the game
   banner's `#N`, play order, Auto-Play's top-32 tests), the dashboard Rank and
   Rank History. **Exception: RL Strength's rank z-score stays on RAW rank**,
@@ -131,9 +136,11 @@ No renames, region moves, additions or removals. Same 160 teams.
 
 ### B4a. Raw vs Blended view (per explicit request)
 A **fourth Rankings sub-tab** (beside Rankings / Rank History / Elo History),
-e.g. **"Raw vs Blended"**. One sortable row per team shows, for OVR, PF, PA,
-DSCR (raw 0-10) and Fatigue, the **raw S10 value, the S9 seed and the blended
-value** that the game and the rankings use. Rank follows blended OVR (B4). The
+e.g. **"Raw vs Blended"**. One sortable row per team shows, for OVR, PF, PA and
+DSCR (raw 0-10), the **raw S10 value, the S9 seed and the blended value** that
+the game and the rankings use. Fatigue is not blended and is not in the view
+(it starts at ceil(S9 final / 5) and adds each game's travel; corrected
+2026-10-11 per explicit instruction). Rank follows blended OVR (B4). The
 header states the current weight, e.g. "Matchday 3: 2/8 S10, 6/8 seed".
 
 **Shown during the blend window only (matchdays 1-8); hidden from matchday 9
