@@ -496,13 +496,17 @@ the user's rules (2026-10-11), and `host_source` says which rule:
   caught exactly this).
 - **"interc"**: S1's interconference games, from S1 InterC (all 160 match real
   games). Its headers are read as the listed team's status -- at home in weeks
-  1 and 7, away in 2 and 11 -- which nothing independent can check.
+  1 and 7, away in 2 and 11. Nothing independent can check it; the user
+  confirmed the reading (2026-10-11, "it was 12 years ago").
 - **"record"**: conference championships, the better regular-season record
   hosting (overall, then in conference). In S1 two were between identical
   records who never met (Celestic Town v Sandgem Town, Vaniville Town v
   Cyllage City): blank and listed in `host_optional` until a tiebreak is ruled.
-- **"seed"**: World Championship / playoff games, the higher seed hosting
-  (Rankings column E holds the seeds; in S2 that means both legs of a tie).
+- **"seed"**: World Championship / playoff games (Rankings column E holds the
+  seeds). S1's are single games, hosted by the higher seed. S2's are two-legged
+  ties, hosted **as now: the worse seed in leg 1, the better seed in leg 2**
+  (per the user, 2026-10-11, correcting a first cut that gave the better seed
+  both legs); that includes the two-game final.
 
 Every new check was mutation-tested (each orientation flipped, the wrong
 crossover letter, two S1 positions swapped, two final ranks swapped, a division

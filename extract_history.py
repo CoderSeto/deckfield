@@ -458,8 +458,9 @@ SEASONS.update({
         "division_rr": True,
         # Hosts, per the user (2026-10-11): S2 Divisions' template, the second
         # team of "x=y" hosting; crossovers its B rounds, interconference its
-        # round 4 ("4-X"); the better record hosts a conference championship,
-        # the higher seed a playoff game.
+        # round 4 ("4-X"); the better record hosts a conference championship.
+        # A playoff tie's first leg is hosted by the worse seed and its second
+        # by the better seed, as now.
         "schedule": dict(positions="s2", orientation="second", crossover="B",
                          regular_weeks={f"W{i}" for i in range(1, 13)}),
         "host_declarations": [("Verdanturf Town", "Rustboro City")],
@@ -508,7 +509,8 @@ SEASONS.update({
         # Hosts, per the user (2026-10-11): the template reversed (the FIRST
         # team of "x=y" hosts) on S1's own positions; crossovers its A rounds;
         # interconference from S1 InterC (the listed team at home in weeks 1
-        # and 7, away in 2 and 11).
+        # and 7, away in 2 and 11 -- reading confirmed by the user); the World
+        # Championship's single games go to the higher seed.
         "schedule": dict(positions="s1", orientation="first", crossover="A",
                          regular_weeks={f"W{i}" for i in range(1, 14)},
                          interc=("S1 InterC", 3, 42, 2,

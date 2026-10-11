@@ -33,7 +33,9 @@ are rebuilt from the season's own schedule documents under rules the user set
 - "interc": S1's interconference games, from S1 InterC.
 - "record": a conference championship, hosted by the better regular-season
   record.
-- "seed": World Championship / playoff games, hosted by the higher seed.
+- "seed": World Championship / playoff games. A single game (S1) is hosted by
+  the higher seed; a two-legged tie (S2) by the worse seed in leg 1 and the
+  better seed in leg 2, as now (per the user).
 """
 import re
 from collections import Counter, defaultdict
@@ -477,7 +479,13 @@ def schedule_hosts(wb, cfg, teams, games):
             if not isinstance(sa, int) or not isinstance(sb, int) or sa == sb:
                 errors.append(f"row {g['row']}: no seeds for {g['winner_name']} v {g['loser_name']}")
             else:
-                hosts[g["row"]] = (g["winner_name"] if sa < sb else g["loser_name"], "seed")
+                better, worse = (g["winner_name"], g["loser_name"]) if sa < sb else \
+                    (g["loser_name"], g["winner_name"])
+                # A two-legged tie (S2, codes ending -1/-2): the worse seed hosts
+                # leg 1 and the better seed leg 2, as now; a single game (S1)
+                # goes to the better seed.
+                leg = re.search(r'-([12])$', g["event"]["code"])
+                hosts[g["row"]] = (worse if leg and leg.group(1) == "1" else better, "seed")
     return hosts, errors, pos
 
 
