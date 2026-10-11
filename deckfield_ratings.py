@@ -100,7 +100,7 @@ STARTING_TOT = 20.0  # every team starts the season at TOT=20, as a floor agains
 SQRT_CUPS_FROM_SEASON = 10  # SEASON10_PLAN B8: OVR's Cups component on the square-root scale
 TIEBREAK_DSCR_CAP = 400.0  # SEASON10_PLAN B9a: per-game DSCR cap for the standings tiebreak only
 TIEBREAK_DSCR_CAP_FROM_SEASON = 10
-GAPFILL_FROM_SEASON = 10  # recompute_from_round fills rounds that never got ratings (see there)
+GAPFILL_FROM_SEASON = 9  # recompute_from_round fills rounds that never got ratings (see there); S9 amended 2026-10-11
 GAME_TYPE_POINT_MULTIPLIER = {"R": 1, "L": 1, "S": 2, "P": 8, "F": 12}
 
 # ---------------------------------------------------------------- schema --
@@ -777,11 +777,11 @@ def recompute_from_round(season, start_round):
         # recompute past it, leaving it with no ratings at all. The next round
         # then found no prior OVR and started SOS and RL Strength from the
         # baseline for every team. It happened in Season 9: WC SF leg 3 (round
-        # 92) was empty, so the frozen rounds 93-95 were computed that way
-        # (final OVRs off by up to 0.29 from a full recompute; the archive keeps
-        # them). From Season 10 the recompute starts at the earliest round
-        # still missing its ratings, so building round by round and a full
-        # recompute always agree.
+        # 92) was empty, so rounds 93-95 were computed that way (final OVRs off
+        # by up to 0.29 from a full recompute). The recompute now starts at the
+        # earliest round still missing its ratings, so building round by round
+        # and a full recompute always agree -- in S9 too, whose frozen record
+        # was amended with the corrected numbers on 2026-10-11.
         have = {r["round"] for r in conn.execute(
             "SELECT DISTINCT round FROM team_round_ratings WHERE season = ?", (season,))}
         missing = [r for r in range(1, start_round) if r not in have]

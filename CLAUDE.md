@@ -57,6 +57,8 @@ database holds one season. See "Season 10" below.
   `start.json`, `accolades.json` and `schedule_orders.json` -- written once,
   before the season, by `prepare_season.py` and `draw_schedule.py`.
 - `conf_pods.json` — the regional pods, the same every season (root).
+- `amend_frozen_season.py` — the one sanctioned way to change a frozen
+  season, on explicit instruction only (used once: S9, 2026-10-11).
 - `prepare_season.py <N>` — writes `seasons/s<N>/` from the previous season's
   FROZEN record. `draw_schedule.py <N>` — the seeded schedule draw.
   `check_schedule.py <N>` — its independent checker (shares no code with it).
@@ -95,7 +97,7 @@ S9 finished at round 95 (3525 games, Casseroya Lake world champion) and is
 now a fixed record, not something the engine rebuilds:
 
 - **`deckfield_dashboard_s9.html`** — a byte-for-byte copy of the final
-  dashboard (main at `057db94`). Every tab is drawn from inline JSON, so it
+  dashboard (main at `057db94`), amended once (2026-10-11, see below). Every tab is drawn from inline JSON, so it
   needs no engine and no database. It is the version that looks exactly like
   the original.
 - **`archive/s9_final.json`** — every data constant on that page as plain
@@ -155,6 +157,42 @@ cover `archive/s*_inputs.json` too.
 `freeze_season.py <N>` is reusable at the end of any season. It refuses to
 overwrite an existing freeze and appends to `SHA256SUMS`.
 
+### Amended once, 2026-10-11 (per explicit instruction: "Amend S9")
+
+The S10 build found that S9's last three rounds were computed wrongly (see
+"Season 10 > the empty-round gap"): WC SF leg 3, round 92, had no games, so
+the round-by-round build never rated it, and round 93 then built SOS and RL
+Strength from the 50 baseline for every team. The user chose to correct the
+frozen record rather than keep it.
+
+`amend_frozen_season.py 9 DATA,STRENGTH_DATA,RANK_ELO_HISTORY "<reason>"`,
+run as Season 9 against the corrected rebuild, is how. It is the only
+sanctioned way to change a frozen file and runs **only on an explicit
+instruction**; an accidental change is still restored from git, never
+re-checksummed. It replaced exactly four lines of the frozen page -- DATA,
+STRENGTH_DATA, RANK_ELO_HISTORY, and the roster export rebuilt with each
+team's frozen Secondary Type kept -- rewrote `s9_final.json` from the page and
+`s9_inputs.json` from the database (still cross-checked against the record),
+added an `amended` entry (date, reason, constants, previous checksums) to both
+files' `meta`, and rewrote their three `SHA256SUMS` lines.
+
+What moved, all at rounds 93-95: final OVR by at most 0.29 (Sevii Islands
+62.32 -> 62.03; mean 0.10), 41 near-neighbour rank swaps, the top ten
+unchanged; RL Strength at round 95; Rank History's three WC Final columns;
+RANK_BY_DEX (the page derives it from DATA). In `s9_inputs.json` only
+`final_ovr` (159 teams) and `final_rank` (41) changed. Results, standings, the
+cups, the RT, the World Championship, the Hall of Fame and accolades did not.
+
+Verified: the amended page renders all 12 tabs with zero `pageerror` and all
+26 archived constants equal its live values; the rebuild used for it equals a
+full `recompute --from 1`, row for row; and a clean Season 9 audit rebuild
+(workbook + all 83 CSVs, 3525 games, with the gap fill now on for S9)
+reproduces the amended archive -- every constant but `QUALIFICATION_DATA`'s
+15th-decimal noise. S10's starting point was rebuilt from it (preseason, no
+game played): `start.json` alone changed -- OVR seeds by at most 0.22 and 30
+EX seeds by one point (Snowpoint City 290 -> 289); the divisions, cup
+seedings, accolades and drawn schedule came out identical.
+
 ## Season 10 (built 2026-10-10, per SEASON10_PLAN.md)
 
 Every decision is in `SEASON10_PLAN.md`; this is how it was built and what
@@ -175,7 +213,7 @@ season number so the Season 9 audit rebuild still reproduces the archive:
 | results files `s10-w<week>-<day>-<event>.csv`, R/L hyphenated | `_round_file_stems()` | S10 |
 | square-root Cups | `compute_round_ratings` | `SQRT_CUPS_FROM_SEASON` |
 | 400 per-game DSCR cap in the standings tiebreak | `_standings_order` + the dashboard's `tbOf` | `TIEBREAK_DSCR_CAP_FROM_SEASON` |
-| recompute fills a round that never got ratings | `recompute_from_round` | `GAPFILL_FROM_SEASON` |
+| recompute fills a round that never got ratings | `recompute_from_round` | `GAPFILL_FROM_SEASON` (9, since the amendment) |
 
 **Starting point.** `prepare_season.py 10` wrote `seasons/s10/` once from the
 frozen record: `league_pods.json` (promotion/relegation applied, seeded by old
@@ -238,13 +276,14 @@ once L15 is played; the line that stamped Canalave City by name is gone.
   got no ratings at all. The round after it then found no prior OVR and built
   SOS and RL Strength from the 50 baseline for every team. It happened in
   Season 9: WC SF leg 3 (round 92) was empty, so the frozen rounds 93-95 were
-  computed that way. Measured: a full recompute differs from the archive by up
-  to 5.4 OVR at round 93 but only 0.29 at round 95 (mean 0.10, 41 adjacent
-  rank swaps, top ten unchanged). **The archive keeps those numbers and S10's
-  seeds come from them** -- S9 is read only from the frozen record. From S10
-  `recompute_from_round` starts at the earliest round still missing ratings,
-  so building round by round and a full recompute agree (verified: the
-  synthetic season's empty PA Final game 3 got its ratings).
+  computed that way. Measured: a full recompute differs by up to 5.4 OVR at
+  round 93 but only 0.29 at round 95 (mean 0.10, 41 adjacent rank swaps, top
+  ten unchanged). `recompute_from_round` now starts at the earliest round
+  still missing ratings, so building round by round and a full recompute
+  agree (verified: the synthetic season's empty PA Final game 3 got its
+  ratings). **On 2026-10-11 the user had S9's frozen record amended** with the
+  corrected numbers and the fix turned on for S9 too (see "Season 9 is
+  frozen > Amended once"); S10's seeds come from the amended record.
 - **RDS round 1 could not be exported before it was played**:
   `_rds_round_games` resolved round 1's own winners before returning round 1.
   Never visible in S9, whose round 1 predated the code.
@@ -411,9 +450,9 @@ python3 deckfield_cli.py migrate "Baccer Game S9 Stats.xlsm"
 
 It must run as Season 9 (the calendar, outline and data files follow the
 setting) and into its own database. It is an audit, never the record: if it
-disagrees with `archive/s9_final.json`, the archive wins. Built round by round
-like this it reproduces the archive (S10's gap fill is off for S9); a single
-`recompute --from 1` does NOT -- see "Season 10 > the empty-round gap".
+disagrees with `archive/s9_final.json`, the archive wins. Built like this it
+reproduces the (amended) archive, as does a full `recompute --from 1`; the
+one known difference is `QUALIFICATION_DATA`'s 15th-decimal noise.
 
 ## The rounds 15-25 recovery (2026-09-03) — resolved
 

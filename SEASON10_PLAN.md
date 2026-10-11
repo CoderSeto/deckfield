@@ -150,12 +150,15 @@ workbook's Rankings sheet, column 69).
   `sqrt((TOT - min TOT) / (max TOT - min TOT)) x 160`, using S9's final TOT
   (min 24, max 1421).
 - **B** = S9 final OVR rescaled 0-160: `(OVR - min) / (max - min) x 160`
-  (min 7.17, max 114.4).
+  (min 7.12, max 114.58 *(amended S9 record; 7.17 / 114.4 before the
+  2026-10-11 amendment -- see CLAUDE.md "Season 9 is frozen")*).
 - **LegacyP** = the team's all-time legacy total (B7), added raw.
-- Preview: range 0-346, median 142 (S9's actual: 23-362, median 112).
-  Casseroya Lake 346, Canalave City 336, Nimbasa City 299, Snowpoint City 290,
-  Camphrier Town 289 *(corrected: 289.498 rounds down; the preview said 290)*,
-  Lumiose City 271; Boyleland 0.
+- Built: range 0-346, median 142 (S9's actual: 23-362, median 112).
+  Casseroya Lake 346, Canalave City 336, Nimbasa City 299, Snowpoint City 289,
+  Camphrier Town 289, Lumiose City 271; Boyleland 0. *(Corrected: the preview
+  said 290 for both Snowpoint City and Camphrier Town; on the amended S9 record
+  they are 289.18 and 289.14. 30 teams' seeds moved by one point with the
+  amendment.)*
 
 ### B7. Legacy Points
 Source: the workbook's `LegacyP` sheet (teams in B2:B58; C = SUM(E:AN); every
