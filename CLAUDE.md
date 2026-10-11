@@ -2186,16 +2186,19 @@ and the now-unused `RT_MD_LABELS` constant are gone).
   widen the Round 1 games and stick the play-in games between them so it's not
   as wide"; it was seven columns for a few hours). A lane (`RT_LANES`, the
   engine's `REGIONAL_TOURNAMENT_LANES`, in `STATIC_CONSTS`) never merges before
-  the semifinal, so each half's OUTER column holds its two lanes' Round 1 games
-  at the top and bottom with their two Play-In games stacked between them, each
-  Play-In feeding straight up or down into its own Round 1 game (`.rtb-feed`, a
-  vertical between the card centres, drawn behind the cards). The Quarterfinal
-  column sits in rows 1 and 4, level with Round 1 (`.wcb-thru` straight
-  across), and its verticals (`.rtb-v`, 150% of a slot) meet in the middle of
-  the column, where the middle column's two Semifinals sit beneath the Final.
-  Left half: lanes 1 and 4 (they meet in a semifinal); right half mirrored:
-  lane 3 above lane 2, so seed 2 sits bottom right as #2 does on the WC. Every
-  column is 540px tall (four rows).
+  the semifinal. Each half's OUTER column is four rows: **Play-In, Round 1,
+  Round 1, Play-In** -- the Play-Ins at the corners and the Round 1 -> QF lines
+  through the middle (swapped the same day, per explicit request: the first
+  cut had Round 1 at the corners and the Play-Ins between, and was "a little
+  ugly"). Each Play-In feeds straight down or up into its own Round 1 game
+  (`.rtb-feed`, a vertical between the card centres, drawn behind the cards).
+  The Quarterfinals sit in rows 2-3, level with Round 1 (`.wcb-thru` straight
+  across), so their merge lines span 37.5-62.5% of the column; the middle
+  column is re-rowed `34fr 16fr 16fr 34fr` so both Semifinals centre inside
+  that span (42% / 58%) with the Final above them -- checked by measurement at
+  1920/1600/1240px. Left half: lanes 1 and 4; right half mirrored, lane 3
+  above lane 2, so seed 2 sits bottom right as #2 does on the WC. Every column
+  is 560px tall.
 - **Every slot is drawn from preseason.** `RT_DATA` now carries each region's
   16 seeds (`{region: {"seeds": [...], "matchdays": {...}}}`), so seeds 1-8
   are shown waiting in their rounds from the start, and a slot not yet decided
