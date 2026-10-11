@@ -32,7 +32,8 @@ are rebuilt from the season's own schedule documents under rules the user set
   ("4-X") pairs between the conferences matched that week.
 - "interc": S1's interconference games, from S1 InterC.
 - "record": a conference championship, hosted by the better regular-season
-  record.
+  record; "poll" where the records were identical, the better poll rank going
+  in (two S1 championships).
 - "seed": World Championship / playoff games. A single game (S1) is hosted by
   the higher seed; a two-legged tie (S2) by the worse seed in leg 1 and the
   better seed in leg 2, as now (per the user).
@@ -468,12 +469,18 @@ def schedule_hosts(wb, cfg, teams, games):
             a, b = g["winner_name"], g["loser_name"]
             ka = (rec[a][0] - rec[a][1], rec[a][2] - rec[a][3])
             kb = (rec[b][0] - rec[b][1], rec[b][2] - rec[b][3])
-            if ka == kb:
-                if g["row"] not in (cfg.get("host_optional") or {}):
-                    errors.append(f"row {g['row']}: conference championship {a} v {b} -- "
-                                  f"identical records, no host")
-            else:
+            if ka != kb:
                 hosts[g["row"]] = (a if ka > kb else b, "record")
+                continue
+            # Identical records (two in S1, neither pair having met): the
+            # better poll rank going into the game hosts (per the user).
+            ra, rb = g["rank_w"], g["rank_l"]
+            if ra == rb or (ra is None and rb is None):
+                errors.append(f"row {g['row']}: conference championship {a} v {b} -- "
+                              f"identical records and poll ranks, no host")
+            else:
+                better = a if rb is None or (ra is not None and ra < rb) else b
+                hosts[g["row"]] = (better, "poll")
         elif g["week"] not in s["regular_weeks"]:
             sa, sb = t_of[g["winner_name"]]["seed"], t_of[g["loser_name"]]["seed"]
             if not isinstance(sa, int) or not isinstance(sb, int) or sa == sb:

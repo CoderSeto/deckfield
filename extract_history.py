@@ -516,12 +516,8 @@ SEASONS.update({
                          interc=("S1 InterC", 3, 42, 2,
                                  {11: (1, "away"), 1: (4, "home"), 2: (5, "away"), 7: (6, "home")})),
         "host_declarations": [("Rustboro City", "Verdanturf Town")],
-        # Two conference championships were between teams with the same
-        # regular-season record (overall and in conference) who never met, so
-        # "the better record hosts" does not decide them; their hosts stay
-        # blank until a tiebreak is ruled.
-        "host_optional": {524: "Lily Valley championship, Celestic Town v Sandgem Town (both 11-2, 8-1)",
-                          525: "Kalosite championship, Vaniville Town v Cyllage City (both 10-3, 8-1)"},
+        # Two conference championships (rows 524-525) were between identical
+        # records who never met; the better poll rank going in hosts them.
         "next_rank": None,
         "cup": None,
         "regional_final": ["CC-F"],

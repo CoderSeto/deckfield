@@ -499,9 +499,10 @@ the user's rules (2026-10-11), and `host_source` says which rule:
   1 and 7, away in 2 and 11. Nothing independent can check it; the user
   confirmed the reading (2026-10-11, "it was 12 years ago").
 - **"record"**: conference championships, the better regular-season record
-  hosting (overall, then in conference). In S1 two were between identical
-  records who never met (Celestic Town v Sandgem Town, Vaniville Town v
-  Cyllage City): blank and listed in `host_optional` until a tiebreak is ruled.
+  hosting (overall, then in conference). **"poll"**: in S1 two were between
+  identical records who never met; per the user the better poll rank going in
+  hosts -- Sandgem Town (#9) over Celestic Town (#10), Cyllage City (#4) over
+  Vaniville Town (#8). Every S1 and S2 game now has a host.
 - **"seed"**: World Championship / playoff games (Rankings column E holds the
   seeds). S1's are single games, hosted by the higher seed. S2's are two-legged
   ties, hosted **as now: the worse seed in leg 1, the better seed in leg 2**
@@ -511,8 +512,8 @@ the user's rules (2026-10-11), and `host_source` says which rule:
 Every new check was mutation-tested (each orientation flipped, the wrong
 crossover letter, two S1 positions swapped, two final ranks swapped, a division
 game dropped, an Elo off by one, a final Elo off, a championship or Grand Final
-result flipped, an unlisted AggOT note, a stale cell correction, the tied
-championships unlisted) and fails as it should. Adding `host_source` changed
+result flipped, an unlisted AggOT note, a stale cell correction) and fails as
+it should. Adding `host_source` changed
 S4-S8's `games.csv` by that column alone ("recorded" throughout); every season
 re-runs byte-identically.
 
@@ -5441,11 +5442,10 @@ page errors on either path.
 
 ## Known open items
 
-- **Historical archive:** all eight seasons extracted (2026-10-11). Open: the
-  hosts of S1's two tied conference championships (rows 524/525, blank until a
-  tiebreak is ruled), and the next steps -- an all-time database or dashboard
-  tab, and the relitigation layer for the gaps (per-team EX, raw goal scores,
-  S1-S2 spread/interest/DSCR, S3's 252 unrecorded hosts).
+- **Historical archive:** all eight seasons extracted (2026-10-11). Next: an
+  all-time database or dashboard tab, and the relitigation layer for the gaps
+  (per-team EX, raw goal scores, S1-S2 spread/interest/DSCR, S3's 252
+  unrecorded hosts).
 - **End of S10 (B13):** append its Legacy column to `legacy_points.json` and its
   Hall of Fame season, then `freeze_season.py 10` and
   `freeze_season_inputs.py 10`; S11 is `prepare_season.py 11` +
