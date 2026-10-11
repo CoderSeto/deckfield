@@ -1,0 +1,1712 @@
+{
+ "note": "Legacy Points (SEASON10_PLAN B7). Seasons 1-8 from the workbook's LegacyP sheet (S8 Swiss runner-up corrected to Camphrier Town; Resort Area is Battle Zone); Season 9 from archive/s9_final.json. A season's column is added when it ends.",
+ "values": {
+  "World": "Champion 16, Finalist 8, semifinalists 4, quarterfinalists 2",
+  "Cup": "WCS / Swiss / PA Cup: champion 8, runner-up 4",
+  "RDS": "Ribbon / Dream / Star (from S9): winner 6, runner-up 3",
+  "League": "8 / 6 / 4 / 2 (S6's two UTL champions 3 + 3)",
+  "Conference": "Conference (from S9, Regional Tournament) champion 4"
+ },
+ "seasons": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9
+ ],
+ "teams": {
+  "Canalave City": {
+   "6": {
+    "points": 20,
+    "items": [
+     {
+      "family": "World",
+      "points": 16,
+      "label": "World Champion"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Lily Valley champion"
+     }
+    ]
+   },
+   "7": {
+    "points": 14,
+    "items": [
+     {
+      "family": "World",
+      "points": 8,
+      "label": "World Finalist"
+     },
+     {
+      "family": "League",
+      "points": 2,
+      "label": "2nd Div. Champion"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Lily Valley champion"
+     }
+    ]
+   },
+   "8": {
+    "points": 20,
+    "items": [
+     {
+      "family": "Cup",
+      "points": 8,
+      "label": "Swiss Champion"
+     },
+     {
+      "family": "League",
+      "points": 8,
+      "label": "First Div. Champion"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Lily Valley champion"
+     }
+    ]
+   },
+   "9": {
+    "points": 16,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "RDS",
+      "points": 6,
+      "label": "Ribbon Cup Winner"
+     },
+     {
+      "family": "League",
+      "points": 8,
+      "label": "First Div. Champion"
+     }
+    ]
+   }
+  },
+  "Lumiose City": {
+   "3": {
+    "points": 8,
+    "items": [
+     {
+      "family": "World",
+      "points": 4,
+      "label": "World semifinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Kalosite champion"
+     }
+    ]
+   },
+   "4": {
+    "points": 28,
+    "items": [
+     {
+      "family": "World",
+      "points": 16,
+      "label": "World Champion"
+     },
+     {
+      "family": "Cup",
+      "points": 8,
+      "label": "WCS Champion"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Kalosite champion"
+     }
+    ]
+   },
+   "6": {
+    "points": 14,
+    "items": [
+     {
+      "family": "World",
+      "points": 4,
+      "label": "World semifinalist"
+     },
+     {
+      "family": "League",
+      "points": 6,
+      "label": "MRL Second"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Kalosite champion"
+     }
+    ]
+   },
+   "7": {
+    "points": 8,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "League",
+      "points": 6,
+      "label": "First Div. Second"
+     }
+    ]
+   }
+  },
+  "Battle Zone": {
+   "3": {
+    "points": 24,
+    "items": [
+     {
+      "family": "World",
+      "points": 16,
+      "label": "World Champion"
+     },
+     {
+      "family": "League",
+      "points": 4,
+      "label": "UTL Champion A"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Lily Valley champion"
+     }
+    ]
+   },
+   "4": {
+    "points": 6,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Lily Valley champion"
+     }
+    ]
+   },
+   "5": {
+    "points": 22,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Cup",
+      "points": 8,
+      "label": "WCS Champion"
+     },
+     {
+      "family": "League",
+      "points": 8,
+      "label": "MRL Champion"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Lily Valley champion"
+     }
+    ]
+   },
+   "6": {
+    "points": 2,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     }
+    ]
+   }
+  },
+  "Castelia City": {
+   "1": {
+    "points": 6,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Vertress champion"
+     }
+    ]
+   },
+   "2": {
+    "points": 12,
+    "items": [
+     {
+      "family": "World",
+      "points": 8,
+      "label": "World Finalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Vertress champion"
+     }
+    ]
+   },
+   "3": {
+    "points": 12,
+    "items": [
+     {
+      "family": "League",
+      "points": 8,
+      "label": "MRL Champion"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Vertress champion"
+     }
+    ]
+   },
+   "4": {
+    "points": 6,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Vertress champion"
+     }
+    ]
+   },
+   "8": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Vertress champion"
+     }
+    ]
+   }
+  },
+  "Cinnabar Island": {
+   "3": {
+    "points": 16,
+    "items": [
+     {
+      "family": "World",
+      "points": 4,
+      "label": "World semifinalist"
+     },
+     {
+      "family": "Cup",
+      "points": 8,
+      "label": "WCS Champion"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Indigo champion"
+     }
+    ]
+   },
+   "4": {
+    "points": 8,
+    "items": [
+     {
+      "family": "Cup",
+      "points": 4,
+      "label": "WCS Runner-up"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Indigo champion"
+     }
+    ]
+   },
+   "5": {
+    "points": 16,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Cup",
+      "points": 4,
+      "label": "WCS Runner-up"
+     },
+     {
+      "family": "League",
+      "points": 6,
+      "label": "MRL Second"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Indigo champion"
+     }
+    ]
+   }
+  },
+  "Spikemuth": {
+   "4": {
+    "points": 6,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Dynamax champion"
+     }
+    ]
+   },
+   "5": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Dynamax champion"
+     }
+    ]
+   },
+   "6": {
+    "points": 5,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "League",
+      "points": 3,
+      "label": "UTL Champion B"
+     }
+    ]
+   },
+   "7": {
+    "points": 16,
+    "items": [
+     {
+      "family": "World",
+      "points": 4,
+      "label": "World semifinalist"
+     },
+     {
+      "family": "League",
+      "points": 8,
+      "label": "First Div. Champion"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Dynamax champion"
+     }
+    ]
+   },
+   "8": {
+    "points": 6,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Dynamax champion"
+     }
+    ]
+   }
+  },
+  "Pueltown": {
+   "7": {
+    "points": 28,
+    "items": [
+     {
+      "family": "World",
+      "points": 16,
+      "label": "World Champion"
+     },
+     {
+      "family": "Cup",
+      "points": 8,
+      "label": "Swiss Champion"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Phoenix champion"
+     }
+    ]
+   },
+   "9": {
+    "points": 6,
+    "items": [
+     {
+      "family": "League",
+      "points": 6,
+      "label": "First Div. Second"
+     }
+    ]
+   }
+  },
+  "Slateport City": {
+   "5": {
+    "points": 24,
+    "items": [
+     {
+      "family": "World",
+      "points": 16,
+      "label": "World Champion"
+     },
+     {
+      "family": "League",
+      "points": 4,
+      "label": "UTL Champion A"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Delta champion"
+     }
+    ]
+   },
+   "6": {
+    "points": 8,
+    "items": [
+     {
+      "family": "Cup",
+      "points": 4,
+      "label": "WCS Runner-up"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Delta champion"
+     }
+    ]
+   }
+  },
+  "Casseroya Lake": {
+   "9": {
+    "points": 26,
+    "items": [
+     {
+      "family": "World",
+      "points": 16,
+      "label": "World Champion"
+     },
+     {
+      "family": "RDS",
+      "points": 6,
+      "label": "Star Cup Winner"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Terastal RT champion"
+     }
+    ]
+   }
+  },
+  "Agate Village": {
+   "6": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Phoenix champion"
+     }
+    ]
+   },
+   "8": {
+    "points": 20,
+    "items": [
+     {
+      "family": "World",
+      "points": 16,
+      "label": "World Champion"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Phoenix champion"
+     }
+    ]
+   }
+  },
+  "Camphrier Town": {
+   "8": {
+    "points": 16,
+    "items": [
+     {
+      "family": "World",
+      "points": 8,
+      "label": "World Finalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Kalosite champion"
+     },
+     {
+      "family": "Cup",
+      "points": 4,
+      "label": "Swiss Runner-up"
+     }
+    ]
+   },
+   "9": {
+    "points": 8,
+    "items": [
+     {
+      "family": "World",
+      "points": 4,
+      "label": "World semifinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Kalosite RT champion"
+     }
+    ]
+   }
+  },
+  "Virbank City": {
+   "3": {
+    "points": 8,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "League",
+      "points": 6,
+      "label": "MRL Second"
+     }
+    ]
+   },
+   "4": {
+    "points": 8,
+    "items": [
+     {
+      "family": "League",
+      "points": 8,
+      "label": "MRL Champion"
+     }
+    ]
+   },
+   "7": {
+    "points": 6,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Vertress champion"
+     }
+    ]
+   },
+   "8": {
+    "points": 2,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     }
+    ]
+   }
+  },
+  "Geosenge Town": {
+   "2": {
+    "points": 20,
+    "items": [
+     {
+      "family": "World",
+      "points": 16,
+      "label": "World Champion"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Kalosite champion"
+     }
+    ]
+   }
+  },
+  "Kala'e Bay": {
+   "3": {
+    "points": 16,
+    "items": [
+     {
+      "family": "World",
+      "points": 8,
+      "label": "World Finalist"
+     },
+     {
+      "family": "Cup",
+      "points": 4,
+      "label": "WCS Runner-up"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Lanakila champion"
+     }
+    ]
+   },
+   "4": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Lanakila champion"
+     }
+    ]
+   }
+  },
+  "Rustboro City": {
+   "1": {
+    "points": 12,
+    "items": [
+     {
+      "family": "World",
+      "points": 8,
+      "label": "World Finalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Delta champion"
+     }
+    ]
+   },
+   "2": {
+    "points": 8,
+    "items": [
+     {
+      "family": "World",
+      "points": 4,
+      "label": "World semifinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Delta champion"
+     }
+    ]
+   }
+  },
+  "Saffron City": {
+   "1": {
+    "points": 20,
+    "items": [
+     {
+      "family": "World",
+      "points": 16,
+      "label": "World Champion"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Indigo champion"
+     }
+    ]
+   }
+  },
+  "Seafolk Village": {
+   "6": {
+    "points": 16,
+    "items": [
+     {
+      "family": "World",
+      "points": 4,
+      "label": "World semifinalist"
+     },
+     {
+      "family": "Cup",
+      "points": 8,
+      "label": "WCS Champion"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Lanakila champion"
+     }
+    ]
+   },
+   "7": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Lanakila champion"
+     }
+    ]
+   }
+  },
+  "Striaton City": {
+   "5": {
+    "points": 8,
+    "items": [
+     {
+      "family": "World",
+      "points": 4,
+      "label": "World semifinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Vertress champion"
+     }
+    ]
+   },
+   "6": {
+    "points": 12,
+    "items": [
+     {
+      "family": "World",
+      "points": 8,
+      "label": "World Finalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Vertress champion"
+     }
+    ]
+   }
+  },
+  "Snowpoint City": {
+   "8": {
+    "points": 4,
+    "items": [
+     {
+      "family": "World",
+      "points": 4,
+      "label": "World semifinalist"
+     }
+    ]
+   },
+   "9": {
+    "points": 13,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Cup",
+      "points": 4,
+      "label": "PA Cup Runner-up"
+     },
+     {
+      "family": "RDS",
+      "points": 3,
+      "label": "Ribbon Cup Runner-up"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Lily Valley RT champion"
+     }
+    ]
+   }
+  },
+  "Cianwood City": {
+   "5": {
+    "points": 8,
+    "items": [
+     {
+      "family": "World",
+      "points": 8,
+      "label": "World Finalist"
+     }
+    ]
+   },
+   "6": {
+    "points": 8,
+    "items": [
+     {
+      "family": "League",
+      "points": 8,
+      "label": "MRL Champion"
+     }
+    ]
+   }
+  },
+  "Mount Silver": {
+   "5": {
+    "points": 6,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Silver champion"
+     }
+    ]
+   },
+   "7": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Silver champion"
+     }
+    ]
+   },
+   "8": {
+    "points": 6,
+    "items": [
+     {
+      "family": "League",
+      "points": 6,
+      "label": "First Div. Second"
+     }
+    ]
+   }
+  },
+  "Solaceon Town": {
+   "2": {
+    "points": 8,
+    "items": [
+     {
+      "family": "World",
+      "points": 4,
+      "label": "World semifinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Lily Valley champion"
+     }
+    ]
+   },
+   "4": {
+    "points": 8,
+    "items": [
+     {
+      "family": "World",
+      "points": 4,
+      "label": "World semifinalist"
+     },
+     {
+      "family": "League",
+      "points": 4,
+      "label": "UTL Champion A"
+     }
+    ]
+   }
+  },
+  "Cortondo": {
+   "5": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Terastal champion"
+     }
+    ]
+   },
+   "6": {
+    "points": 3,
+    "items": [
+     {
+      "family": "League",
+      "points": 3,
+      "label": "UTL Champion A"
+     }
+    ]
+   },
+   "7": {
+    "points": 8,
+    "items": [
+     {
+      "family": "World",
+      "points": 4,
+      "label": "World semifinalist"
+     },
+     {
+      "family": "Cup",
+      "points": 4,
+      "label": "Swiss Runner-up"
+     }
+    ]
+   }
+  },
+  "National Park": {
+   "8": {
+    "points": 6,
+    "items": [
+     {
+      "family": "League",
+      "points": 2,
+      "label": "2nd Div. Champion"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Silver champion"
+     }
+    ]
+   },
+   "9": {
+    "points": 8,
+    "items": [
+     {
+      "family": "League",
+      "points": 4,
+      "label": "First Div. Third"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Silver RT champion"
+     }
+    ]
+   }
+  },
+  "Wild Area": {
+   "3": {
+    "points": 6,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Dynamax champion"
+     }
+    ]
+   },
+   "4": {
+    "points": 6,
+    "items": [
+     {
+      "family": "League",
+      "points": 6,
+      "label": "MRL Second"
+     }
+    ]
+   },
+   "5": {
+    "points": 2,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     }
+    ]
+   }
+  },
+  "Nimbasa City": {
+   "9": {
+    "points": 11,
+    "items": [
+     {
+      "family": "World",
+      "points": 8,
+      "label": "World Finalist"
+     },
+     {
+      "family": "RDS",
+      "points": 3,
+      "label": "Dream Cup Runner-up"
+     }
+    ]
+   }
+  },
+  "Ever Grande City": {
+   "3": {
+    "points": 6,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Delta champion"
+     }
+    ]
+   },
+   "7": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Delta champion"
+     }
+    ]
+   }
+  },
+  "Mesagoza": {
+   "8": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Terastal champion"
+     }
+    ]
+   },
+   "9": {
+    "points": 5,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "RDS",
+      "points": 3,
+      "label": "Star Cup Runner-up"
+     }
+    ]
+   }
+  },
+  "Cabo Poco": {
+   "9": {
+    "points": 8,
+    "items": [
+     {
+      "family": "Cup",
+      "points": 8,
+      "label": "PA Cup Champion"
+     }
+    ]
+   }
+  },
+  "Hulbury": {
+   "4": {
+    "points": 8,
+    "items": [
+     {
+      "family": "World",
+      "points": 8,
+      "label": "World Finalist"
+     }
+    ]
+   }
+  },
+  "Mistralton City": {
+   "1": {
+    "points": 4,
+    "items": [
+     {
+      "family": "World",
+      "points": 4,
+      "label": "World semifinalist"
+     }
+    ]
+   },
+   "9": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Vertress RT champion"
+     }
+    ]
+   }
+  },
+  "Olivine City": {
+   "3": {
+    "points": 4,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "League",
+      "points": 2,
+      "label": "UTL Champion B"
+     }
+    ]
+   },
+   "6": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Silver champion"
+     }
+    ]
+   }
+  },
+  "Petalburg City": {
+   "9": {
+    "points": 8,
+    "items": [
+     {
+      "family": "World",
+      "points": 4,
+      "label": "World semifinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Delta RT champion"
+     }
+    ]
+   }
+  },
+  "Porto Marinada": {
+   "6": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Terastal champion"
+     }
+    ]
+   },
+   "7": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Terastal champion"
+     }
+    ]
+   }
+  },
+  "Ultra Megalopolis": {
+   "5": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Lanakila champion"
+     }
+    ]
+   },
+   "8": {
+    "points": 4,
+    "items": [
+     {
+      "family": "League",
+      "points": 4,
+      "label": "First Div. Third"
+     }
+    ]
+   }
+  },
+  "Vaniville Town": {
+   "1": {
+    "points": 8,
+    "items": [
+     {
+      "family": "World",
+      "points": 4,
+      "label": "World semifinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Kalosite champion"
+     }
+    ]
+   }
+  },
+  "Wyndon South": {
+   "5": {
+    "points": 2,
+    "items": [
+     {
+      "family": "League",
+      "points": 2,
+      "label": "UTL Champion B"
+     }
+    ]
+   },
+   "6": {
+    "points": 6,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Dynamax champion"
+     }
+    ]
+   }
+  },
+  "Aqua Resort": {
+   "4": {
+    "points": 6,
+    "items": [
+     {
+      "family": "World",
+      "points": 4,
+      "label": "World semifinalist"
+     },
+     {
+      "family": "League",
+      "points": 2,
+      "label": "UTL Champion B"
+     }
+    ]
+   }
+  },
+  "Celestic Town": {
+   "1": {
+    "points": 6,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Lily Valley champion"
+     }
+    ]
+   }
+  },
+  "Cocona Village": {
+   "9": {
+    "points": 6,
+    "items": [
+     {
+      "family": "RDS",
+      "points": 6,
+      "label": "Dream Cup Winner"
+     }
+    ]
+   }
+  },
+  "Lavender Town": {
+   "6": {
+    "points": 6,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Indigo champion"
+     }
+    ]
+   }
+  },
+  "Lilycove City": {
+   "8": {
+    "points": 6,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Delta champion"
+     }
+    ]
+   }
+  },
+  "Paniola Town": {
+   "2": {
+    "points": 6,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Lanakila champion"
+     }
+    ]
+   }
+  },
+  "Snowbelle City": {
+   "7": {
+    "points": 6,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Kalosite champion"
+     }
+    ]
+   }
+  },
+  "Vermilion City": {
+   "7": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Indigo champion"
+     }
+    ]
+   },
+   "9": {
+    "points": 2,
+    "items": [
+     {
+      "family": "League",
+      "points": 2,
+      "label": "2nd Div. Champion"
+     }
+    ]
+   }
+  },
+  "Viridian City": {
+   "2": {
+    "points": 6,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     },
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Indigo champion"
+     }
+    ]
+   }
+  },
+  "Cascarrafa": {
+   "7": {
+    "points": 4,
+    "items": [
+     {
+      "family": "League",
+      "points": 4,
+      "label": "First Div. Third"
+     }
+    ]
+   }
+  },
+  "Couriway Town": {
+   "5": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Kalosite champion"
+     }
+    ]
+   }
+  },
+  "Dewford Town": {
+   "4": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Delta champion"
+     }
+    ]
+   }
+  },
+  "Dolce Island": {
+   "9": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Phoenix RT champion"
+     }
+    ]
+   }
+  },
+  "Fall City": {
+   "4": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Phoenix champion"
+     }
+    ]
+   }
+  },
+  "Konikoni City": {
+   "8": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Lanakila champion"
+     }
+    ]
+   }
+  },
+  "Mount Moon": {
+   "8": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Indigo champion"
+     }
+    ]
+   }
+  },
+  "Po Town": {
+   "9": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Lanakila RT champion"
+     }
+    ]
+   }
+  },
+  "Pyrite Town": {
+   "5": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Phoenix champion"
+     }
+    ]
+   }
+  },
+  "Stow-on-Side": {
+   "9": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Dynamax RT champion"
+     }
+    ]
+   }
+  },
+  "Victory Road": {
+   "9": {
+    "points": 4,
+    "items": [
+     {
+      "family": "Conference",
+      "points": 4,
+      "label": "Indigo RT champion"
+     }
+    ]
+   }
+  },
+  "Wintown": {
+   "8": {
+    "points": 4,
+    "items": [
+     {
+      "family": "World",
+      "points": 4,
+      "label": "World semifinalist"
+     }
+    ]
+   }
+  },
+  "Zapapico": {
+   "5": {
+    "points": 4,
+    "items": [
+     {
+      "family": "World",
+      "points": 4,
+      "label": "World semifinalist"
+     }
+    ]
+   }
+  },
+  "Aquacorde Town": {
+   "4": {
+    "points": 2,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     }
+    ]
+   }
+  },
+  "Blueberry Terarium": {
+   "9": {
+    "points": 2,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     }
+    ]
+   }
+  },
+  "Cyllage City": {
+   "1": {
+    "points": 2,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     }
+    ]
+   }
+  },
+  "Driftveil City": {
+   "1": {
+    "points": 2,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     }
+    ]
+   }
+  },
+  "Goldenrod City": {
+   "7": {
+    "points": 2,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     }
+    ]
+   }
+  },
+  "Motostoke": {
+   "8": {
+    "points": 2,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     }
+    ]
+   }
+  },
+  "Oreburgh City": {
+   "2": {
+    "points": 2,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     }
+    ]
+   }
+  },
+  "Santalune City": {
+   "2": {
+    "points": 2,
+    "items": [
+     {
+      "family": "World",
+      "points": 2,
+      "label": "World quarterfinalist"
+     }
+    ]
+   }
+  }
+ }
+}

@@ -58,7 +58,22 @@ def main():
     out_path = os.path.join(ARCHIVE_DIR, f"s{season}_inputs.json")
     if os.path.exists(out_path):
         sys.exit(f"refusing to overwrite {os.path.relpath(out_path, HERE)} -- a frozen season stays frozen")
+    payload = build_payload(season)
+    os.makedirs(ARCHIVE_DIR, exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=1)
+        f.write("\n")
+    with open(out_path, "rb") as f:
+        digest = hashlib.sha256(f.read()).hexdigest()
+    with open(SUMS_PATH, "a") as f:
+        f.write(f"{digest}  {os.path.relpath(out_path, HERE)}\n")
+    print(f"Froze {len(payload['teams'])} teams' season-{season} inputs to {os.path.relpath(out_path, HERE)}; "
+          f"checksum appended to archive/SHA256SUMS")
 
+
+def build_payload(season):
+    """The inputs payload, cross-checked against the frozen record (exits if
+    anything disagrees). Shared by main() and amend_frozen_season.py."""
     final = json.load(open(os.path.join(ARCHIVE_DIR, f"s{season}_final.json")))
     shown = {t["dex"]: t for t in final["data"]["DATA"]["teams"]}
     through = final["meta"]["through_round"]
@@ -163,16 +178,7 @@ def main():
                                for d in range(1, 11)},
     }
 
-    os.makedirs(ARCHIVE_DIR, exist_ok=True)
-    with open(out_path, "w", encoding="utf-8") as f:
-        json.dump(payload, f, ensure_ascii=False, indent=1)
-        f.write("\n")
-    with open(out_path, "rb") as f:
-        digest = hashlib.sha256(f.read()).hexdigest()
-    with open(SUMS_PATH, "a") as f:
-        f.write(f"{digest}  {os.path.relpath(out_path, HERE)}\n")
-    print(f"Froze {len(teams)} teams' season-{season} inputs to {os.path.relpath(out_path, HERE)}; "
-          f"checksum appended to archive/SHA256SUMS")
+    return payload
 
 
 if __name__ == "__main__":

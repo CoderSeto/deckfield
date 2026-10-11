@@ -1,0 +1,382 @@
+{
+ "1": {
+  "UL": {
+   "pod_name": "1-8-9-16",
+   "teams": [
+    "Canalave City",
+    "Ultra Megalopolis",
+    "Aqua Resort",
+    "Camphrier Town"
+   ]
+  },
+  "UR": {
+   "pod_name": "2-7-10-15",
+   "teams": [
+    "Pueltown",
+    "Cianwood City",
+    "Vermilion City",
+    "Pyrite Town"
+   ]
+  },
+  "LL": {
+   "pod_name": "4-5-12-13",
+   "teams": [
+    "Anville Town",
+    "Virbank City",
+    "Lumiose City",
+    "Mesagoza"
+   ]
+  },
+  "LR": {
+   "pod_name": "3-6-11-14",
+   "teams": [
+    "National Park",
+    "Agate Village",
+    "Nimbasa City",
+    "Cinnabar Island"
+   ]
+  }
+ },
+ "2": {
+  "UL": {
+   "pod_name": "1-8-9-16",
+   "teams": [
+    "Porto Marinada",
+    "Veilstone City",
+    "Motostoke",
+    "Anistar City"
+   ]
+  },
+  "UR": {
+   "pod_name": "2-7-10-15",
+   "teams": [
+    "Mount Silver",
+    "Malie City",
+    "Cocona Village",
+    "Petalburg City"
+   ]
+  },
+  "LL": {
+   "pod_name": "4-5-12-13",
+   "teams": [
+    "Striaton City",
+    "Cyllage City",
+    "Vaniville Town",
+    "Snowpoint City"
+   ]
+  },
+  "LR": {
+   "pod_name": "3-6-11-14",
+   "teams": [
+    "Mount Moon",
+    "Seafolk Village",
+    "Postwick",
+    "Po Town"
+   ]
+  }
+ },
+ "3": {
+  "UL": {
+   "pod_name": "1-8-9-16",
+   "teams": [
+    "Cortondo",
+    "Wild Area",
+    "Lilycove City",
+    "Blueberry Terarium"
+   ]
+  },
+  "UR": {
+   "pod_name": "2-7-10-15",
+   "teams": [
+    "Spikemuth",
+    "Floaroma City",
+    "Sunyshore City",
+    "Cabo Poco"
+   ]
+  },
+  "LL": {
+   "pod_name": "4-5-12-13",
+   "teams": [
+    "Wyndon South",
+    "Olivine City",
+    "Sandgem Town",
+    "Mistralton City"
+   ]
+  },
+  "LR": {
+   "pod_name": "3-6-11-14",
+   "teams": [
+    "Kala'e Bay",
+    "Fallarbor Town",
+    "Shalour City",
+    "Casseroya Lake"
+   ]
+  }
+ },
+ "4": {
+  "UL": {
+   "pod_name": "1-8-9-16",
+   "teams": [
+    "Castelia City",
+    "Fortree City",
+    "Crown Tundra",
+    "Mossui Town"
+   ]
+  },
+  "UR": {
+   "pod_name": "2-7-10-15",
+   "teams": [
+    "Exeggutor Island",
+    "Fall City",
+    "Sootopolis City",
+    "Stow-on-Side"
+   ]
+  },
+  "LL": {
+   "pod_name": "4-5-12-13",
+   "teams": [
+    "Cherrygrove City",
+    "Santalune City",
+    "Konikoni City",
+    "Celestic Town"
+   ]
+  },
+  "LR": {
+   "pod_name": "3-6-11-14",
+   "teams": [
+    "Ever Grande City",
+    "Glaseado Mountain",
+    "Accumula Town",
+    "Ringtown"
+   ]
+  }
+ },
+ "5": {
+  "UL": {
+   "pod_name": "1-8-9-16",
+   "teams": [
+    "Cascarrafa",
+    "Tagtree Thicket",
+    "Wintown",
+    "Violet City"
+   ]
+  },
+  "UR": {
+   "pod_name": "2-7-10-15",
+   "teams": [
+    "Zapapico",
+    "Opelucid City",
+    "Victory Road",
+    "Dolce Island"
+   ]
+  },
+  "LL": {
+   "pod_name": "4-5-12-13",
+   "teams": [
+    "Rustboro City",
+    "Ballonlea",
+    "Littleroot Town",
+    "Hearthome City"
+   ]
+  },
+  "LR": {
+   "pod_name": "3-6-11-14",
+   "teams": [
+    "Goldenrod City",
+    "Driftveil City",
+    "Lake of Rage",
+    "Dendemille Town"
+   ]
+  }
+ },
+ "6": {
+  "UL": {
+   "pod_name": "1-8-9-16",
+   "teams": [
+    "Pastoria City",
+    "Eterna City",
+    "Isle of Armor",
+    "Mount Hokulani"
+   ]
+  },
+  "UR": {
+   "pod_name": "2-7-10-15",
+   "teams": [
+    "Hammerlocke",
+    "Ruins of Alph",
+    "Levincia",
+    "Pacifidlog Town"
+   ]
+  },
+  "LL": {
+   "pod_name": "4-5-12-13",
+   "teams": [
+    "Aether Paradise",
+    "Los Platos",
+    "Tapu Village",
+    "Pallet Town"
+   ]
+  },
+  "LR": {
+   "pod_name": "3-6-11-14",
+   "teams": [
+    "Fuchsia City",
+    "Sevii Islands",
+    "Undella Town",
+    "Celadon City"
+   ]
+  }
+ },
+ "7": {
+  "UL": {
+   "pod_name": "1-8-9-16",
+   "teams": [
+    "Slateport City",
+    "Geosenge Town",
+    "Humilau City",
+    "Wedgehurst"
+   ]
+  },
+  "UR": {
+   "pod_name": "2-7-10-15",
+   "teams": [
+    "Hulbury",
+    "Phenac City",
+    "Kiloude City",
+    "Vast Poni Canyon"
+   ]
+  },
+  "LL": {
+   "pod_name": "4-5-12-13",
+   "teams": [
+    "Oldale Town",
+    "Battle Zone",
+    "Wyndon North",
+    "Paniola Town"
+   ]
+  },
+  "LR": {
+   "pod_name": "3-6-11-14",
+   "teams": [
+    "Lavender Town",
+    "Ilex Forest",
+    "Couriway Town",
+    "Aspertia City"
+   ]
+  }
+ },
+ "8": {
+  "UL": {
+   "pod_name": "1-8-9-16",
+   "teams": [
+    "Cerulean Cape",
+    "Mossdeep City",
+    "New Bark Town",
+    "Mahogany Town"
+   ]
+  },
+  "UR": {
+   "pod_name": "2-7-10-15",
+   "teams": [
+    "Nacrene City",
+    "Pewter City",
+    "Coumarine City",
+    "Icirrus City"
+   ]
+  },
+  "LL": {
+   "pod_name": "4-5-12-13",
+   "teams": [
+    "Snowbelle City",
+    "Aquacorde Town",
+    "Cerulean City",
+    "Heahea City"
+   ]
+  },
+  "LR": {
+   "pod_name": "3-6-11-14",
+   "teams": [
+    "Lavaridge Town",
+    "Mount Mortar",
+    "Floccesy Town",
+    "Blackthorn City"
+   ]
+  }
+ },
+ "9": {
+  "UL": {
+   "pod_name": "1-8-9-16",
+   "teams": [
+    "Boyleland",
+    "Saffron City",
+    "Viridian City",
+    "Twinleaf Town"
+   ]
+  },
+  "UR": {
+   "pod_name": "2-7-10-15",
+   "teams": [
+    "Montenevera",
+    "Cycling Road",
+    "Gateon Port",
+    "Fighting Dojo"
+   ]
+  },
+  "LL": {
+   "pod_name": "4-5-12-13",
+   "teams": [
+    "Vientown",
+    "Oreburgh City",
+    "Circhester Bay",
+    "Ambrette Town"
+   ]
+  },
+  "LR": {
+   "pod_name": "3-6-11-14",
+   "teams": [
+    "Haruba Village",
+    "Poni Meadow",
+    "Dewford Town",
+    "Laverre City"
+   ]
+  }
+ },
+ "10": {
+  "UL": {
+   "pod_name": "1-8-9-16",
+   "teams": [
+    "Verdanturf Town",
+    "Iki Town",
+    "Artazon",
+    "Hau'oli City"
+   ]
+  },
+  "UR": {
+   "pod_name": "2-7-10-15",
+   "teams": [
+    "Azalea Town",
+    "Tilt Village",
+    "City of Circhester",
+    "Summerland"
+   ]
+  },
+  "LL": {
+   "pod_name": "4-5-12-13",
+   "teams": [
+    "Mauville City",
+    "Alfornada",
+    "Ecruteak City",
+    "Lacunosa Town"
+   ]
+  },
+  "LR": {
+   "pod_name": "3-6-11-14",
+   "teams": [
+    "Jubilife City",
+    "Solaceon Town",
+    "Medali",
+    "Turffield"
+   ]
+  }
+ }
+}

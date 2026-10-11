@@ -46,14 +46,17 @@ from deckfield_ratings import (
     get_connection, taper_n, export_teams_for_deckfield,
     export_matchday_batches, rank_elo_history,
     pa_cup_real_results, pa_cup_round_preview, pa_cup_round1_seeding,
-    compute_strength_breakdown, generate_pod_schedule,
+    compute_strength_breakdown,
     rds_cup_real_results, rds_cup_round_pairings,
     regional_standings_seeds, regional_tournament_games, rt_game_result, REGION_COLORS,
     world_championship_field, rds_mutual_stage_data, pa_mutual_stage_data, home_away_records,
-    world_championship_overview,
+    world_championship_overview, pod_blocks, pod_round_games, CURRENT_SEASON,
+    blended_outputs, blend_weights, TIEBREAK_DSCR_CAP, TIEBREAK_DSCR_CAP_FROM_SEASON,
+    rds_cup_bracket_data, schedule_orders_view, ROOT,
 )
 
-SEASON = 9
+# The season is a setting (season.json / DECKFIELD_SEASON), read by the engine.
+SEASON = CURRENT_SEASON
 DASHBOARD_PATH = sys.argv[1] if len(sys.argv) > 1 else "deckfield_dashboard.html"
 
 
@@ -143,11 +146,13 @@ def _records_for(conn, team_id, latest_round):
     }
 
 
-def _dscr_avg(conn, team_id, latest_round, game_type):
+def _dscr_avg(conn, team_id, latest_round, game_type, cap=None):
     """Average raw DMAX score (games.dscr_a/dscr_b) across a team's games of
     one game_type -- DATA's dscr_regional_avg/dscr_league_avg. Confirmed
     exact against Canalave City's real numbers (85.74 regional, 183.75
-    league) before trusting this for the full roster."""
+    league) before trusting this for the full roster. With `cap`, each game
+    counts for at most that much: the standings tiebreak's own average from
+    Season 10 (SEASON10_PLAN B9a), which the Standings tab's tbOf reads."""
     rows = conn.execute("""
         SELECT dscr_a, dscr_b, team_a FROM games
         WHERE season=? AND round<=? AND game_type=? AND (team_a=? OR team_b=?)
@@ -155,6 +160,8 @@ def _dscr_avg(conn, team_id, latest_round, game_type):
     if not rows:
         return 0.0
     vals = [r["dscr_a"] if r["team_a"] == team_id else r["dscr_b"] for r in rows]
+    if cap is not None:
+        vals = [min(v, cap) for v in vals]
     return round(sum(vals) / len(vals), 2)
 
 
@@ -165,8 +172,17 @@ def _raw_elo(conn, team_id, latest_round):
         ORDER BY round DESC LIMIT 1
     """, (SEASON, latest_round, team_id, team_id)).fetchone()
     if row is None:
-        return None
+        # Before a team's first game it holds the Elo it carried over.
+        carried = conn.execute("SELECT starting_elo FROM team_seasons WHERE season=? AND team_id=?",
+                               (SEASON, team_id)).fetchone()
+        return carried["starting_elo"] if carried else None
     return row["elo_a_after"] if row["team_a"] == team_id else row["elo_b_after"]
+
+
+def _r(value, places):
+    """round(), passing NULL through: the round-0 opening state has no PDG,
+    SOS, SOV, EYE or normalised Elo/Cups/EX until games are played."""
+    return None if value is None else round(value, places)
 
 
 def build_data():
@@ -182,8 +198,14 @@ def build_data():
         JOIN teams t ON t.team_id = r.team_id
         JOIN team_seasons ts ON ts.team_id = r.team_id AND ts.season = r.season
         WHERE r.season = ? AND r.round = ?
-        ORDER BY r.ovr DESC
+        ORDER BY COALESCE(r.ovr_blend, r.ovr) DESC
     """, (SEASON, latest_round)).fetchall()
+    # During the blend window (SEASON10_PLAN B4) Rank follows BLENDED OVR, and
+    # the Raw vs Blended view (B4a) shows raw, seed and blended side by side.
+    seeds = {r["team_id"]: r for r in conn.execute(
+        "SELECT * FROM season_carryover_seeds WHERE season=?", (SEASON,))}
+    blended = blended_outputs(SEASON, latest_round)
+    capped = SEASON >= TIEBREAK_DSCR_CAP_FROM_SEASON
 
     # Home/away splits come from the engine rather than being recomputed here:
     # they need games.host_team_id, which host_region cannot substitute for
@@ -203,16 +225,46 @@ def build_data():
             "dscr_regional_avg": _dscr_avg(conn, r["team_id"], latest_round, "R"),
             "dscr_league_avg": _dscr_avg(conn, r["team_id"], latest_round, "L"),
             "tot": round(r["tot"]), "elo_raw": round(_raw_elo(conn, r["team_id"], latest_round) or 0),
-            "ovr": round(r["ovr"], 2), "rw": round(r["rw"], 2), "lw": round(r["lw"], 2),
-            "pf": round(r["pf_norm"], 2), "pa": round(r["pa_norm"], 2), "pdg": round(r["pdg"], 2),
-            "sos": round(r["sos"], 2), "sov": round(r["sov"], 2), "dscr": round(r["dscr_comp"], 2),
-            "eye": round(r["eye"], 2), "elo_comp": round(r["elo_comp"], 2), "cups": round(r["cups"], 2),
-            "ex": round(r["ex_norm"], 2), "fatigue": round(r["fatigue_after"], 1) if r["fatigue_after"] is not None else None,
+            "ovr": round(r["ovr"], 2), "rw": _r(r["rw"], 2), "lw": _r(r["lw"], 2),
+            "pf": round(r["pf_norm"], 2), "pa": round(r["pa_norm"], 2), "pdg": _r(r["pdg"], 2),
+            "sos": _r(r["sos"], 2), "sov": _r(r["sov"], 2), "dscr": _r(r["dscr_comp"], 2),
+            "eye": _r(r["eye"], 2), "elo_comp": _r(r["elo_comp"], 2), "cups": _r(r["cups"], 2),
+            "ex": _r(r["ex_norm"], 2), "fatigue": round(r["fatigue_after"], 1) if r["fatigue_after"] is not None else None,
             "rlstr": round(r["rlstr_own"], 4), "clim": round(r["climate"], 2), "grade": r["grade"],
             "log": rec["log"], "rank": rank,
         })
+        if capped:
+            # The standings tiebreak's capped averages (B9a); the uncapped ones
+            # above stay for display.
+            teams_out[-1]["dscr_regional_tb"] = _dscr_avg(conn, r["team_id"], latest_round, "R",
+                                                          TIEBREAK_DSCR_CAP)
+            teams_out[-1]["dscr_league_tb"] = _dscr_avg(conn, r["team_id"], latest_round, "L",
+                                                        TIEBREAK_DSCR_CAP)
+        sd = seeds.get(r["team_id"])
+        if sd is not None:
+            bl = blended[r["team_id"]]
+            teams_out[-1]["ovr_blend"] = round(bl["ovr"], 2)
+            teams_out[-1]["blend"] = {
+                "ovr": [_r(r["ovr"], 2) if latest_round else None, round(sd["ovr_seed"], 2), round(bl["ovr"], 2)],
+                "pf": [_r(r["pf_norm"], 2) if latest_round else None, round(sd["pf_seed"], 2), round(bl["pf"], 2)],
+                "pa": [_r(r["pa_norm"], 2) if latest_round else None, round(sd["pa_seed"], 2), round(bl["pa"], 2)],
+                "dscr": [_r(r["d_sqrt_raw"], 2) if latest_round else None, round(sd["dscr_seed"], 2),
+                         round(bl["dscr"], 2)],
+                # The fatigue seed IS the season's starting fatigue, already
+                # inside the raw value, so the game is handed raw fatigue.
+                "fatigue": [_r(r["fatigue_after"], 1), round(sd["fatigue_seed"], 1), _r(r["fatigue_after"], 1)],
+            }
     conn.close()
-    return {"season": SEASON, "round": latest_round, "ex_taper_n": taper_n(latest_round), "teams": teams_out}
+    out = {"season": SEASON, "round": latest_round, "ex_taper_n": taper_n(latest_round), "teams": teams_out}
+    if seeds:
+        # The blend weight for the NEXT matchday: X of 8 from this season.
+        # The Raw vs Blended view shows only while X < 8 (it hides on the data,
+        # not on a hardcoded round).
+        x, y = blend_weights((latest_round or 0) + 1)
+        out["blend"] = {"x": x, "y": y, "next_matchday": (latest_round or 0) + 1, "active": x < 8}
+    if capped:
+        out["tiebreak_dscr_cap"] = TIEBREAK_DSCR_CAP
+    return out
 
 
 def build_next_matchday():
@@ -323,18 +375,18 @@ def build_schedule_data():
         ).fetchall()
         return {frozenset((r["team_a"], r["team_b"])): (r["team_a"], r["pf_a"], r["pa_a"]) for r in rows}
 
-    def build_mode(pods_path, game_type):
-        with open(pods_path) as f:
-            pod_blocks = json.load(f)
+    def build_mode(game_type):
         scores = pair_scores(game_type)
+        # Round n of each group is that group's own nth game (from Season 10
+        # every region and division plays the definitions in its own drawn
+        # order), so the rounds come from the engine, not the raw outline.
+        by_round = {rnd: pod_round_games(game_type, rnd, SEASON) for rnd in range(1, 16)}
         out = {}
-        for group_name, pod_block in pod_blocks.items():
-            pods = {label: info["teams"] for label, info in pod_block.items()}
-            sched = generate_pod_schedule(pods)
+        for group_name in pod_blocks(game_type, SEASON):
             out[group_name] = {}
             for rnd in range(1, 16):
                 games = []
-                for home, away in sched[rnd]:
+                for home, away in by_round[rnd][group_name]:
                     home_dex, away_dex = name_to_dex[home], name_to_dex[away]
                     game = {"home": home, "away": away, "home_dex": home_dex, "away_dex": away_dex}
                     entry = scores.get(frozenset((home_dex, away_dex)))
@@ -349,8 +401,8 @@ def build_schedule_data():
         return out
 
     data = {
-        "regional": build_mode("conf_pods.json", "R"),
-        "league": build_mode("league_pods.json", "L"),
+        "regional": build_mode("R"),
+        "league": build_mode("L"),
     }
     conn.close()
     return data
@@ -529,22 +581,73 @@ DERIVED_CONSTS = {
     "PA_CUP_DATA", "PA_REAL_RESULTS", "PA_ROUND_PAIRINGS", "PA_SWAP_LOG",
     "STRENGTH_DATA", "RT_DATA", "TEAMS_EXPORT_TSV", "QUALIFICATION_DATA",
     "RDS_MUTUAL_STAGE", "PA_MUTUAL_STAGE", "WC_DATA", "HOF_DATA",
+    # CUP_BRACKET_DATA was STATIC through Season 9 ("fixed for the season") --
+    # true within a season, false across them: the seeding is redrawn every
+    # season (SEASON10_PLAN B9), so it is rebuilt from the season's seed file.
+    "CUP_BRACKET_DATA",
+    # From Season 10: each group's drawn round order (Standings > Orders),
+    # and the Legacy Points table (Hall of Fame > Legacy Points), read from
+    # their committed files every run so an end-of-season update reaches it.
+    "SCHEDULE_ORDERS", "LEGACY_DATA",
 }
 
 # STATIC: genuinely fixed, with the reason it can never go stale. Anything
 # that depends on standings, ratings, results or a generator function
 # belongs in DERIVED, not here.
 STATIC_CONSTS = {
-    "CUP_BRACKET_DATA": "real RDS Cup round-1 seed data, fixed for the season",
+    "S9_HISTORY": "Season 9's frozen record (archive/s9_final.json + its standings order); "
+                  "a finished season never changes -- checked against the archive every run",
     "PROMO_RELEGATION": "league promotion/relegation rules, not results",
     "RANK_BY_DEX": "computed client-side from DATA, so it follows it automatically",
     "REGION_BY_NAME": "region name lookup table",
     "REGION_COLORS": "fixed palette, mirrored from deckfield.html",
     "REGION_DISPLAY": "internal -> display region names",
     "REGION_ORDER": "fixed display order of the 10 regions",
-    "ROUND_LABELS": "static label strings",
     "RT_MD_LABELS": "static label strings",
 }
+
+
+# The finished seasons whose history tab this dashboard carries, and what each
+# tab reads: the frozen record's constants (archive/s<N>_final.json) plus the
+# final standings ORDER (archive/s<N>_inputs.json), which the frozen page only
+# ever worked out in the browser and the history tab, by rule, cannot re-derive
+# with the live renderers (SEASON10_PLAN A3).
+HISTORY_SEASONS = (9,)
+HISTORY_KEYS = (
+    "DATA", "SCHEDULE_DATA", "STRENGTH_DATA", "CUP_BRACKET_DATA", "CUP_REAL_RESULTS",
+    "RDS_ROUND_PAIRINGS", "RDS_MUTUAL_STAGE", "PA_CUP_DATA", "PA_REAL_RESULTS",
+    "PA_ROUND_PAIRINGS", "PA_MUTUAL_STAGE", "PA_SWAP_LOG", "RT_DATA", "QUALIFICATION_DATA",
+    "WC_DATA", "RANK_ELO_HISTORY", "PROMO_RELEGATION",
+)
+
+
+def season_history_const(season):
+    """The value of S<N>_HISTORY: numbers only, from the frozen archive."""
+    with open(os.path.join(ROOT, "archive", f"s{season}_final.json")) as f:
+        final = json.load(f)
+    with open(os.path.join(ROOT, "archive", f"s{season}_inputs.json")) as f:
+        inputs = json.load(f)
+    return {
+        "season": season,
+        "through_round": final["meta"]["through_round"],
+        "frozen_on": final["meta"]["frozen_on"],
+        **{k: final["data"][k] for k in HISTORY_KEYS},
+        "standings": {"region": inputs["regional_standings"], "division": inputs["division_standings"]},
+    }
+
+
+def _check_history_consts(content):
+    """Each S<N>_HISTORY constant is STATIC -- written once, never regenerated
+    -- and must still equal its frozen archive. A hand edit, or a change that
+    regenerated it, fails the run here."""
+    for season in HISTORY_SEASONS:
+        name = f"S{season}_HISTORY"
+        m = re.search(rf'^const {name} = (.*);$', content, re.M)
+        if m is None:
+            raise RuntimeError(f"{name} is missing from the dashboard")
+        if json.loads(m.group(1)) != season_history_const(season):
+            raise RuntimeError(f"{name} no longer equals archive/s{season}_final.json -- restore it "
+                               f"from git; a finished season's history is never edited")
 
 
 def _check_const_manifest(content):
@@ -604,11 +707,18 @@ def _replace_subtitle(content):
         "SELECT MAX(round) m FROM games WHERE season=?", (SEASON,)
     ).fetchone()["m"]
     conn.close()
-    pattern = re.compile(r'(<div class="subtitle">Season )\d+( &mdash; through round )\d+(</div>)')
+    # Before a season's first matchday there is no round to be "through".
+    progress = f"through round {latest}" if latest else "preseason"
+    pattern = re.compile(r'(<div class="subtitle">Season )\d+( &mdash; )(?:through round \d+|preseason)(</div>)')
     new_content, n = pattern.subn(
-        lambda m: f"{m.group(1)}{SEASON}{m.group(2)}{latest}{m.group(3)}", content, count=1)
+        lambda m: f"{m.group(1)}{SEASON}{m.group(2)}{progress}{m.group(3)}", content, count=1)
     if n != 1:
         raise RuntimeError(f"expected exactly one header subtitle line, found {n}")
+    # The page title names the season too.
+    new_content, n = re.subn(r'<title>DECKFIELD — Season \d+</title>',
+                             f'<title>DECKFIELD — Season {SEASON}</title>', new_content, count=1)
+    if n != 1:
+        raise RuntimeError(f"expected exactly one <title>, found {n}")
     return new_content
 
 
@@ -640,6 +750,7 @@ def main():
     # Before touching anything: every data constant in the file must be
     # declared either derived (rebuilt below) or static (with a reason).
     _check_const_manifest(content)
+    _check_history_consts(content)
 
     content = _replace_const(content, "DATA", build_data())
 
@@ -678,6 +789,10 @@ def main():
     # Hall of Fame: seasons 1-8 from hall_of_fame.json, the current season
     # derived from real results (deckfield_ratings.hall_of_fame).
     content = _replace_const(content, "HOF_DATA", hall_of_fame(SEASON))
+    content = _replace_const(content, "CUP_BRACKET_DATA", rds_cup_bracket_data(SEASON))
+    content = _replace_const(content, "SCHEDULE_ORDERS", schedule_orders_view(SEASON))
+    with open(os.path.join(ROOT, "legacy_points.json")) as f:
+        content = _replace_const(content, "LEGACY_DATA", json.load(f))
 
     teams_out, tsv = export_teams_for_deckfield(SEASON)
     pattern = re.compile(r'const TEAMS_EXPORT_TSV = "(?:[^"\\]|\\.)*";\n')

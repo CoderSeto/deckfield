@@ -363,7 +363,12 @@ def run_full_migration(workbook_path=None):
     walkovers, EX bonus, fatigue, host regions, RDS Cup tagging, and the
     corrected fatigue recompute. Safe to re-run from scratch (init_db is
     idempotent; re-migrating overwrites prior data for the same season)."""
-    from deckfield_ratings import add_walkover, get_connection, recompute_all_fatigue_deltas
+    from deckfield_ratings import add_walkover, get_connection, recompute_all_fatigue_deltas, CURRENT_SEASON
+    if CURRENT_SEASON != SEASON:
+        raise SystemExit(
+            f"migrate_s9 rebuilds Season 9, but the engine is configured for Season {CURRENT_SEASON} "
+            f"(its calendar and data files would be the wrong season's). Run it as "
+            f"DECKFIELD_SEASON=9 DECKFIELD_DB=<a separate .db> -- see CLAUDE.md.")
 
     wb = openpyxl.load_workbook(workbook_path or XLSM_PATH, data_only=True, keep_vba=True)
 

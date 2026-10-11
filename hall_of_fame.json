@@ -131,6 +131,22 @@
        "region": "Kalosite"
       }
      ]
+    },
+    "9": {
+     "labels": [
+      "World Champion",
+      "World Finalist"
+     ],
+     "teams": [
+      {
+       "name": "Casseroya Lake",
+       "region": "Terastal"
+      },
+      {
+       "name": "Nimbasa City",
+       "region": "Vertress"
+      }
+     ]
     }
    }
   },
@@ -233,12 +249,50 @@
        "region": "Kalosite"
       }
      ]
+    },
+    "9": {
+     "labels": [
+      "PA Cup Champion",
+      "PA Cup Runner-up"
+     ],
+     "teams": [
+      {
+       "name": "Cabo Poco",
+       "region": "Terastal"
+      },
+      {
+       "name": "Snowpoint City",
+       "region": "LilyValley"
+      }
+     ]
     }
    }
   },
   "rds": {
    "title": "Regional Cups",
-   "seasons": {}
+   "seasons": {
+    "9": {
+     "labels": [
+      "Ribbon Cup Winner",
+      "Dream Cup Winner",
+      "Star Cup Winner"
+     ],
+     "teams": [
+      {
+       "name": "Canalave City",
+       "region": "LilyValley"
+      },
+      {
+       "name": "Cocona Village",
+       "region": "Phoenix"
+      },
+      {
+       "name": "Casseroya Lake",
+       "region": "Terastal"
+      }
+     ]
+    }
+   }
   },
   "league": {
    "title": "League Championship",
@@ -402,6 +456,32 @@
        "region": "Silver"
       }
      ]
+    },
+    "9": {
+     "labels": [
+      "First Div. Champion",
+      "First Div. Second",
+      "First Div. Third",
+      "2nd Div. Champion"
+     ],
+     "teams": [
+      {
+       "name": "Canalave City",
+       "region": "LilyValley"
+      },
+      {
+       "name": "Pueltown",
+       "region": "Phoenix"
+      },
+      {
+       "name": "National Park",
+       "region": "Silver"
+      },
+      {
+       "name": "Vermilion City",
+       "region": "Indigo"
+      }
+     ]
     }
    }
   }
@@ -439,6 +519,10 @@
    "8": {
     "name": "Mount Moon",
     "region": "Indigo"
+   },
+   "9": {
+    "name": "Victory Road",
+    "region": "Indigo"
    }
   },
   "Delta": {
@@ -472,6 +556,10 @@
    },
    "8": {
     "name": "Lilycove City",
+    "region": "Delta"
+   },
+   "9": {
+    "name": "Petalburg City",
     "region": "Delta"
    }
   },
@@ -510,6 +598,10 @@
    "8": {
     "name": "Canalave City",
     "region": "LilyValley"
+   },
+   "9": {
+    "name": "Snowpoint City",
+    "region": "LilyValley"
    }
   },
   "Vertress": {
@@ -543,6 +635,10 @@
    },
    "8": {
     "name": "Castelia City",
+    "region": "Vertress"
+   },
+   "9": {
+    "name": "Mistralton City",
     "region": "Vertress"
    }
   },
@@ -578,6 +674,10 @@
    "8": {
     "name": "Camphrier Town",
     "region": "Kalosite"
+   },
+   "9": {
+    "name": "Camphrier Town",
+    "region": "Kalosite"
    }
   },
   "Lanakila": {
@@ -608,6 +708,10 @@
    "8": {
     "name": "Konikoni City",
     "region": "Lanakila"
+   },
+   "9": {
+    "name": "Po Town",
+    "region": "Lanakila"
    }
   },
   "Dynamax": {
@@ -635,6 +739,10 @@
    "8": {
     "name": "Spikemuth",
     "region": "Dynamax"
+   },
+   "9": {
+    "name": "Stow-on-Side",
+    "region": "Dynamax"
    }
   },
   "Phoenix": {
@@ -657,6 +765,10 @@
    "8": {
     "name": "Agate Village",
     "region": "Phoenix"
+   },
+   "9": {
+    "name": "Dolce Island",
+    "region": "Phoenix"
    }
   },
   "Silver": {
@@ -673,6 +785,10 @@
     "region": "Silver"
    },
    "8": {
+    "name": "National Park",
+    "region": "Silver"
+   },
+   "9": {
     "name": "National Park",
     "region": "Silver"
    }
@@ -692,6 +808,10 @@
    },
    "8": {
     "name": "Mesagoza",
+    "region": "Terastal"
+   },
+   "9": {
+    "name": "Casseroya Lake",
     "region": "Terastal"
    }
   }
@@ -1118,6 +1238,64 @@
    {
     "name": "Cyllage City",
     "region": "Kalosite"
+   }
+  ],
+  "9": [
+   {
+    "name": "Camphrier Town",
+    "region": "Kalosite"
+   },
+   {
+    "name": "Petalburg City",
+    "region": "Delta"
+   },
+   {
+    "name": "Blueberry Terarium",
+    "region": "Terastal"
+   },
+   {
+    "name": "Canalave City",
+    "region": "LilyValley"
+   },
+   {
+    "name": "Snowpoint City",
+    "region": "LilyValley"
+   },
+   {
+    "name": "Mesagoza",
+    "region": "Terastal"
+   },
+   {
+    "name": "Mistralton City",
+    "region": "Vertress"
+   },
+   {
+    "name": "National Park",
+    "region": "Silver"
+   },
+   {
+    "name": "Po Town",
+    "region": "Lanakila"
+   },
+   {
+    "name": "Victory Road",
+    "region": "Indigo"
+   },
+   {
+    "name": "Cabo Poco",
+    "region": "Terastal"
+   },
+   {
+    "name": "Anistar City",
+    "region": "Kalosite"
+   },
+   {
+    "name": "Lumiose City",
+    "region": "Kalosite"
+   },
+   {
+    "name": "Lake of Rage",
+    "region": "Silver"
    }
   ]
  }
