@@ -4104,6 +4104,24 @@ that nothing re-checks. When a structural constant moves, `grep` for the old
 value as a literal -- `PA_BRACKET_LAST_ROUND` was updated everywhere it was
 *named* and missed the one place it was *spelled out*.
 
+**Every cup name in its region colour, losers dimmed, 2026-10-11 (per explicit
+request).** The RDS and PA Cup tabs coloured only a game's winner and left the
+loser plain. They now follow the WC Play-in's convention through one helper,
+`sideNameHtml(name, lost)`: every team in its own region's colour, and the loser
+of a played game -- or of a decided tie, on the AGG line -- at half opacity.
+Unplayed preview rows colour both names. The League standings colour their team
+names too (Regional standings, one region per box, stay plain). Verified on a
+fully played synthetic season: 0 uncoloured names across all three RDS cups and
+PA, exactly one dimmed name per scored row (each leg, AGG line and PA final
+game), all 160 League names coloured, zero `pageerror`.
+
+**Edit the live code, never the embedded S9 page.** `S9_PAGE` holds the frozen
+S9 dashboard's own copy of these renderers as one JSON string, so a
+search-and-replace across the whole file can match inside it (this change hit
+it: one renderer line appeared twice). Edit only what precedes `const S9_PAGE`;
+`regenerate_dashboard.py` rewrites the embed from the checksummed file and
+refuses to write if it would differ.
+
 ## The Matchday Pack: one paste in, one file out (2026-10-03, per explicit request)
 
 Asked for a "one-stop-shop" for the per-matchday copy/paste. Before: four

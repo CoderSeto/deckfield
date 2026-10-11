@@ -941,6 +941,13 @@ function winnerNameHtml(teamName) {
   return `<span style="${style}">${teamName}</span>`;
 }
 const regionName = r => REGION_DISPLAY[r] || r;
+// Every team in its own region's colour, the loser dimmed once its game or
+// tie is decided -- the World Championship Play-in's convention, used on the
+// RDS and PA Cup tabs too (per explicit request, 2026-10-11).
+function sideNameHtml(teamName, lost) {
+  const html = winnerNameHtml(teamName);
+  return lost ? `<span style="opacity:.5">${html}</span>` : html;
+}
 
 function gradeClass(g) {
   if (['SS','S'].includes(g)) return 'g-elite';
@@ -1246,7 +1253,7 @@ function renderStandings() {
         ${standingsMode === 'division' ? `<td class="num ${markerClass}">${marker || ''}</td>` : ''}
         <td class="rank-num ${i<3?'top3':''}" style="${divider}">${i+1}</td>
         <td class="num" style="${divider}">${t.rank}</td>
-        <td class="team-name" style="${divider}">${t.name}</td>
+        <td class="team-name" style="${divider}">${standingsMode === 'division' ? winnerNameHtml(t.name) : t.name}</td>
         <td class="num" style="${divider}">${standingsMode === 'region' ? t.regional : t.league}</td>
         <td class="num" style="${divider}">${h2hDisplayFor(t, tieGroupOf[t.dex], gameType)}</td>
         <td class="num" style="${divider}">${Math.round(tbOf(t, standingsMode))}</td>
@@ -1506,9 +1513,9 @@ function rdsRound1RowHtml(e, winnerSet, scoreByTeam) {
   }
   const homeWon = winnerSet.has(e.home);
   const awayWon = winnerSet.has(e.away);
-  const awayHtml = awayWon ? winnerNameHtml(e.away) : e.away;
-  const homeHtml = homeWon ? winnerNameHtml(e.home) : e.home;
   const result = scoreByTeam.get(e.home) || scoreByTeam.get(e.away);
+  const awayHtml = sideNameHtml(e.away, result && !awayWon);
+  const homeHtml = sideNameHtml(e.home, result && !homeWon);
   let scoreText = '&ndash;';
   if (result) {
     const homeScore = homeWon ? result.winner_score : result.loser_score;
@@ -1526,9 +1533,9 @@ function rdsRound1RowHtml(e, winnerSet, scoreByTeam) {
 function rdsRound3RowHtml(e) {
   return `
     <tr>
-      <td class="sb-away"><span class="sb-rank">#${e.away_seed}</span> ${e.away}</td>
+      <td class="sb-away"><span class="sb-rank">#${e.away_seed}</span> ${winnerNameHtml(e.away)}</td>
       <td class="sb-score">&ndash;</td>
-      <td class="sb-home">${e.home} <span class="sb-rank">#${e.home_seed}</span></td>
+      <td class="sb-home">${winnerNameHtml(e.home)} <span class="sb-rank">#${e.home_seed}</span></td>
     </tr>
   `;
 }
@@ -1603,9 +1610,9 @@ const PA_CUP_DATA = {"draw_round1": [{"row": [160, 97, 96, 33, 32], "home_seed":
 function pacupRowHtml(g, winnerSet, scoreByTeam) {
   const homeWon = winnerSet.has(g.home);
   const awayWon = winnerSet.has(g.away);
-  const awayHtml = awayWon ? winnerNameHtml(g.away) : g.away;
-  const homeHtml = homeWon ? winnerNameHtml(g.home) : g.home;
   const result = scoreByTeam.get(g.home) || scoreByTeam.get(g.away);
+  const awayHtml = sideNameHtml(g.away, result && !awayWon);
+  const homeHtml = sideNameHtml(g.home, result && !homeWon);
   let scoreText = '&ndash;';
   if (result) {
     const homeScore = homeWon ? result.winner_score : result.loser_score;
@@ -1623,9 +1630,9 @@ function pacupRowHtml(g, winnerSet, scoreByTeam) {
 function pacupPreviewRowHtml(e) {
   return `
     <tr>
-      <td class="sb-away"><span class="sb-rank">#${e.away_seed}</span> ${e.away}</td>
+      <td class="sb-away"><span class="sb-rank">#${e.away_seed}</span> ${winnerNameHtml(e.away)}</td>
       <td class="sb-score">&ndash;</td>
-      <td class="sb-home">${e.home} <span class="sb-rank">#${e.home_seed}</span></td>
+      <td class="sb-home">${winnerNameHtml(e.home)} <span class="sb-rank">#${e.home_seed}</span></td>
     </tr>
   `;
 }
@@ -1747,7 +1754,7 @@ function rdsMutualTieRows(g, results) {
     const away = flip ? g.home : g.away, awaySeed = flip ? g.home_seed : g.away_seed;
     const r = byLeg.get(leg);
     const score = r ? `${scoreOf(r, away)}&ndash;${scoreOf(r, home)}` : '&ndash;';
-    const nm = (n) => (r && r.winner === n) ? winnerNameHtml(n) : escQ(n);
+    const nm = (n) => sideNameHtml(n, r && r.winner !== n);
     return `<tr>
       <td class="sb-away"><span class="sb-rank">#${awaySeed}</span> ${nm(away)}</td>
       <td class="sb-score"><span class="sb-leg">L${leg}</span>${score}</td>
@@ -1765,7 +1772,7 @@ function rdsMutualTieRows(g, results) {
     // _rds_mutual_tie_winner() in the engine.
     const winner = homeTot !== awayTot ? (homeTot > awayTot ? g.home : g.away)
                                        : (g.home_seed <= g.away_seed ? g.home : g.away);
-    const nm = (n) => n === winner ? winnerNameHtml(n) : escQ(n);
+    const nm = (n) => sideNameHtml(n, n !== winner);
     html += `<tr class="sb-agg">
       <td class="sb-away"><span class="sb-rank">#${g.away_seed}</span> ${nm(g.away)}</td>
       <td class="sb-score"><span class="sb-leg">AGG</span>${awayTot}&ndash;${homeTot}</td>
@@ -1812,7 +1819,7 @@ function bo3SeriesRows(f, series) {
   const legs = (series && series.legs) || [];
   let html = legs.map(l => {
     const r = l.result;
-    const nm = n => (r && r.winner === n) ? winnerNameHtml(n) : escQ(n);
+    const nm = n => sideNameHtml(n, r && r.winner !== n);
     return `<tr>
       <td class="sb-away"><span class="sb-rank">#${seedOf[l.away]}</span> ${nm(l.away)}</td>
       <td class="sb-score"><span class="sb-leg">G${l.leg}</span>${r ? `${r.away_score}&ndash;${r.home_score}` : '&ndash;'}</td>
