@@ -1,0 +1,1269 @@
+{
+ "season": 4,
+ "source": {
+  "workbook": "history/s4/Dice Game S4.xlsx",
+  "sha256": "c4b9bb486b63800a1b80e253c3dd37899eb438e523659c2ce6bebfcc4824fa19"
+ },
+ "games": 1328,
+ "walkovers": 0,
+ "titles": {
+  "world": [
+   "Lumiose City",
+   "Hulbury"
+  ],
+  "wcs": [
+   "Lumiose City",
+   "Cinnabar Island"
+  ],
+  "league": [
+   "Virbank City",
+   "South Lakes",
+   "Solaceon Town",
+   "Aqua Resort"
+  ],
+  "regions": {
+   "Delta": [
+    "Dewford Town",
+    "Ever Grande City"
+   ],
+   "Dynamax": [
+    "Spikemuth",
+    "South Lakes"
+   ],
+   "Indigo": [
+    "Cinnabar Island",
+    "Saffron City"
+   ],
+   "Kalosite": [
+    "Lumiose City",
+    "Aquacorde Town"
+   ],
+   "Lanakila": [
+    "Kala'e Bay",
+    "Exeggutor Island"
+   ],
+   "LilyValley": [
+    "Resort Area",
+    "Floaroma City"
+   ],
+   "Phoenix": [
+    "Fall City",
+    "Aqua Resort"
+   ],
+   "Vertress": [
+    "Castelia City",
+    "Anville Town"
+   ]
+  }
+ },
+ "anomalies": [
+  {
+   "finding": "Tilt Village: opening Elo",
+   "check": "opening",
+   "reason": "CalcsX column H gives Tilt Village (11th in the Phoenix preseason) 1777; its S4 games start from 1797, which is the preseason pattern (1808 down to 1792 by finish) and makes the league's opening Elo total exactly 230,400 (1800 x 128). The games' 1797 is archived."
+  }
+ ],
+ "corrections": [
+  {
+   "source_row": 500,
+   "field": "winner",
+   "sheet": "a",
+   "corrected": "Littleroot Town",
+   "reason": "WCS Round 2-B, the season's first 5OT game: the winner cell reads \"a\". Calcs has it: Littleroot Town beat Snowbelle City 25-23 at home (Snowbelle's 7-R string, AL!18+23-25, dex 18 = Littleroot Town)."
+  }
+ ],
+ "events": [
+  {
+   "round": 1,
+   "code": "MD1",
+   "title": "Matchday One (Sat)",
+   "sub": null,
+   "dates": [
+    "D1 8/14",
+    "D2 8/15",
+    "D3 8/16",
+    "D4 8/17",
+    "D5 8/22",
+    "D6 9/4",
+    "D7 9/5",
+    "D8 9/11",
+    "D9 9/16"
+   ],
+   "notes": [],
+   "games": 64,
+   "empty": false,
+   "source_row": 2
+  },
+  {
+   "round": 2,
+   "code": "MD2",
+   "title": "Matchday Two (Sat)",
+   "sub": null,
+   "dates": [
+    "D10 9/23",
+    "D11 9/25",
+    "D12 9/26",
+    "D13 10/7",
+    "D14 10/8",
+    "D15 10/22",
+    "D16 10/23"
+   ],
+   "notes": [],
+   "games": 64,
+   "empty": false,
+   "source_row": 66
+  },
+  {
+   "round": 3,
+   "code": "MD3",
+   "title": "Matchday Three (Sat)",
+   "sub": null,
+   "dates": [
+    "D17 11/5",
+    "D18 11/6",
+    "D19 11/10",
+    "D20 11/11",
+    "D21 11/12",
+    "D22 11/14",
+    "D23 11/17",
+    "D24 11/18"
+   ],
+   "notes": [],
+   "games": 64,
+   "empty": false,
+   "source_row": 130
+  },
+  {
+   "round": 4,
+   "code": "UTL-A",
+   "title": "UTL Matchday A (Tue)",
+   "sub": null,
+   "dates": [
+    "D25 11/20",
+    "D26 12/19"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 194
+  },
+  {
+   "round": 5,
+   "code": "MRL-A",
+   "title": "MRL Matchday A (Tue)",
+   "sub": null,
+   "dates": [
+    "D26 12/19",
+    "D27 12/20"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 206
+  },
+  {
+   "round": 6,
+   "code": "WCS-R1-A",
+   "title": "WCS Round 1-A (Thur)",
+   "sub": null,
+   "dates": [
+    "D28 3/8",
+    "D29 3/9"
+   ],
+   "notes": [],
+   "games": 16,
+   "empty": false,
+   "source_row": 218
+  },
+  {
+   "round": 7,
+   "code": "MD4",
+   "title": "Matchday Four (Sat)",
+   "sub": null,
+   "dates": [
+    "D30 3/11",
+    "D31 3/24",
+    "D32 3/27",
+    "D33 3/28"
+   ],
+   "notes": [
+    "First automated game without cards"
+   ],
+   "games": 48,
+   "empty": false,
+   "source_row": 234
+  },
+  {
+   "round": 8,
+   "code": "UTL-B",
+   "title": "UTL Matchday B (Tue)",
+   "sub": null,
+   "dates": [
+    "D34 5/20"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 282
+  },
+  {
+   "round": 9,
+   "code": "MRL-B",
+   "title": "MRL Matchday B (Tue)",
+   "sub": null,
+   "dates": [
+    "D34 5/20"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 294
+  },
+  {
+   "round": 10,
+   "code": "WCS-R1-B",
+   "title": "WCS Round 1-B (Thur)",
+   "sub": null,
+   "dates": [
+    "D34 5/20"
+   ],
+   "notes": [],
+   "games": 16,
+   "empty": false,
+   "source_row": 306
+  },
+  {
+   "round": 11,
+   "code": "MD5",
+   "title": "Matchday Five (Sat)",
+   "sub": null,
+   "dates": [
+    "D35 5/21"
+   ],
+   "notes": [],
+   "games": 48,
+   "empty": false,
+   "source_row": 322
+  },
+  {
+   "round": 12,
+   "code": "UTL-C",
+   "title": "UTL Matchday C (Tue)",
+   "sub": null,
+   "dates": [
+    "D36 5/23"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 370
+  },
+  {
+   "round": 13,
+   "code": "MRL-C",
+   "title": "MRL Matchday C (Tue)",
+   "sub": null,
+   "dates": [
+    "D37 5/24"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 382
+  },
+  {
+   "round": 14,
+   "code": "WCS-R2-A",
+   "title": "WCS Round 2-A (Thur)",
+   "sub": null,
+   "dates": [
+    "D37 5/24"
+   ],
+   "notes": [],
+   "games": 16,
+   "empty": false,
+   "source_row": 394
+  },
+  {
+   "round": 15,
+   "code": "MD6",
+   "title": "Matchday Six (Sat)",
+   "sub": null,
+   "dates": [
+    "D37 5/24",
+    "D38 5/25"
+   ],
+   "notes": [],
+   "games": 64,
+   "empty": false,
+   "source_row": 410
+  },
+  {
+   "round": 16,
+   "code": "UTL-D",
+   "title": "UTL Matchday D (Tue)",
+   "sub": null,
+   "dates": [
+    "D38 5/25",
+    "D39 5/26"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 474
+  },
+  {
+   "round": 17,
+   "code": "MRL-D",
+   "title": "MRL Matchday D (Tue)",
+   "sub": null,
+   "dates": [
+    "D39 5/26",
+    "D40 5/27"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 486
+  },
+  {
+   "round": 18,
+   "code": "WCS-R2-B",
+   "title": "WCS Round 2-B (Thur)",
+   "sub": null,
+   "dates": [
+    "D40 5/27"
+   ],
+   "notes": [],
+   "games": 16,
+   "empty": false,
+   "source_row": 498
+  },
+  {
+   "round": 19,
+   "code": "MD7",
+   "title": "Matchday Seven (Sat)",
+   "sub": null,
+   "dates": [
+    "D41 5/30",
+    "D42 5/31"
+   ],
+   "notes": [],
+   "games": 64,
+   "empty": false,
+   "source_row": 514
+  },
+  {
+   "round": 20,
+   "code": "UTL-E",
+   "title": "UTL Matchday E (Tue)",
+   "sub": null,
+   "dates": [
+    "D42 5/31",
+    "D43 6/1"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 578
+  },
+  {
+   "round": 21,
+   "code": "MRL-E",
+   "title": "MRL Matchday E (Tue)",
+   "sub": null,
+   "dates": [
+    "D43 6/1"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 590
+  },
+  {
+   "round": 22,
+   "code": "UTL-F",
+   "title": "UTL Matchday F (Thu)",
+   "sub": null,
+   "dates": [
+    "D43 6/1"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 602
+  },
+  {
+   "round": 23,
+   "code": "MRL-F",
+   "title": "MRL Matchday F (Thu)",
+   "sub": null,
+   "dates": [
+    "D43 6/1",
+    "D44 6/2"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 614
+  },
+  {
+   "round": 24,
+   "code": "UTL-G",
+   "title": "UTL Matchday G (Tue)",
+   "sub": null,
+   "dates": [
+    "D45 6/4"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 626
+  },
+  {
+   "round": 25,
+   "code": "MRL-G",
+   "title": "MRL Matchday G (Tue)",
+   "sub": null,
+   "dates": [
+    "D46 6/6"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 638
+  },
+  {
+   "round": 26,
+   "code": "WCS-R3-A",
+   "title": "WCS Round 3-A (Thur)",
+   "sub": null,
+   "dates": [
+    "D47 6/8"
+   ],
+   "notes": [],
+   "games": 16,
+   "empty": false,
+   "source_row": 650
+  },
+  {
+   "round": 27,
+   "code": "MD8",
+   "title": "Matchday Eight (Sat)",
+   "sub": null,
+   "dates": [
+    "D48 6/17",
+    "D49 6/19"
+   ],
+   "notes": [],
+   "games": 48,
+   "empty": false,
+   "source_row": 666
+  },
+  {
+   "round": 28,
+   "code": "UTL-H",
+   "title": "UTL Matchday H (Tue)",
+   "sub": null,
+   "dates": [
+    "D50 6/20"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 714
+  },
+  {
+   "round": 29,
+   "code": "MRL-H",
+   "title": "MRL Matchday H (Tue)",
+   "sub": null,
+   "dates": [
+    "D51 6/21"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 726
+  },
+  {
+   "round": 30,
+   "code": "WCS-R3-B",
+   "title": "WCS Round 3-B (Thur)",
+   "sub": null,
+   "dates": [
+    "D51 6/21"
+   ],
+   "notes": [],
+   "games": 16,
+   "empty": false,
+   "source_row": 738
+  },
+  {
+   "round": 31,
+   "code": "MD9",
+   "title": "Matchday Nine (Sat)",
+   "sub": null,
+   "dates": [
+    "D51 6/21",
+    "D52 6/22"
+   ],
+   "notes": [],
+   "games": 48,
+   "empty": false,
+   "source_row": 754
+  },
+  {
+   "round": 32,
+   "code": "UTL-I",
+   "title": "UTL Matchday I (Tue)",
+   "sub": null,
+   "dates": [
+    "D53 6/29"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 802
+  },
+  {
+   "round": 33,
+   "code": "MRL-I",
+   "title": "MRL Matchday I (Tue)",
+   "sub": null,
+   "dates": [
+    "D53 6/29"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 814
+  },
+  {
+   "round": 34,
+   "code": "WCS-R4-A",
+   "title": "WCS Round 4-A (Thur)",
+   "sub": null,
+   "dates": [
+    "D53 6/29"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 826
+  },
+  {
+   "round": 35,
+   "code": "MD10",
+   "title": "Matchday Ten (Sat)",
+   "sub": null,
+   "dates": [
+    "D53 6/29",
+    "D54 6/30",
+    "D55 7/1"
+   ],
+   "notes": [],
+   "games": 64,
+   "empty": false,
+   "source_row": 834
+  },
+  {
+   "round": 36,
+   "code": "UTL-J",
+   "title": "UTL Matchday J (Tue)",
+   "sub": null,
+   "dates": [
+    "D56 7/2"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 898
+  },
+  {
+   "round": 37,
+   "code": "MRL-J",
+   "title": "MRL Matchday J (Tue)",
+   "sub": null,
+   "dates": [
+    "D56 7/2"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 910
+  },
+  {
+   "round": 38,
+   "code": "WCS-R4-B",
+   "title": "WCS Round 4-B (Thur)",
+   "sub": null,
+   "dates": [
+    "D56 7/2"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 922
+  },
+  {
+   "round": 39,
+   "code": "MD11",
+   "title": "Matchday Eleven (Sat)",
+   "sub": null,
+   "dates": [
+    "D57 7/4",
+    "D58 7/5"
+   ],
+   "notes": [],
+   "games": 64,
+   "empty": false,
+   "source_row": 930
+  },
+  {
+   "round": 40,
+   "code": "UTL-R16-1",
+   "title": "UTL Round of 16 - First Leg",
+   "sub": null,
+   "dates": [
+    "D59 7/7"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 994
+  },
+  {
+   "round": 41,
+   "code": "MRL-R16-1",
+   "title": "MRL Round of 16 - First Leg",
+   "sub": null,
+   "dates": [
+    "D59 7/7"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1002
+  },
+  {
+   "round": 42,
+   "code": "WCS-R16-1",
+   "title": "WCS Round of 16 - First Leg",
+   "sub": null,
+   "dates": [
+    "D59 7/7"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1010
+  },
+  {
+   "round": 43,
+   "code": "MD12",
+   "title": "Matchday Twelve (Sat)",
+   "sub": null,
+   "dates": [
+    "D60 7/9"
+   ],
+   "notes": [],
+   "games": 64,
+   "empty": false,
+   "source_row": 1018
+  },
+  {
+   "round": 44,
+   "code": "UTL-R16-2",
+   "title": "UTL Round of 16 - Second Leg",
+   "sub": null,
+   "dates": [
+    "D61 7/10"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1082
+  },
+  {
+   "round": 45,
+   "code": "MRL-R16-2",
+   "title": "MRL Round of 16 - Second Leg",
+   "sub": null,
+   "dates": [
+    "D61 7/10"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1090
+  },
+  {
+   "round": 46,
+   "code": "WCS-R16-2",
+   "title": "WCS Round of 16 - Second Leg",
+   "sub": null,
+   "dates": [
+    "D61 7/10"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1098
+  },
+  {
+   "round": 47,
+   "code": "MD13",
+   "title": "Matchday Thirteen (Sat)",
+   "sub": null,
+   "dates": [
+    "D62 7/12"
+   ],
+   "notes": [
+    "RIVALRY WEEK"
+   ],
+   "games": 64,
+   "empty": false,
+   "source_row": 1106
+  },
+  {
+   "round": 48,
+   "code": "UTL-QF-1",
+   "title": "UTL Quarterfinal - First Leg",
+   "sub": null,
+   "dates": [
+    "D63 7/13"
+   ],
+   "notes": [
+    "1.4x"
+   ],
+   "games": 4,
+   "empty": false,
+   "source_row": 1170
+  },
+  {
+   "round": 49,
+   "code": "MRL-QF-1",
+   "title": "MRL Quarterfinal - First Leg",
+   "sub": null,
+   "dates": [
+    "D63 7/13"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1174
+  },
+  {
+   "round": 50,
+   "code": "WCS-QF-1",
+   "title": "WCS Quarterfinal - First Leg",
+   "sub": null,
+   "dates": [
+    "D63 7/13"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1178
+  },
+  {
+   "round": 51,
+   "code": "CC-QF-1",
+   "title": "Conference Championship",
+   "sub": "Quarterfinal - First Leg",
+   "dates": [
+    "D63 7/13"
+   ],
+   "notes": [
+    "1.2x"
+   ],
+   "games": 16,
+   "empty": false,
+   "source_row": 1182
+  },
+  {
+   "round": 52,
+   "code": "UTL-QF-2",
+   "title": "UTL Quarterfinal - Second Leg",
+   "sub": null,
+   "dates": [
+    "D64 7/14"
+   ],
+   "notes": [
+    "1.4x"
+   ],
+   "games": 4,
+   "empty": false,
+   "source_row": 1198
+  },
+  {
+   "round": 53,
+   "code": "MRL-QF-2",
+   "title": "MRL Quarterfinal - Second Leg",
+   "sub": null,
+   "dates": [
+    "D64 7/14"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1202
+  },
+  {
+   "round": 54,
+   "code": "WCS-QF-2",
+   "title": "WCS Quarterfinal - Second Leg",
+   "sub": null,
+   "dates": [
+    "D64 7/14"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1206
+  },
+  {
+   "round": 55,
+   "code": "CC-QF-2",
+   "title": "Conference Championship",
+   "sub": "Quarterfinal - Second Leg",
+   "dates": [
+    "D64 7/14"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1210
+  },
+  {
+   "round": 56,
+   "code": "UTL-SF-1",
+   "title": "UTL Semifinal - First Leg",
+   "sub": null,
+   "dates": [
+    "D65 7/18"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1218
+  },
+  {
+   "round": 57,
+   "code": "MRL-SF-1",
+   "title": "MRL Semifinal - First Leg",
+   "sub": null,
+   "dates": [
+    "D65 7/18"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1220
+  },
+  {
+   "round": 58,
+   "code": "WCS-SF-1",
+   "title": "WCS Semifinal - First Leg",
+   "sub": null,
+   "dates": [
+    "D65 7/18"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1222
+  },
+  {
+   "round": 59,
+   "code": "CC-SF-1",
+   "title": "Conference Championship",
+   "sub": "Semifinal - First Leg",
+   "dates": [
+    "D65 7/18"
+   ],
+   "notes": [],
+   "games": 16,
+   "empty": false,
+   "source_row": 1224
+  },
+  {
+   "round": 60,
+   "code": "UTL-SF-2",
+   "title": "UTL Semifinal - Second Leg",
+   "sub": null,
+   "dates": [
+    "D66 7/21"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1240
+  },
+  {
+   "round": 61,
+   "code": "MRL-SF-2",
+   "title": "MRL Semifinal - Second Leg",
+   "sub": null,
+   "dates": [
+    "D66 7/21"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1242
+  },
+  {
+   "round": 62,
+   "code": "WCS-SF-2",
+   "title": "WCS Semifinal - Second Leg",
+   "sub": null,
+   "dates": [
+    "D66 7/21"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1244
+  },
+  {
+   "round": 63,
+   "code": "CC-SF-2",
+   "title": "Conference Championship",
+   "sub": "Semifinal - Second Leg",
+   "dates": [
+    "D66 7/21"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1246
+  },
+  {
+   "round": 64,
+   "code": "UTL-F-1",
+   "title": "UTL Championship - First Leg",
+   "sub": null,
+   "dates": [
+    "D66 7/21"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1254
+  },
+  {
+   "round": 65,
+   "code": "MRL-F-1",
+   "title": "MRL Championship - First Leg",
+   "sub": null,
+   "dates": [
+    "D66 7/21"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1255
+  },
+  {
+   "round": 66,
+   "code": "WCS-F-1",
+   "title": "WCS Championship - First Leg",
+   "sub": null,
+   "dates": [
+    "D66 7/21"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1256
+  },
+  {
+   "round": 67,
+   "code": "CC-F",
+   "title": "Delta Conference Championship",
+   "sub": null,
+   "dates": [
+    "D66 7/21"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1257
+  },
+  {
+   "round": 68,
+   "code": "UTL-F-2",
+   "title": "UTL Championship - Second Leg",
+   "sub": null,
+   "dates": [
+    "D66 7/21"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1265
+  },
+  {
+   "round": 69,
+   "code": "MRL-F-2",
+   "title": "MRL Championship - Second Leg",
+   "sub": null,
+   "dates": [
+    "D66 7/21"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1266
+  },
+  {
+   "round": 70,
+   "code": "WCS-F-2",
+   "title": "WCS Championship - Second Leg",
+   "sub": null,
+   "dates": [
+    "D66 7/21"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1267
+  },
+  {
+   "round": 71,
+   "code": "PO-R-R16-1",
+   "title": "PLAYOFFS - Red Bracket",
+   "sub": "Round of 16 - First Leg",
+   "dates": [
+    "D67 7/27"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1268
+  },
+  {
+   "round": 72,
+   "code": "PO-B-R16-1",
+   "title": "PLAYOFFS - Blue Bracket",
+   "sub": "Round of 16 - First Leg",
+   "dates": [
+    "D67 7/27"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1276
+  },
+  {
+   "round": 73,
+   "code": "PO-R-R16-2",
+   "title": "PLAYOFFS - Red Bracket",
+   "sub": "Round of 16 - Second Leg",
+   "dates": [
+    "D67 7/27"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1284
+  },
+  {
+   "round": 74,
+   "code": "PO-B-R16-2",
+   "title": "PLAYOFFS - Blue Bracket",
+   "sub": "Round of 16 - Second Leg",
+   "dates": [
+    "D67 7/27"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1292
+  },
+  {
+   "round": 75,
+   "code": "PO-R-QF-1",
+   "title": "PLAYOFFS - Red Bracket",
+   "sub": "Quarterfinal - First Leg",
+   "dates": [
+    "D67 7/27"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1300
+  },
+  {
+   "round": 76,
+   "code": "PO-B-QF-1",
+   "title": "PLAYOFFS - Blue Bracket",
+   "sub": "Quarterfinal - First Leg",
+   "dates": [
+    "D67 7/27"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1304
+  },
+  {
+   "round": 77,
+   "code": "PO-R-QF-2",
+   "title": "PLAYOFFS - Red Bracket",
+   "sub": "Quarterfinal - Second Leg",
+   "dates": [
+    "D67 7/27"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1308
+  },
+  {
+   "round": 78,
+   "code": "PO-B-QF-2",
+   "title": "PLAYOFFS - Blue Bracket",
+   "sub": "Quarterfinal - Second Leg",
+   "dates": [
+    "D67 7/27"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1312
+  },
+  {
+   "round": 79,
+   "code": "PO-R-SF-1",
+   "title": "PLAYOFFS - Red Bracket",
+   "sub": "Semifinal - First Leg",
+   "dates": [
+    "D68 7/28"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1316
+  },
+  {
+   "round": 80,
+   "code": "PO-B-SF-1",
+   "title": "PLAYOFFS - Blue Bracket",
+   "sub": "Semifinal - First Leg",
+   "dates": [
+    "D68 7/28"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1318
+  },
+  {
+   "round": 81,
+   "code": "PO-R-SF-2",
+   "title": "PLAYOFFS - Red Bracket",
+   "sub": "Semifinal - Second Leg",
+   "dates": [
+    "D68 7/28"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1320
+  },
+  {
+   "round": 82,
+   "code": "PO-B-SF-2",
+   "title": "PLAYOFFS - Blue Bracket",
+   "sub": "Semifinal - Second Leg",
+   "dates": [
+    "D68 7/28"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1322
+  },
+  {
+   "round": 83,
+   "code": "PO-R-F-1",
+   "title": "PLAYOFFS - Red Final - First Leg",
+   "sub": null,
+   "dates": [
+    "D68 7/28"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1324
+  },
+  {
+   "round": 84,
+   "code": "PO-B-F-1",
+   "title": "PLAYOFFS - Blue Final - First Leg",
+   "sub": null,
+   "dates": [
+    "D68 7/28"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1325
+  },
+  {
+   "round": 85,
+   "code": "PO-R-F-2",
+   "title": "PLAYOFFS - Red Final - Second Leg",
+   "sub": null,
+   "dates": [
+    "D68 7/28"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1326
+  },
+  {
+   "round": 86,
+   "code": "PO-B-F-2",
+   "title": "PLAYOFFS - Blue Final - Second Leg",
+   "sub": null,
+   "dates": [
+    "D68 7/28"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1327
+  },
+  {
+   "round": 87,
+   "code": "WC-F-1",
+   "title": "World Championship - Game One",
+   "sub": null,
+   "dates": [
+    "D68 7/28"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1328
+  },
+  {
+   "round": 88,
+   "code": "WC-F-2",
+   "title": "World Championship - Game Two",
+   "sub": null,
+   "dates": [
+    "D68 7/28"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1329
+  }
+ ]
+}

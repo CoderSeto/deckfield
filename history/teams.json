@@ -257,6 +257,12 @@
     "name": "Celadon City",
     "region": "Indigo",
     "division": "Basic A"
+   },
+   "4": {
+    "dex": 9,
+    "name": "Celadon City",
+    "region": "Indigo",
+    "division": ""
    }
   }
  },
@@ -286,6 +292,12 @@
     "name": "Cerulean City",
     "region": "Indigo",
     "division": "Basic D"
+   },
+   "4": {
+    "dex": 10,
+    "name": "Cerulean City",
+    "region": "Indigo",
+    "division": ""
    }
   }
  },
@@ -315,6 +327,12 @@
     "name": "Saffron City",
     "region": "Indigo",
     "division": "Ultra B"
+   },
+   "4": {
+    "dex": 11,
+    "name": "Saffron City",
+    "region": "Indigo",
+    "division": ""
    }
   }
  },
@@ -344,6 +362,12 @@
     "name": "Vermilion City",
     "region": "Indigo",
     "division": "Ultra B"
+   },
+   "4": {
+    "dex": 12,
+    "name": "Vermilion City",
+    "region": "Indigo",
+    "division": "MRL E"
    }
   }
  },
@@ -373,6 +397,12 @@
     "name": "Cinnabar Island",
     "region": "Indigo",
     "division": "Master"
+   },
+   "4": {
+    "dex": 13,
+    "name": "Cinnabar Island",
+    "region": "Indigo",
+    "division": "MRL C"
    }
   }
  },
@@ -402,6 +432,12 @@
     "name": "Fuchsia City",
     "region": "Indigo",
     "division": "Ultra A"
+   },
+   "4": {
+    "dex": 14,
+    "name": "Fuchsia City",
+    "region": "Indigo",
+    "division": "UTL C"
    }
   }
  },
@@ -431,6 +467,12 @@
     "name": "Pewter City",
     "region": "Indigo",
     "division": "Basic D"
+   },
+   "4": {
+    "dex": 15,
+    "name": "Pewter City",
+    "region": "Indigo",
+    "division": ""
    }
   }
  },
@@ -460,6 +502,12 @@
     "name": "Viridian City",
     "region": "Indigo",
     "division": "Basic B"
+   },
+   "4": {
+    "dex": 16,
+    "name": "Viridian City",
+    "region": "Indigo",
+    "division": ""
    }
   }
  },
@@ -489,6 +537,12 @@
     "name": "Dewford Town",
     "region": "Delta",
     "division": "Master"
+   },
+   "4": {
+    "dex": 17,
+    "name": "Dewford Town",
+    "region": "Delta",
+    "division": "MRL B"
    }
   }
  },
@@ -518,6 +572,12 @@
     "name": "Littleroot Town",
     "region": "Delta",
     "division": "Basic C"
+   },
+   "4": {
+    "dex": 18,
+    "name": "Littleroot Town",
+    "region": "Delta",
+    "division": "UTL F"
    }
   }
  },
@@ -547,6 +607,12 @@
     "name": "Oldale Town",
     "region": "Delta",
     "division": "Ultra A"
+   },
+   "4": {
+    "dex": 19,
+    "name": "Oldale Town",
+    "region": "Delta",
+    "division": ""
    }
   }
  },
@@ -576,6 +642,12 @@
     "name": "Petalburg City",
     "region": "Delta",
     "division": "Basic D"
+   },
+   "4": {
+    "dex": 20,
+    "name": "Petalburg City",
+    "region": "Delta",
+    "division": ""
    }
   }
  },
@@ -605,6 +677,12 @@
     "name": "Fallarbor Town",
     "region": "Delta",
     "division": "Great B"
+   },
+   "4": {
+    "dex": 21,
+    "name": "Fallarbor Town",
+    "region": "Delta",
+    "division": "MRL E"
    }
   }
  },
@@ -634,6 +712,12 @@
     "name": "Lavaridge Town",
     "region": "Delta",
     "division": "Basic A"
+   },
+   "4": {
+    "dex": 22,
+    "name": "Lavaridge Town",
+    "region": "Delta",
+    "division": ""
    }
   }
  },
@@ -663,6 +747,12 @@
     "name": "Rustboro City",
     "region": "Delta",
     "division": "Master"
+   },
+   "4": {
+    "dex": 23,
+    "name": "Rustboro City",
+    "region": "Delta",
+    "division": "UTL E"
    }
   }
  },
@@ -692,6 +782,12 @@
     "name": "Verdanturf Town",
     "region": "Delta",
     "division": "Basic D"
+   },
+   "4": {
+    "dex": 24,
+    "name": "Verdanturf Town",
+    "region": "Delta",
+    "division": ""
    }
   }
  },
@@ -721,6 +817,12 @@
     "name": "Ever Grande City",
     "region": "Delta",
     "division": "Ultra B"
+   },
+   "4": {
+    "dex": 25,
+    "name": "Ever Grande City",
+    "region": "Delta",
+    "division": "MRL D"
    }
   }
  },
@@ -750,6 +852,12 @@
     "name": "Mossdeep City",
     "region": "Delta",
     "division": "Basic D"
+   },
+   "4": {
+    "dex": 26,
+    "name": "Mossdeep City",
+    "region": "Delta",
+    "division": ""
    }
   }
  },
@@ -779,6 +887,12 @@
     "name": "Pacifidlog Town",
     "region": "Delta",
     "division": "Basic C"
+   },
+   "4": {
+    "dex": 27,
+    "name": "Pacifidlog Town",
+    "region": "Delta",
+    "division": ""
    }
   }
  },
@@ -808,6 +922,12 @@
     "name": "Sootopolis City",
     "region": "Delta",
     "division": "Basic A"
+   },
+   "4": {
+    "dex": 28,
+    "name": "Sootopolis City",
+    "region": "Delta",
+    "division": ""
    }
   }
  },
@@ -837,6 +957,12 @@
     "name": "Fortree City",
     "region": "Delta",
     "division": "Basic A"
+   },
+   "4": {
+    "dex": 29,
+    "name": "Fortree City",
+    "region": "Delta",
+    "division": "UTL D"
    }
   }
  },
@@ -866,6 +992,12 @@
     "name": "Lilycove City",
     "region": "Delta",
     "division": "Ultra A"
+   },
+   "4": {
+    "dex": 30,
+    "name": "Lilycove City",
+    "region": "Delta",
+    "division": ""
    }
   }
  },
@@ -895,6 +1027,12 @@
     "name": "Mauville City",
     "region": "Delta",
     "division": "Ultra A"
+   },
+   "4": {
+    "dex": 31,
+    "name": "Mauville City",
+    "region": "Delta",
+    "division": "UTL A"
    }
   }
  },
@@ -924,6 +1062,12 @@
     "name": "Slateport City",
     "region": "Delta",
     "division": "Ultra A"
+   },
+   "4": {
+    "dex": 32,
+    "name": "Slateport City",
+    "region": "Delta",
+    "division": "MRL A"
    }
   }
  },
@@ -953,6 +1097,12 @@
     "name": "Canalave City",
     "region": "LilyValley",
     "division": "Basic C"
+   },
+   "4": {
+    "dex": 33,
+    "name": "Canalave City",
+    "region": "LilyValley",
+    "division": ""
    }
   }
  },
@@ -982,6 +1132,12 @@
     "name": "Jubilife City",
     "region": "LilyValley",
     "division": "Basic C"
+   },
+   "4": {
+    "dex": 34,
+    "name": "Jubilife City",
+    "region": "LilyValley",
+    "division": ""
    }
   }
  },
@@ -1011,6 +1167,12 @@
     "name": "Sandgem Town",
     "region": "LilyValley",
     "division": "Basic C"
+   },
+   "4": {
+    "dex": 35,
+    "name": "Sandgem Town",
+    "region": "LilyValley",
+    "division": ""
    }
   }
  },
@@ -1040,6 +1202,12 @@
     "name": "Twinleaf Town",
     "region": "LilyValley",
     "division": "Great A"
+   },
+   "4": {
+    "dex": 36,
+    "name": "Twinleaf Town",
+    "region": "LilyValley",
+    "division": "UTL F"
    }
   }
  },
@@ -1069,6 +1237,12 @@
     "name": "Eterna City",
     "region": "LilyValley",
     "division": "Basic B"
+   },
+   "4": {
+    "dex": 37,
+    "name": "Eterna City",
+    "region": "LilyValley",
+    "division": "UTL D"
    }
   }
  },
@@ -1098,6 +1272,12 @@
     "name": "Floaroma City",
     "region": "LilyValley",
     "division": "Master"
+   },
+   "4": {
+    "dex": 38,
+    "name": "Floaroma City",
+    "region": "LilyValley",
+    "division": "UTL B"
    }
   }
  },
@@ -1127,6 +1307,12 @@
     "name": "Oreburgh City",
     "region": "LilyValley",
     "division": "Basic D"
+   },
+   "4": {
+    "dex": 39,
+    "name": "Oreburgh City",
+    "region": "LilyValley",
+    "division": ""
    }
   }
  },
@@ -1156,6 +1342,12 @@
     "name": "Snowpoint City",
     "region": "LilyValley",
     "division": "Great C"
+   },
+   "4": {
+    "dex": 40,
+    "name": "Snowpoint City",
+    "region": "LilyValley",
+    "division": "MRL D"
    }
   }
  },
@@ -1214,6 +1406,12 @@
     "name": "Resort Area",
     "region": "LilyValley",
     "division": "Master"
+   },
+   "4": {
+    "dex": 42,
+    "name": "Resort Area",
+    "region": "LilyValley",
+    "division": "MRL C"
    }
   }
  },
@@ -1243,6 +1441,12 @@
     "name": "Sunyshore City",
     "region": "LilyValley",
     "division": "Basic D"
+   },
+   "4": {
+    "dex": 43,
+    "name": "Sunyshore City",
+    "region": "LilyValley",
+    "division": ""
    }
   }
  },
@@ -1272,6 +1476,12 @@
     "name": "Veilstone City",
     "region": "LilyValley",
     "division": "Ultra A"
+   },
+   "4": {
+    "dex": 44,
+    "name": "Veilstone City",
+    "region": "LilyValley",
+    "division": "MRL F"
    }
   }
  },
@@ -1301,6 +1511,12 @@
     "name": "Celestic Town",
     "region": "LilyValley",
     "division": "Basic C"
+   },
+   "4": {
+    "dex": 45,
+    "name": "Celestic Town",
+    "region": "LilyValley",
+    "division": "MRL A"
    }
   }
  },
@@ -1330,6 +1546,12 @@
     "name": "Hearthome City",
     "region": "LilyValley",
     "division": "Basic B"
+   },
+   "4": {
+    "dex": 46,
+    "name": "Hearthome City",
+    "region": "LilyValley",
+    "division": ""
    }
   }
  },
@@ -1359,6 +1581,12 @@
     "name": "Pastoria City",
     "region": "LilyValley",
     "division": "Basic B"
+   },
+   "4": {
+    "dex": 47,
+    "name": "Pastoria City",
+    "region": "LilyValley",
+    "division": ""
    }
   }
  },
@@ -1388,6 +1616,12 @@
     "name": "Solaceon Town",
     "region": "LilyValley",
     "division": "Master"
+   },
+   "4": {
+    "dex": 48,
+    "name": "Solaceon Town",
+    "region": "LilyValley",
+    "division": "UTL C"
    }
   }
  },
@@ -1417,6 +1651,12 @@
     "name": "Anville Town",
     "region": "Vertress",
     "division": "Ultra B"
+   },
+   "4": {
+    "dex": 49,
+    "name": "Anville Town",
+    "region": "Vertress",
+    "division": "MRL B"
    }
   }
  },
@@ -1446,6 +1686,12 @@
     "name": "Aspertia City",
     "region": "Vertress",
     "division": "Basic D"
+   },
+   "4": {
+    "dex": 50,
+    "name": "Aspertia City",
+    "region": "Vertress",
+    "division": ""
    }
   }
  },
@@ -1475,6 +1721,12 @@
     "name": "Floccesy Town",
     "region": "Vertress",
     "division": "Ultra B"
+   },
+   "4": {
+    "dex": 51,
+    "name": "Floccesy Town",
+    "region": "Vertress",
+    "division": "UTL F"
    }
   }
  },
@@ -1504,6 +1756,12 @@
     "name": "Mistralton City",
     "region": "Vertress",
     "division": "Ultra A"
+   },
+   "4": {
+    "dex": 52,
+    "name": "Mistralton City",
+    "region": "Vertress",
+    "division": "UTL B"
    }
   }
  },
@@ -1533,6 +1791,12 @@
     "name": "Driftveil City",
     "region": "Vertress",
     "division": "Basic B"
+   },
+   "4": {
+    "dex": 53,
+    "name": "Driftveil City",
+    "region": "Vertress",
+    "division": ""
    }
   }
  },
@@ -1562,6 +1826,12 @@
     "name": "Icirrus City",
     "region": "Vertress",
     "division": "Basic A"
+   },
+   "4": {
+    "dex": 54,
+    "name": "Icirrus City",
+    "region": "Vertress",
+    "division": ""
    }
   }
  },
@@ -1591,6 +1861,12 @@
     "name": "Nimbasa City",
     "region": "Vertress",
     "division": "Basic B"
+   },
+   "4": {
+    "dex": 55,
+    "name": "Nimbasa City",
+    "region": "Vertress",
+    "division": ""
    }
   }
  },
@@ -1620,6 +1896,12 @@
     "name": "Virbank City",
     "region": "Vertress",
     "division": "Master"
+   },
+   "4": {
+    "dex": 56,
+    "name": "Virbank City",
+    "region": "Vertress",
+    "division": "MRL F"
    }
   }
  },
@@ -1649,6 +1931,12 @@
     "name": "Accumula Town",
     "region": "Vertress",
     "division": "Basic A"
+   },
+   "4": {
+    "dex": 57,
+    "name": "Accumula Town",
+    "region": "Vertress",
+    "division": ""
    }
   }
  },
@@ -1678,6 +1966,12 @@
     "name": "Castelia City",
     "region": "Vertress",
     "division": "Master"
+   },
+   "4": {
+    "dex": 58,
+    "name": "Castelia City",
+    "region": "Vertress",
+    "division": "MRL E"
    }
   }
  },
@@ -1707,6 +2001,12 @@
     "name": "Nacrene City",
     "region": "Vertress",
     "division": "Ultra A"
+   },
+   "4": {
+    "dex": 59,
+    "name": "Nacrene City",
+    "region": "Vertress",
+    "division": ""
    }
   }
  },
@@ -1736,6 +2036,12 @@
     "name": "Striaton City",
     "region": "Vertress",
     "division": "Basic A"
+   },
+   "4": {
+    "dex": 60,
+    "name": "Striaton City",
+    "region": "Vertress",
+    "division": "UTL C"
    }
   }
  },
@@ -1765,6 +2071,12 @@
     "name": "Humilau City",
     "region": "Vertress",
     "division": "Great C"
+   },
+   "4": {
+    "dex": 61,
+    "name": "Humilau City",
+    "region": "Vertress",
+    "division": "MRL C"
    }
   }
  },
@@ -1794,6 +2106,12 @@
     "name": "Lacunosa Town",
     "region": "Vertress",
     "division": "Basic C"
+   },
+   "4": {
+    "dex": 62,
+    "name": "Lacunosa Town",
+    "region": "Vertress",
+    "division": ""
    }
   }
  },
@@ -1823,6 +2141,12 @@
     "name": "Opelucid City",
     "region": "Vertress",
     "division": "Great A"
+   },
+   "4": {
+    "dex": 63,
+    "name": "Opelucid City",
+    "region": "Vertress",
+    "division": ""
    }
   }
  },
@@ -1852,6 +2176,12 @@
     "name": "Undella Town",
     "region": "Vertress",
     "division": "Basic C"
+   },
+   "4": {
+    "dex": 64,
+    "name": "Undella Town",
+    "region": "Vertress",
+    "division": "UTL A"
    }
   }
  },
@@ -1881,6 +2211,12 @@
     "name": "Ambrette Town",
     "region": "Kalosite",
     "division": "Basic D"
+   },
+   "4": {
+    "dex": 65,
+    "name": "Ambrette Town",
+    "region": "Kalosite",
+    "division": ""
    }
   }
  },
@@ -1910,6 +2246,12 @@
     "name": "Cyllage City",
     "region": "Kalosite",
     "division": "Ultra A"
+   },
+   "4": {
+    "dex": 66,
+    "name": "Cyllage City",
+    "region": "Kalosite",
+    "division": "UTL C"
    }
   }
  },
@@ -1939,6 +2281,12 @@
     "name": "Geosenge Town",
     "region": "Kalosite",
     "division": "Ultra B"
+   },
+   "4": {
+    "dex": 67,
+    "name": "Geosenge Town",
+    "region": "Kalosite",
+    "division": "UTL A"
    }
   }
  },
@@ -1968,6 +2316,12 @@
     "name": "Shalour City",
     "region": "Kalosite",
     "division": "Basic A"
+   },
+   "4": {
+    "dex": 68,
+    "name": "Shalour City",
+    "region": "Kalosite",
+    "division": ""
    }
   }
  },
@@ -1997,6 +2351,12 @@
     "name": "Camphrier Town",
     "region": "Kalosite",
     "division": "Basic C"
+   },
+   "4": {
+    "dex": 69,
+    "name": "Camphrier Town",
+    "region": "Kalosite",
+    "division": ""
    }
   }
  },
@@ -2026,6 +2386,12 @@
     "name": "Coumarine City",
     "region": "Kalosite",
     "division": "Ultra B"
+   },
+   "4": {
+    "dex": 70,
+    "name": "Coumarine City",
+    "region": "Kalosite",
+    "division": "UTL D"
    }
   }
  },
@@ -2055,6 +2421,12 @@
     "name": "Laverre City",
     "region": "Kalosite",
     "division": "Great A"
+   },
+   "4": {
+    "dex": 71,
+    "name": "Laverre City",
+    "region": "Kalosite",
+    "division": "MRL D"
    }
   }
  },
@@ -2084,6 +2456,12 @@
     "name": "Lumiose City",
     "region": "Kalosite",
     "division": "Master"
+   },
+   "4": {
+    "dex": 72,
+    "name": "Lumiose City",
+    "region": "Kalosite",
+    "division": "MRL A"
    }
   }
  },
@@ -2113,6 +2491,12 @@
     "name": "Anistar City",
     "region": "Kalosite",
     "division": "Basic A"
+   },
+   "4": {
+    "dex": 73,
+    "name": "Anistar City",
+    "region": "Kalosite",
+    "division": "UTL B"
    }
   }
  },
@@ -2142,6 +2526,12 @@
     "name": "Couriway Town",
     "region": "Kalosite",
     "division": "Basic B"
+   },
+   "4": {
+    "dex": 74,
+    "name": "Couriway Town",
+    "region": "Kalosite",
+    "division": ""
    }
   }
  },
@@ -2171,6 +2561,12 @@
     "name": "Dendemille Town",
     "region": "Kalosite",
     "division": "Basic B"
+   },
+   "4": {
+    "dex": 75,
+    "name": "Dendemille Town",
+    "region": "Kalosite",
+    "division": ""
    }
   }
  },
@@ -2200,6 +2596,12 @@
     "name": "Snowbelle City",
     "region": "Kalosite",
     "division": "Basic C"
+   },
+   "4": {
+    "dex": 76,
+    "name": "Snowbelle City",
+    "region": "Kalosite",
+    "division": "UTL E"
    }
   }
  },
@@ -2229,6 +2631,12 @@
     "name": "Aquacorde Town",
     "region": "Kalosite",
     "division": "Ultra B"
+   },
+   "4": {
+    "dex": 77,
+    "name": "Aquacorde Town",
+    "region": "Kalosite",
+    "division": ""
    }
   }
  },
@@ -2258,6 +2666,12 @@
     "name": "Kiloude City",
     "region": "Kalosite",
     "division": "Basic A"
+   },
+   "4": {
+    "dex": 78,
+    "name": "Kiloude City",
+    "region": "Kalosite",
+    "division": ""
    }
   }
  },
@@ -2287,6 +2701,12 @@
     "name": "Santalune City",
     "region": "Kalosite",
     "division": "Basic A"
+   },
+   "4": {
+    "dex": 79,
+    "name": "Santalune City",
+    "region": "Kalosite",
+    "division": ""
    }
   }
  },
@@ -2316,6 +2736,12 @@
     "name": "Vaniville Town",
     "region": "Kalosite",
     "division": "Ultra A"
+   },
+   "4": {
+    "dex": 80,
+    "name": "Vaniville Town",
+    "region": "Kalosite",
+    "division": "MRL B"
    }
   }
  },
@@ -2345,6 +2771,12 @@
     "name": "Exeggutor Island",
     "region": "Lanakila",
     "division": "Great B"
+   },
+   "4": {
+    "dex": 81,
+    "name": "Exeggutor Island",
+    "region": "Lanakila",
+    "division": ""
    }
   }
  },
@@ -2374,6 +2806,12 @@
     "name": "Poni Meadow",
     "region": "Lanakila",
     "division": "Ultra B"
+   },
+   "4": {
+    "dex": 82,
+    "name": "Poni Meadow",
+    "region": "Lanakila",
+    "division": "UTL D"
    }
   }
  },
@@ -2403,6 +2841,12 @@
     "name": "Seafolk Village",
     "region": "Lanakila",
     "division": "Basic C"
+   },
+   "4": {
+    "dex": 83,
+    "name": "Seafolk Village",
+    "region": "Lanakila",
+    "division": ""
    }
   }
  },
@@ -2432,6 +2876,12 @@
     "name": "Vast Poni Canyon",
     "region": "Lanakila",
     "division": "Basic A"
+   },
+   "4": {
+    "dex": 84,
+    "name": "Vast Poni Canyon",
+    "region": "Lanakila",
+    "division": ""
    }
   }
  },
@@ -2461,6 +2911,12 @@
     "name": "Hau'oli City",
     "region": "Lanakila",
     "division": "Ultra B"
+   },
+   "4": {
+    "dex": 85,
+    "name": "Hau'oli City",
+    "region": "Lanakila",
+    "division": ""
    }
   }
  },
@@ -2490,6 +2946,12 @@
     "name": "Iki Town",
     "region": "Lanakila",
     "division": "Ultra A"
+   },
+   "4": {
+    "dex": 86,
+    "name": "Iki Town",
+    "region": "Lanakila",
+    "division": "UTL C"
    }
   }
  },
@@ -2519,6 +2981,12 @@
     "name": "Kala'e Bay",
     "region": "Lanakila",
     "division": "Master"
+   },
+   "4": {
+    "dex": 87,
+    "name": "Kala'e Bay",
+    "region": "Lanakila",
+    "division": "MRL F"
    }
   }
  },
@@ -2548,6 +3016,12 @@
     "name": "Ultra Megalopolis",
     "region": "Lanakila",
     "division": "Great C"
+   },
+   "4": {
+    "dex": 88,
+    "name": "Ultra Megalopolis",
+    "region": "Lanakila",
+    "division": "MRL B"
    }
   }
  },
@@ -2577,6 +3051,12 @@
     "name": "Malie City",
     "region": "Lanakila",
     "division": "Ultra B"
+   },
+   "4": {
+    "dex": 89,
+    "name": "Malie City",
+    "region": "Lanakila",
+    "division": "MRL C"
    }
   }
  },
@@ -2606,6 +3086,12 @@
     "name": "Mount Hokulani",
     "region": "Lanakila",
     "division": "Great A"
+   },
+   "4": {
+    "dex": 90,
+    "name": "Mount Hokulani",
+    "region": "Lanakila",
+    "division": ""
    }
   }
  },
@@ -2635,6 +3121,12 @@
     "name": "Po Town",
     "region": "Lanakila",
     "division": "Basic A"
+   },
+   "4": {
+    "dex": 91,
+    "name": "Po Town",
+    "region": "Lanakila",
+    "division": ""
    }
   }
  },
@@ -2664,6 +3156,12 @@
     "name": "Tapu Village",
     "region": "Lanakila",
     "division": "Great B"
+   },
+   "4": {
+    "dex": 92,
+    "name": "Tapu Village",
+    "region": "Lanakila",
+    "division": ""
    }
   }
  },
@@ -2693,6 +3191,12 @@
     "name": "Aether Paradise",
     "region": "Lanakila",
     "division": "Basic D"
+   },
+   "4": {
+    "dex": 93,
+    "name": "Aether Paradise",
+    "region": "Lanakila",
+    "division": ""
    }
   }
  },
@@ -2722,6 +3226,12 @@
     "name": "Heahea City",
     "region": "Lanakila",
     "division": "Great A"
+   },
+   "4": {
+    "dex": 94,
+    "name": "Heahea City",
+    "region": "Lanakila",
+    "division": "UTL B"
    }
   }
  },
@@ -2751,6 +3261,12 @@
     "name": "Konikoni City",
     "region": "Lanakila",
     "division": "Basic A"
+   },
+   "4": {
+    "dex": 95,
+    "name": "Konikoni City",
+    "region": "Lanakila",
+    "division": ""
    }
   }
  },
@@ -2780,6 +3296,12 @@
     "name": "Paniola Town",
     "region": "Lanakila",
     "division": "Basic D"
+   },
+   "4": {
+    "dex": 96,
+    "name": "Paniola Town",
+    "region": "Lanakila",
+    "division": "UTL A"
    }
   }
  },
@@ -2809,6 +3331,12 @@
     "name": "Ballonlea",
     "region": "Dynamax",
     "division": "Basic B"
+   },
+   "4": {
+    "dex": 97,
+    "name": "Ballonlea",
+    "region": "Dynamax",
+    "division": ""
    }
   }
  },
@@ -2838,6 +3366,12 @@
     "name": "Stow-on-Side",
     "region": "Dynamax",
     "division": "Basic B"
+   },
+   "4": {
+    "dex": 98,
+    "name": "Stow-on-Side",
+    "region": "Dynamax",
+    "division": ""
    }
   }
  },
@@ -2867,6 +3401,12 @@
     "name": "Wyndon North",
     "region": "Dynamax",
     "division": "Basic C"
+   },
+   "4": {
+    "dex": 99,
+    "name": "Wyndon North",
+    "region": "Dynamax",
+    "division": "MRL F"
    }
   }
  },
@@ -2896,6 +3436,12 @@
     "name": "Wyndon South",
     "region": "Dynamax",
     "division": "Ultra B"
+   },
+   "4": {
+    "dex": 100,
+    "name": "Wyndon South",
+    "region": "Dynamax",
+    "division": "UTL F"
    }
   }
  },
@@ -2925,6 +3471,12 @@
     "name": "City of Circhester",
     "region": "Dynamax",
     "division": "Basic B"
+   },
+   "4": {
+    "dex": 101,
+    "name": "City of Circhester",
+    "region": "Dynamax",
+    "division": ""
    }
   }
  },
@@ -2954,6 +3506,12 @@
     "name": "Circhester Bay",
     "region": "Dynamax",
     "division": "Basic B"
+   },
+   "4": {
+    "dex": 102,
+    "name": "Circhester Bay",
+    "region": "Dynamax",
+    "division": ""
    }
   }
  },
@@ -2983,6 +3541,12 @@
     "name": "Hammerlocke",
     "region": "Dynamax",
     "division": "Ultra A"
+   },
+   "4": {
+    "dex": 103,
+    "name": "Hammerlocke",
+    "region": "Dynamax",
+    "division": "UTL E"
    }
   }
  },
@@ -3012,6 +3576,12 @@
     "name": "Spikemuth",
     "region": "Dynamax",
     "division": "Ultra A"
+   },
+   "4": {
+    "dex": 104,
+    "name": "Spikemuth",
+    "region": "Dynamax",
+    "division": ""
    }
   }
  },
@@ -3041,6 +3611,12 @@
     "name": "Crown Tundra",
     "region": "Dynamax",
     "division": "Great A"
+   },
+   "4": {
+    "dex": 105,
+    "name": "Crown Tundra",
+    "region": "Dynamax",
+    "division": ""
    }
   }
  },
@@ -3070,6 +3646,12 @@
     "name": "Postwick",
     "region": "Dynamax",
     "division": "Basic C"
+   },
+   "4": {
+    "dex": 106,
+    "name": "Postwick",
+    "region": "Dynamax",
+    "division": "MRL A"
    }
   }
  },
@@ -3099,6 +3681,12 @@
     "name": "Wild Area",
     "region": "Dynamax",
     "division": "Master"
+   },
+   "4": {
+    "dex": 107,
+    "name": "South Lakes",
+    "region": "Dynamax",
+    "division": "MRL E"
    }
   }
  },
@@ -3128,6 +3716,12 @@
     "name": "Wedgehurst",
     "region": "Dynamax",
     "division": "Ultra B"
+   },
+   "4": {
+    "dex": 108,
+    "name": "Wedgehurst",
+    "region": "Dynamax",
+    "division": "UTL A"
    }
   }
  },
@@ -3157,6 +3751,12 @@
     "name": "Hulbury",
     "region": "Dynamax",
     "division": "Master"
+   },
+   "4": {
+    "dex": 109,
+    "name": "Hulbury",
+    "region": "Dynamax",
+    "division": "MRL D"
    }
   }
  },
@@ -3186,6 +3786,12 @@
     "name": "Isle of Armor",
     "region": "Dynamax",
     "division": "Basic C"
+   },
+   "4": {
+    "dex": 110,
+    "name": "Isle of Armor",
+    "region": "Dynamax",
+    "division": ""
    }
   }
  },
@@ -3215,6 +3821,12 @@
     "name": "Motostoke",
     "region": "Dynamax",
     "division": "Basic D"
+   },
+   "4": {
+    "dex": 111,
+    "name": "Motostoke",
+    "region": "Dynamax",
+    "division": ""
    }
   }
  },
@@ -3244,6 +3856,12 @@
     "name": "Turffield",
     "region": "Dynamax",
     "division": "Basic D"
+   },
+   "4": {
+    "dex": 112,
+    "name": "Turffield",
+    "region": "Dynamax",
+    "division": ""
    }
   }
  },
@@ -3273,6 +3891,12 @@
     "name": "Agate Village",
     "region": "Phoenix",
     "division": "Basic D"
+   },
+   "4": {
+    "dex": 113,
+    "name": "Agate Village",
+    "region": "Phoenix",
+    "division": ""
    }
   }
  },
@@ -3302,6 +3926,12 @@
     "name": "Gateon Port",
     "region": "Phoenix",
     "division": "Master"
+   },
+   "4": {
+    "dex": 114,
+    "name": "Gateon Port",
+    "region": "Phoenix",
+    "division": "UTL F"
    }
   }
  },
@@ -3331,6 +3961,12 @@
     "name": "Phenac City",
     "region": "Phoenix",
     "division": "Great C"
+   },
+   "4": {
+    "dex": 115,
+    "name": "Phenac City",
+    "region": "Phoenix",
+    "division": ""
    }
   }
  },
@@ -3360,6 +3996,12 @@
     "name": "Pyrite Town",
     "region": "Phoenix",
     "division": "Great A"
+   },
+   "4": {
+    "dex": 116,
+    "name": "Pyrite Town",
+    "region": "Phoenix",
+    "division": "MRL E"
    }
   }
  },
@@ -3389,6 +4031,12 @@
     "name": "Fall City",
     "region": "Phoenix",
     "division": "Master"
+   },
+   "4": {
+    "dex": 117,
+    "name": "Fall City",
+    "region": "Phoenix",
+    "division": "MRL B"
    }
   }
  },
@@ -3418,6 +4066,12 @@
     "name": "Ringtown",
     "region": "Phoenix",
     "division": "Basic D"
+   },
+   "4": {
+    "dex": 118,
+    "name": "Ringtown",
+    "region": "Phoenix",
+    "division": ""
    }
   }
  },
@@ -3447,6 +4101,12 @@
     "name": "Summerland",
     "region": "Phoenix",
     "division": "Great A"
+   },
+   "4": {
+    "dex": 119,
+    "name": "Summerland",
+    "region": "Phoenix",
+    "division": ""
    }
   }
  },
@@ -3476,6 +4136,12 @@
     "name": "Wintown",
     "region": "Phoenix",
     "division": "Basic B"
+   },
+   "4": {
+    "dex": 120,
+    "name": "Wintown",
+    "region": "Phoenix",
+    "division": ""
    }
   }
  },
@@ -3505,6 +4171,12 @@
     "name": "Boyleland",
     "region": "Phoenix",
     "division": "Ultra B"
+   },
+   "4": {
+    "dex": 121,
+    "name": "Boyleland",
+    "region": "Phoenix",
+    "division": "MRL C"
    }
   }
  },
@@ -3534,6 +4206,12 @@
     "name": "Haruba Village",
     "region": "Phoenix",
     "division": "Great B"
+   },
+   "4": {
+    "dex": 122,
+    "name": "Haruba Village",
+    "region": "Phoenix",
+    "division": "UTL D"
    }
   }
  },
@@ -3563,6 +4241,12 @@
     "name": "Pueltown",
     "region": "Phoenix",
     "division": "Basic B"
+   },
+   "4": {
+    "dex": 123,
+    "name": "Pueltown",
+    "region": "Phoenix",
+    "division": ""
    }
   }
  },
@@ -3592,6 +4276,12 @@
     "name": "Vientown",
     "region": "Phoenix",
     "division": "Ultra A"
+   },
+   "4": {
+    "dex": 124,
+    "name": "Vientown",
+    "region": "Phoenix",
+    "division": ""
    }
   }
  },
@@ -3621,6 +4311,12 @@
     "name": "Aqua Resort",
     "region": "Phoenix",
     "division": "Master"
+   },
+   "4": {
+    "dex": 125,
+    "name": "Aqua Resort",
+    "region": "Phoenix",
+    "division": "UTL E"
    }
   }
  },
@@ -3650,6 +4346,12 @@
     "name": "Cocona Village",
     "region": "Phoenix",
     "division": "Basic A"
+   },
+   "4": {
+    "dex": 126,
+    "name": "Cocona Village",
+    "region": "Phoenix",
+    "division": ""
    }
   }
  },
@@ -3679,6 +4381,12 @@
     "name": "Dolce Island",
     "region": "Phoenix",
     "division": "Basic A"
+   },
+   "4": {
+    "dex": 127,
+    "name": "Dolce Island",
+    "region": "Phoenix",
+    "division": ""
    }
   }
  },
@@ -3708,6 +4416,12 @@
     "name": "Tilt Village",
     "region": "Phoenix",
     "division": "Great B"
+   },
+   "4": {
+    "dex": 128,
+    "name": "Tilt Village",
+    "region": "Phoenix",
+    "division": ""
    }
   }
  },
@@ -3737,6 +4451,12 @@
     "name": "Cianwood City",
     "region": "Silver",
     "division": "Master"
+   },
+   "4": {
+    "dex": 1,
+    "name": "Cianwood City",
+    "region": "Indigo",
+    "division": "MRL F"
    }
   }
  },
@@ -3766,6 +4486,12 @@
     "name": "Olivine City",
     "region": "Silver",
     "division": "Ultra A"
+   },
+   "4": {
+    "dex": 4,
+    "name": "Olivine City",
+    "region": "Indigo",
+    "division": "MRL A"
    }
   }
  },
@@ -3795,6 +4521,12 @@
     "name": "Goldenrod City",
     "region": "Silver",
     "division": "Great B"
+   },
+   "4": {
+    "dex": 3,
+    "name": "Goldenrod City",
+    "region": "Indigo",
+    "division": "UTL E"
    }
   }
  },
@@ -3853,6 +4585,12 @@
     "name": "Azalea Town",
     "region": "Silver",
     "division": "Basic C"
+   },
+   "4": {
+    "dex": 5,
+    "name": "Azalea Town",
+    "region": "Indigo",
+    "division": "UTL B"
    }
   }
  },
@@ -3911,6 +4649,12 @@
     "name": "Violet City",
     "region": "Silver",
     "division": "Great A"
+   },
+   "4": {
+    "dex": 8,
+    "name": "Violet City",
+    "region": "Indigo",
+    "division": "MRL D"
    }
   }
  },
@@ -3969,6 +4713,12 @@
     "name": "Mahogany Town",
     "region": "Silver",
     "division": "Great C"
+   },
+   "4": {
+    "dex": 7,
+    "name": "Mahogany Town",
+    "region": "Indigo",
+    "division": ""
    }
   }
  },
@@ -4027,6 +4777,12 @@
     "name": "Ecruteak City",
     "region": "Silver",
     "division": "Basic D"
+   },
+   "4": {
+    "dex": 2,
+    "name": "Ecruteak City",
+    "region": "Indigo",
+    "division": ""
    }
   }
  },
@@ -4143,6 +4899,12 @@
     "name": "Blackthorn City",
     "region": "Silver",
     "division": "Basic B"
+   },
+   "4": {
+    "dex": 6,
+    "name": "Blackthorn City",
+    "region": "Indigo",
+    "division": ""
    }
   }
  },
@@ -4520,6 +5282,12 @@
     "name": "Fight Area",
     "region": "LilyValley",
     "division": "Basic C"
+   },
+   "4": {
+    "dex": 41,
+    "name": "Fight Area",
+    "region": "LilyValley",
+    "division": ""
    }
   }
  },

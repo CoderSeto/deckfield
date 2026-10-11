@@ -90,7 +90,7 @@ database holds one season. See "Season 10" below.
 - `history/` — the **historical archive** of Seasons 1-8 (see "The historical
   archive" below). `history/s<N>/` holds that season's workbook and what
   `extract_history.py <N> <workbook>` writes from it; `history/teams.json` is
-  the cross-season team identity map. S8-S5 done 2026-10-11; S4 and earlier
+  the cross-season team identity map. S8-S4 done 2026-10-11; S3 and earlier
   next. Each season is extracted only after the one after it (its
   final ranks and Elo are checked against how the next season opened).
 - `CLAUDE.md` — this file.
@@ -274,6 +274,65 @@ What differed (per the user, and as the Archive shows):
   SF and Final. Canalave City beat Striaton City.
 - One label fused a note into a round name ("formula 12.3>12.4 Semifinal -
   Game Three", Archive row 3516) and is split by `label_overrides`.
+
+### Season 4 (extracted 2026-10-11)
+
+**Complete, from Calcs.** 1,328 games in 88 events, 128 teams in 8 regions
+(Indigo, Delta, Lily Valley, Vertress, Kalosite, Lanakila, Dynamax and the new
+Phoenix; Silver and Terastal come in S5). Per the user: no leagues -- 8-team
+pods for interconference play; regions played 12 games, not a full round
+robin; a WCS of eight 16-team regional brackets; the MRL (Master) and UTL
+(Ultra) drawn from the previous season's top finishers, each a group stage
+double round robin and a 16-team playoff.
+
+- **The Archive holds NO game strings** -- every row is columns only (date,
+  label, spread, K, interest, host, ranks, names, score, goals, DSCR, mark,
+  note). Every game's strings are in **Calcs** (the per-team grid, weeks x
+  Sat/Tue/Thu/Fri/Sun slots, `1-Sa` ... `27-Su`), in S4's own format:
+  `AW!68+32-9^7(13.97)[60]{90.5}2153` = **side (H/A) and result (W/L)**, no
+  game type (`CALCS_S4_PATTERN`). Calcs pairs into exactly the Archive's 1,328
+  games; each string's side must equal the Archive's host. Results are W/L
+  only (stored 3/0; `ot` still flags OT from the notes). "^" is goals again.
+- **Game type comes from the event** (`type_by_code`), since no string has
+  one: weekend matchday games are **R** (same region) or **I** (interconference
+  pod, a new letter); MRL/UTL **M**; WCS **W**; Conference Championship **P**;
+  the Red/Blue playoffs and the World Championship **F**.
+- **Records**: Rankings keeps Se (the 12 weekend matchday games), Cf (the 9
+  of them against the team's own region -- INSIDE Se, not beside it) and Ex
+  (everything else). Proved for all 128: Se + Ex = games played. (Calcs'
+  category block, CQ..DP, does not sum to games and is not used.)
+- The **MRL and UTL** were six groups of 5 each (30 teams apiece; double round
+  robin = 8 games over matchdays A-J, byes included), then R16-QF-SF-Final,
+  two legs each. Every listed group member played. `division` holds the group
+  ("MRL C"), blank for the 68 teams in neither.
+- **Aggregate overtime.** Three ties went to AggOT (rows 1088, 1207, 1310).
+  The Archive (like S5's strings) has the leg's regulation score; Calcs folds
+  the AggOT points into it (Solaceon Town v Virbank City reads 22-22, still
+  Solaceon's win). The REGULATION score is archived and the AggOT points go in
+  `aggot_a`/`aggot_b` (a column every season now has, blank elsewhere), so each
+  tie's aggregate still matches its note.
+- **One cell correction** (`cell_corrections`, applied as the row is read):
+  row 500's winner reads "a" -- Calcs says Littleroot Town (beat Snowbelle City
+  25-23 in the season's first 5OT game).
+- **Phoenix's starting Elo** came from an unofficial preseason mini tournament
+  (the ...X tabs: ArchiveX, CalcsX, RankingsX -- never read for games, per the
+  user) and sits in CalcsX column H (`opening_elo_sheet`). The games agree for
+  15 of 16; for **Tilt Village** CalcsX says 1777 but its games start from
+  **1797** -- the preseason pattern (1808 down to 1792 by finish) and the value
+  that makes the opening total exactly 230,400 (1800 x 128). Listed (a
+  team-keyed anomaly); the games' 1797 is archived.
+- **Renamed before S5**: South Lakes -> Wild Area (same dex, Dynamax; the Hall
+  of Fame lists S4's MRL runner-up as "Wild Area*"). The 8 Indigo teams that
+  became Silver in S5 change dex too (Cianwood City 1 -> 129, etc.);
+  `history/teams.json` keys them by name, so each keeps one identity.
+- Checked against everything the Hall of Fame has for S4: World (Lumiose City
+  over Hulbury, 2-0), WCS (Lumiose City over Cinnabar Island), all eight
+  regional champions (each Conference Championship final is one game,
+  `regional_final: ["CC-F"]`), and -- new -- the league plaque: MRL champion
+  and second (Virbank City, South Lakes) and UTL champion and second (Solaceon
+  Town, Aqua Resort; the sheet labels them "UTL Champion A/B"). S4's final
+  ranks and Elo equal S5's opening for all 128; the round-robin check is off
+  (`round_robins: []`, regions played 12 of 15).
 
 ### Season 5 (extracted 2026-10-11)
 
@@ -5268,8 +5327,7 @@ page errors on either path.
 
 ## Known open items
 
-- **Historical archive:** S8-S5 extracted; S4 and earlier to come (S4 had 128
-  teams, so the extractor's one-to-one-onto-160 identity check must relax), each needing
+- **Historical archive:** S8-S4 extracted; S3 and earlier to come, each needing
   its own `SEASONS` layout in `extract_history.py`. No all-time database or
   dashboard tab yet -- that waits until a few seasons are in.
 - **End of S10 (B13):** append its Legacy column to `legacy_points.json` and its

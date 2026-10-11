@@ -66,6 +66,12 @@ GAME_PATTERN = re.compile(
 SHORT_PATTERN = re.compile(r'^([0-3O])([RLSPFW])$')
 DSCR_PAIR_PATTERN = re.compile(r'^\{(-?[\d.]+)-(-?[\d.]+)\}$')
 WALKOVER_PATTERN = re.compile(r'^(\d)([RLSPFW])-$')
+# S4's Calcs strings open with the side and the result instead of result and
+# game type: "AW!68+32-9^7(13.97)[60]{90.5}2153" = away, won, v dex 68, 32-9.
+CALCS_S4_PATTERN = re.compile(
+    r'^([HA])([WL])!(-?\d+)\+(-?\d+)-(-?\d+)\^(-?[\d.]+)\((-?[\d.]+)\)'
+    r'\[(-?[\d.]+)\]\{(-?[\d.]+)\}(-?[\d.]+)$'
+)
 EX_PATTERN = re.compile(r'^/(-?\d+)/$')
 
 LEAGUE_DIVISION_MAP = {
@@ -74,7 +80,8 @@ LEAGUE_DIVISION_MAP = {
 }
 REGION_NAME_FIX = {"Lily Valley": "LilyValley"}
 # S6's pyramid: one Master division, two Ultra, three Great, four Basic.
-LEAGUE_TIER = {"Master": 1, "Ultra": 2, "Great": 3, "Basic": 4}
+# S4's leagues were the MRL (Master) and UTL (Ultra), each in lettered groups.
+LEAGUE_TIER = {"Master": 1, "Ultra": 2, "Great": 3, "Basic": 4, "MRL": 1, "UTL": 2}
 NUMBER_WORDS = {w: i for i, w in enumerate(
     "ONE TWO THREE FOUR FIVE SIX SEVEN EIGHT NINE TEN ELEVEN TWELVE THIRTEEN "
     "FOURTEEN FIFTEEN".split(), start=1)}
@@ -86,6 +93,9 @@ ORDINAL_WORDS = {w: i for i, w in enumerate("FIRST SECOND THIRD FOURTH FIFTH".sp
 RENAMED_SINCE = {
     "Resort Area": "Battle Zone",
     "Fight Area": "Cabo Poco",
+    # S4 -> S5, same dex (Dynamax); proved by S5's "S4 End". The Hall of Fame
+    # lists S4's MRL runner-up as "Wild Area*".
+    "South Lakes": "Wild Area",
     # S5 -> S6, same dex and region (Terastal); proved by S6's "S5 End".
     "South Kalos": "Blueberry Terarium",
     "East Paldea": "Mossui Town",
@@ -182,6 +192,82 @@ SEASONS = {
             3516: ("Semifinal - Game Three", "formula 12.3>12.4"),
         },
         "cup": ("grand_swiss", "two_leg_final"),
+    },
+    4: {
+        # 128 teams in 8 regions; no league divisions. A team's "division" is its
+        # MRL/UTL group (BT/BU), blank for the 80 teams in neither. CA keys the
+        # rank checkpoints, CB "W25 F" is the final rank, DN "Start" the opening.
+        # Accolades BW/BX. No base climate or primary type column.
+        "rankings": dict(dex=0, region=1, name=2, ovr=42, elo=63, basclm=None,
+                         division=71, division_letter=72, primary=None, accolades=[74, 75],
+                         checkpoint_name=78, final_rank=79, opening_rank=117, opening_elo=None),
+        # Phoenix's 16 teams were new; their starting Elo came from an unofficial
+        # preseason mini tournament (the ...X tabs, excluded from everything) and
+        # sits in CalcsX column H.
+        "opening_elo_sheet": ("CalcsX", 3, 18, 0, 7),
+        # Records: Se = the 12 weekend matchday games (9 against the team's own
+        # region = Cf, 3 interconference pod games), Ex = everything else. Cf is
+        # inside Se, not beside it. Proved for all 128: Se + Ex = games played.
+        "record_cols": dict(SeW=5, SeL=6, CfW=8, CfL=9, ExW=11, ExL=12),
+        "record_buckets": {"R": ("Se", "Cf"), "I": ("Se",), "M": ("Ex",), "W": ("Ex",),
+                           "P": ("Ex",), "F": ("Ex",)},
+        # The Archive holds no game strings at all; every game's strings are in
+        # Calcs, in S4's own format (side + result, no game type).
+        "archive_cols": dict(date=0, label=1, spread=2, k=3, interest=4, ha=5, rank_w=6,
+                             winner=7, score_w=8, score_l=9, loser=10, rank_l=11, goals=12,
+                             dscr=13, w=None, l=None, mark=14, ex=None, note=15),
+        "calcs_grid": (11, 93),
+        "calcs_first_col": 12,
+        "calcs_pattern": "s4",
+        "fill_short_from_calcs": True,
+        "caret_is_goals": True,
+        # The strings carry no game type, so it comes from the event. A weekend
+        # matchday game is R (same region) or I (interconference pod).
+        "type_by_code": [(r'^MD\d+$', "R/I"), (r'^(MRL|UTL)-', "M"), (r'^WCS-', "W"),
+                         (r'^CC-', "P"), (r'^(PO-|WC-F)', "F")],
+        "mixed_types": {"R", "I"},
+        "round_robins": [],
+        "extra_titles": re.compile(r'^(Matchday \w+ \((Sat|Sun)\)|(UTL|MRL|WCS) .+|'
+                                   r'(\w+ )*Conference Championship|PLAYOFFS - .+|'
+                                   r'World Championship - .+)$'),
+        "label_overrides": {
+            282: ("UTL Matchday B (Tue)", "First automated game without cards"),
+            283: (None, None),
+            1107: (None, "RIVALRY WEEK"),
+        },
+        "cup": ("wcs", "two_leg_final", ["WCS-F-1", "WCS-F-2"]),
+        "regional_final": ["CC-F"],
+        # The Hall of Fame's S4 league plaque: MRL champion and second, UTL
+        # champion and second (labelled "UTL Champion A/B" in the sheet).
+        "league_finals": [["MRL-F-1", "MRL-F-2"], ["UTL-F-1", "UTL-F-2"]],
+        "anomalies": {
+            "Tilt Village: opening Elo": (
+                "opening", "CalcsX column H gives Tilt Village (11th in the Phoenix "
+                "preseason) 1777; its S4 games start from 1797, which is the preseason "
+                "pattern (1808 down to 1792 by finish) and makes the league's opening Elo "
+                "total exactly 230,400 (1800 x 128). The games' 1797 is archived."),
+        },
+        "corrections": {},
+        # Archive cells corrected as the row is read (row, column, the sheet's
+        # value, the corrected value, the reason).
+        "cell_corrections": {
+            500: ("winner", "a", "Littleroot Town",
+                  "WCS Round 2-B, the season's first 5OT game: the winner cell reads "
+                  "\"a\". Calcs has it: Littleroot Town beat Snowbelle City 25-23 at home "
+                  "(Snowbelle's 7-R string, AL!18+23-25, dex 18 = Littleroot Town)."),
+        },
+        # Ties decided in aggregate overtime. The Archive (like S5's strings) has
+        # the leg's regulation score; Calcs folds the aggregate-OT points into it
+        # (Solaceon Town v Virbank City reads 22-22, still Solaceon's win). The
+        # regulation score is archived and the AggOT points go in aggot_a/b.
+        "aggot_rows": {
+            1088: "UTL R16 leg 2: 18-15 in regulation, 26-26 on aggregate; Anville Town "
+                  "advances 32-26 (Calcs 24-15).",
+            1207: "WCS QF leg 2: 21-12 to Solaceon Town in regulation, 32-32 on aggregate; "
+                  "Virbank City advances 42-33 (Calcs 22-22).",
+            1310: "Playoffs QF leg 2: 19-10 to Castelia City in regulation, 34-34 on "
+                  "aggregate; Spikemuth advances 43-41 (Calcs 26-19).",
+        },
     },
     5: {
         # Records are kept in three buckets: Conference (Regional) CW/CL, League
@@ -292,6 +378,32 @@ def _event_code(title, sub):
         # S6: a best of three ("Game One").
         rm = re.match(r'(First|Second) Round', s, re.I)
         return f"WC-PI{1 if rm.group(1).lower() == 'first' else 2}-{leg_n}" if rm else f"WC-PI-{leg_n or game_n}"
+    # S4.
+    m = re.match(r'MATCHDAY (\w+) \((SAT|SUN)\)$', t)
+    if m:
+        return f"MD{NUMBER_WORDS[m.group(1)]}"
+    m = re.match(r'(UTL|MRL) MATCHDAY ([A-Z]) \(\w+\)$', t)
+    if m:
+        return f"{m.group(1)}-{m.group(2)}"
+    m = re.match(r'WCS ROUND (\d)-([AB]) \(\w+\)$', t)
+    if m:
+        return f"WCS-R{m.group(1)}-{m.group(2)}"
+    m = re.match(r'(UTL|MRL|WCS) (ROUND OF 16|QUARTERFINAL|SEMIFINAL|CHAMPIONSHIP) - (FIRST|SECOND) LEG$', t)
+    if m:
+        rnd = {"ROUND OF 16": "R16", "QUARTERFINAL": "QF", "SEMIFINAL": "SF",
+               "CHAMPIONSHIP": "F"}[m.group(2)]
+        return f"{m.group(1)}-{rnd}-{leg_n}"
+    if t == "CONFERENCE CHAMPIONSHIP":
+        return f"CC-{ {'Quarterfinal': 'QF', 'Semifinal': 'SF'}[s.split(' - ')[0]] }-{leg_n}"
+    if t.endswith(" CONFERENCE CHAMPIONSHIP"):
+        return "CC-F"
+    m = re.match(r'PLAYOFFS - (RED|BLUE) (BRACKET|FINAL - (FIRST|SECOND) LEG)$', t)
+    if m:
+        if m.group(2) == "BRACKET":
+            rnd = {"Round of 16": "R16", "Quarterfinal": "QF", "Semifinal": "SF"}[s.split(" - ")[0]]
+        else:
+            rnd = "F"
+        return f"PO-{m.group(1)[0]}-{rnd}-{leg_n}"
     if t == "LEAGUE PLAYOFFS":
         # S6: two days ("First Leg"); S5: a semifinal and a final, two legs each.
         rm = re.match(r'(Semifinal|Final) -', s)
@@ -368,8 +480,8 @@ def read_teams(wb, cfg):
                      if r[i] not in (None, "", "-")]
         if "division_letter" in c:
             tier_name = r[c["division"]]
-            division = " ".join(x for x in (tier_name, r[c["division_letter"]]) if x)
-            tier = LEAGUE_TIER[tier_name]
+            division = " ".join(str(x) for x in (tier_name, r[c["division_letter"]]) if x)
+            tier = LEAGUE_TIER[tier_name] if tier_name else ""
         else:
             division, tier = LEAGUE_DIVISION_MAP[r[c["division"]]], ""
         teams[r[c["dex"]]] = {
@@ -377,7 +489,7 @@ def read_teams(wb, cfg):
             "region": REGION_NAME_FIX.get(region, region),
             "division": division, "tier": tier,
             "primary_type": r[c["primary"]] if c["primary"] is not None else "",
-            "basclm": r[c["basclm"]],
+            "basclm": r[c["basclm"]] if c["basclm"] is not None else "",
             "opening_rank": r[c["opening_rank"]],
             "sheet_opening_elo": r[c["opening_elo"]] if c["opening_elo"] is not None else None,
             "final_rank": r[c["final_rank"]], "final_ovr": r[c["ovr"]],
@@ -385,6 +497,11 @@ def read_teams(wb, cfg):
             "accolades": "; ".join(accolades),
             "record": {k: r[i] for k, i in cfg["record_cols"].items()},
         }
+    if "opening_elo_sheet" in cfg:
+        sheet, lo, hi, dex_col, elo_col = cfg["opening_elo_sheet"]
+        for r in wb[sheet].iter_rows(min_row=lo, max_row=hi, values_only=True):
+            if r[dex_col] is not None:
+                teams[r[dex_col]]["sheet_opening_elo"] = r[elo_col]
     return teams
 
 
@@ -416,7 +533,7 @@ def opening_elos(games, teams, cfg=None):
     return out
 
 
-def read_games(wb, cfg, name_to_dex):
+def read_games(wb, cfg, name_to_dex, region_of=None):
     """Every Archive game, in sheet order, with its event and play day.
 
     Each game's winner and loser are 10-field tuples in the packed string's own
@@ -437,9 +554,17 @@ def read_games(wb, cfg, name_to_dex):
         return e
 
     day = None
+    cell_fixes = cfg.get("cell_corrections", {})
     for rownum, r in enumerate(rows, start=1):
         if rownum == 1:
             continue
+        if rownum in cell_fixes:
+            key, sheet, fixed, _why = cell_fixes[rownum]
+            if r[cols[key]] != sheet:
+                raise SystemExit(f"cell correction at Archive row {rownum}: expected "
+                                 f"{key}={sheet!r}, sheet has {r[cols[key]]!r}")
+            r = list(r)
+            r[cols[key]] = fixed
         # Column A marks the start of a play day ("D1 5/22"); every game below
         # it until the next mark was played that day.
         if isinstance(r[cols["date"]], str) and r[cols["date"]].strip():
@@ -470,24 +595,36 @@ def read_games(wb, cfg, name_to_dex):
                 # A changelog note or a matchday's name ("Base-2 Scoring
                 # System", "The Overhaul").
                 cur["notes"].append(label)
-        if not r[cols["w"]]:
-            continue
-        sw, sl = str(r[cols["w"]]).strip(), str(r[cols["l"]]).strip()
-        fw, fl = GAME_PATTERN.match(sw), GAME_PATTERN.match(sl)
         winner, loser = r[cols["winner"]], r[cols["loser"]]
+        if cols["w"] is None:
+            # S4: no strings in the Archive at all -- a game row is one with a
+            # winner; result and type are filled in below and from Calcs.
+            if not winner:
+                continue
+            sw, sl = "", ""
+        elif not r[cols["w"]]:
+            continue
+        else:
+            sw, sl = str(r[cols["w"]]).strip(), str(r[cols["l"]]).strip()
+        fw, fl = GAME_PATTERN.match(sw), GAME_PATTERN.match(sl)
         if fw and fl:
             w, l, short = fw.groups(), fl.groups(), False
         else:
-            mw, ml = SHORT_PATTERN.match(sw), SHORT_PATTERN.match(sl)
+            if cols["w"] is None:
+                mw = ml = None
+                kinds = (("3", "?"), ("0", "?"))
+            else:
+                mw, ml = SHORT_PATTERN.match(sw), SHORT_PATTERN.match(sl)
+                kinds = ((mw.group(1), mw.group(2)), (ml.group(1), ml.group(2))) if mw and ml else None
             pair = DSCR_PAIR_PATTERN.match(str(r[cols["dscr"]]))
-            if not (mw and ml and pair):
+            if not (kinds and pair):
                 raise ValueError(f"Archive row {rownum}: unparseable game {sw!r} / {sl!r}")
             spread = round(float(r[cols["spread"]]), 2)
             gi = str(round(float(r[cols["interest"]])))
-            res_w, res_l = mw.group(1).replace("O", "0"), ml.group(1).replace("O", "0")
-            w = (res_w, mw.group(2), str(name_to_dex[loser]), str(r[cols["score_w"]]),
+            res_w, res_l = kinds[0][0].replace("O", "0"), kinds[1][0].replace("O", "0")
+            w = (res_w, kinds[0][1], str(name_to_dex[loser]), str(r[cols["score_w"]]),
                  str(r[cols["score_l"]]), "", f"{spread:g}", gi, pair.group(1), "")
-            l = (res_l, ml.group(2), str(name_to_dex[winner]), str(r[cols["score_l"]]),
+            l = (res_l, kinds[1][1], str(name_to_dex[winner]), str(r[cols["score_l"]]),
                  str(r[cols["score_w"]]), "", f"{-spread:g}", gi, pair.group(2), "")
             short = True
         target["games"] += 1
@@ -535,6 +672,20 @@ def read_games(wb, cfg, name_to_dex):
         seen[e["code"]] += 1
         if seen[e["code"]] > 1:
             e["code"] = f"{e['code']}.{seen[e['code']]}"
+
+    # S4: the game type comes from the event, since no string carries it.
+    rules = cfg.get("type_by_code")
+    if rules:
+        for g in games:
+            code = g["event"]["code"]
+            gtype = next((t for rx, t in rules if re.match(rx, code)), None)
+            if gtype is None:
+                raise ValueError(f"no game type rule for event {code}")
+            if gtype == "R/I":
+                same = region_of[g["winner_name"]] == region_of[g["loser_name"]]
+                gtype = "R" if same else "I"
+            g["w"] = (g["w"][0], gtype) + tuple(g["w"][2:])
+            g["l"] = (g["l"][0], gtype) + tuple(g["l"][2:])
     return merged, games
 
 
@@ -551,7 +702,18 @@ def read_calcs_grid(wb, cfg):
         cells = []
         for j in range(lo, hi):
             v = r[j]
-            m = GAME_PATTERN.match(v.strip()) if isinstance(v, str) else None
+            if not isinstance(v, str):
+                continue
+            if cfg.get("calcs_pattern") == "s4":
+                m = CALCS_S4_PATTERN.match(v.strip())
+                if m:
+                    # Normalised to the packed-string order; the type is the
+                    # event's ("?" here), the side is kept as an 11th field.
+                    side, res, *rest = m.groups()
+                    cells.append((j, header[j], v.strip(),
+                                  ("3" if res == "W" else "0", "?", *rest, side)))
+                continue
+            m = GAME_PATTERN.match(v.strip())
             if m:
                 cells.append((j, header[j], v.strip(), m.groups()))
         grid[r[0]] = cells
@@ -577,14 +739,26 @@ def match_calcs(games, grid, cfg, name_to_dex):
 
     def in_column(slot, groups):
         for d, c in by_col.get(slot, []):
-            if (d, c[0]) not in used and c[3][:9] == groups[:9]:
+            if (d, c[0]) not in used and (c[3][0],) + tuple(c[3][2:9]) == (groups[0],) + tuple(groups[2:9]):
                 return (d, c)
         return None
 
-    for g in games:
+    aggot = cfg.get("aggot_rows", {})
+
+    def own_row_any_score(d, opp, pf, pa):
+        # An AggOT leg: Calcs' score is the regulation score plus AggOT points.
+        for c in grid.get(d, []):
+            if ((d, c[0]) not in used and int(c[3][2]) == opp
+                    and int(c[3][3]) >= int(pf) and int(c[3][4]) >= int(pa)):
+                return (d, c)
+        return None
+
+    # AggOT legs last, so the same pairing's other leg is matched exactly first.
+    for g in sorted(games, key=lambda g: g["row"] in aggot):
         wd, ld = name_to_dex[g["winner_name"]], name_to_dex[g["loser_name"]]
-        cw = own_row(wd, ld, g["w"][3], g["w"][4])
-        cl = own_row(ld, wd, g["l"][3], g["l"][4])
+        finder = own_row_any_score if g["row"] in aggot else own_row
+        cw = finder(wd, ld, g["w"][3], g["w"][4])
+        cl = finder(ld, wd, g["l"][3], g["l"][4])
         if (cw is None or cl is None) and g["event"]["code"] in misfiled and not g["short"]:
             cw = cw or in_column(g["event"]["code"], g["w"])
             cl = cl or in_column(g["event"]["code"], g["l"])
@@ -609,7 +783,19 @@ def fill_short_from_calcs(games, grid, cfg, name_to_dex):
         cw, cl = found[g["row"]]
         if (cw[3][0], cl[3][0]) != (g["w"][0], g["l"][0]):
             raise SystemExit(f"Archive row {g['row']}: Calcs result {cw[2]} disagrees with the Archive")
-        g["w"], g["l"] = cw[3], cl[3]
+        if len(cw[3]) > 10:
+            # S4: the strings name the winner's side; it must be the Archive's.
+            if cw[3][10] != g["home_away"] or cl[3][10] == cw[3][10]:
+                raise SystemExit(f"Archive row {g['row']}: Calcs sides {cw[2]} / {cl[2]} "
+                                 f"disagree with the Archive's {g['home_away']}")
+        keep_type = g["w"][1]
+        reg_w, reg_l = (g["w"][3], g["w"][4]), (g["l"][3], g["l"][4])
+        g["w"] = (cw[3][0], cw[3][1] if cw[3][1] != "?" else keep_type) + tuple(cw[3][2:10])
+        g["l"] = (cl[3][0], cl[3][1] if cl[3][1] != "?" else keep_type) + tuple(cl[3][2:10])
+        if g["row"] in cfg.get("aggot_rows", {}):
+            g["aggot"] = (int(g["w"][3]) - int(reg_w[0]), int(g["w"][4]) - int(reg_w[1]))
+            g["w"] = g["w"][:3] + reg_w + g["w"][5:]
+            g["l"] = g["l"][:3] + reg_l + g["l"][5:]
         g["raw_w"], g["raw_l"] = cw[2], cl[2]
         g["string_source"] = "calcs"
 
@@ -655,7 +841,9 @@ def canonical_ids(teams):
         if name not in by_name:
             raise ValueError(f"{t['name']!r} (dex {dex}) has no S9 counterpart; add it to RENAMED_SINCE")
         out[dex] = by_name[name]
-    if sorted(out.values()) != sorted(by_name.values()):
+    if len(set(out.values())) != len(out):
+        raise ValueError("two of the season's teams map to the same S9 team")
+    if len(out) == len(by_name) and sorted(out.values()) != sorted(by_name.values()):
         raise ValueError("the season's teams do not map one-to-one onto S9's")
     return out, {cid: s9[str(cid)]["name"] for cid in out.values()}
 
@@ -696,6 +884,8 @@ def build_game_rows(games, name_to_dex, canon, cfg):
             "ex_winner_diff": "" if g["ex"] is None else g["ex"],
             "winner": "A" if winner_home else "B",
             "goals_a": goals_h, "goals_b": goals_a, "elo_k": g["elo_k"],
+            "aggot_a": (g["aggot"][0] if winner_home else g["aggot"][1]) if "aggot" in g else "",
+            "aggot_b": (g["aggot"][1] if winner_home else g["aggot"][0]) if "aggot" in g else "",
             "rank_a": rank_h, "rank_b": rank_a,
             "ot": int(ot), "mark": g["mark"], "note": g["note"].replace("\n", " "),
             "source_row": g["row"], "string_source": g["string_source"],
@@ -707,7 +897,8 @@ def build_game_rows(games, name_to_dex, canon, cfg):
 GAME_FIELDS = ["seq", "round", "event", "day", "game_type", "team_a", "team_b", "result_a",
                "pf_a", "pa_a", "raw_goal_a", "raw_goal_b", "spread_a", "interest",
                "dscr_a", "dscr_b", "elo_a_after", "elo_b_after", "home", "ex_a", "ex_b",
-               "ex_winner_diff", "winner", "goals_a", "goals_b", "elo_k", "rank_a", "rank_b",
+               "ex_winner_diff", "winner", "goals_a", "goals_b", "aggot_a", "aggot_b", "elo_k",
+               "rank_a", "rank_b",
                "ot", "mark", "note", "source_row", "string_source", "raw_winner", "raw_loser"]
 
 
@@ -760,18 +951,23 @@ def validate(season, teams, games, walkovers, canon, events, anomalies=None, cfg
             pair = DSCR_PAIR_PATTERN.match(str(c["dscr"]))
             if not pair or (float(pair.group(1)), float(pair.group(2))) != (float(w[8]), float(l[8])):
                 errors.append(f"{where}: dscr column {c['dscr']} != strings {w[8]}/{l[8]}")
-            if cfg.get("caret_is_goals") and gm and (float(w[5]), float(l[5])) != (
-                    float(gm.group(1)), float(gm.group(2))):
-                errors.append(f"{where}: goals column {g['goals']} != string ^{w[5]}/^{l[5]}")
+        if cfg.get("caret_is_goals") and gm and w[5] != "" and "aggot" not in g and (float(w[5]), float(l[5])) != (
+                float(gm.group(1)), float(gm.group(2))):
+            errors.append(f"{where}: goals column {g['goals']} != string ^{w[5]}/^{l[5]}")
 
     # 2. Per-team W-L in each bucket equals the workbook's own, byes included.
     bucket = cfg.get("record_buckets", DEFAULT_BUCKETS)
     rec = defaultdict(Counter)
+    def buckets_of(gtype):
+        b = bucket[gtype]
+        return (b,) if isinstance(b, str) else b
     for g in games:
-        rec[name_to_dex[g["winner_name"]]][bucket[g["w"][1]] + "W"] += 1
-        rec[name_to_dex[g["loser_name"]]][bucket[g["l"][1]] + "L"] += 1
+        for b in buckets_of(g["w"][1]):
+            rec[name_to_dex[g["winner_name"]]][b + "W"] += 1
+            rec[name_to_dex[g["loser_name"]]][b + "L"] += 1
     for wo in walkovers:
-        rec[wo["dex"]][bucket[wo["game_type"]] + ("W" if wo["result"] >= 2 else "L")] += 1
+        for b in buckets_of(wo["game_type"]):
+            rec[wo["dex"]][b + ("W" if wo["result"] >= 2 else "L")] += 1
     grid = cfg.get("_grid")
     if cfg.get("records_from_calcs"):
         # 2'. S5: Rankings' records come from Calcs' grid, whose R11 column is
@@ -796,7 +992,13 @@ def validate(season, teams, games, walkovers, canon, events, anomalies=None, cfg
         for g in games:
             if g["row"] in found:
                 cw, cl = found[g["row"]]
-                if (cw[3], cl[3]) != (tuple(g["w"]), tuple(g["l"])):
+                def norm(t, gt):
+                    return (t[0], gt if t[1] == "?" else t[1]) + tuple(t[2:10])
+                def body(t):
+                    # An AggOT leg's score and "^" carry the AggOT points in Calcs.
+                    return tuple(x for i, x in enumerate(t) if i not in (3, 4, 5)) if "aggot" in g else t
+                if (body(norm(cw[3], g["w"][1])), body(norm(cl[3], g["l"][1]))) != (
+                        body(tuple(g["w"])), body(tuple(g["l"]))):
                     errors.append(f"row {g['row']}: calcs strings {cw[2]} / {cl[2]} != "
                                   f"{g['raw_w']} / {g['raw_l']}")
         used = sum(len(v) for v in found.values())
@@ -835,13 +1037,13 @@ def validate(season, teams, games, walkovers, canon, events, anomalies=None, cfg
     # 3c. Elo is zero-sum and every season opens on an average of 1800: the
     #     opening Elo and the final Elo each total 1800 per team (per the user,
     #     2026-10-11: "as long as the Starting Elo totals 288000, it's fine").
-    expected_total = 1800 * len(teams)
+    expected_total = cfg.get("elo_total", 1800 * len(teams))
     totals = [("final", [float(t["final_elo"]) for t in teams.values()])]
     if opening:
         totals.insert(0, ("opening", list(opening.values())))
     for label, vals in totals:
         total = sum(vals)
-        if abs(total - expected_total) > 0.5:
+        if expected_total is not None and abs(total - expected_total) > 0.5:
             errors.append(f"{label} Elo totals {total:g}, not {expected_total}")
 
     # 4. The next season's own record of how this one ended: its opening rank
@@ -852,7 +1054,9 @@ def validate(season, teams, games, walkovers, canon, events, anomalies=None, cfg
     nxt = _next_season_record(season)
     for dex, t in teams.items():
         rank, elo_in = nxt[canon[dex]]
-        if rank != t["final_rank"]:
+        if rank is None:
+            errors.append(f"{t['name']}: S{season + 1} has no opening rank for it")
+        elif rank != t["final_rank"]:
             errors.append(f"{t['name']}: final rank {t['final_rank']}, S{season + 1} opened it at {rank}")
         if elo_in is not None and elo_in != float(t["final_elo"]):
             errors.append(f"{t['name']}: final Elo {t['final_elo']}, S{season + 1} opened it at {elo_in}")
@@ -866,13 +1070,13 @@ def validate(season, teams, games, walkovers, canon, events, anomalies=None, cfg
     for g in games:
         types[g["event"]["code"]].add(g["w"][1])
     for code, ts in types.items():
-        if len(ts) > 1:
+        if len(ts) > 1 and not ts <= cfg.get("mixed_types", set()):
             errors.append(f"{code}: mixes game types {sorted(ts)}")
 
     # 6. Regional and League are complete single round robins: each pair in a
     #    region (division) meets exactly once, never across groups, and every
     #    team plays every matchday.
-    for gtype, key in (("R", "region"), ("L", "division")):
+    for gtype, key in cfg.get("round_robins", [("R", "region"), ("L", "division")]):
         pairs, per_event = Counter(), defaultdict(Counter)
         for g in games:
             if g["w"][1] != gtype:
@@ -893,6 +1097,8 @@ def validate(season, teams, games, walkovers, canon, events, anomalies=None, cfg
 
     # Listed anomalies: accepted, but each must actually occur -- a listed
     # anomaly that no longer fires means the list is stale.
+    # An anomaly is keyed by Archive row (matched with its check's name) or,
+    # for a team-level finding, by the start of the error's own text.
     anomalies = anomalies or {}
     accepted, fired = [], set()
     for e in errors:
@@ -900,6 +1106,11 @@ def validate(season, teams, games, walkovers, canon, events, anomalies=None, cfg
         if m and int(m.group(1)) in anomalies and m.group(2) == anomalies[int(m.group(1))][0]:
             accepted.append(e)
             fired.add(int(m.group(1)))
+            continue
+        for key in anomalies:
+            if isinstance(key, str) and e.startswith(key):
+                accepted.append(e)
+                fired.add(key)
     errors = [e for e in errors if e not in accepted]
     for row in anomalies:
         if row not in fired:
@@ -916,7 +1127,7 @@ def _next_season_record(season):
     path = os.path.join(HISTORY, f"s{season + 1}", "teams.csv")
     if not os.path.exists(path):
         raise SystemExit(f"S{season + 1} must be extracted before S{season} (needs {os.path.relpath(path, ROOT)})")
-    return {int(r["team"]): (int(r["opening_rank"]),
+    return {int(r["team"]): (int(r["opening_rank"]) if r["opening_rank"] else None,
                              float(r["opening_elo"]) if r["opening_elo"] else None)
             for r in csv.DictReader(open(path))}
 
@@ -949,9 +1160,10 @@ def derived_titles(games, teams, events, cfg):
     champ = wc.most_common(1)[0][0]
     titles["world"] = (champ, (finalists - {champ}).pop())
 
-    cup_name, rule = cfg["cup"]
+    cup_name, rule, *cup_codes = cfg["cup"]
     if rule == "two_leg_final":
-        w, pts = _tie_winner(by_code["GS-F-1"] + by_code["GS-F-2"])
+        codes = cup_codes[0] if cup_codes else ["GS-F-1", "GS-F-2"]
+        w, pts = _tie_winner([g for c in codes for g in by_code[c]])
         titles["cup"] = (w, (set(pts) - {w}).pop() if w else None)
     elif rule == "wcs":
         ties = defaultdict(list)
@@ -965,12 +1177,17 @@ def derived_titles(games, teams, events, cfg):
 
     region_of = {t["name"]: t["region"] for t in teams.values()}
     ties = defaultdict(list)
-    for g in by_code["RP-F-1"] + by_code["RP-F-2"]:
-        ties[region_of[g["winner_name"]]].append(g)
+    for c in cfg.get("regional_final", ["RP-F-1", "RP-F-2"]):
+        for g in by_code[c]:
+            ties[region_of[g["winner_name"]]].append(g)
     titles["regions"] = {}
     for region, gl in ties.items():
         w, pts = _tie_winner(gl)
         titles["regions"][region] = (w, (set(pts) - {w}).pop() if w else None, dict(pts))
+    titles["league"] = []
+    for codes in cfg.get("league_finals", []):
+        w, pts = _tie_winner([g for c in codes for g in by_code[c]])
+        titles["league"] += [w, (set(pts) - {w}).pop() if w else None]
     return titles
 
 
@@ -981,7 +1198,9 @@ def _check_hall_of_fame(season, games, teams, events, cfg):
     titles = derived_titles(games, teams, events, cfg)
 
     def hof_names(entry):
-        return [RENAMED_SINCE.get(t["name"], t["name"]) if t else None for t in entry["teams"]]
+        # "*" marks "since renamed or moved conference" in the Hall of Fame.
+        return [RENAMED_SINCE.get(t["name"].rstrip("*"), t["name"].rstrip("*")) if t else None
+                for t in entry["teams"]]
 
     def canonical(n):
         return RENAMED_SINCE.get(n, n)
@@ -993,6 +1212,11 @@ def _check_hall_of_fame(season, games, teams, events, cfg):
     cup = hof["plaques"]["cup"]["seasons"][s]
     if [canonical(x) if x else None for x in titles["cup"]] != hof_names(cup)[:2]:
         errors.append(f"{titles['cup_name']}: games say {titles['cup']}, Hall of Fame {hof_names(cup)}")
+
+    if titles["league"]:
+        league = hof_names(hof["plaques"]["league"]["seasons"][s])
+        if [canonical(x) if x else None for x in titles["league"]] != league[:len(titles["league"])]:
+            errors.append(f"League titles: games say {titles['league']}, Hall of Fame {league}")
 
     for region, (w, ru, pts) in titles["regions"].items():
         if w is None:
@@ -1026,7 +1250,8 @@ def main(season, workbook):
     cfg = SEASONS[season]
     wb = openpyxl.load_workbook(workbook, read_only=True, data_only=True)
     teams = read_teams(wb, cfg)
-    events, games = read_games(wb, cfg, {t["name"]: d for d, t in teams.items()})
+    events, games = read_games(wb, cfg, {t["name"]: d for d, t in teams.items()},
+                               {t["name"]: t["region"] for t in teams.values()})
     corrections = cfg["corrections"]
     apply_corrections(games, corrections)
     if "calcs_grid" in cfg:
@@ -1076,11 +1301,14 @@ def main(season, workbook):
             "source": {"workbook": os.path.relpath(workbook, ROOT), "sha256": sha},
             "games": len(games), "walkovers": len(walkovers),
             "titles": {"world": titles["world"], titles["cup_name"]: titles["cup"],
+                       **({"league": titles["league"]} if titles["league"] else {}),
                        "regions": {r: v[:2] for r, v in sorted(titles["regions"].items())}},
-            "anomalies": [{"source_row": r, "check": c, "reason": why}
-                          for r, (c, why) in sorted(anomalies.items())],
+            "anomalies": [{"source_row" if isinstance(r, int) else "finding": r, "check": c,
+                           "reason": why}
+                          for r, (c, why) in sorted(anomalies.items(), key=lambda kv: str(kv[0]))],
             "corrections": [{"source_row": r, "field": f, "sheet": a, "corrected": b, "reason": why}
-                            for r, (f, a, b, why) in sorted(corrections.items())],
+                            for r, (f, a, b, why) in sorted({**corrections,
+                                                            **cfg.get("cell_corrections", {})}.items())],
             "events": [{"round": e["round"], "code": e["code"], "title": e["title"],
                         "sub": e["sub"], "dates": e["dates"], "notes": e["notes"],
                         "games": e["games"], "empty": e["games"] == 0,
