@@ -124,7 +124,9 @@ strings of every game mirror each other and name the right teams; each team's
 W-L per bucket (R/L/Swiss/playoff+finals) equals the workbook's Rankings F..M,
 byes included; the Elo chain holds game by game from each team's opening
 Elo (winner +K, loser -K, exactly); each team's last game Elo equals its final
-Elo; goals never exceed points; the final rank AND final Elo equal how the
+Elo; opening and final Elo each total exactly 1800 per team (288,000 -- the
+user's own test for a season's starting Elo; Elo is zero-sum, and S7 and S8 both
+hold it exactly); goals never exceed points; the final rank AND final Elo equal how the
 NEXT season opened (its archived `opening_rank`/`opening_elo`; for S8, S9's
 verbatim "S8 End"); the Hall of Fame's World, cup and all ten regional titles
 follow from the games; and Regional and League are complete round robins
@@ -138,7 +140,11 @@ block (headed "NOT FIXED") disagrees for all 160 and is not read.
 **A recorded inconsistency is accepted only when listed** -- per season, in
 `SEASONS[n]["anomalies"]`, by Archive row, check and reason -- and it lands in
 `events.json`. Anything unlisted still refuses, and a listed anomaly that no
-longer occurs refuses too (the list cannot go stale).
+longer occurs refuses too (the list cannot go stale). **A value the user has
+ruled wrong is replaced only through `SEASONS[n]["corrections"]`** (row, field,
+the sheet's value, the corrected value, the reason), applied before validation
+and written to `events.json`; it refuses if the sheet no longer holds the value
+the correction names.
 
 **Event labels**: a title opens with two ALL-CAPS words; a round/leg label
 refines it, and a second round/leg label within one title opens the next part
@@ -188,9 +194,8 @@ S8's structure, as the Archive lays it out (event codes in `events.json`):
 ### Season 7 (extracted 2026-10-11)
 
 **Complete as well -- nothing to simulate.** 3,442 games in 85 events, the same
-recorded fields as S8 plus play dates (26 days, "D1 5/22" to "D26 2/25") and
-game IDs (column C, e.g. `S06R01G01` -- prefixed S06 though they are S7 games;
-kept verbatim). Same 160 teams with the same dex, names and regions as S8. No
+recorded fields as S8 plus play dates (26 days, "D1 5/22" to "D26 2/25").
+Column C's game IDs are not extracted (per the user: ignore them). Same 160 teams with the same dex, names and regions as S8. No
 Primary Type column; accolades span two columns (joined with "; ").
 
 The user described S7 as S8 "except the WC, which had odd swiss brackets to
@@ -212,10 +217,11 @@ Balance", "Modified HomeAdv"; at GS7 "EYE formula fixed", "PF formula
 adjusted", "Scoring table formula adjusted"; at L14 "Five month hiatus
 (corrupted file)" (the dates jump from 9/14 to 2/8 there).
 
-**One listed anomaly**: Archive row 3222 (Delta playoff SF leg 1, Fallarbor
-Town at Lavaridge Town) moved Elo by 40 each way while its K column says 22.
-Every later game chains correctly from the recorded Elo. Recorded as written;
-which number is right was put to the user.
+**One correction**: Archive row 3222 (Delta playoff SF leg 1, Fallarbor Town at
+Lavaridge Town) moved Elo by 40 each way while its K column says 22. Per the
+user, "whatever the Elo actually changed by, that's what stays": the Elo is
+kept and `elo_k` is 40, with the sheet's 22 recorded in `events.json`.
+**The rule for every season: the recorded Elo is the truth, and K follows it.**
 
 ## Season 9 is frozen (2026-10-10, per explicit instruction)
 

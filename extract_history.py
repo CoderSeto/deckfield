@@ -35,7 +35,11 @@ It also adds the season to history/teams.json, the cross-season identity map.
 It refuses to write unless every check against the workbook's own totals and
 against later records passes -- see validate(). A recorded inconsistency the
 season really contains is accepted only when it is listed, row by row with its
-reason, in that season's "anomalies"; anything unlisted still refuses.
+reason, in that season's "anomalies"; anything unlisted still refuses. A
+recorded value the user has ruled wrong is replaced only through that season's
+"corrections" (Archive row, field, the sheet's value, the corrected value, the
+reason), each written to events.json; the sheet's value must still be what the
+entry says, so a correction cannot silently go stale.
 Season-specific layout lives in SEASONS.
 """
 import csv
@@ -91,6 +95,7 @@ SEASONS = {
         # Calcs: per-team game grid, column L onward in play order.
         "calcs_first_col": 12,
         "anomalies": {},
+        "corrections": {},
     },
     7: {
         # No primary type column. Accolades in CA and CB. CK the final rank
@@ -102,11 +107,13 @@ SEASONS = {
                          final_rank=88, opening_rank=147, opening_elo=None),
         "record_cols": dict(RW=5, RL=6, LW=7, LL=8, SW=9, SL=10, pW=11, pL=12),
         "calcs_first_col": 12,
-        "anomalies": {
-            3222: ("Elo", "Delta playoff SF leg 1, Fallarbor Town (57) won at Lavaridge "
-                          "Town (25): Elo moved 40 each way (1879->1919, 2041->2001) "
-                          "though the K column says 22. Recorded as written; the chain "
-                          "continues from the recorded Elo and every later game holds."),
+        "anomalies": {},
+        "corrections": {
+            3222: ("elo_k", 22, 40,
+                   "Delta playoff SF leg 1, Fallarbor Town (57) won at Lavaridge Town "
+                   "(25): Elo moved 40 each way (1879->1919, 2041->2001) but the K "
+                   "column says 22. Per the user (2026-10-11): whatever the Elo "
+                   "actually changed by stays, so K is 40."),
         },
     },
 }
@@ -205,6 +212,18 @@ def read_teams(wb, cfg):
     return teams
 
 
+def apply_corrections(games, corrections):
+    """Replace each ruled-wrong value, refusing if the sheet no longer holds
+    the value the correction was written against."""
+    by_row = {g["row"]: g for g in games}
+    for row, (field, sheet, fixed, _why) in corrections.items():
+        g = by_row.get(row)
+        if g is None or g[field] != sheet:
+            raise SystemExit(f"correction at Archive row {row}: expected {field}={sheet!r}, "
+                             f"sheet has {None if g is None else g[field]!r}")
+        g[field] = fixed
+
+
 def opening_elos(games, teams):
     """Each team's Elo before its first game, from that game: Elo after, less
     the K it gained (winner) or plus the K it lost (loser)."""
@@ -269,7 +288,6 @@ def read_games(wb):
             "home_away": str(r[6]).strip().upper(), "w": w.groups(), "l": l.groups(),
             "ex": ex, "mark": r[17] or "", "note": r[19] or "",
             "rank_w": r[7], "rank_l": r[12], "elo_k": r[4], "goals": r[13],
-            "game_id": r[2] or "",
         })
     for i, e in enumerate(events, start=1):
         e["round"] = i
@@ -357,7 +375,7 @@ def build_game_rows(games, name_to_dex, canon):
             "goals_a": goals_h, "goals_b": goals_a, "elo_k": g["elo_k"],
             "rank_a": rank_h, "rank_b": rank_a,
             "ot": int(ot), "mark": g["mark"], "note": g["note"].replace("\n", " "),
-            "source_row": g["row"], "game_id": g["game_id"], "raw_winner": "".join(_raw(w)), "raw_loser": "".join(_raw(l)),
+            "source_row": g["row"], "raw_winner": "".join(_raw(w)), "raw_loser": "".join(_raw(l)),
         })
     return rows
 
@@ -371,7 +389,7 @@ GAME_FIELDS = ["seq", "round", "event", "game_type", "team_a", "team_b", "result
                "pf_a", "pa_a", "raw_goal_a", "raw_goal_b", "spread_a", "interest",
                "dscr_a", "dscr_b", "elo_a_after", "elo_b_after", "home", "ex_a", "ex_b",
                "ex_winner_diff", "winner", "goals_a", "goals_b", "elo_k", "rank_a", "rank_b",
-               "ot", "mark", "note", "source_row", "game_id", "raw_winner", "raw_loser"]
+               "ot", "mark", "note", "source_row", "raw_winner", "raw_loser"]
 
 
 def validate(season, teams, games, walkovers, canon, events, anomalies=None):
@@ -447,6 +465,16 @@ def validate(season, teams, games, walkovers, canon, events, anomalies=None):
     for dex, t in teams.items():
         if last.get(dex) != float(t["final_elo"]):
             errors.append(f"{t['name']}: last game Elo {last.get(dex)} != final {t['final_elo']}")
+
+    # 3c. Elo is zero-sum and every season opens on an average of 1800: the
+    #     opening Elo and the final Elo each total 1800 per team (per the user,
+    #     2026-10-11: "as long as the Starting Elo totals 288000, it's fine").
+    expected_total = 1800 * len(teams)
+    for label, vals in (("opening", opening.values()),
+                        ("final", (float(t["final_elo"]) for t in teams.values()))):
+        total = sum(vals)
+        if abs(total - expected_total) > 0.5:
+            errors.append(f"{label} Elo totals {total:g}, not {expected_total}")
 
     # 4. The next season's own record of how this one ended: its opening rank
     #    and opening Elo, by canonical id. For S8 that is S9's "S8 End" ranks
@@ -608,6 +636,8 @@ def main(season, workbook):
     wb = openpyxl.load_workbook(workbook, read_only=True, data_only=True)
     teams = read_teams(wb, cfg)
     events, games = read_games(wb)
+    corrections = cfg["corrections"]
+    apply_corrections(games, corrections)
     walkovers = read_walkovers(wb, cfg, events)
     canon, canon_names = canonical_ids(teams)
 
@@ -653,6 +683,8 @@ def main(season, workbook):
                        "regions": {r: v[:2] for r, v in sorted(titles["regions"].items())}},
             "anomalies": [{"source_row": r, "check": c, "reason": why}
                           for r, (c, why) in sorted(anomalies.items())],
+            "corrections": [{"source_row": r, "field": f, "sheet": a, "corrected": b, "reason": why}
+                            for r, (f, a, b, why) in sorted(corrections.items())],
             "events": [{"round": e["round"], "code": e["code"], "title": e["title"],
                         "sub": e["sub"], "date": e["date"], "notes": e["notes"],
                         "games": e["games"], "empty": e["games"] == 0,

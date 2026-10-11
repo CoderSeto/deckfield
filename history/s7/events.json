@@ -58,11 +58,14 @@
    ]
   }
  },
- "anomalies": [
+ "anomalies": [],
+ "corrections": [
   {
    "source_row": 3222,
-   "check": "Elo",
-   "reason": "Delta playoff SF leg 1, Fallarbor Town (57) won at Lavaridge Town (25): Elo moved 40 each way (1879->1919, 2041->2001) though the K column says 22. Recorded as written; the chain continues from the recorded Elo and every later game holds."
+   "field": "elo_k",
+   "sheet": 22,
+   "corrected": 40,
+   "reason": "Delta playoff SF leg 1, Fallarbor Town (57) won at Lavaridge Town (25): Elo moved 40 each way (1879->1919, 2041->2001) but the K column says 22. Per the user (2026-10-11): whatever the Elo actually changed by stays, so K is 40."
   }
  ],
  "events": [
