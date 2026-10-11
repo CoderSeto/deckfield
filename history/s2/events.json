@@ -1,0 +1,293 @@
+{
+ "season": 2,
+ "source": [
+  {
+   "workbook": "history/s1-3/Dice_Game_S123.xlsx",
+   "sha256": "2949b1622a8c5e5982421df200953f4451aaea02144ed0c3a0fcb08514194649"
+  },
+  {
+   "workbook": "history/s1-3/DG_MRLUCL_Experimenting.xlsx",
+   "sha256": "469c96da421424b5969a6355c471baf111120870f854f931f3ca2dd1701a7e75"
+  }
+ ],
+ "host_sources": {
+  "record": 6,
+  "schedule": 576,
+  "seed": 18
+ },
+ "games": 600,
+ "walkovers": 0,
+ "titles": {
+  "world": [
+   "Geosenge Town",
+   "Castelia City"
+  ],
+  "regions": {
+   "Delta": [
+    "Rustboro City",
+    "Slateport City"
+   ],
+   "Indigo": [
+    "Viridian City",
+    "Goldenrod City"
+   ],
+   "Kalosite": [
+    "Geosenge Town",
+    "Santalune City"
+   ],
+   "Lanakila": [
+    "Paniola Town",
+    "Seafolk Village"
+   ],
+   "LilyValley": [
+    "Solaceon Town",
+    "Oreburgh City"
+   ],
+   "Vertress": [
+    "Castelia City",
+    "Virbank City"
+   ]
+  }
+ },
+ "anomalies": [
+  {
+   "finding": "Ambrette Town: CfL",
+   "check": "records",
+   "reason": "Rankings gives a 3-7 conference record, ten games; Ambrette Town played nine (3-6), every one confirmed by the weekly Elo. The games are archived."
+  }
+ ],
+ "corrections": [],
+ "events": [
+  {
+   "round": 1,
+   "code": "MD1",
+   "title": "Week 1",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 48,
+   "empty": false,
+   "source_row": 2
+  },
+  {
+   "round": 2,
+   "code": "MD2",
+   "title": "Week 2",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 48,
+   "empty": false,
+   "source_row": 42
+  },
+  {
+   "round": 3,
+   "code": "MD3",
+   "title": "Week 3",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 48,
+   "empty": false,
+   "source_row": 98
+  },
+  {
+   "round": 4,
+   "code": "MD4",
+   "title": "Week 4",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 48,
+   "empty": false,
+   "source_row": 146
+  },
+  {
+   "round": 5,
+   "code": "MD5",
+   "title": "Week 5",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 48,
+   "empty": false,
+   "source_row": 194
+  },
+  {
+   "round": 6,
+   "code": "MD6",
+   "title": "Week 6",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 48,
+   "empty": false,
+   "source_row": 242
+  },
+  {
+   "round": 7,
+   "code": "MD7",
+   "title": "Week 7",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 48,
+   "empty": false,
+   "source_row": 290
+  },
+  {
+   "round": 8,
+   "code": "MD8",
+   "title": "Week 8",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 48,
+   "empty": false,
+   "source_row": 338
+  },
+  {
+   "round": 9,
+   "code": "MD9",
+   "title": "Week 9",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 48,
+   "empty": false,
+   "source_row": 386
+  },
+  {
+   "round": 10,
+   "code": "MD10",
+   "title": "Week 10",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 48,
+   "empty": false,
+   "source_row": 434
+  },
+  {
+   "round": 11,
+   "code": "MD11",
+   "title": "Week 11",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 48,
+   "empty": false,
+   "source_row": 482
+  },
+  {
+   "round": 12,
+   "code": "MD12",
+   "title": "Week 12",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 48,
+   "empty": false,
+   "source_row": 530
+  },
+  {
+   "round": 13,
+   "code": "CC-F",
+   "title": "Conference Championships",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 6,
+   "empty": false,
+   "source_row": 578
+  },
+  {
+   "round": 14,
+   "code": "WC-PI-1",
+   "title": "Playoffs - Play-in, First Leg",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 584
+  },
+  {
+   "round": 15,
+   "code": "WC-PI-2",
+   "title": "Playoffs - Play-in, Second Leg",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 586
+  },
+  {
+   "round": 16,
+   "code": "WC-QF-1",
+   "title": "Playoffs - Quarterfinal, First Leg",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 588
+  },
+  {
+   "round": 17,
+   "code": "WC-QF-2",
+   "title": "Playoffs - Quarterfinal, Second Leg",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 592
+  },
+  {
+   "round": 18,
+   "code": "WC-SF-1",
+   "title": "Playoffs - Semifinal, First Leg",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 596
+  },
+  {
+   "round": 19,
+   "code": "WC-SF-2",
+   "title": "Playoffs - Semifinal, Second Leg",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 598
+  },
+  {
+   "round": 20,
+   "code": "WC-F-1",
+   "title": "Playoffs - Final, Game One",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 600
+  },
+  {
+   "round": 21,
+   "code": "WC-F-2",
+   "title": "Playoffs - Final, Game Two",
+   "sub": null,
+   "dates": [],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 601
+  }
+ ]
+}

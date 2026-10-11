@@ -1,6 +1,10 @@
 """Extract a finished pre-S9 season from its workbook into history/s<N>/.
 
     python3 extract_history.py 8 "history/s8/Baccer Game S8 Stats.xlsm"
+    python3 extract_history.py 3 history/s1-3/Dice_Game_S123.xlsx    # S1-S3 share it
+
+Seasons 1-3 are read by history_early.py (one workbook for all three, their
+Elo in history/s1-3/DG_MRLUCL_Experimenting.xlsx); the checks are these.
 
 The historical archive keeps exactly what the season RECORDED. Nothing here is
 simulated, estimated or recomputed with today's formulas: a stat the workbook
@@ -10,7 +14,11 @@ in a separate layer beside these files, never in them.
 What it writes, all under history/s<N>/:
 
 - games.csv      one row per game, Archive order. team_a is the HOST (home is
-                 always "A", as in the modern CSV). Team ids are CANONICAL --
+                 "A", as in the modern CSV); where no host is known (some S1/S3
+                 games) team_a is the winner and home is blank. host_source says
+                 where the host came from: "recorded" (the sheet's H/A), or for
+                 S1-S2 "schedule", "interc", "record" or "seed" (rebuilt under
+                 the user's rules -- see history_early.py). Team ids are CANONICAL --
                  the team's S9 dex -- not the season's own dex, which is not a
                  stable identity (see history/teams.json).
                  rank_a/rank_b are each side's rank GOING INTO the game (Archive
@@ -340,6 +348,190 @@ SEASONS = {
 # ---------------------------------------------------------------------------
 # Events
 # ---------------------------------------------------------------------------
+
+# Seasons 1-3 live in one workbook (history/s1-3/Dice_Game_S123.xlsx) and
+# their Elo in another (DG_MRLUCL_Experimenting.xlsx); history_early.py reads
+# them. No game strings survive: each game is its row's columns, its game type
+# its event's, its Elo the weekly Elo sheet's.
+EARLY_ELO_WORKBOOK = "history/s1-3/DG_MRLUCL_Experimenting.xlsx"
+EARLY_TYPES = [(r'^MD\d+$', "R/I"), (r'^WCS-', "W"), (r'^(CRY|EME|PLA|GRA|PRI|KAH|GIG)-', "C"),
+               (r'^(MRL|UTL)-', "M"), (r'^CC-', "P"), (r'^WC-', "F")]
+
+
+def _weeks(n_regular, post):
+    """S1/S2's events are the Elo workbook's weeks: W1..Wn the regular season,
+    then the postseason in order."""
+    out = {f"W{i}": (f"MD{i}", f"Week {i}") for i in range(1, n_regular + 1)}
+    for i, ev in enumerate(post, start=n_regular + 1):
+        out[f"W{i}"] = ev
+    return out
+
+
+SEASONS.update({
+    3: {
+        # 112 teams in 7 conferences (Dynamax new). Rankings: A dex, CD the
+        # FINAL rank checkpoint (keyed by CC's name), DG "Preseason" (S2's
+        # final order, with the 16 Dynamax teams ranked in), BC TOTAL.
+        "reader": "early",
+        "rankings": dict(sheet="Rankings", dex=0, region=1, division=2, name=3, ovr=54,
+                         final_rank=82, opening_rank=110, checkpoint_name=81),
+        "elo_workbook": EARLY_ELO_WORKBOOK, "elo_sheet": "Season 3",
+        "elo_archive": dict(sheet="Archive", week=1, winner=7, score_w=8, score_l=9, loser=10, goals=12),
+        # Records as S4's: Se = the 13 matchday games, Cf = those within the
+        # conference (inside Se), Ex = everything else.
+        "record_cols": dict(SeW=5, SeL=6, CfW=8, CfL=9, ExW=11, ExL=12),
+        "record_buckets": {"R": ("Se", "Cf"), "I": ("Se",), "C": ("Ex",), "W": ("Ex",),
+                           "M": ("Ex",), "P": ("Se",), "F": ("Ex",)},
+        "archive": "Archive",
+        "archive_cols": dict(date=0, label=1, spread=2, interest=3, ha=4, rank_w=5, winner=6,
+                             score_w=7, score_l=8, loser=9, rank_l=10, goals=11, dscr=12,
+                             mark=13, note=14),
+        # A changelog note written in the label cell of a game that opens the
+        # next event.
+        "label_overrides": {
+            742: ("UTL Group A - Match 2 - 1st Leg", "New Rating Formula Instituted"),
+        },
+        "type_by_code": EARLY_TYPES,
+        "mixed_types": {"R", "I"},
+        "round_robins": [],
+        # 252 early games (matchdays 1, 2, 4 and 5, cup round 1) recorded no host.
+        "host_optional": True,
+        "next_rank": "order",
+        "cup": ("wcs", "two_leg_final", ["WCS-F-1", "WCS-F-2"]),
+        "regional_final": ["CC-F"],
+        "league_finals": [["MRL-F-1", "MRL-F-2"], ["UTL-F-1", "UTL-F-2"]],
+        # The World Championship was double elimination; the champion won the
+        # Grand Final reset, 2-1.
+        "world_final": ["WC-GFR-1", "WC-GFR-2", "WC-GFR-3"],
+        # Ties decided in aggregate overtime (the numbers are read from each
+        # row's note and checked against the legs).
+        "aggot_rows": {
+            461: "WCS round 3 leg 2: Cyllage City won the leg, Ever Grande City the tie.",
+            725: "WCS round 4 leg 2.",
+            954: "WCS round 5 leg 2: Santalune City won the leg, Viridian City the tie.",
+            1267: "WCS semifinal leg 2: South Lakes won the leg, Kala'e Bay the tie.",
+            1309: "World Championship Lower First Round leg 2.",
+            1328: "World Championship Lower Final leg 2.",
+        },
+        # Rankings' own count is one off for three teams, each time on one side
+        # of a game only (the opponent's record in it reconciles), and every
+        # game is confirmed by the weekly Elo: both teams' Elo moved that week.
+        "anomalies": {
+            "Cinnabar Island: ExW": ("records", "Rankings counts 19 non-matchday wins; the "
+                                                "games hold 20. The games are archived."),
+            "Celestic Town: ExL": ("records", "Rankings counts 5 non-matchday losses; the "
+                                              "games hold 6. The games are archived."),
+            "Solaceon Town: ExW": ("records", "Rankings counts 8 non-matchday wins; the "
+                                              "games hold 9. The games are archived."),
+        },
+        "corrections": {},
+        "cell_corrections": {
+            177: ("dscr", "{42.2-4.8)", "{42.2-4.8}",
+                  "Matchday 4, Hau'oli City over Heahea City: the DSCR pair's closing brace "
+                  "is typed as a parenthesis."),
+        },
+    },
+    2: {
+        # 96 teams in 6 conferences (Lanakila new), 12 divisions of 8.
+        # S2 Rankings: A the team's code, E its playoff seed, Y its final rank,
+        # AA TOTAL.
+        "reader": "early",
+        "rankings": dict(sheet="S2 Rankings", dex=0, region=1, division=2, name=3, ovr=26,
+                         final_rank=24, seed=4),
+        "elo_workbook": EARLY_ELO_WORKBOOK, "elo_sheet": "Season 2",
+        "elo_archive": dict(sheet="S2 Archive", week=1, winner=4, score_w=5, score_l=6, loser=7, goals=9),
+        # Wins/Losses = every game; CF = regular-season conference games only.
+        "record_cols": dict(W=5, L=6, CfW=8, CfL=9),
+        "record_buckets": {"R": ("", "Cf"), "I": ("",), "P": ("",), "F": ("",)},
+        "archive": "S2 Archive",
+        "archive_cols": dict(label=2, rank_w=3, winner=4, score_w=5, score_l=6, loser=7,
+                             rank_l=8, goals=9, note=10),
+        "week_events": _weeks(12, [
+            ("CC-F", "Conference Championships"),
+            ("WC-PI-1", "Playoffs - Play-in, First Leg"), ("WC-PI-2", "Playoffs - Play-in, Second Leg"),
+            ("WC-QF-1", "Playoffs - Quarterfinal, First Leg"), ("WC-QF-2", "Playoffs - Quarterfinal, Second Leg"),
+            ("WC-SF-1", "Playoffs - Semifinal, First Leg"), ("WC-SF-2", "Playoffs - Semifinal, Second Leg"),
+            ("WC-F-1", "Playoffs - Final, Game One"), ("WC-F-2", "Playoffs - Final, Game Two")]),
+        "type_by_code": EARLY_TYPES,
+        "mixed_types": {"R", "I"},
+        "round_robins": [],
+        "division_rr": True,
+        # Hosts, per the user (2026-10-11): S2 Divisions' template, the second
+        # team of "x=y" hosting; crossovers its B rounds, interconference its
+        # round 4 ("4-X"); the better record hosts a conference championship,
+        # the higher seed a playoff game.
+        "schedule": dict(positions="s2", orientation="second", crossover="B",
+                         regular_weeks={f"W{i}" for i in range(1, 13)}),
+        "host_declarations": [("Verdanturf Town", "Rustboro City")],
+        "next_rank": "order",
+        "cup": None,
+        "regional_final": ["CC-F"],
+        "world_final": ["WC-F-1", "WC-F-2"],
+        "aggot_rows": {
+            594: "Playoff quarterfinal leg 2.",
+        },
+        "anomalies": {
+            "Ambrette Town: CfL": ("records", "Rankings gives a 3-7 conference record, ten "
+                                              "games; Ambrette Town played nine (3-6), every one "
+                                              "confirmed by the weekly Elo. The games are archived."),
+        },
+        "corrections": {},
+    },
+    1: {
+        # 80 teams in 5 conferences, 10 divisions of 8. S1 Rankings: A the
+        # team's code, E its World Championship seed, U its final rank, V TOTAL.
+        "reader": "early",
+        "rankings": dict(sheet="S1 Rankings", dex=0, region=1, division=2, name=3, ovr=21,
+                         final_rank=20, seed=4),
+        "elo_workbook": EARLY_ELO_WORKBOOK, "elo_sheet": "Season 1",
+        "elo_archive": dict(sheet="S1 Archive", week=0, winner=3, score_w=4, score_l=5, loser=6, goals=7),
+        # Wins/Losses = every game; CF = regular-season conference games only.
+        "record_cols": dict(W=5, L=6, CfW=8, CfL=9),
+        "record_buckets": {"R": ("", "Cf"), "I": ("",), "P": ("",), "F": ("",)},
+        "archive": "S1 Archive",
+        "archive_cols": dict(date=1, label=2, winner=3, score_w=4, score_l=5, loser=6,
+                             goals=7, note=8),
+        # Column C holds poll ranks ("#25 v. #15", winner first) through the
+        # conference championships; the World Championship's are seeds.
+        "label_ranks": {f"W{i}" for i in range(1, 15)},
+        "week_events": _weeks(13, [
+            ("CC-F", "Conference Championships"),
+            ("WC-G1", "World Championship - Group Stage, Opening Games"),
+            ("WC-G2", "World Championship - Group Stage, Winners and Losers"),
+            ("WC-G3", "World Championship - Group Stage, Deciders"),
+            ("WC-SF", "World Championship - Semifinals"),
+            ("WC-F", "World Championship - Final")]),
+        "type_by_code": EARLY_TYPES,
+        "mixed_types": {"R", "I"},
+        "round_robins": [],
+        "division_rr": True,
+        # Hosts, per the user (2026-10-11): the template reversed (the FIRST
+        # team of "x=y" hosts) on S1's own positions; crossovers its A rounds;
+        # interconference from S1 InterC (the listed team at home in weeks 1
+        # and 7, away in 2 and 11).
+        "schedule": dict(positions="s1", orientation="first", crossover="A",
+                         regular_weeks={f"W{i}" for i in range(1, 14)},
+                         interc=("S1 InterC", 3, 42, 2,
+                                 {11: (1, "away"), 1: (4, "home"), 2: (5, "away"), 7: (6, "home")})),
+        "host_declarations": [("Rustboro City", "Verdanturf Town")],
+        # Two conference championships were between teams with the same
+        # regular-season record (overall and in conference) who never met, so
+        # "the better record hosts" does not decide them; their hosts stay
+        # blank until a tiebreak is ruled.
+        "host_optional": {524: "Lily Valley championship, Celestic Town v Sandgem Town (both 11-2, 8-1)",
+                          525: "Kalosite championship, Vaniville Town v Cyllage City (both 10-3, 8-1)"},
+        "next_rank": None,
+        "cup": None,
+        "regional_final": ["CC-F"],
+        "world_final": ["WC-F"],
+        "anomalies": {
+            228: ("more", "Week 6, Shalour City 12-8 over Geosenge Town: goals read [8-9], "
+                           "nine goals for a side that scored eight points. Kept as recorded."),
+        },
+        "corrections": {},
+    },
+})
+
 
 STRUCTURAL = re.compile(r'\b(Leg|Round|Game|Quarterfinal|Semifinal|Championship|Play-in|'
                         r'Nature|Justice)\b', re.I)
@@ -857,7 +1049,9 @@ def build_game_rows(games, name_to_dex, canon, cfg):
     for seq, g in enumerate(games, start=1):
         w, l = g["w"], g["l"]
         wdex, ldex = name_to_dex[g["winner_name"]], name_to_dex[g["loser_name"]]
-        winner_home = g["home_away"] == "H"
+        # An unknown host (S3's earliest games) keeps the winner as team_a and
+        # leaves `home` blank.
+        winner_home = g["home_away"] in ("H", "")
         home, away = (w, l) if winner_home else (l, w)
         rank_h, rank_a = (g["rank_w"], g["rank_l"]) if winner_home else (g["rank_l"], g["rank_w"])
         gw, gl = (int(x) for x in GOALS_PATTERN.match(str(g["goals"])).groups())
@@ -876,7 +1070,8 @@ def build_game_rows(games, name_to_dex, canon, cfg):
             "spread_a": home[6], "interest": home[7],
             "dscr_a": home[8], "dscr_b": away[8],
             "elo_a_after": home[9], "elo_b_after": away[9],
-            "home": "A",
+            "home": "A" if g["home_away"] else "",
+            "host_source": g.get("host_source", "recorded"),
             # Modern per-team EX is a gap: S7-S8 banked a bonus for the winner
             # only, as a differential, not each side's own score; S6 kept no
             # per-game EX at all.
@@ -896,7 +1091,7 @@ def build_game_rows(games, name_to_dex, canon, cfg):
 
 GAME_FIELDS = ["seq", "round", "event", "day", "game_type", "team_a", "team_b", "result_a",
                "pf_a", "pa_a", "raw_goal_a", "raw_goal_b", "spread_a", "interest",
-               "dscr_a", "dscr_b", "elo_a_after", "elo_b_after", "home", "ex_a", "ex_b",
+               "dscr_a", "dscr_b", "elo_a_after", "elo_b_after", "home", "host_source", "ex_a", "ex_b",
                "ex_winner_diff", "winner", "goals_a", "goals_b", "aggot_a", "aggot_b", "elo_k",
                "rank_a", "rank_b",
                "ot", "mark", "note", "source_row", "string_source", "raw_winner", "raw_loser"]
@@ -919,15 +1114,18 @@ def validate(season, teams, games, walkovers, canon, events, anomalies=None, cfg
             errors.append(f"{where}: results {w[0]}/{l[0]} do not sum to 3")
         if (w[3], w[4]) != (l[4], l[3]):
             errors.append(f"{where}: scores do not mirror")
-        if abs(float(w[6]) + float(l[6])) > 0.011:
+        if w[6] != "" and abs(float(w[6]) + float(l[6])) > 0.011:
             errors.append(f"{where}: spreads do not mirror")
         if w[7] != l[7] or w[1] != l[1]:
             errors.append(f"{where}: interest or game type differ")
         if int(w[0]) < 2:
             errors.append(f"{where}: the named winner did not win")
-        if int(w[2]) != name_to_dex.get(g["loser_name"]) or int(l[2]) != name_to_dex.get(g["winner_name"]):
+        # (S1-S2 identify a team by its Rankings code, not a number.)
+        if w[2] != str(name_to_dex.get(g["loser_name"])) or l[2] != str(name_to_dex.get(g["winner_name"])):
             errors.append(f"{where}: opponent dex does not match the named teams")
-        if g["home_away"] not in ("H", "A"):
+        optional = cfg.get("host_optional")
+        if g["home_away"] not in ("H", "A") and not (g["home_away"] == "" and (
+                optional is True or (optional and g["row"] in optional))):
             errors.append(f"{where}: host {g['home_away']!r} is neither H nor A")
         gm = GOALS_PATTERN.match(str(g["goals"]))
         if not gm:
@@ -1051,15 +1249,31 @@ def validate(season, teams, games, walkovers, canon, events, anomalies=None, cfg
     #    (copied verbatim from S9's workbook), which is what proves
     #    RENAMED_SINCE; for earlier seasons the next season's archived
     #    teams.csv. Required: a season is extracted only after the one after it.
+    #    Where the next season added teams and ranked them in among the old
+    #    ones (S3 -> S4's Phoenix, S2 -> S3's Dynamax) the check is the ORDER
+    #    of this season's teams ("next_rank": "order"); where the next season
+    #    kept no opening rank (S2) it is skipped ("next_rank": None).
     nxt = _next_season_record(season)
+    rank_mode = cfg.get("next_rank", "exact")
     for dex, t in teams.items():
         rank, elo_in = nxt[canon[dex]]
-        if rank is None:
-            errors.append(f"{t['name']}: S{season + 1} has no opening rank for it")
-        elif rank != t["final_rank"]:
-            errors.append(f"{t['name']}: final rank {t['final_rank']}, S{season + 1} opened it at {rank}")
+        if rank_mode == "exact":
+            if rank is None:
+                errors.append(f"{t['name']}: S{season + 1} has no opening rank for it")
+            elif rank != t["final_rank"]:
+                errors.append(f"{t['name']}: final rank {t['final_rank']}, S{season + 1} opened it at {rank}")
         if elo_in is not None and elo_in != float(t["final_elo"]):
             errors.append(f"{t['name']}: final Elo {t['final_elo']}, S{season + 1} opened it at {elo_in}")
+    if rank_mode == "order":
+        mine = sorted(teams, key=lambda d: teams[d]["final_rank"])
+        if any(nxt[canon[d]][0] is None for d in mine):
+            errors.append(f"S{season + 1} has no opening rank for some of this season's teams")
+        else:
+            theirs = sorted(teams, key=lambda d: nxt[canon[d]][0])
+            if mine != theirs:
+                bad = [teams[d]["name"] for d, e in zip(mine, theirs) if d != e]
+                errors.append(f"final rank order differs from S{season + 1}'s opening order "
+                              f"({len(bad)} places, from {bad[0]})")
 
     # 5. The Hall of Fame's titles for this season follow from the games.
     errors += _check_hall_of_fame(season, games, teams, events, cfg)
@@ -1094,6 +1308,31 @@ def validate(season, teams, games, walkovers, canon, events, anomalies=None, cfg
         for code, c in per_event.items():
             if len(c) != len(teams) or set(c.values()) != {1}:
                 errors.append(f"{code}: not every team played exactly once")
+
+    # 6b. S1-S2: every division is a complete single round robin within the
+    #     regular season, whichever weeks its games fell in.
+    if cfg.get("division_rr"):
+        pairs = Counter()
+        for g in games:
+            a, b = name_to_dex[g["winner_name"]], name_to_dex[g["loser_name"]]
+            if g["w"][1] == "R" and teams[a]["division"] == teams[b]["division"]:
+                pairs[frozenset((a, b))] += 1
+        sizes = Counter((t["region"], t["division"]) for t in teams.values())
+        expected = sum(n * (n - 1) // 2 for n in sizes.values())
+        if len(pairs) != expected or any(v != 1 for v in pairs.values()):
+            errors.append(f"divisions: {len(pairs)} distinct pairs (expected {expected}), "
+                          f"{sum(v > 1 for v in pairs.values())} repeated")
+
+    # 6c. Hosts the user declared, which fix the schedule's orientation.
+    for host, away in cfg.get("host_declarations", []):
+        found = [g for g in games if {g["winner_name"], g["loser_name"]} == {host, away}
+                 and g["w"][1] == "R"]
+        if not found:
+            errors.append(f"declared host: no {host} v {away} game")
+        for g in found:
+            actual = g["winner_name"] if g["home_away"] == "H" else g["loser_name"]
+            if actual != host:
+                errors.append(f"declared host: {host} should host {away}, row {g['row']} has {actual}")
 
     # Listed anomalies: accepted, but each must actually occur -- a listed
     # anomaly that no longer fires means the list is stale.
@@ -1154,13 +1393,14 @@ def derived_titles(games, teams, events, cfg):
         by_code[g["event"]["code"]].append(g)
     titles = {}
 
-    wc = Counter(g["winner_name"] for c in ("WC-F-1", "WC-F-2", "WC-F-3") for g in by_code[c])
-    finalists = {g[k] for c in ("WC-F-1", "WC-F-2", "WC-F-3") for g in by_code[c]
+    world_codes = cfg.get("world_final", ("WC-F-1", "WC-F-2", "WC-F-3"))
+    wc = Counter(g["winner_name"] for c in world_codes for g in by_code[c])
+    finalists = {g[k] for c in world_codes for g in by_code[c]
                  for k in ("winner_name", "loser_name")}
     champ = wc.most_common(1)[0][0]
     titles["world"] = (champ, (finalists - {champ}).pop())
 
-    cup_name, rule, *cup_codes = cfg["cup"]
+    cup_name, rule, *cup_codes = cfg["cup"] or (None, None)
     if rule == "two_leg_final":
         codes = cup_codes[0] if cup_codes else ["GS-F-1", "GS-F-2"]
         w, pts = _tie_winner([g for c in codes for g in by_code[c]])
@@ -1209,8 +1449,11 @@ def _check_hall_of_fame(season, games, teams, events, cfg):
     if [canonical(x) for x in titles["world"]] != world[:2]:
         errors.append(f"World Championship: games say {titles['world']}, Hall of Fame {world[:2]}")
 
-    cup = hof["plaques"]["cup"]["seasons"][s]
-    if [canonical(x) if x else None for x in titles["cup"]] != hof_names(cup)[:2]:
+    cup = hof["plaques"]["cup"]["seasons"].get(s)
+    if cfg["cup"] is None:
+        if cup is not None:
+            errors.append(f"the Hall of Fame has an S{s} cup but this season names none")
+    elif [canonical(x) if x else None for x in titles["cup"]] != hof_names(cup)[:2]:
         errors.append(f"{titles['cup_name']}: games say {titles['cup']}, Hall of Fame {hof_names(cup)}")
 
     if titles["league"]:
@@ -1226,7 +1469,7 @@ def _check_hall_of_fame(season, games, teams, events, cfg):
         if plate is None:
             errors.append(f"{region}: no Hall of Fame entry for S{s}")
             continue
-        champ = plate["name"]
+        champ = plate["name"].rstrip("*")
         if canonical(w) != RENAMED_SINCE.get(champ, champ):
             errors.append(f"{region} regional champion: games say {w}, Hall of Fame {champ}")
     return errors
@@ -1249,9 +1492,23 @@ def write_csv(path, fields, rows):
 def main(season, workbook):
     cfg = SEASONS[season]
     wb = openpyxl.load_workbook(workbook, read_only=True, data_only=True)
-    teams = read_teams(wb, cfg)
-    events, games = read_games(wb, cfg, {t["name"]: d for d, t in teams.items()},
-                               {t["name"]: t["region"] for t in teams.values()})
+    sources = [workbook]
+    host_errors = []
+    if cfg.get("reader") == "early":
+        # S1-S3: one workbook for all three, their Elo in a second.
+        import history_early
+        elo_path = os.path.join(ROOT, cfg["elo_workbook"])
+        sources.append(elo_path)
+        ewb = openpyxl.load_workbook(elo_path, read_only=True, data_only=True)
+        teams = history_early.read_teams(wb, ewb, cfg)
+        events, games = history_early.read_games(wb, ewb, cfg, teams)
+        if cfg.get("schedule"):
+            hosts, host_errors, _ = history_early.schedule_hosts(wb, cfg, teams, games)
+            history_early.apply_hosts(hosts, games)
+    else:
+        teams = read_teams(wb, cfg)
+        events, games = read_games(wb, cfg, {t["name"]: d for d, t in teams.items()},
+                                   {t["name"]: t["region"] for t in teams.values()})
     corrections = cfg["corrections"]
     apply_corrections(games, corrections)
     if "calcs_grid" in cfg:
@@ -1259,11 +1516,12 @@ def main(season, workbook):
         cfg["_grid"] = read_calcs_grid(wb, cfg)
         if cfg.get("fill_short_from_calcs"):
             fill_short_from_calcs(games, cfg["_grid"], cfg, name_to_dex)
-    walkovers = read_walkovers(wb, cfg, events)
+    walkovers = [] if cfg.get("reader") == "early" else read_walkovers(wb, cfg, events)
     canon, canon_names = canonical_ids(teams)
 
     anomalies = cfg["anomalies"]
     errors, accepted = validate(season, teams, games, walkovers, canon, events, anomalies, cfg)
+    errors = host_errors + errors
     for e in accepted:
         print("  accepted (listed anomaly): " + e)
     if errors:
@@ -1293,14 +1551,19 @@ def main(season, workbook):
          "accolades": t["accolades"].replace("\n", " ")}
         for d, t in sorted(teams.items(), key=lambda kv: canon[kv[0]])])
 
-    sha = hashlib.sha256(open(workbook, "rb").read()).hexdigest()
+    srcs = [{"workbook": os.path.relpath(p, ROOT), "sha256": hashlib.sha256(open(p, "rb").read()).hexdigest()}
+            for p in sources]
     titles = derived_titles(games, teams, events, cfg)
     with open(os.path.join(out, "events.json"), "w") as f:
         json.dump({
             "season": season,
-            "source": {"workbook": os.path.relpath(workbook, ROOT), "sha256": sha},
+            "source": srcs[0] if len(srcs) == 1 else srcs,
+            **({"host_sources": dict(sorted(Counter(g.get("host_source", "recorded")
+                                                    for g in games).items()))}
+               if cfg.get("reader") == "early" else {}),
             "games": len(games), "walkovers": len(walkovers),
-            "titles": {"world": titles["world"], titles["cup_name"]: titles["cup"],
+            "titles": {"world": titles["world"],
+                       **({titles["cup_name"]: titles["cup"]} if cfg["cup"] else {}),
                        **({"league": titles["league"]} if titles["league"] else {}),
                        "regions": {r: v[:2] for r, v in sorted(titles["regions"].items())}},
             "anomalies": [{"source_row" if isinstance(r, int) else "finding": r, "check": c,
