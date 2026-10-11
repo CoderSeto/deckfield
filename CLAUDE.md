@@ -339,15 +339,24 @@ once L15 is played; the line that stamped Canalave City by name is gone.
 - Several file reads were relative to the working directory; every data file
   is now read from the repo root.
 
-**Dashboard additions:** Season 9 tab -- the frozen `deckfield_dashboard_s9.html`
-itself, framed in place (`#s9-frame`, loaded the first time the tab opens, sized
-to the window and scrolling on its own), so it looks exactly as S9 did with
-none of this page's code involved. It replaced ten plain-table views of an
-inline `S9_HISTORY` copy, per explicit request (2026-10-11: "super ugly ...
-needs to look like it otherwise would if it were S9"). `regenerate_dashboard.py`
-checks the tab still frames that page and that the page is checksummed
-(`_check_history_frames`). The page must sit beside the dashboard (it does on
-GitHub Pages and in the repo); the tab links to it as well. Rankings > Raw vs Blended and a Blend column
+**Dashboard additions:** Season 9 tab -- its own sub-tabs (Rankings, Standings,
+RL Strength, Schedule, RDS Cup, PA Cup, Regional Playoffs, Qualification, World
+Championship), each showing **Season 9's own panel drawn by its own frozen
+page**, so every view looks exactly as it did and none of this season's code
+draws it. Per explicit request (2026-10-11): not a view of the old dashboard,
+"everything in the sub-tabs displayed as it would otherwise have been", with
+Hall of Fame, Calendar and Next Matchday cut as redundant. How: `S9_PAGE` is
+`deckfield_dashboard_s9.html` embedded byte for byte (derived -- copied from
+the checksummed file every regenerate and verified against `SHA256SUMS`,
+`</` escaped so its own `</script>` cannot close the dashboard's). The tab
+loads it into a frame (`srcdoc`) with a style hiding its header and tab bar and
+a small script: the sub-tab buttons `postMessage` which of its tabs to show,
+and it posts back its content height so the frame sizes to the panel and never
+scrolls on its own. postMessage needs no same-origin access, so it works on
+GitHub Pages and opened from disk alike. It costs ~1.1 MB of dashboard.
+`freeze_season.py` skips any `S<N>_PAGE`. (Earlier the same day it was ten
+plain-table views of an inline `S9_HISTORY` copy, then the whole old dashboard
+in a frame; both were replaced on request.) Rankings > Raw vs Blended and a Blend column
 (only while `DATA.blend.active`, i.e. matchdays 1-8), Standings > Orders,
 30 Schedule buttons (ROUND_LABELS removed), Hall of Fame > Legacy Points.
 `CUP_BRACKET_DATA` became derived (rebuilt from the season's seed file;
@@ -468,7 +477,7 @@ python3 regenerate_dashboard.py
 
 It refuses to run if a frozen file changed (`archive/SHA256SUMS`), if a
 dashboard constant is in neither `DERIVED_CONSTS` nor `STATIC_CONSTS`, or if
-the Season 9 tab no longer frames the frozen, checksummed S9 page. Do not silence any of them -- read
+the embedded `S9_PAGE` would not equal the frozen, checksummed S9 page. Do not silence any of them -- read
 the message.
 
 ### 6. Verify in a real browser before committing
@@ -488,6 +497,9 @@ is `rds`, the history one `s9`; panels are `#panel-<tab>`) and every
 sub-view toggle inside it, and assert **zero `pageerror` events**. A failed
 request to `fonts.googleapis.com` is the sandbox's network block, not a bug.
 Query the DOM rather than grepping rendered text (`.sb-round` is uppercase).
+The Season 9 tab's views live inside `#s9-frame`
+(`page.query_selector("#s9-frame").content_frame()`); its errors reach
+`pageerror`/`console` on the page.
 
 ### 7. Commit and push
 

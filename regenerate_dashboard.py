@@ -575,6 +575,10 @@ def build_strength_data():
 # that is in neither list. A new dashboard constant therefore cannot be
 # added without someone deciding, once, which kind it is.
 #
+# The finished seasons whose history tab this dashboard carries (see
+# _write_history_pages).
+HISTORY_SEASONS = (9,)
+
 # DERIVED: rebuilt from deckfield.db on every run, below in main().
 DERIVED_CONSTS = {
     "DATA", "NEXT_MATCHDAY_DATA", "CALENDAR_DATA", "SCHEDULE_DATA",
@@ -590,6 +594,9 @@ DERIVED_CONSTS = {
     # and the Legacy Points table (Hall of Fame > Legacy Points), read from
     # their committed files every run so an end-of-season update reaches it.
     "SCHEDULE_ORDERS", "LEGACY_DATA",
+    # Each finished season's frozen page, embedded for its history tab (see
+    # HISTORY_SEASONS): copied from the checksummed file, never from the db.
+    *(f"S{n}_PAGE" for n in HISTORY_SEASONS),
 }
 
 # STATIC: genuinely fixed, with the reason it can never go stale. Anything
@@ -606,24 +613,45 @@ STATIC_CONSTS = {
 }
 
 
-# The finished seasons whose history tab this dashboard carries. Each tab frames
-# that season's frozen page (deckfield_dashboard_s<N>.html) unchanged, so it
-# looks exactly as it did; the frozen page is checksummed in archive/SHA256SUMS
-# and _check_frozen_archive guards its bytes.
-HISTORY_SEASONS = (9,)
+# The finished seasons whose history tab this dashboard carries. Each tab's
+# sub-views are that season's own panels, drawn by its frozen page, which is
+# embedded byte for byte as S<N>_PAGE (copied from the checksummed file every
+# run and verified after writing) -- so a history view can never drift from
+# the frozen record, and works opened from disk as well as on Pages.
 
 
-def _check_history_frames(content):
-    """Each history tab must frame its season's frozen page, and that page must
-    be one of the checksummed frozen files."""
+def _frozen_page_sha(season):
+    page = f"deckfield_dashboard_s{season}.html"
     with open(os.path.join(ROOT, "archive", "SHA256SUMS")) as f:
-        frozen = {line.split("  ", 1)[1].strip() for line in f if line.strip()}
+        for line in f:
+            digest, rel = line.strip().split("  ", 1)
+            if rel == page:
+                return page, digest
+    raise RuntimeError(f"{page} is not a checksummed frozen page (archive/SHA256SUMS)")
+
+
+def _write_history_pages(content):
+    """Write each S<N>_PAGE from its frozen file. `</` is escaped so the page's
+    own </script> cannot close this one; the value decodes to the exact bytes."""
     for season in HISTORY_SEASONS:
-        page = f"deckfield_dashboard_s{season}.html"
-        if f'id="s{season}-frame" data-src="{page}"' not in content:
-            raise RuntimeError(f"the Season {season} tab no longer frames {page}")
-        if page not in frozen:
-            raise RuntimeError(f"{page} is not a checksummed frozen page (archive/SHA256SUMS)")
+        page, _ = _frozen_page_sha(season)
+        with open(os.path.join(ROOT, page), encoding="utf-8") as f:
+            literal = json.dumps(f.read()).replace("</", "<\\/")
+        content, n = re.subn(rf'^const S{season}_PAGE = ".*";$', lambda m: f'const S{season}_PAGE = {literal};',
+                             content, count=1, flags=re.M)
+        if n != 1:
+            raise RuntimeError(f"expected exactly one `const S{season}_PAGE = \"...\";` line")
+    _check_history_pages(content)
+    return content
+
+
+def _check_history_pages(content):
+    """Each S<N>_PAGE must decode to its frozen page's checksummed bytes."""
+    for season in HISTORY_SEASONS:
+        page, digest = _frozen_page_sha(season)
+        m = re.search(rf'^const S{season}_PAGE = (".*");$', content, re.M)
+        if m is None or hashlib.sha256(json.loads(m.group(1)).encode("utf-8")).hexdigest() != digest:
+            raise RuntimeError(f"S{season}_PAGE does not equal the frozen {page}")
 
 
 def _check_const_manifest(content):
@@ -726,7 +754,6 @@ def main():
     # Before touching anything: every data constant in the file must be
     # declared either derived (rebuilt below) or static (with a reason).
     _check_const_manifest(content)
-    _check_history_frames(content)
 
     content = _replace_const(content, "DATA", build_data())
 
@@ -775,6 +802,8 @@ def main():
     content, n = pattern.subn(lambda m: f'const TEAMS_EXPORT_TSV = {_js_string_literal(tsv)};\n', content, count=1)
     if n != 1:
         raise RuntimeError(f"expected exactly one `const TEAMS_EXPORT_TSV = ...;` block, found {n}")
+
+    content = _write_history_pages(content)
 
     with open(DASHBOARD_PATH, "w") as f:
         f.write(content)
