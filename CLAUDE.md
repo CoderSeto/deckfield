@@ -2182,14 +2182,20 @@ and the now-unused `RT_MD_LABELS` constant are gone).
   the loser dimmed once the tie is decided, a score's tooltip naming its host.
   Two-legged ties read **G1 / G2 / AGG** (G1 = leg 1, hosted by the worse
   seed); the **Play-In is one game, G1 only**.
-- **Seven columns, not five.** A lane (`RT_LANES`, the engine's
-  `REGIONAL_TOURNAMENT_LANES`, in `STATIC_CONSTS`) never merges before the
-  semifinal, so each half is two lanes running straight across -- Play-In ->
-  Round 1 -> Quarterfinal -- with straight connectors (`.wcb-thru`), then the
-  WC's merge into the middle column, which holds the region's Final above the
-  two Semifinals. Left half: lanes 1 and 4 (they meet in a semifinal); right
-  half mirrored: lane 3 above lane 2, so seed 2 sits bottom right as #2 does
-  on the WC.
+- **Five columns, like the WC** (per explicit request, 2026-10-11: "vertically
+  widen the Round 1 games and stick the play-in games between them so it's not
+  as wide"; it was seven columns for a few hours). A lane (`RT_LANES`, the
+  engine's `REGIONAL_TOURNAMENT_LANES`, in `STATIC_CONSTS`) never merges before
+  the semifinal, so each half's OUTER column holds its two lanes' Round 1 games
+  at the top and bottom with their two Play-In games stacked between them, each
+  Play-In feeding straight up or down into its own Round 1 game (`.rtb-feed`, a
+  vertical between the card centres, drawn behind the cards). The Quarterfinal
+  column sits in rows 1 and 4, level with Round 1 (`.wcb-thru` straight
+  across), and its verticals (`.rtb-v`, 150% of a slot) meet in the middle of
+  the column, where the middle column's two Semifinals sit beneath the Final.
+  Left half: lanes 1 and 4 (they meet in a semifinal); right half mirrored:
+  lane 3 above lane 2, so seed 2 sits bottom right as #2 does on the WC. Every
+  column is 540px tall (four rows).
 - **Every slot is drawn from preseason.** `RT_DATA` now carries each region's
   16 seeds (`{region: {"seeds": [...], "matchdays": {...}}}`), so seeds 1-8
   are shown waiting in their rounds from the start, and a slot not yet decided
@@ -2200,13 +2206,11 @@ and the now-unused `RT_MD_LABELS` constant are gone).
 - **No "Champion" label on the Final** (`.rtb .wcb-champ` hidden): the winner
   is bold and the loser dimmed like every box, and the label alone cost the
   middle column ~120px.
-- **Fit, measured in played and unplayed states** (preseason, MD3, MD7 and a
+- **Fit, measured in played and unplayed states** (preseason, MD3 and a
   finished synthetic tournament, all ten regions): 0 names wrapped or cut and
-  0 overlapping or spilling boxes at 1920 and 1600px. Below ~1500px a name
-  wraps between words rather than being cut (the WC rule); the page itself
-  already scrolls sideways under ~1560px. Column weights (Play-In .8, middle
-  1.22) and type (12px, Final 14px; 11.5/13px under 1700px) were set from
-  measured natural widths, not by eye.
+  0 overlapping or spilling boxes at every width from 1920 down to 1240px (the
+  seven-column version wrapped names below ~1500px). A name that ever runs out
+  of room wraps between words rather than being cut (the WC rule).
 
 Verified against the engine on the finished synthetic tournament: in all ten
 regions one lit score per game played plus one per decided aggregate (37 =
