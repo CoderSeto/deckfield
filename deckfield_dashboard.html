@@ -334,14 +334,24 @@
   }
   /* Regional Playoffs: one region's tournament as a bracket (per explicit
      request, 2026-10-11), built on the World Championship's .wcb boxes and
-     connectors. Seven columns: each half's two lanes run Play-In -> Round 1
-     -> Quarterfinal straight across (a lane never merges before the
-     semifinal), and the middle carries the Final above the two Semifinals,
-     as on the WC bracket. Two-legged ties read G1 / G2 / AGG; the Play-In is
-     one game. */
+     connectors. Five columns, as on the WC: each half's outer column holds
+     its two Round 1 games top and bottom with the two Play-In games stacked
+     between them (each feeding straight up or down into its own Round 1
+     game), then the Quarterfinals, lined up with Round 1, merging into the
+     middle column's two Semifinals beneath the Final. Two-legged ties read
+     G1 / G2 / AGG; the Play-In is one game. */
   .rtb .wcb-col { flex-grow: 1; }
-  .rtb .wcb-col.playin { flex-grow: .8; }
   .rtb .wcb-col.middle { flex-grow: 1.22; }
+  /* Four rows a column (Round 1, Play-In, Play-In, Round 1), so taller than
+     the WC's four-across R16. */
+  .rtb .wcb-col-grid { height: 540px; }
+  /* Play-In -> Round 1: a vertical between the two cards' centres, behind
+     both cards, so only the gap between them shows. */
+  .rtb .rtb-feed { left: 50%; width: 2px; height: 100%; margin-left: -1px; }
+  .rtb .rtb-feed.up { top: -50%; } .rtb .rtb-feed.down { top: 50%; }
+  /* Quarterfinal -> Semifinal: the QFs sit in rows 1 and 4, so each vertical
+     runs from its card's centre to the middle of the column. */
+  .rtb .rtb-v.down { top: 50%; height: 150%; } .rtb .rtb-v.up { top: -100%; height: 150%; }
   /* The Final marks its winner bold and dims the loser, as every box does;
      a "Champion" label would cost the middle column ~120px it does not have. */
   .rtb .wcb-champ { display: none; }
@@ -2126,33 +2136,33 @@ function rtBracketHtml(region) {
 
   const slot = (row, span, card, lines, cls = '') =>
     `<div class="wcb-slot${cls}" style="grid-row:${row} / span ${span}">${card}${lines}</div>`;
-  // Left half: lane 1 (seed 1's) above lane 4; right half mirrors it with
-  // lane 3 above lane 2, so seed 2 sits bottom right as #2 does on the WC.
-  const column = (laneIdx, round, label, side, cls = '') => {
-    const slots = laneIdx.map((li, i) => {
-      let ln = '';
-      if (round !== 'playin') ln += '<span class="wcb-line wcb-thru"></span>';
-      if (round === 'qf') ln += '<span class="wcb-line wcb-out"></span>'
-        + `<span class="wcb-line wcb-v ${i === 0 ? 'down' : 'up'}"></span>`;
-      return slot(i * 2 + 1, 2, rtCardHtml(lanes[li][round], label), ln);
-    }).join('');
-    return `<div class="wcb-col${side === 'right' ? ' mirror' : ''}${cls}"><div class="wcb-col-grid">${slots}</div></div>`;
-  };
+  // Five columns, as on the WC bracket (per explicit request, 2026-10-11: "so
+  // it's not as wide"). Each half's outer column holds its two lanes' Round 1
+  // games at the top and bottom with their two Play-In games stacked between
+  // them; each Play-In winner feeds straight up or down into its own lane's
+  // Round 1 game. The Quarterfinal column lines up with the Round 1 games and
+  // merges into the semifinal. Left half: lane 1 (seed 1's) above lane 4;
+  // right half mirrored, lane 3 above lane 2, so seed 2 sits bottom right as
+  // #2 does on the WC.
+  const outer = ([a, b], side) => `<div class="wcb-col${side === 'right' ? ' mirror' : ''}"><div class="wcb-col-grid">`
+    + slot(1, 1, rtCardHtml(lanes[a].r1, 'Round 1'), '')
+    + slot(2, 1, rtCardHtml(lanes[a].playin, 'Play-In'), '<span class="wcb-line rtb-feed up"></span>')
+    + slot(3, 1, rtCardHtml(lanes[b].playin, 'Play-In'), '<span class="wcb-line rtb-feed down"></span>')
+    + slot(4, 1, rtCardHtml(lanes[b].r1, 'Round 1'), '')
+    + '</div></div>';
+  const quarters = ([a, b], side) => `<div class="wcb-col${side === 'right' ? ' mirror' : ''}"><div class="wcb-col-grid">`
+    + [a, b].map((li, i) => slot(i === 0 ? 1 : 4, 1, rtCardHtml(lanes[li].qf, 'Quarterfinal'),
+        '<span class="wcb-line wcb-thru"></span><span class="wcb-line wcb-out"></span>'
+        + `<span class="wcb-line wcb-v rtb-v ${i === 0 ? 'down' : 'up'}"></span>`)).join('')
+    + '</div></div>';
   const left = [0, 3], right = [2, 1];
   const middle = `<div class="wcb-col middle"><div class="wcb-col-grid">
       ${slot(1, 1, rtCardHtml(final, 'Final', `${regionName(region)} Final`), '', ' final')}
       ${slot(2, 1, rtCardHtml(sfLeft, 'Semifinal'), '<span class="wcb-line wcb-in"></span>')}
       ${slot(3, 1, rtCardHtml(sfRight, 'Semifinal'), '<span class="wcb-line wcb-in from-right"></span>')}
     </div></div>`;
-  return `<div class="wcb rtb">`
-    + column(left, 'playin', 'Play-In', 'left', ' playin')
-    + column(left, 'r1', 'Round 1', 'left')
-    + column(left, 'qf', 'Quarterfinal', 'left', ' qf')
-    + middle
-    + column(right, 'qf', 'Quarterfinal', 'right', ' qf')
-    + column(right, 'r1', 'Round 1', 'right')
-    + column(right, 'playin', 'Play-In', 'right', ' playin')
-    + '</div>';
+  return `<div class="wcb rtb">` + outer(left, 'left') + quarters(left, 'left') + middle
+    + quarters(right, 'right') + outer(right, 'right') + '</div>';
 }
 
 function renderRegionalTournament() {
