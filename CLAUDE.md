@@ -110,32 +110,43 @@ never into them.
 moved: between S8 and S9 **Mossui Town** (S8 Terastal, dex 156) and **Fight
 Area** (S8 Lily Valley, dex 41) swapped regions and dex numbers, and Fight Area
 was renamed **Cabo Poco**; **Resort Area** became **Battle Zone** (same slot).
-Proved by S9's own "S8 End" checkpoint, which ranks Mossui Town 48 and Cabo Poco
-84 -- exactly Mossui Town's and Fight Area's S8 finishes. `RENAMED_SINCE` in the
+Confirmed by the user (2026-10-11: "Mossui moved to Lily Valley and Fight Area
+moved to Terastal and became Cabo Poco") and by S9's own "S8 End" checkpoint,
+which ranks Mossui Town 48 and Cabo Poco 84 -- exactly Mossui Town's and Fight
+Area's S8 finishes. `RENAMED_SINCE` in the
 extractor holds the renames; `history/teams.json` maps every season's
 (dex, name, region, division) to the canonical id.
 
 **The extractor refuses to write unless everything reconciles**: both packed
 strings of every game mirror each other and name the right teams; each team's
 W-L per bucket (R/L/Swiss/playoff+finals) equals the workbook's Rankings F..M,
-byes included; each team's last game Elo equals its final Elo; the final rank
+byes included; the Elo chain holds game by game from each team's opening
+Elo (winner +K, loser -K, exactly); each team's last game Elo equals its final
+Elo; goals never exceed points; the final rank
 equals the next season's recorded end-of-season checkpoint; the Hall of Fame's
 World, cup and all ten regional titles follow from the games; and Regional and
 League are complete round robins (every pair once, never across groups, every
 team every matchday). Each check was mutation-tested (a dropped bye, a one-sided
 score typo, a bad host flag, a missing WC game, the identity swap undone, a
-flipped regional final) and fails as it should. A re-run is byte-identical.
+flipped regional final, a K off by one, an opening Elo off by 5, goals above
+points) and fails as it should. A re-run is byte-identical.
 
 ### Season 8 (extracted 2026-10-11)
 
 **Essentially complete -- nothing needs simulating.** 3,505 games in 84 events
 (one empty: WC QF game 3), every one with host, score, raw goal scores, spread,
-interest, both DSCRs and both Elos, plus each side's rank going into the game
-and 120 byes (`walkovers.csv`). The only modern gap is **per-team EX**: S8
+interest, both DSCRs and both Elos, goals scored (`goals_a`/`goals_b`), the
+Elo K, each side's rank going into the game, and 120 byes (`walkovers.csv`). The only modern gap is **per-team EX**: S8
 banked EX for the winner only, as a differential (`ex_winner_diff`; a blank
 Archive cell is 0 -- no cell ever reads `/0/`), so `ex_a`/`ex_b` are blank.
-Archive columns E and N (`[6-10]`) are kept raw (`archive_e`/`archive_n`); their
-meaning is unknown.
+Archive column **E is the Elo K** (per the user) -- in practice the exact
+points exchanged: the winner gains it and the loser loses it in every one of
+the 3,425 games where both sides had a prior game -- so each team's opening Elo
+is recoverable, and it equals Rankings FV (S7's final Elo) for all 160
+(`opening_elo` in `teams.csv`). Column **N is goals scored, written
+[winner-loser]** (per the user; the data agrees: read that way no side ever has
+more goals than points, the other way 76 games break). Stored host/away like
+everything else.
 
 S8's structure, as the Archive lays it out (event codes in `events.json`):
 - **Regional R1-R15, League L1-L15**: as now, 80 games each.
@@ -153,7 +164,8 @@ S8's structure, as the Archive lays it out (event codes in `events.json`):
   (WC-FPI), then best-of-three R16, QF, SF and Final. Agate Village beat
   Camphrier Town in the final (3 games).
 - **OT**: Regional, League and Grand Swiss OT games are 2/1 as now; Playoff and
-  Finals OT games were scored **3/0**. Recorded as played, `ot` flags them all.
+  Finals OT games were scored **3/0** -- confirmed as S8's rule. Recorded as
+  played; `ot` flags them all.
 
 ## Season 9 is frozen (2026-10-10, per explicit instruction)
 

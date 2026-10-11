@@ -14,8 +14,10 @@ What it writes, all under history/s<N>/:
                  the team's S9 dex -- not the season's own dex, which is not a
                  stable identity (see history/teams.json).
                  rank_a/rank_b are each side's rank GOING INTO the game (Archive
-                 H/M). archive_e / archive_n are Archive columns E and N kept raw
-                 because their meaning is not yet known. raw_winner/raw_loser
+                 H/M). goals_a/goals_b are goals scored (Archive N, written
+                 [winner-loser]); elo_k is the game's Elo K (Archive E): the
+                 points the winner gained and the loser lost, exactly.
+                 raw_winner/raw_loser
                  are the two packed game strings verbatim, for audit.
 - walkovers.csv  byes the season scored as wins (S8: the Grand Swiss
                  round-1/round-2 byes, from Calcs' "3S-" cells).
@@ -44,6 +46,7 @@ import openpyxl
 ROOT = os.path.dirname(os.path.abspath(__file__))
 HISTORY = os.path.join(ROOT, "history")
 
+GOALS_PATTERN = re.compile(r'^\[(\d+)-(\d+)\]$')  # Archive N: [winner goals-loser goals]
 GAME_PATTERN = re.compile(
     r'^(\d)([RLSPF])!(-?\d+)\+(-?\d+)-(-?\d+)\^(-?[\d.]+)\((-?[\d.]+)\)'
     r'\[(-?[\d.]+)\]\{(-?[\d.]+)\}(-?[\d.]+)$'
@@ -72,10 +75,11 @@ SEASONS = {
     8: {
         # Rankings columns (0-based): A dex, B region, C name, AN rank,
         # AQ OVR, BL Elo, BQ base climate, BV division, BY primary type,
-        # CA accolades, CK the FINAL rank checkpoint.
+        # CA accolades, CK the FINAL rank checkpoint, FV the Elo carried in
+        # from S7 (proved: it is each team's Elo before its first S8 game).
         "rankings": dict(dex=0, region=1, name=2, rank=39, ovr=42, elo=63,
                          basclm=68, division=73, primary=76, accolades=78,
-                         final_rank=88),
+                         final_rank=88, opening_elo=177),
         # Rankings F..M: the W-L the workbook itself kept per bucket.
         "record_cols": dict(RW=5, RL=6, LW=7, LL=8, SW=9, SL=10, pW=11, pL=12),
         # Calcs: per-team game grid, column L onward in play order.
@@ -150,7 +154,7 @@ def read_teams(wb, cfg):
             "division": LEAGUE_DIVISION_MAP[r[c["division"]]],
             "primary_type": r[c["primary"]], "basclm": r[c["basclm"]],
             "final_rank": r[c["final_rank"]], "final_ovr": r[c["ovr"]],
-            "final_elo": r[c["elo"]],
+            "final_elo": r[c["elo"]], "opening_elo": r[c["opening_elo"]],
             "accolades": r[c["accolades"]] or "",
             "record": {k: r[i] for k, i in cfg["record_cols"].items()},
         }
@@ -188,7 +192,7 @@ def read_games(wb):
             "row": rownum, "event": cur, "winner_name": r[8], "loser_name": r[11],
             "home_away": str(r[6]).strip().upper(), "w": w.groups(), "l": l.groups(),
             "ex": ex, "mark": r[17] or "", "note": r[19] or "",
-            "rank_w": r[7], "rank_l": r[12], "col_e": r[4], "col_n": r[13] or "",
+            "rank_w": r[7], "rank_l": r[12], "elo_k": r[4], "goals": r[13],
         })
     for i, e in enumerate(events, start=1):
         e["round"] = i
@@ -254,6 +258,8 @@ def build_game_rows(games, name_to_dex, canon):
         winner_home = g["home_away"] == "H"
         home, away = (w, l) if winner_home else (l, w)
         rank_h, rank_a = (g["rank_w"], g["rank_l"]) if winner_home else (g["rank_l"], g["rank_w"])
+        gw, gl = (int(x) for x in GOALS_PATTERN.match(str(g["goals"])).groups())
+        goals_h, goals_a = (gw, gl) if winner_home else (gl, gw)
         hdex, adex = (wdex, ldex) if winner_home else (ldex, wdex)
         ot = "OT" in g["note"] or (int(w[0]) == 2)
         rows.append({
@@ -271,10 +277,10 @@ def build_game_rows(games, name_to_dex, canon):
             "ex_a": "", "ex_b": "",
             "ex_winner_diff": "" if g["ex"] is None else g["ex"],
             "winner": "A" if winner_home else "B",
+            "goals_a": goals_h, "goals_b": goals_a, "elo_k": g["elo_k"],
             "rank_a": rank_h, "rank_b": rank_a,
             "ot": int(ot), "mark": g["mark"], "note": g["note"].replace("\n", " "),
-            "source_row": g["row"], "archive_e": g["col_e"], "archive_n": g["col_n"],
-            "raw_winner": "".join(_raw(w)), "raw_loser": "".join(_raw(l)),
+            "source_row": g["row"], "raw_winner": "".join(_raw(w)), "raw_loser": "".join(_raw(l)),
         })
     return rows
 
@@ -287,8 +293,8 @@ def _raw(g):
 GAME_FIELDS = ["seq", "round", "event", "game_type", "team_a", "team_b", "result_a",
                "pf_a", "pa_a", "raw_goal_a", "raw_goal_b", "spread_a", "interest",
                "dscr_a", "dscr_b", "elo_a_after", "elo_b_after", "home", "ex_a", "ex_b",
-               "ex_winner_diff", "winner", "rank_a", "rank_b", "ot", "mark", "note",
-               "source_row", "archive_e", "archive_n", "raw_winner", "raw_loser"]
+               "ex_winner_diff", "winner", "goals_a", "goals_b", "elo_k", "rank_a", "rank_b",
+               "ot", "mark", "note", "source_row", "raw_winner", "raw_loser"]
 
 
 def validate(season, teams, games, walkovers, canon, events):
@@ -314,6 +320,13 @@ def validate(season, teams, games, walkovers, canon, events):
             errors.append(f"{where}: opponent dex does not match the named teams")
         if g["home_away"] not in ("H", "A"):
             errors.append(f"{where}: host {g['home_away']!r} is neither H nor A")
+        gm = GOALS_PATTERN.match(str(g["goals"]))
+        if not gm:
+            errors.append(f"{where}: goals {g['goals']!r} unparseable")
+        elif int(gm.group(1)) > int(w[3]) or int(gm.group(2)) > int(l[3]):
+            errors.append(f"{where}: more goals than points (goals {g['goals']}, score {w[3]}-{l[3]})")
+        if not isinstance(g["elo_k"], (int, float)):
+            errors.append(f"{where}: Elo K {g['elo_k']!r} is not a number")
 
     # 2. Per-team W-L in each bucket equals the workbook's own, byes included.
     bucket = {"R": "R", "L": "L", "S": "S", "P": "p", "F": "p"}
@@ -328,7 +341,20 @@ def validate(season, teams, games, walkovers, canon, events):
             if rec[dex][k] != v:
                 errors.append(f"{t['name']}: {k} {rec[dex][k]} from the games, {v} in Rankings")
 
-    # 3. Each team's last Elo equals its final Elo.
+    # 3. The Elo chain: from each team's opening Elo, every game moves the
+    #    winner up and the loser down by exactly that game's Elo K (Archive E,
+    #    the points exchanged).
+    elo = {d: float(t["opening_elo"]) for d, t in teams.items()}
+    for g in games:
+        wd, ld = name_to_dex[g["winner_name"]], name_to_dex[g["loser_name"]]
+        k = float(g["elo_k"]) if isinstance(g["elo_k"], (int, float)) else None
+        if k is not None and (abs(elo[wd] + k - float(g["w"][9])) > 0.5
+                              or abs(elo[ld] - k - float(g["l"][9])) > 0.5):
+            errors.append(f"row {g['row']}: Elo {elo[wd]:.0f}/{elo[ld]:.0f} +/- K {k} != "
+                          f"{g['w'][9]}/{g['l'][9]}")
+        elo[wd], elo[ld] = float(g["w"][9]), float(g["l"][9])
+
+    # 3b. Each team's last Elo equals its final Elo.
     last = {}
     for g in games:
         last[name_to_dex[g["winner_name"]]] = float(g["w"][9])
@@ -485,11 +511,11 @@ def main(season, workbook):
                 "game_type": w["game_type"], "result": w["result"]}
                for w in sorted(walkovers, key=lambda w: (w["round"], canon[w["dex"]]))])
     team_fields = ["team", "season_dex", "name", "region", "division", "primary_type",
-                   "basclm", "final_rank", "final_ovr", "final_elo", "accolades"]
+                   "basclm", "opening_elo", "final_rank", "final_ovr", "final_elo", "accolades"]
     write_csv(os.path.join(out, "teams.csv"), team_fields, [
         {"team": canon[d], "season_dex": d, "name": t["name"], "region": t["region"],
          "division": t["division"], "primary_type": t["primary_type"], "basclm": t["basclm"],
-         "final_rank": t["final_rank"], "final_ovr": t["final_ovr"], "final_elo": t["final_elo"],
+         "opening_elo": t["opening_elo"], "final_rank": t["final_rank"], "final_ovr": t["final_ovr"], "final_elo": t["final_elo"],
          "accolades": t["accolades"].replace("\n", " ")}
         for d, t in sorted(teams.items(), key=lambda kv: canon[kv[0]])])
 
