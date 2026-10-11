@@ -1,0 +1,1204 @@
+{
+ "season": 6,
+ "source": {
+  "workbook": "history/s6/Dice Game S6 M.xlsm",
+  "sha256": "aaae5cfaf688d6908d8a15666a44c1ddfb68c0cb9dc339f30246fbc89e49680e"
+ },
+ "games": 3516,
+ "walkovers": 120,
+ "titles": {
+  "world": [
+   "Canalave City",
+   "Striaton City"
+  ],
+  "grand_swiss": [
+   "Seafolk Village",
+   "Slateport City"
+  ],
+  "regions": {
+   "Delta": [
+    "Slateport City",
+    "Lavaridge Town"
+   ],
+   "Dynamax": [
+    "Wyndon South",
+    "Motostoke"
+   ],
+   "Indigo": [
+    "Lavender Town",
+    "Vermilion City"
+   ],
+   "Kalosite": [
+    "Lumiose City",
+    "Shalour City"
+   ],
+   "Lanakila": [
+    "Seafolk Village",
+    "Aether Paradise"
+   ],
+   "LilyValley": [
+    "Canalave City",
+    "Resort Area"
+   ],
+   "Phoenix": [
+    "Agate Village",
+    "Aqua Resort"
+   ],
+   "Silver": [
+    "Olivine City",
+    "Cianwood City"
+   ],
+   "Terastal": [
+    "Porto Marinada",
+    "Cortondo"
+   ],
+   "Vertress": [
+    "Striaton City",
+    "Nimbasa City"
+   ]
+  }
+ },
+ "anomalies": [],
+ "corrections": [],
+ "events": [
+  {
+   "round": 1,
+   "code": "R1",
+   "title": "REGIONAL MATCHDAY ONE",
+   "sub": null,
+   "dates": [
+    "D1 8/9",
+    "D2 8/10"
+   ],
+   "notes": [
+    "Divisor changed to 12",
+    "Grand Swiss replaces WCS",
+    "Goal Avg now checks raw score",
+    "Bonus EX points now awarded"
+   ],
+   "games": 80,
+   "empty": false,
+   "source_row": 2
+  },
+  {
+   "round": 2,
+   "code": "R2",
+   "title": "REGIONAL MATCHDAY TWO",
+   "sub": null,
+   "dates": [
+    "D3 8/11"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 82
+  },
+  {
+   "round": 3,
+   "code": "R3",
+   "title": "REGIONAL MATCHDAY THREE",
+   "sub": null,
+   "dates": [
+    "D4 8/13"
+   ],
+   "notes": [
+    "Good/Bad Field Weather Added"
+   ],
+   "games": 80,
+   "empty": false,
+   "source_row": 162
+  },
+  {
+   "round": 4,
+   "code": "GS1",
+   "title": "GRAND SWISS ROUND ONE",
+   "sub": null,
+   "dates": [
+    "D5 8/14"
+   ],
+   "notes": [],
+   "games": 40,
+   "empty": false,
+   "source_row": 242
+  },
+  {
+   "round": 5,
+   "code": "GS2",
+   "title": "GRAND SWISS ROUND TWO",
+   "sub": null,
+   "dates": [
+    "D6 8/15"
+   ],
+   "notes": [
+    "Reduced divisor to 11.75"
+   ],
+   "games": 60,
+   "empty": false,
+   "source_row": 282
+  },
+  {
+   "round": 6,
+   "code": "R4",
+   "title": "REGIONAL MATCHDAY FOUR",
+   "sub": null,
+   "dates": [
+    "D6 8/15",
+    "D7 8/16"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 342
+  },
+  {
+   "round": 7,
+   "code": "L1",
+   "title": "LEAGUE MATCHDAY ONE",
+   "sub": null,
+   "dates": [
+    "D8 8/17"
+   ],
+   "notes": [
+    "Reduced divisor to 11.5"
+   ],
+   "games": 80,
+   "empty": false,
+   "source_row": 422
+  },
+  {
+   "round": 8,
+   "code": "L2",
+   "title": "LEAGUE MATCHDAY TWO",
+   "sub": null,
+   "dates": [
+    "D8 8/17"
+   ],
+   "notes": [
+    "Divisor reduced to 11.375"
+   ],
+   "games": 80,
+   "empty": false,
+   "source_row": 502
+  },
+  {
+   "round": 9,
+   "code": "R5",
+   "title": "REGIONAL MATCHDAY FIVE",
+   "sub": null,
+   "dates": [
+    "D9 8/18"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 582
+  },
+  {
+   "round": 10,
+   "code": "GS3",
+   "title": "GRAND SWISS ROUND THREE",
+   "sub": null,
+   "dates": [
+    "D9 8/18"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 662
+  },
+  {
+   "round": 11,
+   "code": "GS4",
+   "title": "GRAND SWISS ROUND FOUR",
+   "sub": null,
+   "dates": [
+    "D10 8/19"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 742
+  },
+  {
+   "round": 12,
+   "code": "L3",
+   "title": "LEAGUE MATCHDAY THREE",
+   "sub": null,
+   "dates": [
+    "D10 8/19"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 822
+  },
+  {
+   "round": 13,
+   "code": "GS5",
+   "title": "GRAND SWISS ROUND FIVE",
+   "sub": null,
+   "dates": [
+    "D11 8/20",
+    "D12 8/21"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 902
+  },
+  {
+   "round": 14,
+   "code": "GS6",
+   "title": "GRAND SWISS ROUND SIX",
+   "sub": null,
+   "dates": [
+    "D13 8/27"
+   ],
+   "notes": [],
+   "games": 64,
+   "empty": false,
+   "source_row": 982
+  },
+  {
+   "round": 15,
+   "code": "R6",
+   "title": "REGIONAL MATCHDAY SIX",
+   "sub": null,
+   "dates": [
+    "D13 8/27"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 1046
+  },
+  {
+   "round": 16,
+   "code": "L4",
+   "title": "LEAGUE MATCHDAY FOUR",
+   "sub": null,
+   "dates": [
+    "D14 8/28",
+    "D15 9/1"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 1126
+  },
+  {
+   "round": 17,
+   "code": "L5",
+   "title": "LEAGUE MATCHDAY FIVE",
+   "sub": null,
+   "dates": [
+    "D16 9/2"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 1206
+  },
+  {
+   "round": 18,
+   "code": "R7",
+   "title": "REGIONAL MATCHDAY SEVEN",
+   "sub": null,
+   "dates": [
+    "D17 9/8"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 1286
+  },
+  {
+   "round": 19,
+   "code": "GS7",
+   "title": "GRAND SWISS ROUND SEVEN",
+   "sub": null,
+   "dates": [
+    "D18 9/29"
+   ],
+   "notes": [],
+   "games": 64,
+   "empty": false,
+   "source_row": 1366
+  },
+  {
+   "round": 20,
+   "code": "GS8",
+   "title": "GRAND SWISS ROUND EIGHT",
+   "sub": null,
+   "dates": [
+    "D19 9/30"
+   ],
+   "notes": [],
+   "games": 64,
+   "empty": false,
+   "source_row": 1430
+  },
+  {
+   "round": 21,
+   "code": "L6",
+   "title": "LEAGUE MATCHDAY SIX",
+   "sub": null,
+   "dates": [
+    "D20 10/1"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 1494
+  },
+  {
+   "round": 22,
+   "code": "GS9",
+   "title": "GRAND SWISS ROUND NINE",
+   "sub": null,
+   "dates": [
+    "D21 11/21"
+   ],
+   "notes": [
+    "Changed Goals to PD/GL"
+   ],
+   "games": 64,
+   "empty": false,
+   "source_row": 1574
+  },
+  {
+   "round": 23,
+   "code": "GS10",
+   "title": "GRAND SWISS ROUND TEN",
+   "sub": null,
+   "dates": [
+    "D22 11/22"
+   ],
+   "notes": [],
+   "games": 64,
+   "empty": false,
+   "source_row": 1638
+  },
+  {
+   "round": 24,
+   "code": "R8",
+   "title": "REGIONAL MATCHDAY EIGHT",
+   "sub": null,
+   "dates": [
+    "D23 11/23"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 1702
+  },
+  {
+   "round": 25,
+   "code": "L7",
+   "title": "LEAGUE MATCHDAY SEVEN",
+   "sub": null,
+   "dates": [
+    "D23 11/23"
+   ],
+   "notes": [
+    "tweaked SoC from 10/10 to 6/12"
+   ],
+   "games": 80,
+   "empty": false,
+   "source_row": 1782
+  },
+  {
+   "round": 26,
+   "code": "L8",
+   "title": "LEAGUE MATCHDAY EIGHT",
+   "sub": null,
+   "dates": [
+    "D24 12/3",
+    "D25 12/9"
+   ],
+   "notes": [
+    "formula 1.375 > 1.3"
+   ],
+   "games": 80,
+   "empty": false,
+   "source_row": 1862
+  },
+  {
+   "round": 27,
+   "code": "R9",
+   "title": "REGIONAL MATCHDAY NINE",
+   "sub": null,
+   "dates": [
+    "D25 12/9"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 1942
+  },
+  {
+   "round": 28,
+   "code": "GS11",
+   "title": "GRAND SWISS ROUND ELEVEN",
+   "sub": null,
+   "dates": [
+    "D26 12/10"
+   ],
+   "notes": [
+    "Changed SoS multiplier to 1.5"
+   ],
+   "games": 32,
+   "empty": false,
+   "source_row": 2022
+  },
+  {
+   "round": 29,
+   "code": "GS12",
+   "title": "GRAND SWISS ROUND TWELVE",
+   "sub": null,
+   "dates": [
+    "D27 12/11"
+   ],
+   "notes": [],
+   "games": 32,
+   "empty": false,
+   "source_row": 2054
+  },
+  {
+   "round": 30,
+   "code": "L9",
+   "title": "LEAGUE MATCHDAY NINE",
+   "sub": null,
+   "dates": [
+    "D27 12/11"
+   ],
+   "notes": [
+    "formula 1.3 > 1.5"
+   ],
+   "games": 80,
+   "empty": false,
+   "source_row": 2086
+  },
+  {
+   "round": 31,
+   "code": "GS13",
+   "title": "GRAND SWISS ROUND THIRTEEN",
+   "sub": null,
+   "dates": [
+    "D28 12/20"
+   ],
+   "notes": [],
+   "games": 32,
+   "empty": false,
+   "source_row": 2166
+  },
+  {
+   "round": 32,
+   "code": "GS14",
+   "title": "GRAND SWISS ROUND FOURTEEN",
+   "sub": null,
+   "dates": [
+    "D28 12/20"
+   ],
+   "notes": [
+    "formula 1.5 > 1.7"
+   ],
+   "games": 32,
+   "empty": false,
+   "source_row": 2198
+  },
+  {
+   "round": 33,
+   "code": "R10",
+   "title": "REGIONAL MATCHDAY TEN",
+   "sub": null,
+   "dates": [
+    "D29 12/21"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 2230
+  },
+  {
+   "round": 34,
+   "code": "L10",
+   "title": "LEAGUE MATCHDAY TEN",
+   "sub": null,
+   "dates": [
+    "D29 12/21"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 2310
+  },
+  {
+   "round": 35,
+   "code": "L11",
+   "title": "LEAGUE MATCHDAY ELEVEN",
+   "sub": null,
+   "dates": [
+    "D30 12/22"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 2390
+  },
+  {
+   "round": 36,
+   "code": "R11",
+   "title": "REGIONAL MATCHDAY ELEVEN",
+   "sub": null,
+   "dates": [
+    "D31 12/24",
+    "D32 12/25"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 2470
+  },
+  {
+   "round": 37,
+   "code": "GS15",
+   "title": "GRAND SWISS ROUND FIFTEEN",
+   "sub": null,
+   "dates": [
+    "D32 12/25"
+   ],
+   "notes": [],
+   "games": 32,
+   "empty": false,
+   "source_row": 2550
+  },
+  {
+   "round": 38,
+   "code": "GS-PI",
+   "title": "GRAND SWISS PLAY-IN ROUND",
+   "sub": null,
+   "dates": [
+    "D32 12/25"
+   ],
+   "notes": [],
+   "games": 3,
+   "empty": false,
+   "source_row": 2582
+  },
+  {
+   "round": 39,
+   "code": "L12",
+   "title": "LEAGUE MATCHDAY TWELVE",
+   "sub": null,
+   "dates": [
+    "D32 12/25"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 2585
+  },
+  {
+   "round": 40,
+   "code": "GS-R16-1",
+   "title": "GRAND SWISS ROUND OF SIXTEEN",
+   "sub": "First Leg",
+   "dates": [
+    "D32 12/25"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 2665
+  },
+  {
+   "round": 41,
+   "code": "GS-R16-2",
+   "title": "GRAND SWISS ROUND OF SIXTEEN",
+   "sub": "Second Leg",
+   "dates": [
+    "D32 12/25"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 2673
+  },
+  {
+   "round": 42,
+   "code": "R12",
+   "title": "REGIONAL MATCHDAY TWELVE",
+   "sub": null,
+   "dates": [
+    "D32 12/25"
+   ],
+   "notes": [
+    "formula 1.7 > 1.8"
+   ],
+   "games": 80,
+   "empty": false,
+   "source_row": 2681
+  },
+  {
+   "round": 43,
+   "code": "L13",
+   "title": "LEAGUE MATCHDAY THIRTEEN",
+   "sub": null,
+   "dates": [
+    "D32 12/25"
+   ],
+   "notes": [
+    "formula 1.8 > 1.9"
+   ],
+   "games": 80,
+   "empty": false,
+   "source_row": 2761
+  },
+  {
+   "round": 44,
+   "code": "L14",
+   "title": "LEAGUE MATCHDAY FOURTEEN",
+   "sub": null,
+   "dates": [
+    "D33 1/16"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 2841
+  },
+  {
+   "round": 45,
+   "code": "R13",
+   "title": "REGIONAL MATCHDAY THIRTEEN",
+   "sub": null,
+   "dates": [
+    "D34 1/17"
+   ],
+   "notes": [
+    "formula 1.9> 2.0"
+   ],
+   "games": 80,
+   "empty": false,
+   "source_row": 2921
+  },
+  {
+   "round": 46,
+   "code": "GS-QF-1",
+   "title": "GRAND SWISS QUARTERFINAL",
+   "sub": "First Leg",
+   "dates": [
+    "D35 1/22"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 3001
+  },
+  {
+   "round": 47,
+   "code": "GS-QF-2",
+   "title": "GRAND SWISS QUARTERFINAL",
+   "sub": "Second Leg",
+   "dates": [
+    "D35 1/22"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 3005
+  },
+  {
+   "round": 48,
+   "code": "L15",
+   "title": "LEAGUE MATCHDAY FIFTEEN",
+   "sub": null,
+   "dates": [
+    "D35 1/22",
+    "D36 1/23"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 3009
+  },
+  {
+   "round": 49,
+   "code": "GS-SF-1",
+   "title": "GRAND SWISS SEMIFINAL",
+   "sub": "First Leg",
+   "dates": [
+    "D36 1/23"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 3089
+  },
+  {
+   "round": 50,
+   "code": "GS-SF-2",
+   "title": "GRAND SWISS SEMIFINAL",
+   "sub": "Second Leg",
+   "dates": [
+    "D36 1/23"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 3091
+  },
+  {
+   "round": 51,
+   "code": "R14",
+   "title": "REGIONAL MATCHDAY FOURTEEN",
+   "sub": null,
+   "dates": [
+    "D37 1/25"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 3093
+  },
+  {
+   "round": 52,
+   "code": "GS-F-1",
+   "title": "GRAND SWISS FINAL - First Leg",
+   "sub": null,
+   "dates": [
+    "D37 1/25"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 3173
+  },
+  {
+   "round": 53,
+   "code": "GS-F-2",
+   "title": "GRAND SWISS FINAL - Second Leg",
+   "sub": null,
+   "dates": [
+    "D37 1/25"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 3174
+  },
+  {
+   "round": 54,
+   "code": "R15",
+   "title": "REGIONAL MATCHDAY FIFTEEN",
+   "sub": null,
+   "dates": [
+    "D38 1/27",
+    "D39 1/28"
+   ],
+   "notes": [],
+   "games": 80,
+   "empty": false,
+   "source_row": 3175
+  },
+  {
+   "round": 55,
+   "code": "LP-1",
+   "title": "LEAGUE PLAYOFFS",
+   "sub": "First Leg",
+   "dates": [
+    "D39 1/28"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 3255
+  },
+  {
+   "round": 56,
+   "code": "LP-2",
+   "title": "LEAGUE PLAYOFFS",
+   "sub": "Second Leg",
+   "dates": [
+    "D39 1/28"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 3263
+  },
+  {
+   "round": 57,
+   "code": "RP-QF-1",
+   "title": "REGIONAL PLAYOFFS",
+   "sub": "Quarterfinal - First Leg",
+   "dates": [
+    "D39 1/28"
+   ],
+   "notes": [],
+   "games": 20,
+   "empty": false,
+   "source_row": 3271
+  },
+  {
+   "round": 58,
+   "code": "RP-QF-2",
+   "title": "REGIONAL PLAYOFFS",
+   "sub": "Quarterfinal - Second Leg",
+   "dates": [
+    "D39 1/28"
+   ],
+   "notes": [],
+   "games": 20,
+   "empty": false,
+   "source_row": 3291
+  },
+  {
+   "round": 59,
+   "code": "RP-SF-1",
+   "title": "REGIONAL PLAYOFFS",
+   "sub": "Semifinal - First Leg",
+   "dates": [
+    "D39 1/28"
+   ],
+   "notes": [],
+   "games": 20,
+   "empty": false,
+   "source_row": 3311
+  },
+  {
+   "round": 60,
+   "code": "RP-SF-2",
+   "title": "REGIONAL PLAYOFFS",
+   "sub": "Semifinal - Second Leg",
+   "dates": [
+    "D39 1/28"
+   ],
+   "notes": [],
+   "games": 20,
+   "empty": false,
+   "source_row": 3331
+  },
+  {
+   "round": 61,
+   "code": "RP-F-1",
+   "title": "REGIONAL PLAYOFFS",
+   "sub": "Championship - First Leg",
+   "dates": [
+    "D39 1/28"
+   ],
+   "notes": [],
+   "games": 10,
+   "empty": false,
+   "source_row": 3351
+  },
+  {
+   "round": 62,
+   "code": "RP-F-2",
+   "title": "REGIONAL PLAYOFFS",
+   "sub": "Championship - Second Leg",
+   "dates": [
+    "D39 1/28"
+   ],
+   "notes": [],
+   "games": 10,
+   "empty": false,
+   "source_row": 3361
+  },
+  {
+   "round": 63,
+   "code": "WC-PI-1",
+   "title": "CHAMPIONSHIP PLAY-IN",
+   "sub": "Game One",
+   "dates": [
+    "D40 1/29"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 3371
+  },
+  {
+   "round": 64,
+   "code": "WC-PI-2",
+   "title": "CHAMPIONSHIP PLAY-IN",
+   "sub": "Game Two",
+   "dates": [
+    "D40 1/29"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 3379
+  },
+  {
+   "round": 65,
+   "code": "WC-PI-3",
+   "title": "CHAMPIONSHIP PLAY-IN",
+   "sub": "Game Three",
+   "dates": [
+    "D40 1/29"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 3387
+  },
+  {
+   "round": 66,
+   "code": "WC-S1",
+   "title": "CHAMPIONSHIP SWISS",
+   "sub": "Round One",
+   "dates": [
+    "D41 2/1"
+   ],
+   "notes": [],
+   "games": 16,
+   "empty": false,
+   "source_row": 3391
+  },
+  {
+   "round": 67,
+   "code": "WC-S2",
+   "title": "CHAMPIONSHIP SWISS",
+   "sub": "Round 2",
+   "dates": [
+    "D41 2/1"
+   ],
+   "notes": [
+    "formula: 12>12.1"
+   ],
+   "games": 16,
+   "empty": false,
+   "source_row": 3407
+  },
+  {
+   "round": 68,
+   "code": "WC-S3",
+   "title": "CHAMPIONSHIP SWISS",
+   "sub": "Round 3",
+   "dates": [
+    "D41 2/1"
+   ],
+   "notes": [],
+   "games": 16,
+   "empty": false,
+   "source_row": 3423
+  },
+  {
+   "round": 69,
+   "code": "WC-S3-2",
+   "title": "CHAMPIONSHIP SWISS",
+   "sub": "Round 3 - Second Leg",
+   "dates": [
+    "D41 2/1"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 3439
+  },
+  {
+   "round": 70,
+   "code": "WC-S4-1",
+   "title": "CHAMPIONSHIP SWISS",
+   "sub": "Round 4 - First Leg",
+   "dates": [
+    "D42 2/2"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 3447
+  },
+  {
+   "round": 71,
+   "code": "WC-S4-2",
+   "title": "CHAMPIONSHIP SWISS",
+   "sub": "Round 4 - Second Leg",
+   "dates": [
+    "D42 2/2"
+   ],
+   "notes": [],
+   "games": 12,
+   "empty": false,
+   "source_row": 3459
+  },
+  {
+   "round": 72,
+   "code": "WC-S5-1",
+   "title": "CHAMPIONSHIP SWISS",
+   "sub": "Round 5 - First Leg",
+   "dates": [
+    "D42 2/2"
+   ],
+   "notes": [],
+   "games": 6,
+   "empty": false,
+   "source_row": 3471
+  },
+  {
+   "round": 73,
+   "code": "WC-S5-2",
+   "title": "CHAMPIONSHIP SWISS",
+   "sub": "Round 5 - Second Leg",
+   "dates": [
+    "D42 2/2"
+   ],
+   "notes": [],
+   "games": 6,
+   "empty": false,
+   "source_row": 3477
+  },
+  {
+   "round": 74,
+   "code": "WC-R16-1",
+   "title": "CHAMPIONSHIP FINALS",
+   "sub": "Round of 16 - First Leg",
+   "dates": [
+    "D42 2/2"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 3483
+  },
+  {
+   "round": 75,
+   "code": "WC-R16-2",
+   "title": "CHAMPIONSHIP FINALS",
+   "sub": "Round of 16 - Second Leg",
+   "dates": [
+    "D42 2/2"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 3491
+  },
+  {
+   "round": 76,
+   "code": "WC-QF-1",
+   "title": "CHAMPIONSHIP FINALS",
+   "sub": "Quarterfinal - Game One",
+   "dates": [
+    "D42 2/2"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 3499
+  },
+  {
+   "round": 77,
+   "code": "WC-QF-2",
+   "title": "CHAMPIONSHIP FINALS",
+   "sub": "Quarterfinal - Game Two",
+   "dates": [
+    "D43 2/3"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 3503
+  },
+  {
+   "round": 78,
+   "code": "WC-QF-3",
+   "title": "CHAMPIONSHIP FINALS",
+   "sub": "Quarterfinal - Game Three",
+   "dates": [
+    "D43 2/3"
+   ],
+   "notes": [
+    "formula 12.2>12.3"
+   ],
+   "games": 2,
+   "empty": false,
+   "source_row": 3507
+  },
+  {
+   "round": 79,
+   "code": "WC-SF-1",
+   "title": "CHAMPIONSHIP FINALS",
+   "sub": "Semifinal - Game One",
+   "dates": [
+    "D43 2/3"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 3511
+  },
+  {
+   "round": 80,
+   "code": "WC-SF-2",
+   "title": "CHAMPIONSHIP FINALS",
+   "sub": "Semifinal - Game Two",
+   "dates": [
+    "D43 2/3"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 3513
+  },
+  {
+   "round": 81,
+   "code": "WC-SF-3",
+   "title": "CHAMPIONSHIP FINALS",
+   "sub": "Semifinal - Game Three",
+   "dates": [
+    "D43 2/3"
+   ],
+   "notes": [
+    "formula 12.3>12.4"
+   ],
+   "games": 2,
+   "empty": false,
+   "source_row": 3515
+  },
+  {
+   "round": 82,
+   "code": "WC-F-1",
+   "title": "WORLD CHAMPIONSHIP - Game One",
+   "sub": null,
+   "dates": [
+    "D43 2/3"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 3517
+  },
+  {
+   "round": 83,
+   "code": "WC-F-2",
+   "title": "WORLD CHAMPIONSHIP - Game Two",
+   "sub": null,
+   "dates": [
+    "D43 2/3"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 3518
+  },
+  {
+   "round": 84,
+   "code": "WC-F-3",
+   "title": "WORLD CHAMPIONSHIP - Game Three",
+   "sub": null,
+   "dates": [
+    "D43 2/3"
+   ],
+   "notes": [
+    "formula 12.4>12.5"
+   ],
+   "games": 1,
+   "empty": false,
+   "source_row": 3519
+  }
+ ]
+}

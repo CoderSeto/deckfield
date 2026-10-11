@@ -90,7 +90,7 @@ database holds one season. See "Season 10" below.
 - `history/` — the **historical archive** of Seasons 1-8 (see "The historical
   archive" below). `history/s<N>/` holds that season's workbook and what
   `extract_history.py <N> <workbook>` writes from it; `history/teams.json` is
-  the cross-season team identity map. S8 and S7 done 2026-10-11; S6 and
+  the cross-season team identity map. S8, S7 and S6 done 2026-10-11; S5 and
   earlier next. Each season is extracted only after the one after it (its
   final ranks and Elo are checked against how the next season opened).
 - `CLAUDE.md` — this file.
@@ -149,8 +149,15 @@ the correction names.
 **Event labels**: a title opens with two ALL-CAPS words; a round/leg label
 refines it, and a second round/leg label within one title opens the next part
 of that stage (S7's Championship Swiss round 3); anything else -- matchday
-names, the sheet's changelog notes -- is kept as the event's `notes`. Column A's
-play dates ("D1 5/22", S7 on) become the event's `date`. Each check was mutation-tested (a dropped bye, a one-sided
+names, the sheet's changelog notes -- is kept as the event's `notes`. A label
+that fuses the two is split by a listed `label_overrides` entry. Column A marks
+the start of a play day ("D1 5/22", S6 and S7): every game below it until the
+next mark was played that day, so each game carries its `day` and each event
+its `dates` (more than one when a matchday spanned two days).
+
+**"formula" notes (S6-S7) are OVR-scaling changes, not rule changes**: before
+S9 no team could go above 100 OVR, and the formula was adjusted during a season
+to keep it so (per the user, 2026-10-11). Each check was mutation-tested (a dropped bye, a one-sided
 score typo, a bad host flag, a missing WC game, the identity swap undone, a
 flipped regional final, a K off by one, an opening Elo off by 5, goals above
 points) and fails as it should. A re-run is byte-identical.
@@ -222,6 +229,42 @@ Lavaridge Town) moved Elo by 40 each way while its K column says 22. Per the
 user, "whatever the Elo actually changed by, that's what stays": the Elo is
 kept and `elo_k` is 40, with the sheet's 22 recorded in `events.json`.
 **The rule for every season: the recorded Elo is the truth, and K follows it.**
+
+### Season 6 (extracted 2026-10-11)
+
+**Complete -- nothing to simulate**, with one more gap than S7: **no per-game
+EX at all** (the Archive has no EX column; the notes moved into column S), even
+though the R1 notes say "Bonus EX points now awarded". 3,516 games in 84
+events, play dates for all of them (39 days, 8/9 to 2/3; eight matchdays span
+two days), the same 160 teams with the same dex, names and regions as S7. Every
+check passes with no anomalies and no corrections.
+
+What differed (per the user, and as the Archive shows):
+- **League pyramid**: Master (1 division), Ultra A-B, Great A-C, Basic A-D --
+  ten divisions of 16, each a full round robin. `division` holds the label
+  ("Great B") and `tier` 1-4 (S7 on, `division` is 1-10 and `tier` blank).
+  The Hall of Fame's league plaque for S6 is MRL (Master) and UTL (Ultra)
+  champions; it is not checked, since the standings tiebreak of the time is
+  not modelled.
+- **League Playoffs** (LP-1, LP-2: two days, 8 games each, typed P), from the
+  LPO sheet: Master Placement (Master 3rd v 4th), Master/Ultra Relegation (a
+  three-team ladder, "loser of both games relegated, 3 at 2, W at 1"), Ultra
+  Promotion, Great Promotion (a three-team ladder, "winner of both games
+  promoted, 2 at 1, 3 at L1"), and a 3rd-v-4th promotion tie in each Basic
+  division. The archive keeps the two days as recorded and does not model the
+  ties.
+- **Grand Swiss, 15 rounds and a top 16** (it "replaces WCS" from this season,
+  per the notes; the Hall of Fame's cup plaque still calls S6's "WCS"): rounds
+  of 40/60/80/80/80/64/64/64/64/64/32/32/32/32/32 games, the same 80 + 40 byes
+  scored as wins, then a 3-game single-leg play-in (GS-PI) and a two-legged
+  R16, QF, SF and Final. Seafolk Village beat Slateport City.
+- **World Championship**: a best-of-three play-in (WC-PI-1..3, typed P), a
+  Championship Swiss whose round 3 sheet lists 16 games together (singles and
+  first legs mixed) then 8 second legs (WC-S3, WC-S3-2), two-legged rounds 4-5,
+  a two-legged R16 (not best of three, unlike S7-S8), then best-of-three QF,
+  SF and Final. Canalave City beat Striaton City.
+- One label fused a note into a round name ("formula 12.3>12.4 Semifinal -
+  Game Three", Archive row 3516) and is split by `label_overrides`.
 
 ## Season 9 is frozen (2026-10-10, per explicit instruction)
 
@@ -5148,7 +5191,7 @@ page errors on either path.
 
 ## Known open items
 
-- **Historical archive:** S8 and S7 extracted; S6 and earlier to come, each needing
+- **Historical archive:** S8, S7 and S6 extracted; S5 and earlier to come, each needing
   its own `SEASONS` layout in `extract_history.py`. No all-time database or
   dashboard tab yet -- that waits until a few seasons are in.
 - **End of S10 (B13):** append its Legacy column to `legacy_points.json` and its

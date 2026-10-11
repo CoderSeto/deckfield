@@ -26,7 +26,8 @@ What it writes, all under history/s<N>/:
                  coming in), final rank / OVR / Elo, accolades.
 - events.json    every event in play order with its game count (an event with
                  no games, like a leg 3 nobody had to play, is listed and
-                 marked empty), its play date where the sheet kept one, the
+                 marked empty), its play dates where the sheet kept them (also per
+                 game, as games.csv's `day`), the
                  changelog notes the sheet wrote beside it, any listed
                  anomalies, and the source workbook's SHA-256.
 
@@ -68,6 +69,8 @@ LEAGUE_DIVISION_MAP = {
     "Sixth": 6, "Seventh": 7, "Eighth": 8, "Ninth": 9, "Tenth": 10,
 }
 REGION_NAME_FIX = {"Lily Valley": "LilyValley"}
+# S6's pyramid: one Master division, two Ultra, three Great, four Basic.
+LEAGUE_TIER = {"Master": 1, "Ultra": 2, "Great": 3, "Basic": 4}
 NUMBER_WORDS = {w: i for i, w in enumerate(
     "ONE TWO THREE FOUR FIVE SIX SEVEN EIGHT NINE TEN ELEVEN TWELVE THIRTEEN "
     "FOURTEEN FIFTEEN".split(), start=1)}
@@ -92,6 +95,9 @@ SEASONS = {
                          division=73, primary=76, accolades=[78], checkpoint_name=84,
                          final_rank=88, opening_rank=150, opening_elo=177),
         "record_cols": dict(RW=5, RL=6, LW=7, LL=8, SW=9, SL=10, pW=11, pL=12),
+        # Archive columns (0-based) after the packed strings: R the MAX/INVT
+        # mark, S the winner's EX, T the notes.
+        "archive_cols": dict(mark=17, ex=18, note=19),
         # Calcs: per-team game grid, column L onward in play order.
         "calcs_first_col": 12,
         "anomalies": {},
@@ -106,6 +112,7 @@ SEASONS = {
                          division=73, primary=None, accolades=[78, 79], checkpoint_name=84,
                          final_rank=88, opening_rank=147, opening_elo=None),
         "record_cols": dict(RW=5, RL=6, LW=7, LL=8, SW=9, SL=10, pW=11, pL=12),
+        "archive_cols": dict(mark=17, ex=18, note=19),
         "calcs_first_col": 12,
         "anomalies": {},
         "corrections": {
@@ -114,6 +121,25 @@ SEASONS = {
                    "(25): Elo moved 40 each way (1879->1919, 2041->2001) but the K "
                    "column says 22. Per the user (2026-10-11): whatever the Elo "
                    "actually changed by stays, so K is 40."),
+        },
+    },
+    6: {
+        # The league is a pyramid: BV the tier (Master/Ultra/Great/Basic), BW
+        # the division letter within it (blank for Master). EP "S5 End". The
+        # carried-in Elo block (ES..FO) is the same stale copy S7 has; not
+        # read. No primary type.
+        "rankings": dict(dex=0, region=1, name=2, ovr=42, elo=63, basclm=68,
+                         division=73, division_letter=74, primary=None, accolades=[78, 79],
+                         checkpoint_name=84, final_rank=88, opening_rank=145, opening_elo=None),
+        "record_cols": dict(RW=5, RL=6, LW=7, LL=8, SW=9, SL=10, pW=11, pL=12),
+        # No per-game EX column: the notes moved into S.
+        "archive_cols": dict(mark=17, ex=None, note=18),
+        "calcs_first_col": 12,
+        "anomalies": {},
+        "corrections": {},
+        # A changelog note written into a round label's cell.
+        "label_overrides": {
+            3516: ("Semifinal - Game Three", "formula 12.3>12.4"),
         },
     },
 }
@@ -151,15 +177,19 @@ def _event_code(title, sub):
     if m and m.group(1) in NUMBER_WORDS:
         return f"GS{NUMBER_WORDS[m.group(1)]}"
     if t == "CHAMPIONSHIP PLAY-IN":
-        # S8: one two-legged round ("First Leg"); S7: two ("First Round - ...").
+        # S8: one two-legged round ("First Leg"); S7: two ("First Round - ...");
+        # S6: a best of three ("Game One").
         rm = re.match(r'(First|Second) Round', s, re.I)
-        return f"WC-PI{1 if rm.group(1).lower() == 'first' else 2}-{leg_n}" if rm else f"WC-PI-{leg_n}"
+        return f"WC-PI{1 if rm.group(1).lower() == 'first' else 2}-{leg_n}" if rm else f"WC-PI-{leg_n or game_n}"
+    if t == "LEAGUE PLAYOFFS":
+        return f"LP-{leg_n}"
     stage = {
         "GRAND SWISS PLAY-IN ROUND": "GS-PI", "GRAND SWISS ROUND OF SIXTEEN": "GS-R16",
         "GRAND SWISS QUARTERFINAL": "GS-QF", "GRAND SWISS SEMIFINAL": "GS-SF",
     }.get(t)
     if stage:
-        return f"{stage}-{leg_n}"
+        # S6's Grand Swiss play-in was single games, no legs.
+        return f"{stage}-{leg_n}" if leg_n else stage
     if t.startswith("GRAND SWISS FINAL"):
         return f"GS-F-{leg_n}"
     if t == "REGIONAL PLAYOFFS":
@@ -196,10 +226,16 @@ def read_teams(wb, cfg):
         region = r[c["region"]]
         accolades = [str(r[i]).strip() for i in c["accolades"]
                      if r[i] not in (None, "", "-")]
+        if "division_letter" in c:
+            tier_name = r[c["division"]]
+            division = " ".join(x for x in (tier_name, r[c["division_letter"]]) if x)
+            tier = LEAGUE_TIER[tier_name]
+        else:
+            division, tier = LEAGUE_DIVISION_MAP[r[c["division"]]], ""
         teams[r[c["dex"]]] = {
             "dex": r[c["dex"]], "name": r[c["name"]],
             "region": REGION_NAME_FIX.get(region, region),
-            "division": LEAGUE_DIVISION_MAP[r[c["division"]]],
+            "division": division, "tier": tier,
             "primary_type": r[c["primary"]] if c["primary"] is not None else "",
             "basclm": r[c["basclm"]],
             "opening_rank": r[c["opening_rank"]],
@@ -238,21 +274,32 @@ def opening_elos(games, teams):
     return out
 
 
-def read_games(wb):
-    """Every Archive game, in sheet order, with its event."""
+def read_games(wb, cfg):
+    """Every Archive game, in sheet order, with its event and play day."""
+    cols = cfg["archive_cols"]
+    overrides = cfg.get("label_overrides", {})
     rows = list(wb["Archive"].iter_rows(min_row=1, max_col=23, values_only=True))
     events, games = [], []
     cur = None
 
     def new_event(title, rownum, sub=None):
-        e = {"title": title, "sub": sub, "row": rownum, "games": 0, "notes": [], "date": None}
+        e = {"title": title, "sub": sub, "row": rownum, "games": 0, "notes": [], "dates": []}
         events.append(e)
         return e
 
+    day = None
     for rownum, r in enumerate(rows, start=1):
         if rownum == 1:
             continue
+        # Column A marks the start of a play day ("D1 5/22"); every game below
+        # it until the next mark was played that day.
+        if isinstance(r[0], str) and r[0].strip():
+            day = r[0].strip()
         label = r[1]
+        if rownum in overrides:
+            label, note = overrides[rownum]
+            if cur is not None:
+                cur["notes"].append(note)
         if isinstance(label, str) and label.strip():
             label = label.strip()
             if _is_title(label):
@@ -269,24 +316,24 @@ def read_games(wb):
                 # A changelog note or a matchday's name ("Base-2 Scoring
                 # System", "The Overhaul").
                 cur["notes"].append(label)
-        if isinstance(r[0], str) and r[0].strip() and cur is not None and cur["date"] is None:
-            cur["date"] = r[0].strip()
         if not r[15]:
             continue
         w, l = GAME_PATTERN.match(str(r[15])), GAME_PATTERN.match(str(r[16]))
         if not w or not l:
             raise ValueError(f"Archive row {rownum}: unparseable game {r[15]!r} / {r[16]!r}")
         cur["games"] += 1
+        if day and day not in cur["dates"]:
+            cur["dates"].append(day)
         ex = None
-        if r[18] not in (None, ""):
-            m = EX_PATTERN.match(str(r[18]).strip())
+        if cols["ex"] is not None and r[cols["ex"]] not in (None, ""):
+            m = EX_PATTERN.match(str(r[cols["ex"]]).strip())
             if not m:
-                raise ValueError(f"Archive row {rownum}: unparseable EX {r[18]!r}")
+                raise ValueError(f"Archive row {rownum}: unparseable EX {r[cols['ex']]!r}")
             ex = int(m.group(1))
         games.append({
             "row": rownum, "event": cur, "winner_name": r[8], "loser_name": r[11],
             "home_away": str(r[6]).strip().upper(), "w": w.groups(), "l": l.groups(),
-            "ex": ex, "mark": r[17] or "", "note": r[19] or "",
+            "ex": ex, "mark": r[cols["mark"]] or "", "note": r[cols["note"]] or "", "day": day or "",
             "rank_w": r[7], "rank_l": r[12], "elo_k": r[4], "goals": r[13],
         })
     for i, e in enumerate(events, start=1):
@@ -358,7 +405,7 @@ def build_game_rows(games, name_to_dex, canon):
         hdex, adex = (wdex, ldex) if winner_home else (ldex, wdex)
         ot = "OT" in g["note"] or (int(w[0]) == 2)
         rows.append({
-            "seq": seq, "round": g["event"]["round"], "event": g["event"]["code"],
+            "seq": seq, "round": g["event"]["round"], "event": g["event"]["code"], "day": g["day"],
             "game_type": w[1],
             "team_a": canon[hdex], "team_b": canon[adex],
             "result_a": int(home[0]), "pf_a": int(home[3]), "pa_a": int(home[4]),
@@ -367,8 +414,9 @@ def build_game_rows(games, name_to_dex, canon):
             "dscr_a": home[8], "dscr_b": away[8],
             "elo_a_after": home[9], "elo_b_after": away[9],
             "home": "A",
-            # Modern per-team EX is a gap: this season banked a bonus for the
-            # winner only, and as a differential, not each side's own score.
+            # Modern per-team EX is a gap: S7-S8 banked a bonus for the winner
+            # only, as a differential, not each side's own score; S6 kept no
+            # per-game EX at all.
             "ex_a": "", "ex_b": "",
             "ex_winner_diff": "" if g["ex"] is None else g["ex"],
             "winner": "A" if winner_home else "B",
@@ -385,7 +433,7 @@ def _raw(g):
     return [f"{r}{t}!{opp}+{pf}-{pa}^{raw}({spread})[{gi}]{{{dscr}}}{elo}"]
 
 
-GAME_FIELDS = ["seq", "round", "event", "game_type", "team_a", "team_b", "result_a",
+GAME_FIELDS = ["seq", "round", "event", "day", "game_type", "team_a", "team_b", "result_a",
                "pf_a", "pa_a", "raw_goal_a", "raw_goal_b", "spread_a", "interest",
                "dscr_a", "dscr_b", "elo_a_after", "elo_b_after", "home", "ex_a", "ex_b",
                "ex_winner_diff", "winner", "goals_a", "goals_b", "elo_k", "rank_a", "rank_b",
@@ -635,7 +683,7 @@ def main(season, workbook):
     cfg = SEASONS[season]
     wb = openpyxl.load_workbook(workbook, read_only=True, data_only=True)
     teams = read_teams(wb, cfg)
-    events, games = read_games(wb)
+    events, games = read_games(wb, cfg)
     corrections = cfg["corrections"]
     apply_corrections(games, corrections)
     walkovers = read_walkovers(wb, cfg, events)
@@ -662,12 +710,12 @@ def main(season, workbook):
                 "game_type": w["game_type"], "result": w["result"]}
                for w in sorted(walkovers, key=lambda w: (w["round"], canon[w["dex"]]))])
     opening = opening_elos(games, teams)
-    team_fields = ["team", "season_dex", "name", "region", "division", "primary_type",
+    team_fields = ["team", "season_dex", "name", "region", "division", "tier", "primary_type",
                    "basclm", "opening_rank", "opening_elo", "final_rank", "final_ovr",
                    "final_elo", "accolades"]
     write_csv(os.path.join(out, "teams.csv"), team_fields, [
         {"team": canon[d], "season_dex": d, "name": t["name"], "region": t["region"],
-         "division": t["division"], "primary_type": t["primary_type"], "basclm": t["basclm"],
+         "division": t["division"], "tier": t["tier"], "primary_type": t["primary_type"], "basclm": t["basclm"],
          "opening_rank": t["opening_rank"], "opening_elo": _num(opening[d]), "final_rank": t["final_rank"], "final_ovr": t["final_ovr"], "final_elo": t["final_elo"],
          "accolades": t["accolades"].replace("\n", " ")}
         for d, t in sorted(teams.items(), key=lambda kv: canon[kv[0]])])
@@ -686,7 +734,7 @@ def main(season, workbook):
             "corrections": [{"source_row": r, "field": f, "sheet": a, "corrected": b, "reason": why}
                             for r, (f, a, b, why) in sorted(corrections.items())],
             "events": [{"round": e["round"], "code": e["code"], "title": e["title"],
-                        "sub": e["sub"], "date": e["date"], "notes": e["notes"],
+                        "sub": e["sub"], "dates": e["dates"], "notes": e["notes"],
                         "games": e["games"], "empty": e["games"] == 0,
                         "source_row": e["row"]} for e in events],
         }, f, indent=1)

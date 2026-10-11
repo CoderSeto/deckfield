@@ -74,7 +74,9 @@
    "code": "R1",
    "title": "REGIONAL MATCHDAY ONE",
    "sub": null,
-   "date": "D1 5/22",
+   "dates": [
+    "D1 5/22"
+   ],
    "notes": [
     "Base-2 Scoring System",
     "Increased !#$+ value",
@@ -92,7 +94,9 @@
    "code": "R2",
    "title": "REGIONAL MATCHDAY TWO",
    "sub": null,
-   "date": "D2 5/24",
+   "dates": [
+    "D2 5/24"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -103,7 +107,9 @@
    "code": "R3",
    "title": "REGIONAL MATCHDAY THREE",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D2 5/24"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -114,7 +120,9 @@
    "code": "GS1",
    "title": "GRAND SWISS ROUND ONE",
    "sub": null,
-   "date": "D3 5/24",
+   "dates": [
+    "D3 5/24"
+   ],
    "notes": [],
    "games": 40,
    "empty": false,
@@ -125,7 +133,9 @@
    "code": "GS2",
    "title": "GRAND SWISS ROUND TWO",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D3 5/24"
+   ],
    "notes": [],
    "games": 60,
    "empty": false,
@@ -136,7 +146,9 @@
    "code": "R4",
    "title": "REGIONAL MATCHDAY FOUR",
    "sub": null,
-   "date": "D4 5/26",
+   "dates": [
+    "D4 5/26"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -147,7 +159,9 @@
    "code": "L1",
    "title": "LEAGUE MATCHDAY ONE",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D4 5/26"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -158,7 +172,9 @@
    "code": "L2",
    "title": "LEAGUE MATCHDAY TWO",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D4 5/26"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -169,7 +185,9 @@
    "code": "R5",
    "title": "REGIONAL MATCHDAY FIVE",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D4 5/26"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -180,7 +198,9 @@
    "code": "GS3",
    "title": "GRAND SWISS ROUND THREE",
    "sub": null,
-   "date": "D5 6/2",
+   "dates": [
+    "D5 6/2"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -191,7 +211,9 @@
    "code": "GS4",
    "title": "GRAND SWISS ROUND FOUR",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D5 6/2"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -202,7 +224,9 @@
    "code": "L3",
    "title": "LEAGUE MATCHDAY THREE",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D5 6/2"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -213,7 +237,9 @@
    "code": "GS5",
    "title": "GRAND SWISS ROUND FIVE",
    "sub": null,
-   "date": "D6 6/7",
+   "dates": [
+    "D6 6/7"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -224,7 +250,9 @@
    "code": "GS6",
    "title": "GRAND SWISS ROUND SIX",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D6 6/7"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -235,7 +263,9 @@
    "code": "R6",
    "title": "REGIONAL MATCHDAY SIX",
    "sub": null,
-   "date": "D7 6/14",
+   "dates": [
+    "D7 6/14"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -246,7 +276,9 @@
    "code": "L4",
    "title": "LEAGUE MATCHDAY FOUR",
    "sub": null,
-   "date": "D8 6/15",
+   "dates": [
+    "D8 6/15"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -257,7 +289,9 @@
    "code": "L5",
    "title": "LEAGUE MATCHDAY FIVE",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D8 6/15"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -268,7 +302,9 @@
    "code": "R7",
    "title": "REGIONAL MATCHDAY SEVEN",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D8 6/15"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -279,7 +315,9 @@
    "code": "GS7",
    "title": "GRAND SWISS ROUND SEVEN",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D8 6/15"
+   ],
    "notes": [
     "EYE formula fixed",
     "PF formula adjusted",
@@ -294,7 +332,9 @@
    "code": "GS8",
    "title": "GRAND SWISS ROUND EIGHT",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D8 6/15"
+   ],
    "notes": [],
    "games": 48,
    "empty": false,
@@ -305,7 +345,9 @@
    "code": "L6",
    "title": "LEAGUE MATCHDAY SIX",
    "sub": null,
-   "date": "D9 6/25",
+   "dates": [
+    "D9 6/25"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -316,7 +358,9 @@
    "code": "GS9",
    "title": "GRAND SWISS ROUND NINE",
    "sub": null,
-   "date": "D10 6/28",
+   "dates": [
+    "D10 6/28"
+   ],
    "notes": [],
    "games": 48,
    "empty": false,
@@ -327,7 +371,9 @@
    "code": "GS10",
    "title": "GRAND SWISS ROUND TEN",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D10 6/28"
+   ],
    "notes": [],
    "games": 48,
    "empty": false,
@@ -338,7 +384,9 @@
    "code": "R8",
    "title": "REGIONAL MATCHDAY EIGHT",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D10 6/28"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -349,7 +397,9 @@
    "code": "L7",
    "title": "LEAGUE MATCHDAY SEVEN",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D10 6/28"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -360,7 +410,9 @@
    "code": "L8",
    "title": "LEAGUE MATCHDAY EIGHT",
    "sub": null,
-   "date": "D11 7/7",
+   "dates": [
+    "D11 7/7"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -371,7 +423,9 @@
    "code": "R9",
    "title": "REGIONAL MATCHDAY NINE",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D11 7/7"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -382,7 +436,9 @@
    "code": "GS11",
    "title": "GRAND SWISS ROUND ELEVEN",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D11 7/7"
+   ],
    "notes": [],
    "games": 36,
    "empty": false,
@@ -393,7 +449,9 @@
    "code": "GS12",
    "title": "GRAND SWISS ROUND TWELVE",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D11 7/7"
+   ],
    "notes": [],
    "games": 36,
    "empty": false,
@@ -404,7 +462,9 @@
    "code": "L9",
    "title": "LEAGUE MATCHDAY NINE",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D11 7/7"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -415,7 +475,9 @@
    "code": "GS13",
    "title": "GRAND SWISS ROUND THIRTEEN",
    "sub": null,
-   "date": "D12 7/18",
+   "dates": [
+    "D12 7/18"
+   ],
    "notes": [],
    "games": 24,
    "empty": false,
@@ -426,7 +488,9 @@
    "code": "GS14",
    "title": "GRAND SWISS ROUND FOURTEEN",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D12 7/18"
+   ],
    "notes": [],
    "games": 24,
    "empty": false,
@@ -437,7 +501,9 @@
    "code": "R10",
    "title": "REGIONAL MATCHDAY TEN",
    "sub": null,
-   "date": "D13 8/8",
+   "dates": [
+    "D13 8/8"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -448,7 +514,9 @@
    "code": "L10",
    "title": "LEAGUE MATCHDAY TEN",
    "sub": null,
-   "date": "D14 8/12",
+   "dates": [
+    "D14 8/12"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -459,7 +527,9 @@
    "code": "L11",
    "title": "LEAGUE MATCHDAY ELEVEN",
    "sub": null,
-   "date": "D15 8/15",
+   "dates": [
+    "D15 8/15"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -470,7 +540,9 @@
    "code": "R11",
    "title": "REGIONAL MATCHDAY ELEVEN",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D15 8/15"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -481,7 +553,9 @@
    "code": "GS-PI-1",
    "title": "GRAND SWISS PLAY-IN ROUND",
    "sub": "First Leg",
-   "date": "D16 8/16",
+   "dates": [
+    "D16 8/16"
+   ],
    "notes": [],
    "games": 8,
    "empty": false,
@@ -492,7 +566,9 @@
    "code": "GS-PI-2",
    "title": "GRAND SWISS PLAY-IN ROUND",
    "sub": "Second Leg",
-   "date": null,
+   "dates": [
+    "D16 8/16"
+   ],
    "notes": [],
    "games": 8,
    "empty": false,
@@ -503,7 +579,9 @@
    "code": "L12",
    "title": "LEAGUE MATCHDAY TWELVE",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D16 8/16"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -514,7 +592,9 @@
    "code": "GS-R16-1",
    "title": "GRAND SWISS ROUND OF SIXTEEN",
    "sub": "First Leg",
-   "date": null,
+   "dates": [
+    "D16 8/16"
+   ],
    "notes": [],
    "games": 8,
    "empty": false,
@@ -525,7 +605,9 @@
    "code": "GS-R16-2",
    "title": "GRAND SWISS ROUND OF SIXTEEN",
    "sub": "Second Leg",
-   "date": null,
+   "dates": [
+    "D16 8/16"
+   ],
    "notes": [],
    "games": 8,
    "empty": false,
@@ -536,7 +618,9 @@
    "code": "R12",
    "title": "REGIONAL MATCHDAY TWELVE",
    "sub": null,
-   "date": "D17",
+   "dates": [
+    "D17"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -547,7 +631,9 @@
    "code": "L13",
    "title": "LEAGUE MATCHDAY THIRTEEN",
    "sub": null,
-   "date": "D18 9/14",
+   "dates": [
+    "D18 9/14"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -558,7 +644,9 @@
    "code": "L14",
    "title": "LEAGUE MATCHDAY FOURTEEN",
    "sub": null,
-   "date": "D19 2/8",
+   "dates": [
+    "D19 2/8"
+   ],
    "notes": [
     "Five month hiatus (corrupted file)"
    ],
@@ -571,7 +659,9 @@
    "code": "R13",
    "title": "REGIONAL MATCHDAY THIRTEEN",
    "sub": null,
-   "date": "D20 2/9",
+   "dates": [
+    "D20 2/9"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -582,7 +672,9 @@
    "code": "GS-QF-1",
    "title": "GRAND SWISS QUARTERFINAL",
    "sub": "First Leg",
-   "date": null,
+   "dates": [
+    "D20 2/9"
+   ],
    "notes": [],
    "games": 4,
    "empty": false,
@@ -593,7 +685,9 @@
    "code": "GS-QF-2",
    "title": "GRAND SWISS QUARTERFINAL",
    "sub": "Second Leg",
-   "date": null,
+   "dates": [
+    "D20 2/9"
+   ],
    "notes": [],
    "games": 4,
    "empty": false,
@@ -604,7 +698,9 @@
    "code": "L15",
    "title": "LEAGUE MATCHDAY FIFTEEN",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D20 2/9"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -615,7 +711,9 @@
    "code": "GS-SF-1",
    "title": "GRAND SWISS SEMIFINAL",
    "sub": "First Leg",
-   "date": null,
+   "dates": [
+    "D20 2/9"
+   ],
    "notes": [],
    "games": 2,
    "empty": false,
@@ -626,7 +724,9 @@
    "code": "GS-SF-2",
    "title": "GRAND SWISS SEMIFINAL",
    "sub": "Second Leg",
-   "date": null,
+   "dates": [
+    "D20 2/9"
+   ],
    "notes": [],
    "games": 2,
    "empty": false,
@@ -637,7 +737,9 @@
    "code": "R14",
    "title": "REGIONAL MATCHDAY FOURTEEN",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D20 2/9"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -648,7 +750,9 @@
    "code": "GS-F-1",
    "title": "GRAND SWISS FINAL - First Leg",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D20 2/9"
+   ],
    "notes": [],
    "games": 1,
    "empty": false,
@@ -659,7 +763,9 @@
    "code": "GS-F-2",
    "title": "GRAND SWISS FINAL - Second Leg",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D20 2/9"
+   ],
    "notes": [],
    "games": 1,
    "empty": false,
@@ -670,7 +776,9 @@
    "code": "R15",
    "title": "REGIONAL MATCHDAY FIFTEEN",
    "sub": null,
-   "date": "D21 2/12",
+   "dates": [
+    "D21 2/12"
+   ],
    "notes": [],
    "games": 80,
    "empty": false,
@@ -681,7 +789,9 @@
    "code": "RP-QF-1",
    "title": "REGIONAL PLAYOFFS",
    "sub": "Quarterfinal - First Leg",
-   "date": "D22 2/14",
+   "dates": [
+    "D22 2/14"
+   ],
    "notes": [],
    "games": 20,
    "empty": false,
@@ -692,7 +802,9 @@
    "code": "RP-QF-2",
    "title": "REGIONAL PLAYOFFS",
    "sub": "Quarterfinal - Second Leg",
-   "date": null,
+   "dates": [
+    "D22 2/14"
+   ],
    "notes": [],
    "games": 20,
    "empty": false,
@@ -703,7 +815,9 @@
    "code": "RP-SF-1",
    "title": "REGIONAL PLAYOFFS",
    "sub": "Semifinal - First Leg",
-   "date": null,
+   "dates": [
+    "D22 2/14"
+   ],
    "notes": [],
    "games": 20,
    "empty": false,
@@ -714,7 +828,9 @@
    "code": "RP-SF-2",
    "title": "REGIONAL PLAYOFFS",
    "sub": "Semifinal - Second Leg",
-   "date": null,
+   "dates": [
+    "D22 2/14"
+   ],
    "notes": [],
    "games": 20,
    "empty": false,
@@ -725,7 +841,9 @@
    "code": "RP-F-1",
    "title": "REGIONAL PLAYOFFS",
    "sub": "Championship - First Leg",
-   "date": "D23 2/22",
+   "dates": [
+    "D23 2/22"
+   ],
    "notes": [],
    "games": 10,
    "empty": false,
@@ -736,7 +854,9 @@
    "code": "RP-F-2",
    "title": "REGIONAL PLAYOFFS",
    "sub": "Championship - Second Leg",
-   "date": null,
+   "dates": [
+    "D23 2/22"
+   ],
    "notes": [],
    "games": 10,
    "empty": false,
@@ -747,7 +867,9 @@
    "code": "WC-PI1-1",
    "title": "CHAMPIONSHIP PLAY-IN",
    "sub": "First Round - First Leg",
-   "date": null,
+   "dates": [
+    "D23 2/22"
+   ],
    "notes": [],
    "games": 8,
    "empty": false,
@@ -758,7 +880,9 @@
    "code": "WC-PI1-2",
    "title": "CHAMPIONSHIP PLAY-IN",
    "sub": "First Round - Second Leg",
-   "date": null,
+   "dates": [
+    "D23 2/22"
+   ],
    "notes": [],
    "games": 8,
    "empty": false,
@@ -769,7 +893,9 @@
    "code": "WC-PI2-1",
    "title": "CHAMPIONSHIP PLAY-IN",
    "sub": "Second Round - First Leg",
-   "date": null,
+   "dates": [
+    "D23 2/22"
+   ],
    "notes": [],
    "games": 8,
    "empty": false,
@@ -780,7 +906,9 @@
    "code": "WC-PI2-2",
    "title": "CHAMPIONSHIP PLAY-IN",
    "sub": "Second Round - Second Leg",
-   "date": null,
+   "dates": [
+    "D23 2/22"
+   ],
    "notes": [],
    "games": 8,
    "empty": false,
@@ -791,7 +919,9 @@
    "code": "WC-S1",
    "title": "CHAMPIONSHIP SWISS",
    "sub": "Round 1",
-   "date": null,
+   "dates": [
+    "D23 2/22"
+   ],
    "notes": [],
    "games": 16,
    "empty": false,
@@ -802,7 +932,9 @@
    "code": "WC-S2",
    "title": "CHAMPIONSHIP SWISS",
    "sub": "Round 2",
-   "date": null,
+   "dates": [
+    "D23 2/22"
+   ],
    "notes": [],
    "games": 16,
    "empty": false,
@@ -813,7 +945,9 @@
    "code": "WC-S3",
    "title": "CHAMPIONSHIP SWISS",
    "sub": "Round 3",
-   "date": "D24 2/23",
+   "dates": [
+    "D24 2/23"
+   ],
    "notes": [],
    "games": 8,
    "empty": false,
@@ -824,7 +958,9 @@
    "code": "WC-S3-1",
    "title": "CHAMPIONSHIP SWISS",
    "sub": "Round 3 - First Leg",
-   "date": null,
+   "dates": [
+    "D24 2/23"
+   ],
    "notes": [],
    "games": 8,
    "empty": false,
@@ -835,7 +971,9 @@
    "code": "WC-S3-2",
    "title": "CHAMPIONSHIP SWISS",
    "sub": "Round 3 - Second Leg",
-   "date": null,
+   "dates": [
+    "D24 2/23"
+   ],
    "notes": [],
    "games": 8,
    "empty": false,
@@ -846,7 +984,9 @@
    "code": "WC-S4-1",
    "title": "CHAMPIONSHIP SWISS",
    "sub": "Round 4 - First Leg",
-   "date": null,
+   "dates": [
+    "D24 2/23"
+   ],
    "notes": [],
    "games": 12,
    "empty": false,
@@ -857,7 +997,9 @@
    "code": "WC-S4-2",
    "title": "CHAMPIONSHIP SWISS",
    "sub": "Round 4 - Second Leg",
-   "date": null,
+   "dates": [
+    "D24 2/23"
+   ],
    "notes": [],
    "games": 12,
    "empty": false,
@@ -868,7 +1010,9 @@
    "code": "WC-S5-1",
    "title": "CHAMPIONSHIP SWISS",
    "sub": "Round 5 - First Leg",
-   "date": null,
+   "dates": [
+    "D24 2/23"
+   ],
    "notes": [],
    "games": 6,
    "empty": false,
@@ -879,7 +1023,9 @@
    "code": "WC-S5-2",
    "title": "CHAMPIONSHIP SWISS",
    "sub": "Round 5 - Second Leg",
-   "date": null,
+   "dates": [
+    "D24 2/23"
+   ],
    "notes": [],
    "games": 6,
    "empty": false,
@@ -890,7 +1036,9 @@
    "code": "WC-R16-1",
    "title": "CHAMPIONSHIP FINALS",
    "sub": "Round of 16 - Game One",
-   "date": "D25 2/24",
+   "dates": [
+    "D25 2/24"
+   ],
    "notes": [],
    "games": 8,
    "empty": false,
@@ -901,7 +1049,9 @@
    "code": "WC-R16-2",
    "title": "CHAMPIONSHIP FINALS",
    "sub": "Round of 16 - Game Two",
-   "date": null,
+   "dates": [
+    "D25 2/24"
+   ],
    "notes": [],
    "games": 8,
    "empty": false,
@@ -912,7 +1062,9 @@
    "code": "WC-R16-3",
    "title": "CHAMPIONSHIP FINALS",
    "sub": "Round of 16 - Game Three",
-   "date": null,
+   "dates": [
+    "D25 2/24"
+   ],
    "notes": [],
    "games": 5,
    "empty": false,
@@ -923,7 +1075,9 @@
    "code": "WC-QF-1",
    "title": "CHAMPIONSHIP FINALS",
    "sub": "Quarterfinal - Game One",
-   "date": "D26 2/25",
+   "dates": [
+    "D26 2/25"
+   ],
    "notes": [],
    "games": 4,
    "empty": false,
@@ -934,7 +1088,9 @@
    "code": "WC-QF-2",
    "title": "CHAMPIONSHIP FINALS",
    "sub": "Quarterfinal - Game Two",
-   "date": null,
+   "dates": [
+    "D26 2/25"
+   ],
    "notes": [],
    "games": 4,
    "empty": false,
@@ -945,7 +1101,9 @@
    "code": "WC-QF-3",
    "title": "CHAMPIONSHIP FINALS",
    "sub": "Quarterfinal - Game Three",
-   "date": null,
+   "dates": [
+    "D26 2/25"
+   ],
    "notes": [],
    "games": 2,
    "empty": false,
@@ -956,7 +1114,9 @@
    "code": "WC-SF-1",
    "title": "CHAMPIONSHIP FINALS",
    "sub": "Semifinal - Game One",
-   "date": null,
+   "dates": [
+    "D26 2/25"
+   ],
    "notes": [],
    "games": 2,
    "empty": false,
@@ -967,7 +1127,9 @@
    "code": "WC-SF-2",
    "title": "CHAMPIONSHIP FINALS",
    "sub": "Semifinal - Game Two",
-   "date": null,
+   "dates": [
+    "D26 2/25"
+   ],
    "notes": [],
    "games": 2,
    "empty": false,
@@ -978,7 +1140,9 @@
    "code": "WC-SF-3",
    "title": "CHAMPIONSHIP FINALS",
    "sub": "Semifinal - Game Three",
-   "date": null,
+   "dates": [
+    "D26 2/25"
+   ],
    "notes": [],
    "games": 2,
    "empty": false,
@@ -989,7 +1153,9 @@
    "code": "WC-F-1",
    "title": "WORLD CHAMPIONSHIP - GAME ONE",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D26 2/25"
+   ],
    "notes": [],
    "games": 1,
    "empty": false,
@@ -1000,7 +1166,9 @@
    "code": "WC-F-2",
    "title": "WORLD CHAMPIONSHIP - GAME TWO",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D26 2/25"
+   ],
    "notes": [],
    "games": 1,
    "empty": false,
@@ -1011,7 +1179,9 @@
    "code": "WC-F-3",
    "title": "WORLD CHAMPIONSHIP - GAME THREE",
    "sub": null,
-   "date": null,
+   "dates": [
+    "D26 2/25"
+   ],
    "notes": [],
    "games": 1,
    "empty": false,
