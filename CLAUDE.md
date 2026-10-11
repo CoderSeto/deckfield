@@ -309,15 +309,23 @@ says which sheet each game's strings came from. Then:
   the Archive (WCS R5 Justice, Regional 10): listed, the Archive's kept.
 - **Renamed before S6** (same dex, Terastal): South Kalos -> Blueberry
   Terarium, East Paldea -> Mossui Town (`RENAMED_SINCE`; proved by S6's
-  "S5 End"). **32 teams first appear in S5** -- "S4 End" is blank for all 16
-  Terastal teams and 8 each in Indigo and Silver, matching the Hall of Fame's
-  regional plaques (Silver and Terastal begin at S5). S4 had 128 teams.
+  "S5 End", confirmed by the user 2026-10-11 as renames of the same teams).
+- **S5 added two conferences** (per the user): **Silver, made from part of
+  Indigo, and Terastal, brand new.** "S4 End" is blank for 32 teams -- all 16
+  Terastal teams and 8 each in Indigo and Silver -- so S4 had 128 teams, and
+  the 8 Silver teams that do have an S4 rank were Indigo teams in S4.
+  `history/teams.json` keeps each season's region, so such a move shows.
 
 Structure (per the user: no Swiss; the WCS with a draw/process-style pair of
 brackets, Nature and Justice; the league pyramid with LPO):
 - **Regional R1-R15, League L1-L15** -- R1-R4 titled "Matchday One/Two/Three/
   Six" (the sixth matchday overall; mapped by `event_code_overrides`). The
-  "GREAT RESET" note sits on League matchday 1, after a 3.5-month break.
+  "GREAT RESET" note sits on League matchday 1, after a 3.5-month break: per
+  the user, it is where the old scheduling system was dropped, the league
+  structure introduced, and Regional and League play both made full round
+  robins. Everything before it (R1-R4, the WCS preliminary and first-round
+  Nature games) is the old system's, and it is exactly the stretch the
+  Archive kept in short form.
 - **WCS**: a preliminary round (32 games per bracket), first round (64, written
   as two blocks per bracket and merged), rounds 2-5 (32/16/8/4), two-legged
   quarterfinals (2 per bracket), each bracket's two-legged final (the "WCS
