@@ -19,56 +19,72 @@ cross-referenced between conversations).
 
 ## File map
 
+**The season is a setting** (`season.json`, overridable with the
+`DECKFIELD_SEASON` environment variable) -- Season 10 since 2026-10-10. One
+database holds one season. See "Season 10" below.
+
 - `deckfield_ratings.py` — the engine: schema, all rating formulas, fatigue,
-  S8 carryover, RLStr, Regional/League schedule generator, RDS Cup and PA
-  Cup bracket generators, the Regional Tournament (postseason) generator,
-  the weekly schedule / next-matchday system, region colors, and the
-  DECKFIELD export functions (Teams roster, Schedule, Region Climate).
+  carryover and the blend, RLStr, the Regional/League outlines and drawn
+  orders, RDS Cup and PA Cup bracket generators, the Regional Tournament
+  (postseason) generator, the World Championship, the weekly schedule /
+  next-matchday system, region colors, and the DECKFIELD export functions
+  (Teams roster, Schedule, Region Climate). `CURRENT_SEASON`, `DB_PATH`
+  (`DECKFIELD_DB` overrides it) and `season_file()` live at its top.
 - `deckfield.html` — the game itself (match simulator). Version of record
   as of 2026-07-29; edit this copy, not one in another conversation.
-- `migrate_s9.py` — one-shot migration from the real Excel workbook into
-  the database. Exposes `run_full_migration(workbook_path=None)`.
 - `deckfield_cli.py` — the CLI for local use without going through chat.
-  Commands: `migrate [workbook.xlsm]`, `add-results <csv>`,
-  `recompute --from N`, `status`, `next-matchday [--output file]`,
-  `export-teams [--output file]`, `region-climate [--output file]`,
-  `export-results [--from N] [--to N] [--force]`.
+  Commands: `start-season` (S10 on), `migrate [workbook.xlsm]` (Season 9
+  only), `add-results <csv>`, `recompute --from N`, `status`,
+  `next-matchday [--output file]`, `export-teams [--output file]`,
+  `region-climate [--output file]`,
+  `export-results [--from N] [--to N] [--force]` (defaults to
+  `-o results/s<season>`). `--season` defaults to the configured season and
+  refuses any other.
+- `deckfield.db` — the SQLite database (gitignored). From Season 10 it is
+  rebuilt by `start-season` plus replaying `results/s10/` (see the runbook).
+- `deckfield_dashboard.html` — a **static snapshot** dashboard: Rankings
+  (+ Rank History, Elo History, Raw vs Blended), Standings (+ Orders), RL
+  Strength, Schedule, RDS Cup, PA Cup, Next Matchday, Calendar, Regional
+  Playoffs, Qualification, World Championship, Hall of Fame (+ Legacy
+  Points) and Season 9. Rebuilt by `regenerate_dashboard.py`; there's no
+  `dashboard` CLI command yet.
+- `seasons/s<N>/` — each season's fixed inputs. `seasons/s9/`: S9's
+  `league_pods.json`, `rds_seeds.json`, `pa_draw_seeds.json`,
+  `pa_process_seeds.json` (formerly `league_pods.json`, `cup_seeds_full.json`,
+  `pa_cup_seeds.json`, `pa_process_real_seeds_v2.json` at the root) and
+  `rank_history_verbatim.json` (the 9 historical Rank History checkpoints,
+  copied verbatim from `Rankings!CT:CL`). `seasons/s10/`: the same four plus
+  `start.json`, `accolades.json` and `schedule_orders.json` -- written once,
+  before the season, by `prepare_season.py` and `draw_schedule.py`.
+- `conf_pods.json` — the regional pods, the same every season (root).
+- `prepare_season.py <N>` — writes `seasons/s<N>/` from the previous season's
+  FROZEN record. `draw_schedule.py <N>` — the seeded schedule draw.
+  `check_schedule.py <N>` — its independent checker (shares no code with it).
+- `migrate_s9.py` — one-shot migration from the real Excel workbook into
+  the database, Season 9 only (it refuses to run as any other season).
 - `Baccer Game S9 Stats.xlsm` — the real workbook, in the repo root. Note
   the **spaces**: `migrate_s9.XLSM_PATH`'s default
   (`/mnt/user-data/uploads/Baccer_Game_S9_Stats.xlsm`, underscores) is a
   path that does not exist here, so always pass the workbook explicitly.
-- `deckfield.db` — the SQLite database (gitignored; **`migrate` alone only
-  rebuilds rounds 1-11** — the full rebuild is migrate + replaying
-  `results/`, see the runbook below).
-- `deckfield_dashboard.html` — a **static snapshot** dashboard: Rankings,
-  Standings, RL Strength, Schedule, RDS Cup, PA Cup, Next Matchday,
-  Calendar, Regional Playoffs. Rebuilt by re-running the export scripts
-  described below; there's no `dashboard` CLI command yet — this is the
-  biggest piece of unfinished plumbing.
-- Static data files bundled alongside the engine (needed by the export/
-  schedule functions, not regenerated per-run): `conf_pods.json`,
-  `league_pods.json` (Regional/League pod structures), `cup_seeds_full.json`
-  (Ribbon/Dream/Star seeding), `pa_cup_seeds.json` (PA Cup Draw seeding),
-  `pa_process_real_seeds_v2.json` (PA Cup Process seeding, real and
-  conflict-resolved), `rank_history_verbatim.json` (the 9 historical Rank
-  History checkpoints, copied verbatim from `Rankings!CT:CL` -- see
-  "Rank/Elo History tab" below).
-- `hall_of_fame.json` — seasons 1-8 of the Hall of Fame, extracted once from
-  the workbook's `HOF` sheet by `extract_hall_of_fame.py` (static history; see
-  "Hall of Fame tab").
+- `hall_of_fame.json` — every finished season's Hall of Fame: 1-8 extracted
+  from the workbook's `HOF` sheet, 9 from its frozen `HOF_DATA`, both by
+  `extract_hall_of_fame.py` (see "Hall of Fame tab").
+- `legacy_points.json` — Legacy Points by team and season (SEASON10_PLAN B7):
+  1-8 from the workbook's `LegacyP` sheet, 9 from the frozen record, written
+  by `extract_legacy_points.py`. A season's column is added when it ends.
 - `deckfield_dashboard_s9.html`, `archive/s9_final.json`,
   `archive/s9_inputs.json`, `archive/SHA256SUMS` — **Season 9's frozen
   record**, written once by `freeze_season.py` and `freeze_season_inputs.py`.
   Never edited, never regenerated; see "Season 9 is frozen" below.
-- `results/s9/` — every S9 matchday CSV from round 12 on (moved here from
-  `results/` when S9 was frozen). Kept as the audit trail, not the record. `export-results` now
-  defaults to `-o results/s9` (until the season becomes a setting), so a bare
-  run cannot scatter duplicates into `results/`.
+- `results/s9/`, `results/s10/` — every matchday CSV, one folder per season.
+  S9's (round 12 on) are its audit trail; S10's are what rebuilds S10.
 - `SEASON10_PLAN.md` — the agreed Season 10 turnover plan (every decision,
-  with numbers and build order). **Read it before any S10 work.**
-- `prototypes/s10_schedule/` — the reference S10 schedule draw and its
-  independent checker (SEASON10_PLAN B10b). Not production code; build step 3
-  promotes it and must reproduce its trial draw.
+  with numbers and build order). Built 2026-10-10; read it before changing
+  any S10 rule.
+- `prototypes/s10_schedule/` — the reference S10 schedule draw and checker
+  the production draw was promoted from (it reproduces the trial file byte
+  for byte). Run the prototypes as `DECKFIELD_SEASON=9` against an S9
+  database: they flip the outline themselves.
 - `CLAUDE.md` — this file.
 
 ## Season 9 is frozen (2026-10-10, per explicit instruction)
@@ -139,13 +155,136 @@ cover `archive/s*_inputs.json` too.
 `freeze_season.py <N>` is reusable at the end of any season. It refuses to
 overwrite an existing freeze and appends to `SHA256SUMS`.
 
-## THE RUNBOOK: adding a matchday's results
+## Season 10 (built 2026-10-10, per SEASON10_PLAN.md)
+
+Every decision is in `SEASON10_PLAN.md`; this is how it was built and what
+the build found. **S10 reads S9 only from the frozen record** (`archive/`),
+never by recomputing it.
+
+**The season is a setting.** `season.json` (`{"season": 10}`) or
+`DECKFIELD_SEASON` picks it; `DECKFIELD_DB` picks the database. Everything
+season-shaped keys off `CURRENT_SEASON`, and every S10 rule is gated on the
+season number so the Season 9 audit rebuild still reproduces the archive:
+
+| what | where | from |
+|---|---|---|
+| calendar: weeks 5-6 restored, rounds 1-95 in order, no confirmed-round exceptions | `weekly_schedule()` | S10 |
+| EX taper keyed to the real calendar week | `week_for_round()` | S10 |
+| Outline A (odd) / B (even, every host reversed), derived from the one table | `outline_defs()` | parity |
+| each group's drawn order; `R n` = the group's nth game | `pod_round_games()`, `schedule_orders.json` | S10 |
+| results files `s10-w<week>-<day>-<event>.csv`, R/L hyphenated | `_round_file_stems()` | S10 |
+| square-root Cups | `compute_round_ratings` | `SQRT_CUPS_FROM_SEASON` |
+| 400 per-game DSCR cap in the standings tiebreak | `_standings_order` + the dashboard's `tbOf` | `TIEBREAK_DSCR_CAP_FROM_SEASON` |
+| recompute fills a round that never got ratings | `recompute_from_round` | `GAPFILL_FROM_SEASON` |
+
+**Starting point.** `prepare_season.py 10` wrote `seasons/s10/` once from the
+frozen record: `league_pods.json` (promotion/relegation applied, seeded by old
+division then position -- identical to the prototype's pods), `start.json`
+(division, base climate, EX seed with its A/B/LegacyP parts, carryover
+seeds, starting fatigue, carried Elo), `accolades.json` (S9's exported titles
+-- proved to reproduce the frozen roster exactly -- plus World Champion S9
+and World Finalist S9), and the RDS/PA seed files. It refuses to overwrite a
+file whose contents would differ. `start-season` builds the database from
+them.
+
+**The round-0 opening state.** `start-season` writes one rating row per team
+at round 0: OVR, PF, PA and raw DSCR are the seeds (before any game the blend
+is 8/8 seed), fatigue the starting fatigue, TOT 20; components that need
+games (PDG, SOS, SOV, EYE, the normalised Elo/Cups/EX) are NULL and show as a
+dash. It is what the preseason dashboard and matchday 1's roster read.
+**Round 0 is never a prior round**: `_prior_round_ovr()` returns nothing for
+round 1, so SOS and RL Strength start from the 50 baseline exactly as S9's
+round 1 did, and no seed leaks into a raw component.
+
+**The blend is outputs only.** `team_round_ratings.ovr_blend` =
+(raw OVR x X + seed x (8-X)) / 8, X = rounds played (capped at 8), stored
+beside raw OVR and never read back by any formula. `blended_outputs()` gives
+the roster its blended OVR, PF, PA and raw DSCR (and climate from blended
+OVR). Rank follows blended OVR wherever a rank is SHOWN or used for play
+order (`current_rank_lookup`, the roster, `DATA`, Rank History, the
+Qualification table); `_team_ranks_snapshot` (RL Strength's rank z-score) and
+SOS stay raw. **Fatigue is handed over raw**: its seed IS the season's
+starting fatigue, already inside the raw value, so blending it again would
+count the seed twice -- the Raw vs Blended view shows it that way and says so.
+Verified on a synthetic season: `ovr_blend` matched the formula with zero
+error at rounds 0-14, and the roster is pure raw from round 8.
+
+**Elo carries.** `team_seasons.starting_elo` holds S9's final Elo;
+`_opening_elo()` replaces the STARTING_ELO fallback everywhere a team has no
+game yet (ratings, RL Strength, the roster, `DATA`, Rank History).
+
+**Schedule draw.** `draw_schedule.py 10` is the prototype promoted: same
+solver, seed 10, calendar read from the engine's own `WEEKLY_SCHEDULE`. It
+reproduces `prototypes/s10_schedule/schedule_orders_s10_trial.json` **byte for
+byte** as `seasons/s10/schedule_orders.json`, refuses to overwrite once
+written, and takes ~80 s. `check_schedule.py 10` is the independent checker
+(hosts against S9's real games reversed, D1 top three from the HOF, its own
+typed calendar, the divisions against `league_pods.json`): FAILURES 0, and it
+failed each deliberately broken copy tried.
+
+**Allocation priors re-keyed** (B11): `REGION_STRENGTH_Z` holds S7/S8 as
+supplied; a frozen season's term is its `STRENGTH_DATA` z-scored
+(`_season_strength_z`). Rows carry `s<N>`, `s<N-1>`, `s<N-2>` keys -- S9's
+output is byte-identical to before.
+
+**The Division One accolade is derived** from the final division standings
+once L15 is played; the line that stamped Canalave City by name is gone.
+
+**Bugs the build found:**
+
+- **The empty-round gap (pre-existing, fixed from S10).** A round with no
+  games -- a best-of-three leg 3 nobody had to play -- never gets a CSV, so
+  ingesting the next round started the recompute past it and the empty round
+  got no ratings at all. The round after it then found no prior OVR and built
+  SOS and RL Strength from the 50 baseline for every team. It happened in
+  Season 9: WC SF leg 3 (round 92) was empty, so the frozen rounds 93-95 were
+  computed that way. Measured: a full recompute differs from the archive by up
+  to 5.4 OVR at round 93 but only 0.29 at round 95 (mean 0.10, 41 adjacent
+  rank swaps, top ten unchanged). **The archive keeps those numbers and S10's
+  seeds come from them** -- S9 is read only from the frozen record. From S10
+  `recompute_from_round` starts at the earliest round still missing ratings,
+  so building round by round and a full recompute agree (verified: the
+  synthetic season's empty PA Final game 3 got its ratings).
+- **RDS round 1 could not be exported before it was played**:
+  `_rds_round_games` resolved round 1's own winners before returning round 1.
+  Never visible in S9, whose round 1 predated the code.
+- Several file reads were relative to the working directory; every data file
+  is now read from the repo root.
+
+**Dashboard additions:** Season 9 tab (ten plain-table views from
+`S9_HISTORY`, STATIC and checked against the archive every run; own
+renderers, never the live ones), Rankings > Raw vs Blended and a Blend column
+(only while `DATA.blend.active`, i.e. matchdays 1-8), Standings > Orders,
+30 Schedule buttons (ROUND_LABELS removed), Hall of Fame > Legacy Points.
+`CUP_BRACKET_DATA` became derived (rebuilt from the season's seed file;
+byte-identical to S9's baked copy under S9's seeds), plus `SCHEDULE_ORDERS`
+and `LEGACY_DATA`.
+
+**The test run (C8)**, a synthetic S10 season through the real CLI on a
+scratch database, 3,526 games through round 94 (the WC Final went 2-0):
+`next-matchday` = week 1 Weekend R1, round 1; all 400 regional games of
+R1-R5 hosted by S9's visitor and equal to the drawn orders; RDS round 1 = 64
+games (Cianwood City, Ribbon #1, hosting #64) and round 2 = 48; PA rounds 1-8
+at 32/32/32/32/16/8/4/2 per bracket with zero region/division violations
+through round 6 except one logged "no valid swap, original pairing stands",
+and zero cross-bracket repeats; the 400 cap applied identically in both
+standings ports (engine and dashboard agree in 20/20 groups capped and
+uncapped, and with freak games injected the cap changes 3 groups' order);
+Raw vs Blended shown at round 5 (5/8) and hidden at round 9; the Matchday
+Pack loaded in `deckfield.html` (160 teams, 80 matchups), all 80 games
+played, the results CSV ingested under its own name and re-exported byte for
+byte; Division One S10 awarded from the standings; zero `pageerror` at
+preseason, rounds 5, 9 and 94, and in Season 9 mode.
+
+## THE RUNBOOK: adding a matchday's results (Season 10)
 
 **Read this section before doing anything else when the task is "add these
-results."** Everything here is also explained in depth further down, but
-the details are spread across a dozen sections and the steps below are the
-whole job in order. Do not skip the verification steps — they are how every
-bug recorded in this file was caught.
+results."** It is the whole job in order. Do not skip the verification
+steps — they are how every bug recorded in this file was caught.
+
+The season is Season 10 (`season.json`). Season 9 is FROZEN: never rebuilt to
+add anything, read only from `archive/` (see "Season 9 is frozen"). Its own
+rebuild still works as an audit -- see the end of this runbook.
 
 ### 0. Bootstrap the container (fresh session = nothing is installed)
 
@@ -159,49 +298,46 @@ pip install openpyxl playwright        # neither is preinstalled
 Do **not** run `playwright install` — it is blocked, and Chromium is
 already on disk. See step 6 for how to point Playwright at it.
 
-### 1. Rebuild the database (migrate, then replay `results/s9/` IN ROUND ORDER)
+### 1. Rebuild the database (start-season, then replay `results/s10/` IN ROUND ORDER)
 
 ```
-python3 deckfield_cli.py migrate "Baccer Game S9 Stats.xlsm"
+python3 deckfield_cli.py start-season
 ```
 
-The workbook path is a **positional** argument, not `--workbook`, and the
-filename has spaces (quote it). Migrate covers rounds 1-11 only; every
-round from 12 on lives in `results/s9/` and must be replayed:
+That builds the 160 teams, their season rows, carryover seeds and the round-0
+opening state from the committed `seasons/s10/` files (themselves written
+once from S9's frozen record). It drops every table first. Then replay every
+played matchday, sorted by the round number **inside each file**:
 
 ```
-for f in $(for f in results/s9/*.csv; do r=$(sed -n 2p "$f" | cut -d, -f1); \
+for f in $(for f in results/s10/*.csv; do r=$(sed -n 2p "$f" | cut -d, -f1); \
     echo "$r $f"; done | sort -n | cut -d' ' -f2); do
   python3 deckfield_cli.py add-results "$f"
 done
 ```
 
-That sorts by the round number **inside each file**, which is the only
-correct order. `for f in results/s9/*.csv` looks equivalent and is **wrong** —
-a shell glob sorts `thu` before `tue`, feeding round 25 before 24, 13
-before 12, and so on. (Fatigue is rederived on every ingest now, so
-out-of-order replay no longer corrupts it — see the fatigue section — but
-ingest in round order anyway; nothing else guarantees it stays that way.)
+A bare `for f in results/s10/*.csv` is **wrong**: a glob sorts `thu` before
+`tue`. (Fatigue is rederived on every ingest and a recompute fills any round
+that never got ratings, so order no longer corrupts anything -- but ingest in
+round order anyway.) A round with no CSV at all is legitimate only for a
+best-of-three leg 3 nobody had to play.
 
 ### 2. Prove the rebuild is faithful BEFORE ingesting anything new
 
 ```
 python3 -c "import deckfield_ratings as db; c=db.get_connection(); \
-  print(c.execute('select count(*) from games').fetchone()[0])"
+  print(c.execute('select count(*), max(round) from games').fetchone()[:])"
 ```
 
-Check it against the counts recorded in the recovery section above (1544
-through round 26, 1576 through round 27; add the new count when you add a
-round). If it does not match, **stop** — something is wrong with the
-rebuild, and ingesting on top of a bad base silently corrupts everything
-downstream.
-
-Stronger check, worth doing whenever the count is the only evidence: copy
-`deckfield_dashboard.html` aside, run `python3 regenerate_dashboard.py`,
+Then copy `deckfield_dashboard.html` aside, run `python3 regenerate_dashboard.py`,
 and diff the `const` blocks. Every one should be byte-identical except
-**`TEAMS_EXPORT_TSV`**, whose Secondary Type column is a fresh
-`random.randint(1, 18)` on every export by design. That one exception is
-expected; any other difference is a real problem.
+**`TEAMS_EXPORT_TSV`** (its Secondary Type column is a fresh
+`random.randint(1, 18)` on every export, by design). Any other difference is
+a real problem: stop.
+
+**Check `origin/main` before concluding a round has not been played** -- a
+local rebuild proves what `results/s10/` contains, never what has been played
+(this has bitten twice; see the recovery section).
 
 ### 3. Confirm the round number the CSV claims
 
@@ -210,31 +346,25 @@ python3 deckfield_cli.py next-matchday
 ```
 
 It prints the event and "Use round=N when reporting results back." That N
-must equal the `round` column in the CSV you were given. If it does not,
-do not "fix" the CSV or hand-pick a number — work out why they disagree
-first (`abs_round_for_event()` is the single source of truth).
+must equal the `round` column in the CSV. If it does not, work out why
+before touching anything (`abs_round_for_event()` is the single source of
+truth; S10 numbers its rounds 1-95 in calendar order with no exceptions).
 
-### 4. Save the CSV into `results/s9/` under the engine's own filename
+### 4. Save the CSV into `results/s10/` under the engine's own filename
 
-Never invent a filename. Copy the CSV in with your best guess, then let
-the engine confirm it:
+The Matchday Pack already names the download (`s10-w<week>-<day>-<event>.csv`,
+e.g. `s10-w1-weekend-r-1.csv`, `s10-w3-tue-rds-draw-1.csv`). Then:
 
 ```
-cp <uploaded.csv> results/s9/<year>-w<week>-<day>-<event>.csv
-python3 deckfield_cli.py add-results results/s9/<...>.csv
-python3 deckfield_cli.py export-results --from N --to N -o results/s9
+cp <uploaded.csv> results/s10/<name>.csv
+python3 deckfield_cli.py add-results results/s10/<name>.csv
+python3 deckfield_cli.py export-results --from N --to N
 ```
 
-`export-results` derives the filename from
-`full_schedule_abs_round_mapping()` + `WEEKLY_SCHEDULE`. If your name was
-right it prints "already matches" and writes nothing — which also proves
-the ingest round-trips losslessly. If your name was wrong it writes the
-correct file, and you delete yours.
-
-**Keep the CSV. Always.** The database is gitignored precisely because
-`results/` is supposed to be able to rebuild it; that only holds if every
-ingested matchday's CSV is committed. Eleven rounds were once lost exactly
-this way (see the recovery section).
+`export-results` (default `-o results/s10`) derives the filename itself. If
+it prints "already matches", the name was right and the round trip is
+lossless; if it writes a file, delete yours. **Keep the CSV. Always** -- it is
+the only thing that rebuilds the season.
 
 ### 5. Regenerate the dashboard — always, no exceptions
 
@@ -242,18 +372,12 @@ this way (see the recovery section).
 python3 regenerate_dashboard.py
 ```
 
-Per explicit standing instruction, results are never added without this.
-It rebuilds every derived constant plus the header subtitle. If it raises
-about the const manifest, read `_check_const_manifest()`'s message and
-decide whether the new constant is derived or static — do **not** silence
-it by adding the name to `STATIC_CONSTS` without checking what it is
-derived from. That guard exists because this exact bug shipped six times.
+It refuses to run if a frozen file changed (`archive/SHA256SUMS`), if a
+dashboard constant is in neither `DERIVED_CONSTS` nor `STATIC_CONSTS`, or if
+`S9_HISTORY` no longer equals the archive. Do not silence any of them -- read
+the message.
 
 ### 6. Verify in a real browser before committing
-
-Executing the `<script>` block in Node with a mocked `document` is the
-documented minimum, but Playwright against the real file is strictly
-better and is what the recent fixes used:
 
 ```python
 from playwright.sync_api import sync_playwright
@@ -264,28 +388,32 @@ with sync_playwright() as pw:
     ...
 ```
 
-`executable_path` is required: pip installs a newer Playwright than the
-Chromium build on disk, so a bare `launch()` fails looking for a build
-number that was never downloaded.
-
-Click through every tab (`button[data-tab="..."]`; the RDS one is `rds`,
-not `rdscup`; panels are `#panel-<tab>`) and assert **zero `pageerror`
-events**. Two things are expected noise and are **not** code bugs:
-
-- A failed request to `fonts.googleapis.com` (`ERR_CONNECTION_RESET`) —
-  the sandbox blocks outbound network. It surfaces as a console error and
-  a `requestfailed`, never as a `pageerror`. Distinguish the two before
-  reporting a failure.
-- Any check you wrote that greps rendered text for a section label. Query
-  the DOM (`.sb-round`, `thead th`) instead; text-matching produced two
-  false failures on a page that was rendering correctly.
+`executable_path` is required (pip's Playwright expects a newer Chromium build
+than the one on disk). Click every tab (`button[data-tab="..."]`; the RDS one
+is `rds`, the history one `s9`; panels are `#panel-<tab>`) and every
+sub-view toggle inside it, and assert **zero `pageerror` events**. A failed
+request to `fonts.googleapis.com` is the sandbox's network block, not a bug.
+Query the DOM rather than grepping rendered text (`.sb-round` is uppercase).
 
 ### 7. Commit and push
 
-Commit `results/s9/*.csv`, `deckfield_dashboard.html`, and anything else you
-changed. Never commit `deckfield.db` (it is gitignored — keep it that
-way). Push to the branch named in the session instructions.
+Commit `results/s10/*.csv`, `deckfield_dashboard.html`, and anything else you
+changed. Never commit `deckfield.db`. Push to the branch named in the session
+instructions.
 
+### Season 9's audit rebuild (only to check the engine against the archive)
+
+```
+export DECKFIELD_SEASON=9 DECKFIELD_DB=s9_audit.db
+python3 deckfield_cli.py migrate "Baccer Game S9 Stats.xlsm"
+# then replay results/s9/ in round order exactly as in step 1
+```
+
+It must run as Season 9 (the calendar, outline and data files follow the
+setting) and into its own database. It is an audit, never the record: if it
+disagrees with `archive/s9_final.json`, the archive wins. Built round by round
+like this it reproduces the archive (S10's gap fill is off for S9); a single
+`recompute --from 1` does NOT -- see "Season 10 > the empty-round gap".
 
 ## The rounds 15-25 recovery (2026-09-03) — resolved
 
@@ -4708,6 +4836,15 @@ page errors on either path.
 
 ## Known open items
 
+- **RDS byes award nothing in S10 -- a decision is pending.** In S9 the
+  Dream/Star bye seeds (49-64 empty, so 16 teams per bracket bye rounds 1-2)
+  got walkover rows from the workbook worth a win's points (+12 SP/TOT each,
+  see "Byes are not wins in a displayed record"). Nothing creates walkovers
+  from results, so S10's byes earn no points unless that is decided and built.
+- **End of S10 (B13):** append its Legacy column to `legacy_points.json` and its
+  Hall of Fame season, then `freeze_season.py 10` and
+  `freeze_season_inputs.py 10`; S11 is `prepare_season.py 11` +
+  `draw_schedule.py 11` (Outline A again).
 - Dashboard regeneration isn't in the CLI yet — still manual script runs.
 - **The World Championship generates end to end** as of 2026-09-16 -- group
   stage, Play-in, bracket and champion -- with its own dashboard tab and a

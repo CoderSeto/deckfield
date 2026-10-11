@@ -3228,6 +3228,11 @@ def _rds_round_games(conn, cup, bracket, target_round):
     seed_to_team = {int(k): v for k, v in seeds[cup].items()}
     team_to_seed = {v: k for k, v in seed_to_team.items() if v not in (None, "bye")}
     entries = generate_cup_bracket(seed_to_team, bracket.lower())[1]
+    if target_round == 1:
+        # Round 1 is the seeding itself. Returning it only after resolving
+        # round 1's own winners made round 1 unexportable before it was played
+        # -- never visible in Season 9, whose round 1 predated this code.
+        return [(e["home"], e["away"]) for e in entries if not e["bye"]]
 
     survivors = []
     for e in entries:
@@ -3247,9 +3252,6 @@ def _rds_round_games(conn, cup, bracket, target_round):
                 return None
             next_survivors.append(w)
         survivors = next_survivors
-
-    if target_round == 1:
-        return [(e["home"], e["away"]) for e in entries if not e["bye"]]
 
     home_is_lower = (bracket == "Draw")
     games = []

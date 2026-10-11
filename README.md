@@ -13,79 +13,82 @@ deckfield.html                    the game (match simulator) — open directly i
 deckfield_dashboard.html          generated dashboard snapshot — open directly in a browser
 deckfield_ratings.py              the engine: schema, ratings, brackets, schedule
 deckfield_cli.py                  command-line tool for updating the database
-migrate_s9.py                     one-time migration from the Excel workbook
-CLAUDE.md                         full project memory / technical reference
-Baccer_Game_S9_Stats.xlsm         source workbook (committed once, read-only)
-conf_pods.json, league_pods.json  pod structures for the Regional/League schedule
-cup_seeds_full.json               Ribbon/Dream/Star Cup seeding
-pa_cup_seeds.json                 PA Cup Draw seeding
-pa_process_real_seeds_v2.json     PA Cup Process seeding (resolved)
-results/s9/                       every S9 batch of game results (round 12 on), as CSVs
+regenerate_dashboard.py           rebuilds the dashboard from the database
+season.json                       which season is running (10)
+seasons/s<N>/                     each season's fixed inputs: league pods, cup seedings,
+                                  starting values, accolades, drawn round orders
+conf_pods.json                    regional pods (the same every season)
+prepare_season.py                 writes seasons/s<N>/ from the previous season's frozen record
+draw_schedule.py                  draws each region's and division's round order
+check_schedule.py                 independent checker for that draw
+results/s10/                      every S10 matchday's results, as CSVs -- the season's record
+results/s9/                       S9's results (round 12 on) -- its audit trail
+hall_of_fame.json                 every finished season's Hall of Fame
+legacy_points.json                Legacy Points by team and season
 deckfield_dashboard_s9.html       Season 9's final dashboard, frozen (never regenerated)
 archive/s9_final.json             Season 9's final numbers as plain JSON -- the S9 record
+archive/s9_inputs.json            what Season 10 needed from S9 that the dashboard never showed
 archive/SHA256SUMS                checksums regenerate_dashboard.py verifies before running
+migrate_s9.py                     Season 9's one-time migration from the Excel workbook
+Baccer Game S9 Stats.xlsm         source workbook (committed once, read-only)
+CLAUDE.md                         full project memory / technical reference
+SEASON10_PLAN.md                  the Season 10 turnover decisions
 deckfield.db                      the database — gitignored, always regenerable
 ```
 
 **The database is never committed.** It's a build artifact: fully
-reproducible from the workbook plus every CSV in `results/`. What's
-actually durable and versioned is the workbook (once) and the `results/`
-folder (forever, growing one file per matchday).
+reproducible from the season's starting files plus every CSV in
+`results/s10/`. What's actually durable and versioned is `seasons/s10/`
+(written once, before the season) and the `results/s10/` folder (growing one
+file per matchday). Season 9 is frozen in `archive/` and is never rebuilt
+to change anything.
 
 ## First-time setup
 
 ```
-pip install openpyxl
-python3 deckfield_cli.py migrate
+pip install openpyxl playwright
+python3 deckfield_cli.py start-season
 ```
 
-This builds `deckfield.db` from scratch and computes ratings for every
-round already in the workbook. Safe to re-run any time — it drops and
-rebuilds everything rather than duplicating data.
+This builds `deckfield.db` for Season 10 from `seasons/s10/`. Safe to re-run
+any time — it drops and rebuilds everything rather than duplicating data.
 
 ## The day-to-day loop
 
-1. **Find out what's next:**
-   ```
-   python3 deckfield_cli.py next-matchday --output next.txt
-   ```
-   Paste `next.txt` into `deckfield.html`'s Schedule tab. Do the same for
-   the roster (`export-teams`) and weather (`region-climate`) if DECKFIELD
-   needs a refresh on those too.
+1. **Find out what's next:** open the dashboard's **Next Matchday** tab and
+   press **Copy Matchday Pack**, then paste it into **Import Matchday Pack**
+   at the top of `deckfield.html`'s Schedule tab. (`python3 deckfield_cli.py
+   next-matchday` prints the same matchups.)
 
-2. **Play the matchday** in `deckfield.html`, then export its results.
+2. **Play the matchday** in `deckfield.html`, then download its results: the
+   file is already named for `results/s10/`, e.g. `s10-w1-weekend-r-1.csv`.
 
-3. **Save the results as a new file in `results/s9/`**, named for what it is,
-   e.g. `results/s9/2026-w6-tue-pa-draw-1.csv`. This file *is* the record —
-   treat it the way you'd treat a save file, not a scratch export.
+3. **Save it in `results/s10/`.** This file *is* the record — treat it the
+   way you'd treat a save file, not a scratch export.
 
 4. **Load it into the database:**
    ```
-   python3 deckfield_cli.py add-results results/s9/2026-w6-tue-pa-draw-1.csv
+   python3 deckfield_cli.py add-results results/s10/s10-w1-weekend-r-1.csv
    ```
    This updates the real database and recomputes ratings from the
    earliest affected round forward.
 
-5. **Commit the result file:**
-   ```
-   git add results/s9/2026-w6-tue-pa-draw-1.csv
-   git commit -m "Week 6 Tue: PA Draw round 1"
-   ```
-
-6. **Regenerate the dashboard** whenever you want a fresh published
-   snapshot, and commit that too.
+5. **Regenerate the dashboard** (`python3 regenerate_dashboard.py`) and
+   commit the result file and the dashboard together.
 
 ## Rebuilding from scratch
 
 If the database is ever lost, corrupted, or you're setting up on a new
-machine, the entire history is recoverable:
+machine, the entire season is recoverable:
 
 ```
-python3 deckfield_cli.py migrate
-python3 deckfield_cli.py add-results results/s9/<file1>.csv
-python3 deckfield_cli.py add-results results/s9/<file2>.csv
-...  # every file in results/s9/, in the order they were played
+python3 deckfield_cli.py start-season
+python3 deckfield_cli.py add-results results/s10/<file1>.csv
+python3 deckfield_cli.py add-results results/s10/<file2>.csv
+...  # every file in results/s10/, in the order they were played
 ```
+
+(CLAUDE.md's runbook has the one-liner that sorts them by round.)
 
 ## Running the HTML files
 

@@ -1,7 +1,9 @@
 # Season 10 turnover plan
 
 Agreed decision by decision with the user on 2026-10-10. **Every item below is
-decided. Nothing here has been built yet** except Phase 1 (the S9 freeze).
+decided, and all of it was built on 2026-10-10** (section C; what the build
+found is in CLAUDE.md under "Season 10"). Four numbers below were corrected by
+the build and are marked *(corrected)*.
 Build in the order in section C. Where a number is quoted, it was measured
 against the frozen S9 record on that date.
 
@@ -152,7 +154,8 @@ workbook's Rankings sheet, column 69).
 - **LegacyP** = the team's all-time legacy total (B7), added raw.
 - Preview: range 0-346, median 142 (S9's actual: 23-362, median 112).
   Casseroya Lake 346, Canalave City 336, Nimbasa City 299, Snowpoint City 290,
-  Camphrier Town 290, Lumiose City 271; Boyleland 0.
+  Camphrier Town 289 *(corrected: 289.498 rounds down; the preview said 290)*,
+  Lumiose City 271; Boyleland 0.
 
 ### B7. Legacy Points
 Source: the workbook's `LegacyP` sheet (teams in B2:B58; C = SUM(E:AN); every
@@ -188,7 +191,8 @@ S9 column to add:
 Resulting S9 totals: Casseroya Lake 26, Canalave City 16, Snowpoint City 13,
 Nimbasa City 11, Camphrier Town / Petalburg City / Cabo Poco / National Park 8,
 Pueltown / Cocona Village 6, Mesagoza 5, the five other RT champions 4,
-Blueberry Terarium / Vermilion City 2. 66 teams hold legacy points after S9;
+Blueberry Terarium / Vermilion City 2. 67 teams hold legacy points after S9
+*(corrected: 57 on the S1-S8 sheet plus 10 first-time S9 earners; the plan said 66)*;
 Canalave City leads all-time with 70.
 
 **Legacy Points sub-tab on the Hall of Fame**: team x season (S1-S9, then
@@ -254,7 +258,8 @@ in step: `_standings_order` in the engine (it averages `dscr_a`/`dscr_b`) and
 `dscr_regional_avg` / `dscr_league_avg` are uncapped.
 
 ### B10. Calendar
-33 weeks, 98 rounds numbered 1-98 in order. **No `_CONFIRMED_ABS_ROUND`
+33 weeks, 95 rounds numbered 1-95 in order *(corrected: the plan said 98 -- S9's
+special week 6 only re-ordered slots, so S10 has exactly S9's 95)*. **No `_CONFIRMED_ABS_ROUND`
 exceptions and no week-6 special case for S10.** Original weeks 5 and 6 are
 restored:
 
@@ -267,7 +272,8 @@ restored:
 | 6 | L2 | L3 | R5 |
 | 7-33 | identical to S9 | | |
 
-The RT ends at round 77, which is where the WC field freezes (S9: 74). Key the
+The RT ends at round 74, which is where the WC field freezes, as in S9
+*(corrected: the plan said 77)*. Key the
 EX taper to S10's real calendar weeks (`week_for_round` is S9-shaped).
 
 ### B10a. Regional/League schedule outline: every host reversed for S10

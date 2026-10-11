@@ -24,6 +24,12 @@ Verified 2026-10-10:
   divisions sharing an order, a same-region game next to its Regional game).
 
 The draw prototypes swap Outline B into `deckfield_ratings` **in-process
-only** (by reassigning `POD_ROUND_DEFS` / `CROSS_ROUND_DEFS`). The engine
-itself is untouched; the build makes the outline a real season-parity
-setting (B10a).
+only** (by reassigning `POD_ROUND_DEFS` / `CROSS_ROUND_DEFS`).
+
+**Promoted 2026-10-10.** The production draw is `draw_schedule.py` and the
+checker `check_schedule.py` (repo root); `seasons/s10/schedule_orders.json`
+equals `schedule_orders_s10_trial.json` byte for byte. The engine now flips the
+outline itself by season parity (`outline_defs`), and these prototypes flip it
+again in-process -- so run them as Season 9 against an S9 database
+(`DECKFIELD_SEASON=9 DECKFIELD_DB=<s9 db>`), which is what they were written
+against (they read `division_standings_seeds(9, ...)`).
