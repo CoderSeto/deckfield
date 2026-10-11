@@ -1261,8 +1261,9 @@ def blend_weights(round_num):
 
 def blend_stat(new_value, seed_value, round_num):
     """The actual carryover blend: (NewSeason*X + Seed*Y) / 8. Only
-    meaningful for OVR, Fatigue, DSCR (raw D-Sqrt), PF, and PA -- nothing
-    else in the spec uses this."""
+    meaningful for OVR, DSCR (raw D-Sqrt), PF, and PA -- nothing else in the
+    spec uses this (fatigue is never blended). A missing new value (round 0,
+    before any game) counts as 0, which X = 0 multiplies away."""
     x, y = blend_weights(round_num)
     new_value = new_value if new_value is not None else 0.0
     return (new_value * x + seed_value * y) / 8
@@ -1276,8 +1277,9 @@ def get_match_inputs(team_id, season, upcoming_round):
     raw season total against a 0-100 seed would mix units. Returns the pure
     live stat unchanged once the blend window has closed (round > 9) or if
     the team has no seeds on file (e.g. season 1, nothing to carry over
-    from). Fatigue is NOT included here -- call blend_stat() directly with
-    the freshly computed fatigue() value for the specific upcoming matchup.
+    from). Fatigue is never blended: the season starts from the previous
+    season's final fatigue divided by 5 (rounded up) and each game's travel
+    is added on from there.
     """
     conn = get_connection()
     seeds = conn.execute(
@@ -1513,28 +1515,34 @@ def write_opening_ratings(season):
     pairings have something to read.
 
     Before any game, the blend (B4) is 8/8 seed and 0/8 season, so every
-    blended output IS the seed: OVR, PF, PA and raw DSCR read the carryover
-    seeds, fatigue the starting fatigue, TOT the 20 floor. Components that
-    only exist once games are played (PDG, SOS, SOV, EYE, the normalised Elo,
-    Cups and EX) are left NULL rather than invented. Round 0 is never read
-    back as a PRIOR round: SOS and RL Strength at round 1 start from the
-    baseline, exactly as Season 9's round 1 did (_prior_round_ovr)."""
+    blended output IS the seed (blended_outputs reads the seeds directly). The
+    row itself carries only what is REAL before a game is played, per explicit
+    instruction (2026-10-11: "only raw stats should be in those component
+    columns"): OVR (the seed, which rank, grade and climate need), fatigue
+    (the starting fatigue -- never blended), TOT (the 20 floor), the opening
+    RL Strength (1.0) and EX, whose component needs no game: it is the EX seed
+    normalised across the league, exactly as compute_round_ratings does it
+    every round. PF, PA, raw DSCR and every other game-built component (PDG,
+    SOS, SOV, DSCR, EYE, Elo, Cups) stay NULL until a game is played. Round 0
+    is never read back as a PRIOR round: SOS and RL Strength at round 1 start
+    from the baseline, exactly as Season 9's round 1 did (_prior_round_ovr)."""
     conn = get_connection()
     rows = conn.execute("""
-        SELECT s.*, ts.basclm, ts.starting_fatigue FROM season_carryover_seeds s
+        SELECT s.*, ts.basclm, ts.starting_fatigue, ts.ex FROM season_carryover_seeds s
         JOIN team_seasons ts ON ts.team_id = s.team_id AND ts.season = s.season
         WHERE s.season = ?""", (season,)).fetchall()
+    ex_vals = [r["ex"] for r in rows]
     out = []
     for r in rows:
         ovr = r["ovr_seed"]
         out.append((r["team_id"], season, 0, 0, 0, 0, 0, 0, 0, 0, STARTING_TOT,
-                    r["pf_seed"], r["pa_seed"], ovr, grade_for(ovr), (r["basclm"] / 100) * (ovr + 50),
-                    r["dscr_seed"], 1.0, r["starting_fatigue"], ovr))
+                    normalize(r["ex"], ex_vals), ovr, grade_for(ovr), (r["basclm"] / 100) * (ovr + 50),
+                    1.0, r["starting_fatigue"], ovr))
     conn.executemany("""
         INSERT OR REPLACE INTO team_round_ratings
         (team_id, season, round, rp, lp, sp, p, f, b, tb, tot,
-         pf_norm, pa_norm, ovr, grade, climate, d_sqrt_raw, rlstr_own, fatigue_after, ovr_blend)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         ex_norm, ovr, grade, climate, rlstr_own, fatigue_after, ovr_blend)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, out)
     conn.commit()
     conn.close()

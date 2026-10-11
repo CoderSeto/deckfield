@@ -227,10 +227,18 @@ file whose contents would differ. `start-season` builds the database from
 them.
 
 **The round-0 opening state.** `start-season` writes one rating row per team
-at round 0: OVR, PF, PA and raw DSCR are the seeds (before any game the blend
-is 8/8 seed), fatigue the starting fatigue, TOT 20; components that need
-games (PDG, SOS, SOV, EYE, the normalised Elo/Cups/EX) are NULL and show as a
-dash. It is what the preseason dashboard and matchday 1's roster read.
+at round 0 holding only what is real before a game (per explicit instruction,
+2026-10-11: "only raw stats should be in those component columns"): OVR is
+the seed (rank, grade and climate need one), fatigue the starting fatigue, TOT
+20, RL Strength 1.0, and **EX** -- its component needs no game, it is the EX
+seed normalised across the league, and it equals round 1's EX exactly
+(verified, all 160). PF, PA, raw DSCR and every other game-built component
+(PDG, SOS, SOV, DSCR, EYE, Elo, Cups) are NULL and show as a dash. The roster
+and the Raw vs Blended view still get the seeds, because `blended_outputs()`
+reads them from `season_carryover_seeds` (X = 0 before any game). It is what
+the preseason dashboard and matchday 1's roster read. (It first carried the
+PF/PA/DSCR seeds in the raw columns and left EX blank; corrected the day after
+the build.)
 **Round 0 is never a prior round**: `_prior_round_ovr()` returns nothing for
 round 1, so SOS and RL Strength start from the 50 baseline exactly as S9's
 round 1 did, and no seed leaks into a raw component.
@@ -242,9 +250,12 @@ the roster its blended OVR, PF, PA and raw DSCR (and climate from blended
 OVR). Rank follows blended OVR wherever a rank is SHOWN or used for play
 order (`current_rank_lookup`, the roster, `DATA`, Rank History, the
 Qualification table); `_team_ranks_snapshot` (RL Strength's rank z-score) and
-SOS stay raw. **Fatigue is handed over raw**: its seed IS the season's
-starting fatigue, already inside the raw value, so blending it again would
-count the seed twice -- the Raw vs Blended view shows it that way and says so.
+SOS stay raw. **Fatigue is not a blended element at all** (per explicit
+correction, 2026-10-11): the season starts from the previous final fatigue
+divided by 5, rounded up, and every game's travel is added on from there. The
+roster always carried it raw; the Raw vs Blended view used to list it with a
+Raw/Seed/Blended triple, which read as though it were blended, and no longer
+shows it.
 Verified on a synthetic season: `ovr_blend` matched the formula with zero
 error at rounds 0-14, and the roster is pure raw from round 8.
 
@@ -304,9 +315,15 @@ once L15 is played; the line that stamped Canalave City by name is gone.
 - Several file reads were relative to the working directory; every data file
   is now read from the repo root.
 
-**Dashboard additions:** Season 9 tab (ten plain-table views from
-`S9_HISTORY`, STATIC and checked against the archive every run; own
-renderers, never the live ones), Rankings > Raw vs Blended and a Blend column
+**Dashboard additions:** Season 9 tab -- the frozen `deckfield_dashboard_s9.html`
+itself, framed in place (`#s9-frame`, loaded the first time the tab opens, sized
+to the window and scrolling on its own), so it looks exactly as S9 did with
+none of this page's code involved. It replaced ten plain-table views of an
+inline `S9_HISTORY` copy, per explicit request (2026-10-11: "super ugly ...
+needs to look like it otherwise would if it were S9"). `regenerate_dashboard.py`
+checks the tab still frames that page and that the page is checksummed
+(`_check_history_frames`). The page must sit beside the dashboard (it does on
+GitHub Pages and in the repo); the tab links to it as well. Rankings > Raw vs Blended and a Blend column
 (only while `DATA.blend.active`, i.e. matchdays 1-8), Standings > Orders,
 30 Schedule buttons (ROUND_LABELS removed), Hall of Fame > Legacy Points.
 `CUP_BRACKET_DATA` became derived (rebuilt from the season's seed file;
@@ -427,7 +444,7 @@ python3 regenerate_dashboard.py
 
 It refuses to run if a frozen file changed (`archive/SHA256SUMS`), if a
 dashboard constant is in neither `DERIVED_CONSTS` nor `STATIC_CONSTS`, or if
-`S9_HISTORY` no longer equals the archive. Do not silence any of them -- read
+the Season 9 tab no longer frames the frozen, checksummed S9 page. Do not silence any of them -- read
 the message.
 
 ### 6. Verify in a real browser before committing
