@@ -1,0 +1,1762 @@
+{
+ "1": {
+  "s9_name": "Cycling Road",
+  "seasons": {
+   "8": {
+    "dex": 1,
+    "name": "Cycling Road",
+    "region": "Indigo",
+    "division": 8
+   }
+  }
+ },
+ "2": {
+  "s9_name": "Fighting Dojo",
+  "seasons": {
+   "8": {
+    "dex": 2,
+    "name": "Fighting Dojo",
+    "region": "Indigo",
+    "division": 7
+   }
+  }
+ },
+ "3": {
+  "s9_name": "Cerulean Cape",
+  "seasons": {
+   "8": {
+    "dex": 3,
+    "name": "Cerulean Cape",
+    "region": "Indigo",
+    "division": 7
+   }
+  }
+ },
+ "4": {
+  "s9_name": "Lavender Town",
+  "seasons": {
+   "8": {
+    "dex": 4,
+    "name": "Lavender Town",
+    "region": "Indigo",
+    "division": 2
+   }
+  }
+ },
+ "5": {
+  "s9_name": "Pallet Town",
+  "seasons": {
+   "8": {
+    "dex": 5,
+    "name": "Pallet Town",
+    "region": "Indigo",
+    "division": 9
+   }
+  }
+ },
+ "6": {
+  "s9_name": "Sevii Islands",
+  "seasons": {
+   "8": {
+    "dex": 6,
+    "name": "Sevii Islands",
+    "region": "Indigo",
+    "division": 4
+   }
+  }
+ },
+ "7": {
+  "s9_name": "Mount Moon",
+  "seasons": {
+   "8": {
+    "dex": 7,
+    "name": "Mount Moon",
+    "region": "Indigo",
+    "division": 1
+   }
+  }
+ },
+ "8": {
+  "s9_name": "Victory Road",
+  "seasons": {
+   "8": {
+    "dex": 8,
+    "name": "Victory Road",
+    "region": "Indigo",
+    "division": 8
+   }
+  }
+ },
+ "9": {
+  "s9_name": "Celadon City",
+  "seasons": {
+   "8": {
+    "dex": 9,
+    "name": "Celadon City",
+    "region": "Indigo",
+    "division": 7
+   }
+  }
+ },
+ "10": {
+  "s9_name": "Cerulean City",
+  "seasons": {
+   "8": {
+    "dex": 10,
+    "name": "Cerulean City",
+    "region": "Indigo",
+    "division": 7
+   }
+  }
+ },
+ "11": {
+  "s9_name": "Saffron City",
+  "seasons": {
+   "8": {
+    "dex": 11,
+    "name": "Saffron City",
+    "region": "Indigo",
+    "division": 5
+   }
+  }
+ },
+ "12": {
+  "s9_name": "Vermilion City",
+  "seasons": {
+   "8": {
+    "dex": 12,
+    "name": "Vermilion City",
+    "region": "Indigo",
+    "division": 2
+   }
+  }
+ },
+ "13": {
+  "s9_name": "Cinnabar Island",
+  "seasons": {
+   "8": {
+    "dex": 13,
+    "name": "Cinnabar Island",
+    "region": "Indigo",
+    "division": 2
+   }
+  }
+ },
+ "14": {
+  "s9_name": "Fuchsia City",
+  "seasons": {
+   "8": {
+    "dex": 14,
+    "name": "Fuchsia City",
+    "region": "Indigo",
+    "division": 3
+   }
+  }
+ },
+ "15": {
+  "s9_name": "Pewter City",
+  "seasons": {
+   "8": {
+    "dex": 15,
+    "name": "Pewter City",
+    "region": "Indigo",
+    "division": 6
+   }
+  }
+ },
+ "16": {
+  "s9_name": "Viridian City",
+  "seasons": {
+   "8": {
+    "dex": 16,
+    "name": "Viridian City",
+    "region": "Indigo",
+    "division": 9
+   }
+  }
+ },
+ "17": {
+  "s9_name": "Dewford Town",
+  "seasons": {
+   "8": {
+    "dex": 17,
+    "name": "Dewford Town",
+    "region": "Delta",
+    "division": 10
+   }
+  }
+ },
+ "18": {
+  "s9_name": "Littleroot Town",
+  "seasons": {
+   "8": {
+    "dex": 18,
+    "name": "Littleroot Town",
+    "region": "Delta",
+    "division": 9
+   }
+  }
+ },
+ "19": {
+  "s9_name": "Oldale Town",
+  "seasons": {
+   "8": {
+    "dex": 19,
+    "name": "Oldale Town",
+    "region": "Delta",
+    "division": 5
+   }
+  }
+ },
+ "20": {
+  "s9_name": "Petalburg City",
+  "seasons": {
+   "8": {
+    "dex": 20,
+    "name": "Petalburg City",
+    "region": "Delta",
+    "division": 8
+   }
+  }
+ },
+ "21": {
+  "s9_name": "Fallarbor Town",
+  "seasons": {
+   "8": {
+    "dex": 21,
+    "name": "Fallarbor Town",
+    "region": "Delta",
+    "division": 5
+   }
+  }
+ },
+ "22": {
+  "s9_name": "Lavaridge Town",
+  "seasons": {
+   "8": {
+    "dex": 22,
+    "name": "Lavaridge Town",
+    "region": "Delta",
+    "division": 4
+   }
+  }
+ },
+ "23": {
+  "s9_name": "Rustboro City",
+  "seasons": {
+   "8": {
+    "dex": 23,
+    "name": "Rustboro City",
+    "region": "Delta",
+    "division": 1
+   }
+  }
+ },
+ "24": {
+  "s9_name": "Verdanturf Town",
+  "seasons": {
+   "8": {
+    "dex": 24,
+    "name": "Verdanturf Town",
+    "region": "Delta",
+    "division": 6
+   }
+  }
+ },
+ "25": {
+  "s9_name": "Ever Grande City",
+  "seasons": {
+   "8": {
+    "dex": 25,
+    "name": "Ever Grande City",
+    "region": "Delta",
+    "division": 1
+   }
+  }
+ },
+ "26": {
+  "s9_name": "Mossdeep City",
+  "seasons": {
+   "8": {
+    "dex": 26,
+    "name": "Mossdeep City",
+    "region": "Delta",
+    "division": 9
+   }
+  }
+ },
+ "27": {
+  "s9_name": "Pacifidlog Town",
+  "seasons": {
+   "8": {
+    "dex": 27,
+    "name": "Pacifidlog Town",
+    "region": "Delta",
+    "division": 9
+   }
+  }
+ },
+ "28": {
+  "s9_name": "Sootopolis City",
+  "seasons": {
+   "8": {
+    "dex": 28,
+    "name": "Sootopolis City",
+    "region": "Delta",
+    "division": 6
+   }
+  }
+ },
+ "29": {
+  "s9_name": "Fortree City",
+  "seasons": {
+   "8": {
+    "dex": 29,
+    "name": "Fortree City",
+    "region": "Delta",
+    "division": 5
+   }
+  }
+ },
+ "30": {
+  "s9_name": "Lilycove City",
+  "seasons": {
+   "8": {
+    "dex": 30,
+    "name": "Lilycove City",
+    "region": "Delta",
+    "division": 4
+   }
+  }
+ },
+ "31": {
+  "s9_name": "Mauville City",
+  "seasons": {
+   "8": {
+    "dex": 31,
+    "name": "Mauville City",
+    "region": "Delta",
+    "division": 6
+   }
+  }
+ },
+ "32": {
+  "s9_name": "Slateport City",
+  "seasons": {
+   "8": {
+    "dex": 32,
+    "name": "Slateport City",
+    "region": "Delta",
+    "division": 1
+   }
+  }
+ },
+ "33": {
+  "s9_name": "Canalave City",
+  "seasons": {
+   "8": {
+    "dex": 33,
+    "name": "Canalave City",
+    "region": "LilyValley",
+    "division": 1
+   }
+  }
+ },
+ "34": {
+  "s9_name": "Jubilife City",
+  "seasons": {
+   "8": {
+    "dex": 34,
+    "name": "Jubilife City",
+    "region": "LilyValley",
+    "division": 7
+   }
+  }
+ },
+ "35": {
+  "s9_name": "Sandgem Town",
+  "seasons": {
+   "8": {
+    "dex": 35,
+    "name": "Sandgem Town",
+    "region": "LilyValley",
+    "division": 5
+   }
+  }
+ },
+ "36": {
+  "s9_name": "Twinleaf Town",
+  "seasons": {
+   "8": {
+    "dex": 36,
+    "name": "Twinleaf Town",
+    "region": "LilyValley",
+    "division": 9
+   }
+  }
+ },
+ "37": {
+  "s9_name": "Eterna City",
+  "seasons": {
+   "8": {
+    "dex": 37,
+    "name": "Eterna City",
+    "region": "LilyValley",
+    "division": 8
+   }
+  }
+ },
+ "38": {
+  "s9_name": "Floaroma City",
+  "seasons": {
+   "8": {
+    "dex": 38,
+    "name": "Floaroma City",
+    "region": "LilyValley",
+    "division": 3
+   }
+  }
+ },
+ "39": {
+  "s9_name": "Oreburgh City",
+  "seasons": {
+   "8": {
+    "dex": 39,
+    "name": "Oreburgh City",
+    "region": "LilyValley",
+    "division": 5
+   }
+  }
+ },
+ "40": {
+  "s9_name": "Snowpoint City",
+  "seasons": {
+   "8": {
+    "dex": 40,
+    "name": "Snowpoint City",
+    "region": "LilyValley",
+    "division": 6
+   }
+  }
+ },
+ "41": {
+  "s9_name": "Mossui Town",
+  "seasons": {
+   "8": {
+    "dex": 156,
+    "name": "Mossui Town",
+    "region": "Terastal",
+    "division": 7
+   }
+  }
+ },
+ "42": {
+  "s9_name": "Battle Zone",
+  "seasons": {
+   "8": {
+    "dex": 42,
+    "name": "Resort Area",
+    "region": "LilyValley",
+    "division": 3
+   }
+  }
+ },
+ "43": {
+  "s9_name": "Sunyshore City",
+  "seasons": {
+   "8": {
+    "dex": 43,
+    "name": "Sunyshore City",
+    "region": "LilyValley",
+    "division": 5
+   }
+  }
+ },
+ "44": {
+  "s9_name": "Veilstone City",
+  "seasons": {
+   "8": {
+    "dex": 44,
+    "name": "Veilstone City",
+    "region": "LilyValley",
+    "division": 2
+   }
+  }
+ },
+ "45": {
+  "s9_name": "Celestic Town",
+  "seasons": {
+   "8": {
+    "dex": 45,
+    "name": "Celestic Town",
+    "region": "LilyValley",
+    "division": 6
+   }
+  }
+ },
+ "46": {
+  "s9_name": "Hearthome City",
+  "seasons": {
+   "8": {
+    "dex": 46,
+    "name": "Hearthome City",
+    "region": "LilyValley",
+    "division": 8
+   }
+  }
+ },
+ "47": {
+  "s9_name": "Pastoria City",
+  "seasons": {
+   "8": {
+    "dex": 47,
+    "name": "Pastoria City",
+    "region": "LilyValley",
+    "division": 2
+   }
+  }
+ },
+ "48": {
+  "s9_name": "Solaceon Town",
+  "seasons": {
+   "8": {
+    "dex": 48,
+    "name": "Solaceon Town",
+    "region": "LilyValley",
+    "division": 5
+   }
+  }
+ },
+ "49": {
+  "s9_name": "Anville Town",
+  "seasons": {
+   "8": {
+    "dex": 49,
+    "name": "Anville Town",
+    "region": "Vertress",
+    "division": 1
+   }
+  }
+ },
+ "50": {
+  "s9_name": "Aspertia City",
+  "seasons": {
+   "8": {
+    "dex": 50,
+    "name": "Aspertia City",
+    "region": "Vertress",
+    "division": 10
+   }
+  }
+ },
+ "51": {
+  "s9_name": "Floccesy Town",
+  "seasons": {
+   "8": {
+    "dex": 51,
+    "name": "Floccesy Town",
+    "region": "Vertress",
+    "division": 10
+   }
+  }
+ },
+ "52": {
+  "s9_name": "Mistralton City",
+  "seasons": {
+   "8": {
+    "dex": 52,
+    "name": "Mistralton City",
+    "region": "Vertress",
+    "division": 6
+   }
+  }
+ },
+ "53": {
+  "s9_name": "Driftveil City",
+  "seasons": {
+   "8": {
+    "dex": 53,
+    "name": "Driftveil City",
+    "region": "Vertress",
+    "division": 4
+   }
+  }
+ },
+ "54": {
+  "s9_name": "Icirrus City",
+  "seasons": {
+   "8": {
+    "dex": 54,
+    "name": "Icirrus City",
+    "region": "Vertress",
+    "division": 9
+   }
+  }
+ },
+ "55": {
+  "s9_name": "Nimbasa City",
+  "seasons": {
+   "8": {
+    "dex": 55,
+    "name": "Nimbasa City",
+    "region": "Vertress",
+    "division": 3
+   }
+  }
+ },
+ "56": {
+  "s9_name": "Virbank City",
+  "seasons": {
+   "8": {
+    "dex": 56,
+    "name": "Virbank City",
+    "region": "Vertress",
+    "division": 1
+   }
+  }
+ },
+ "57": {
+  "s9_name": "Accumula Town",
+  "seasons": {
+   "8": {
+    "dex": 57,
+    "name": "Accumula Town",
+    "region": "Vertress",
+    "division": 7
+   }
+  }
+ },
+ "58": {
+  "s9_name": "Castelia City",
+  "seasons": {
+   "8": {
+    "dex": 58,
+    "name": "Castelia City",
+    "region": "Vertress",
+    "division": 3
+   }
+  }
+ },
+ "59": {
+  "s9_name": "Nacrene City",
+  "seasons": {
+   "8": {
+    "dex": 59,
+    "name": "Nacrene City",
+    "region": "Vertress",
+    "division": 5
+   }
+  }
+ },
+ "60": {
+  "s9_name": "Striaton City",
+  "seasons": {
+   "8": {
+    "dex": 60,
+    "name": "Striaton City",
+    "region": "Vertress",
+    "division": 1
+   }
+  }
+ },
+ "61": {
+  "s9_name": "Humilau City",
+  "seasons": {
+   "8": {
+    "dex": 61,
+    "name": "Humilau City",
+    "region": "Vertress",
+    "division": 8
+   }
+  }
+ },
+ "62": {
+  "s9_name": "Lacunosa Town",
+  "seasons": {
+   "8": {
+    "dex": 62,
+    "name": "Lacunosa Town",
+    "region": "Vertress",
+    "division": 8
+   }
+  }
+ },
+ "63": {
+  "s9_name": "Opelucid City",
+  "seasons": {
+   "8": {
+    "dex": 63,
+    "name": "Opelucid City",
+    "region": "Vertress",
+    "division": 4
+   }
+  }
+ },
+ "64": {
+  "s9_name": "Undella Town",
+  "seasons": {
+   "8": {
+    "dex": 64,
+    "name": "Undella Town",
+    "region": "Vertress",
+    "division": 8
+   }
+  }
+ },
+ "65": {
+  "s9_name": "Ambrette Town",
+  "seasons": {
+   "8": {
+    "dex": 65,
+    "name": "Ambrette Town",
+    "region": "Kalosite",
+    "division": 9
+   }
+  }
+ },
+ "66": {
+  "s9_name": "Cyllage City",
+  "seasons": {
+   "8": {
+    "dex": 66,
+    "name": "Cyllage City",
+    "region": "Kalosite",
+    "division": 3
+   }
+  }
+ },
+ "67": {
+  "s9_name": "Geosenge Town",
+  "seasons": {
+   "8": {
+    "dex": 67,
+    "name": "Geosenge Town",
+    "region": "Kalosite",
+    "division": 4
+   }
+  }
+ },
+ "68": {
+  "s9_name": "Shalour City",
+  "seasons": {
+   "8": {
+    "dex": 68,
+    "name": "Shalour City",
+    "region": "Kalosite",
+    "division": 4
+   }
+  }
+ },
+ "69": {
+  "s9_name": "Camphrier Town",
+  "seasons": {
+   "8": {
+    "dex": 69,
+    "name": "Camphrier Town",
+    "region": "Kalosite",
+    "division": 7
+   }
+  }
+ },
+ "70": {
+  "s9_name": "Coumarine City",
+  "seasons": {
+   "8": {
+    "dex": 70,
+    "name": "Coumarine City",
+    "region": "Kalosite",
+    "division": 6
+   }
+  }
+ },
+ "71": {
+  "s9_name": "Laverre City",
+  "seasons": {
+   "8": {
+    "dex": 71,
+    "name": "Laverre City",
+    "region": "Kalosite",
+    "division": 9
+   }
+  }
+ },
+ "72": {
+  "s9_name": "Lumiose City",
+  "seasons": {
+   "8": {
+    "dex": 72,
+    "name": "Lumiose City",
+    "region": "Kalosite",
+    "division": 1
+   }
+  }
+ },
+ "73": {
+  "s9_name": "Anistar City",
+  "seasons": {
+   "8": {
+    "dex": 73,
+    "name": "Anistar City",
+    "region": "Kalosite",
+    "division": 7
+   }
+  }
+ },
+ "74": {
+  "s9_name": "Couriway Town",
+  "seasons": {
+   "8": {
+    "dex": 74,
+    "name": "Couriway Town",
+    "region": "Kalosite",
+    "division": 7
+   }
+  }
+ },
+ "75": {
+  "s9_name": "Dendemille Town",
+  "seasons": {
+   "8": {
+    "dex": 75,
+    "name": "Dendemille Town",
+    "region": "Kalosite",
+    "division": 6
+   }
+  }
+ },
+ "76": {
+  "s9_name": "Snowbelle City",
+  "seasons": {
+   "8": {
+    "dex": 76,
+    "name": "Snowbelle City",
+    "region": "Kalosite",
+    "division": 5
+   }
+  }
+ },
+ "77": {
+  "s9_name": "Aquacorde Town",
+  "seasons": {
+   "8": {
+    "dex": 77,
+    "name": "Aquacorde Town",
+    "region": "Kalosite",
+    "division": 4
+   }
+  }
+ },
+ "78": {
+  "s9_name": "Kiloude City",
+  "seasons": {
+   "8": {
+    "dex": 78,
+    "name": "Kiloude City",
+    "region": "Kalosite",
+    "division": 8
+   }
+  }
+ },
+ "79": {
+  "s9_name": "Santalune City",
+  "seasons": {
+   "8": {
+    "dex": 79,
+    "name": "Santalune City",
+    "region": "Kalosite",
+    "division": 4
+   }
+  }
+ },
+ "80": {
+  "s9_name": "Vaniville Town",
+  "seasons": {
+   "8": {
+    "dex": 80,
+    "name": "Vaniville Town",
+    "region": "Kalosite",
+    "division": 3
+   }
+  }
+ },
+ "81": {
+  "s9_name": "Exeggutor Island",
+  "seasons": {
+   "8": {
+    "dex": 81,
+    "name": "Exeggutor Island",
+    "region": "Lanakila",
+    "division": 4
+   }
+  }
+ },
+ "82": {
+  "s9_name": "Poni Meadow",
+  "seasons": {
+   "8": {
+    "dex": 82,
+    "name": "Poni Meadow",
+    "region": "Lanakila",
+    "division": 7
+   }
+  }
+ },
+ "83": {
+  "s9_name": "Seafolk Village",
+  "seasons": {
+   "8": {
+    "dex": 83,
+    "name": "Seafolk Village",
+    "region": "Lanakila",
+    "division": 2
+   }
+  }
+ },
+ "84": {
+  "s9_name": "Vast Poni Canyon",
+  "seasons": {
+   "8": {
+    "dex": 84,
+    "name": "Vast Poni Canyon",
+    "region": "Lanakila",
+    "division": 10
+   }
+  }
+ },
+ "85": {
+  "s9_name": "Hau'oli City",
+  "seasons": {
+   "8": {
+    "dex": 85,
+    "name": "Hau'oli City",
+    "region": "Lanakila",
+    "division": 8
+   }
+  }
+ },
+ "86": {
+  "s9_name": "Iki Town",
+  "seasons": {
+   "8": {
+    "dex": 86,
+    "name": "Iki Town",
+    "region": "Lanakila",
+    "division": 8
+   }
+  }
+ },
+ "87": {
+  "s9_name": "Kala'e Bay",
+  "seasons": {
+   "8": {
+    "dex": 87,
+    "name": "Kala'e Bay",
+    "region": "Lanakila",
+    "division": 1
+   }
+  }
+ },
+ "88": {
+  "s9_name": "Ultra Megalopolis",
+  "seasons": {
+   "8": {
+    "dex": 88,
+    "name": "Ultra Megalopolis",
+    "region": "Lanakila",
+    "division": 1
+   }
+  }
+ },
+ "89": {
+  "s9_name": "Malie City",
+  "seasons": {
+   "8": {
+    "dex": 89,
+    "name": "Malie City",
+    "region": "Lanakila",
+    "division": 2
+   }
+  }
+ },
+ "90": {
+  "s9_name": "Mount Hokulani",
+  "seasons": {
+   "8": {
+    "dex": 90,
+    "name": "Mount Hokulani",
+    "region": "Lanakila",
+    "division": 10
+   }
+  }
+ },
+ "91": {
+  "s9_name": "Po Town",
+  "seasons": {
+   "8": {
+    "dex": 91,
+    "name": "Po Town",
+    "region": "Lanakila",
+    "division": 6
+   }
+  }
+ },
+ "92": {
+  "s9_name": "Tapu Village",
+  "seasons": {
+   "8": {
+    "dex": 92,
+    "name": "Tapu Village",
+    "region": "Lanakila",
+    "division": 10
+   }
+  }
+ },
+ "93": {
+  "s9_name": "Aether Paradise",
+  "seasons": {
+   "8": {
+    "dex": 93,
+    "name": "Aether Paradise",
+    "region": "Lanakila",
+    "division": 3
+   }
+  }
+ },
+ "94": {
+  "s9_name": "Heahea City",
+  "seasons": {
+   "8": {
+    "dex": 94,
+    "name": "Heahea City",
+    "region": "Lanakila",
+    "division": 9
+   }
+  }
+ },
+ "95": {
+  "s9_name": "Konikoni City",
+  "seasons": {
+   "8": {
+    "dex": 95,
+    "name": "Konikoni City",
+    "region": "Lanakila",
+    "division": 7
+   }
+  }
+ },
+ "96": {
+  "s9_name": "Paniola Town",
+  "seasons": {
+   "8": {
+    "dex": 96,
+    "name": "Paniola Town",
+    "region": "Lanakila",
+    "division": 9
+   }
+  }
+ },
+ "97": {
+  "s9_name": "Ballonlea",
+  "seasons": {
+   "8": {
+    "dex": 97,
+    "name": "Ballonlea",
+    "region": "Dynamax",
+    "division": 5
+   }
+  }
+ },
+ "98": {
+  "s9_name": "Stow-on-Side",
+  "seasons": {
+   "8": {
+    "dex": 98,
+    "name": "Stow-on-Side",
+    "region": "Dynamax",
+    "division": 6
+   }
+  }
+ },
+ "99": {
+  "s9_name": "Wyndon North",
+  "seasons": {
+   "8": {
+    "dex": 99,
+    "name": "Wyndon North",
+    "region": "Dynamax",
+    "division": 7
+   }
+  }
+ },
+ "100": {
+  "s9_name": "Wyndon South",
+  "seasons": {
+   "8": {
+    "dex": 100,
+    "name": "Wyndon South",
+    "region": "Dynamax",
+    "division": 2
+   }
+  }
+ },
+ "101": {
+  "s9_name": "City of Circhester",
+  "seasons": {
+   "8": {
+    "dex": 101,
+    "name": "City of Circhester",
+    "region": "Dynamax",
+    "division": 9
+   }
+  }
+ },
+ "102": {
+  "s9_name": "Circhester Bay",
+  "seasons": {
+   "8": {
+    "dex": 102,
+    "name": "Circhester Bay",
+    "region": "Dynamax",
+    "division": 10
+   }
+  }
+ },
+ "103": {
+  "s9_name": "Hammerlocke",
+  "seasons": {
+   "8": {
+    "dex": 103,
+    "name": "Hammerlocke",
+    "region": "Dynamax",
+    "division": 3
+   }
+  }
+ },
+ "104": {
+  "s9_name": "Spikemuth",
+  "seasons": {
+   "8": {
+    "dex": 104,
+    "name": "Spikemuth",
+    "region": "Dynamax",
+    "division": 1
+   }
+  }
+ },
+ "105": {
+  "s9_name": "Crown Tundra",
+  "seasons": {
+   "8": {
+    "dex": 105,
+    "name": "Crown Tundra",
+    "region": "Dynamax",
+    "division": 4
+   }
+  }
+ },
+ "106": {
+  "s9_name": "Postwick",
+  "seasons": {
+   "8": {
+    "dex": 106,
+    "name": "Postwick",
+    "region": "Dynamax",
+    "division": 3
+   }
+  }
+ },
+ "107": {
+  "s9_name": "Wild Area",
+  "seasons": {
+   "8": {
+    "dex": 107,
+    "name": "Wild Area",
+    "region": "Dynamax",
+    "division": 2
+   }
+  }
+ },
+ "108": {
+  "s9_name": "Wedgehurst",
+  "seasons": {
+   "8": {
+    "dex": 108,
+    "name": "Wedgehurst",
+    "region": "Dynamax",
+    "division": 8
+   }
+  }
+ },
+ "109": {
+  "s9_name": "Hulbury",
+  "seasons": {
+   "8": {
+    "dex": 109,
+    "name": "Hulbury",
+    "region": "Dynamax",
+    "division": 2
+   }
+  }
+ },
+ "110": {
+  "s9_name": "Isle of Armor",
+  "seasons": {
+   "8": {
+    "dex": 110,
+    "name": "Isle of Armor",
+    "region": "Dynamax",
+    "division": 6
+   }
+  }
+ },
+ "111": {
+  "s9_name": "Motostoke",
+  "seasons": {
+   "8": {
+    "dex": 111,
+    "name": "Motostoke",
+    "region": "Dynamax",
+    "division": 4
+   }
+  }
+ },
+ "112": {
+  "s9_name": "Turffield",
+  "seasons": {
+   "8": {
+    "dex": 112,
+    "name": "Turffield",
+    "region": "Dynamax",
+    "division": 10
+   }
+  }
+ },
+ "113": {
+  "s9_name": "Agate Village",
+  "seasons": {
+   "8": {
+    "dex": 113,
+    "name": "Agate Village",
+    "region": "Phoenix",
+    "division": 3
+   }
+  }
+ },
+ "114": {
+  "s9_name": "Gateon Port",
+  "seasons": {
+   "8": {
+    "dex": 114,
+    "name": "Gateon Port",
+    "region": "Phoenix",
+    "division": 8
+   }
+  }
+ },
+ "115": {
+  "s9_name": "Phenac City",
+  "seasons": {
+   "8": {
+    "dex": 115,
+    "name": "Phenac City",
+    "region": "Phoenix",
+    "division": 5
+   }
+  }
+ },
+ "116": {
+  "s9_name": "Pyrite Town",
+  "seasons": {
+   "8": {
+    "dex": 116,
+    "name": "Pyrite Town",
+    "region": "Phoenix",
+    "division": 3
+   }
+  }
+ },
+ "117": {
+  "s9_name": "Fall City",
+  "seasons": {
+   "8": {
+    "dex": 117,
+    "name": "Fall City",
+    "region": "Phoenix",
+    "division": 3
+   }
+  }
+ },
+ "118": {
+  "s9_name": "Ringtown",
+  "seasons": {
+   "8": {
+    "dex": 118,
+    "name": "Ringtown",
+    "region": "Phoenix",
+    "division": 10
+   }
+  }
+ },
+ "119": {
+  "s9_name": "Summerland",
+  "seasons": {
+   "8": {
+    "dex": 119,
+    "name": "Summerland",
+    "region": "Phoenix",
+    "division": 7
+   }
+  }
+ },
+ "120": {
+  "s9_name": "Wintown",
+  "seasons": {
+   "8": {
+    "dex": 120,
+    "name": "Wintown",
+    "region": "Phoenix",
+    "division": 8
+   }
+  }
+ },
+ "121": {
+  "s9_name": "Boyleland",
+  "seasons": {
+   "8": {
+    "dex": 121,
+    "name": "Boyleland",
+    "region": "Phoenix",
+    "division": 3
+   }
+  }
+ },
+ "122": {
+  "s9_name": "Haruba Village",
+  "seasons": {
+   "8": {
+    "dex": 122,
+    "name": "Haruba Village",
+    "region": "Phoenix",
+    "division": 4
+   }
+  }
+ },
+ "123": {
+  "s9_name": "Pueltown",
+  "seasons": {
+   "8": {
+    "dex": 123,
+    "name": "Pueltown",
+    "region": "Phoenix",
+    "division": 2
+   }
+  }
+ },
+ "124": {
+  "s9_name": "Vientown",
+  "seasons": {
+   "8": {
+    "dex": 124,
+    "name": "Vientown",
+    "region": "Phoenix",
+    "division": 7
+   }
+  }
+ },
+ "125": {
+  "s9_name": "Aqua Resort",
+  "seasons": {
+   "8": {
+    "dex": 125,
+    "name": "Aqua Resort",
+    "region": "Phoenix",
+    "division": 2
+   }
+  }
+ },
+ "126": {
+  "s9_name": "Cocona Village",
+  "seasons": {
+   "8": {
+    "dex": 126,
+    "name": "Cocona Village",
+    "region": "Phoenix",
+    "division": 5
+   }
+  }
+ },
+ "127": {
+  "s9_name": "Dolce Island",
+  "seasons": {
+   "8": {
+    "dex": 127,
+    "name": "Dolce Island",
+    "region": "Phoenix",
+    "division": 9
+   }
+  }
+ },
+ "128": {
+  "s9_name": "Tilt Village",
+  "seasons": {
+   "8": {
+    "dex": 128,
+    "name": "Tilt Village",
+    "region": "Phoenix",
+    "division": 10
+   }
+  }
+ },
+ "129": {
+  "s9_name": "Cianwood City",
+  "seasons": {
+   "8": {
+    "dex": 129,
+    "name": "Cianwood City",
+    "region": "Silver",
+    "division": 1
+   }
+  }
+ },
+ "130": {
+  "s9_name": "Olivine City",
+  "seasons": {
+   "8": {
+    "dex": 130,
+    "name": "Olivine City",
+    "region": "Silver",
+    "division": 2
+   }
+  }
+ },
+ "131": {
+  "s9_name": "Goldenrod City",
+  "seasons": {
+   "8": {
+    "dex": 131,
+    "name": "Goldenrod City",
+    "region": "Silver",
+    "division": 3
+   }
+  }
+ },
+ "132": {
+  "s9_name": "National Park",
+  "seasons": {
+   "8": {
+    "dex": 132,
+    "name": "National Park",
+    "region": "Silver",
+    "division": 2
+   }
+  }
+ },
+ "133": {
+  "s9_name": "Azalea Town",
+  "seasons": {
+   "8": {
+    "dex": 133,
+    "name": "Azalea Town",
+    "region": "Silver",
+    "division": 5
+   }
+  }
+ },
+ "134": {
+  "s9_name": "Ilex Forest",
+  "seasons": {
+   "8": {
+    "dex": 134,
+    "name": "Ilex Forest",
+    "region": "Silver",
+    "division": 6
+   }
+  }
+ },
+ "135": {
+  "s9_name": "Violet City",
+  "seasons": {
+   "8": {
+    "dex": 135,
+    "name": "Violet City",
+    "region": "Silver",
+    "division": 8
+   }
+  }
+ },
+ "136": {
+  "s9_name": "Ruins of Alph",
+  "seasons": {
+   "8": {
+    "dex": 136,
+    "name": "Ruins of Alph",
+    "region": "Silver",
+    "division": 9
+   }
+  }
+ },
+ "137": {
+  "s9_name": "Mahogany Town",
+  "seasons": {
+   "8": {
+    "dex": 137,
+    "name": "Mahogany Town",
+    "region": "Silver",
+    "division": 10
+   }
+  }
+ },
+ "138": {
+  "s9_name": "Lake of Rage",
+  "seasons": {
+   "8": {
+    "dex": 138,
+    "name": "Lake of Rage",
+    "region": "Silver",
+    "division": 9
+   }
+  }
+ },
+ "139": {
+  "s9_name": "Ecruteak City",
+  "seasons": {
+   "8": {
+    "dex": 139,
+    "name": "Ecruteak City",
+    "region": "Silver",
+    "division": 6
+   }
+  }
+ },
+ "140": {
+  "s9_name": "Mount Mortar",
+  "seasons": {
+   "8": {
+    "dex": 140,
+    "name": "Mount Mortar",
+    "region": "Silver",
+    "division": 4
+   }
+  }
+ },
+ "141": {
+  "s9_name": "New Bark Town",
+  "seasons": {
+   "8": {
+    "dex": 141,
+    "name": "New Bark Town",
+    "region": "Silver",
+    "division": 10
+   }
+  }
+ },
+ "142": {
+  "s9_name": "Cherrygrove City",
+  "seasons": {
+   "8": {
+    "dex": 142,
+    "name": "Cherrygrove City",
+    "region": "Silver",
+    "division": 4
+   }
+  }
+ },
+ "143": {
+  "s9_name": "Blackthorn City",
+  "seasons": {
+   "8": {
+    "dex": 143,
+    "name": "Blackthorn City",
+    "region": "Silver",
+    "division": 8
+   }
+  }
+ },
+ "144": {
+  "s9_name": "Mount Silver",
+  "seasons": {
+   "8": {
+    "dex": 144,
+    "name": "Mount Silver",
+    "region": "Silver",
+    "division": 1
+   }
+  }
+ },
+ "145": {
+  "s9_name": "Montenevera",
+  "seasons": {
+   "8": {
+    "dex": 145,
+    "name": "Montenevera",
+    "region": "Terastal",
+    "division": 5
+   }
+  }
+ },
+ "146": {
+  "s9_name": "Glaseado Mountain",
+  "seasons": {
+   "8": {
+    "dex": 146,
+    "name": "Glaseado Mountain",
+    "region": "Terastal",
+    "division": 4
+   }
+  }
+ },
+ "147": {
+  "s9_name": "Tagtree Thicket",
+  "seasons": {
+   "8": {
+    "dex": 147,
+    "name": "Tagtree Thicket",
+    "region": "Terastal",
+    "division": 5
+   }
+  }
+ },
+ "148": {
+  "s9_name": "Blueberry Terarium",
+  "seasons": {
+   "8": {
+    "dex": 148,
+    "name": "Blueberry Terarium",
+    "region": "Terastal",
+    "division": 10
+   }
+  }
+ },
+ "149": {
+  "s9_name": "Porto Marinada",
+  "seasons": {
+   "8": {
+    "dex": 149,
+    "name": "Porto Marinada",
+    "region": "Terastal",
+    "division": 2
+   }
+  }
+ },
+ "150": {
+  "s9_name": "Cascarrafa",
+  "seasons": {
+   "8": {
+    "dex": 150,
+    "name": "Cascarrafa",
+    "region": "Terastal",
+    "division": 1
+   }
+  }
+ },
+ "151": {
+  "s9_name": "Casseroya Lake",
+  "seasons": {
+   "8": {
+    "dex": 151,
+    "name": "Casseroya Lake",
+    "region": "Terastal",
+    "division": 7
+   }
+  }
+ },
+ "152": {
+  "s9_name": "Medali",
+  "seasons": {
+   "8": {
+    "dex": 152,
+    "name": "Medali",
+    "region": "Terastal",
+    "division": 10
+   }
+  }
+ },
+ "153": {
+  "s9_name": "Zapapico",
+  "seasons": {
+   "8": {
+    "dex": 153,
+    "name": "Zapapico",
+    "region": "Terastal",
+    "division": 3
+   }
+  }
+ },
+ "154": {
+  "s9_name": "Artazon",
+  "seasons": {
+   "8": {
+    "dex": 154,
+    "name": "Artazon",
+    "region": "Terastal",
+    "division": 10
+   }
+  }
+ },
+ "155": {
+  "s9_name": "Levincia",
+  "seasons": {
+   "8": {
+    "dex": 155,
+    "name": "Levincia",
+    "region": "Terastal",
+    "division": 6
+   }
+  }
+ },
+ "156": {
+  "s9_name": "Cabo Poco",
+  "seasons": {
+   "8": {
+    "dex": 41,
+    "name": "Fight Area",
+    "region": "LilyValley",
+    "division": 10
+   }
+  }
+ },
+ "157": {
+  "s9_name": "Alfornada",
+  "seasons": {
+   "8": {
+    "dex": 157,
+    "name": "Alfornada",
+    "region": "Terastal",
+    "division": 9
+   }
+  }
+ },
+ "158": {
+  "s9_name": "Cortondo",
+  "seasons": {
+   "8": {
+    "dex": 158,
+    "name": "Cortondo",
+    "region": "Terastal",
+    "division": 1
+   }
+  }
+ },
+ "159": {
+  "s9_name": "Los Platos",
+  "seasons": {
+   "8": {
+    "dex": 159,
+    "name": "Los Platos",
+    "region": "Terastal",
+    "division": 6
+   }
+  }
+ },
+ "160": {
+  "s9_name": "Mesagoza",
+  "seasons": {
+   "8": {
+    "dex": 160,
+    "name": "Mesagoza",
+    "region": "Terastal",
+    "division": 2
+   }
+  }
+ }
+}

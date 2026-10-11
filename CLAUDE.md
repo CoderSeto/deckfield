@@ -87,7 +87,73 @@ database holds one season. See "Season 10" below.
   the production draw was promoted from (it reproduces the trial file byte
   for byte). Run the prototypes as `DECKFIELD_SEASON=9` against an S9
   database: they flip the outline themselves.
+- `history/` — the **historical archive** of Seasons 1-8 (see "The historical
+  archive" below). `history/s<N>/` holds that season's workbook and what
+  `extract_history.py <N> <workbook>` writes from it; `history/teams.json` is
+  the cross-season team identity map. S8 done 2026-10-11; S7 and earlier next.
 - `CLAUDE.md` — this file.
+
+## The historical archive (Seasons 1-8, begun 2026-10-11)
+
+Per explicit request: an archive of the early seasons for all-time statistics,
+"relitigating" them -- filling gaps in modern stats while every recorded result
+stays exactly as it was. Worked backwards from S8, one season at a time.
+
+**The archive holds only what a season RECORDED.** `extract_history.py` writes
+`history/s<N>/{games,walkovers,teams}.csv` and `events.json` straight from the
+workbook, and a stat the season never kept stays **blank**, never zero and never
+estimated. Anything filled in later (simulated or modelled) goes in a separate
+layer beside these files, marked as such and seeded so it rebuilds exactly --
+never into them.
+
+**Team identity is the team's S9 dex, not the season's own dex.** Dex slots
+moved: between S8 and S9 **Mossui Town** (S8 Terastal, dex 156) and **Fight
+Area** (S8 Lily Valley, dex 41) swapped regions and dex numbers, and Fight Area
+was renamed **Cabo Poco**; **Resort Area** became **Battle Zone** (same slot).
+Proved by S9's own "S8 End" checkpoint, which ranks Mossui Town 48 and Cabo Poco
+84 -- exactly Mossui Town's and Fight Area's S8 finishes. `RENAMED_SINCE` in the
+extractor holds the renames; `history/teams.json` maps every season's
+(dex, name, region, division) to the canonical id.
+
+**The extractor refuses to write unless everything reconciles**: both packed
+strings of every game mirror each other and name the right teams; each team's
+W-L per bucket (R/L/Swiss/playoff+finals) equals the workbook's Rankings F..M,
+byes included; each team's last game Elo equals its final Elo; the final rank
+equals the next season's recorded end-of-season checkpoint; the Hall of Fame's
+World, cup and all ten regional titles follow from the games; and Regional and
+League are complete round robins (every pair once, never across groups, every
+team every matchday). Each check was mutation-tested (a dropped bye, a one-sided
+score typo, a bad host flag, a missing WC game, the identity swap undone, a
+flipped regional final) and fails as it should. A re-run is byte-identical.
+
+### Season 8 (extracted 2026-10-11)
+
+**Essentially complete -- nothing needs simulating.** 3,505 games in 84 events
+(one empty: WC QF game 3), every one with host, score, raw goal scores, spread,
+interest, both DSCRs and both Elos, plus each side's rank going into the game
+and 120 byes (`walkovers.csv`). The only modern gap is **per-team EX**: S8
+banked EX for the winner only, as a differential (`ex_winner_diff`; a blank
+Archive cell is 0 -- no cell ever reads `/0/`), so `ex_a`/`ex_b` are blank.
+Archive columns E and N (`[6-10]`) are kept raw (`archive_e`/`archive_n`); their
+meaning is unknown.
+
+S8's structure, as the Archive lays it out (event codes in `events.json`):
+- **Regional R1-R15, League L1-L15**: as now, 80 games each.
+- **Grand Swiss** (in place of PA; no RDS Cups): GS1-GS14 with cuts --
+  40/60/80/80/80/80/64/64/48/48/36/36/24/24 games, i.e. 80 teams in round 1
+  (the other 80 bye), 120 in round 2 (40 bye), all 160 in rounds 3-6, then 128,
+  96, 72, 48. Byes were **scored as wins** (Calcs `3S-`, +1 or +2 Swiss W --
+  the top 40 seeds byed both rounds). Then a 24-team bracket: two-legged
+  play-in (8 ties), R16, QF, SF and Final (GS-PI/R16/QF/SF/F-1/2). Champion
+  Canalave City over Camphrier Town.
+- **Regional Playoffs**: 6 teams per region, all two-legged -- QF (seeds 3-6;
+  1-2 bye), SF, Final (RP-QF/SF/F-1/2).
+- **World Championship**: a two-legged play-in (WC-PI), a 32-team **Championship
+  Swiss** of 8 rounds (WC-S1..8, 16 games each), a two-legged finals play-in
+  (WC-FPI), then best-of-three R16, QF, SF and Final. Agate Village beat
+  Camphrier Town in the final (3 games).
+- **OT**: Regional, League and Grand Swiss OT games are 2/1 as now; Playoff and
+  Finals OT games were scored **3/0**. Recorded as played, `ot` flags them all.
 
 ## Season 9 is frozen (2026-10-10, per explicit instruction)
 
@@ -5014,6 +5080,9 @@ page errors on either path.
 
 ## Known open items
 
+- **Historical archive:** S8 extracted; S7 and earlier to come, each needing
+  its own `SEASONS` layout in `extract_history.py`. No all-time database or
+  dashboard tab yet -- that waits until a few seasons are in.
 - **End of S10 (B13):** append its Legacy column to `legacy_points.json` and its
   Hall of Fame season, then `freeze_season.py 10` and
   `freeze_season_inputs.py 10`; S11 is `prepare_season.py 11` +
