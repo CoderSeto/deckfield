@@ -310,17 +310,21 @@ double round robin and a 16-team playoff.
   the AggOT points into it (Solaceon Town v Virbank City reads 22-22, still
   Solaceon's win). The REGULATION score is archived and the AggOT points go in
   `aggot_a`/`aggot_b` (a column every season now has, blank elsewhere), so each
-  tie's aggregate still matches its note.
+  tie's aggregate still matches its note. **Confirmed by the user (2026-10-11):
+  AggOT points do not count for statistics -- only the advancement matters.**
+  So anything built on the archive (all-time stats, relitigation) reads the
+  regulation score and treats `aggot_a/b` purely as how the tie was settled.
 - **One cell correction** (`cell_corrections`, applied as the row is read):
   row 500's winner reads "a" -- Calcs says Littleroot Town (beat Snowbelle City
-  25-23 in the season's first 5OT game).
+  25-23 in the season's first 5OT game). Approved by the user, 2026-10-11.
 - **Phoenix's starting Elo** came from an unofficial preseason mini tournament
   (the ...X tabs: ArchiveX, CalcsX, RankingsX -- never read for games, per the
   user) and sits in CalcsX column H (`opening_elo_sheet`). The games agree for
   15 of 16; for **Tilt Village** CalcsX says 1777 but its games start from
   **1797** -- the preseason pattern (1808 down to 1792 by finish) and the value
   that makes the opening total exactly 230,400 (1800 x 128). Listed (a
-  team-keyed anomaly); the games' 1797 is archived.
+  team-keyed anomaly); the games' 1797 is archived. Confirmed by the user
+  (2026-10-11): 1777 was a typo.
 - **Renamed before S5**: South Lakes -> Wild Area (same dex, Dynamax; the Hall
   of Fame lists S4's MRL runner-up as "Wild Area*"). The 8 Indigo teams that
   became Silver in S5 change dex too (Cianwood City 1 -> 129, etc.);
