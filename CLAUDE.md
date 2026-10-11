@@ -5442,10 +5442,14 @@ page errors on either path.
 
 ## Known open items
 
-- **Historical archive:** all eight seasons extracted (2026-10-11). Next: an
-  all-time database or dashboard tab, and the relitigation layer for the gaps
-  (per-team EX, raw goal scores, S1-S2 spread/interest/DSCR, S3's 252
-  unrecorded hosts).
+- **Historical archive:** all eight seasons extracted (2026-10-11). **No
+  relitigation layer** -- per the user (2026-10-11), the gaps the early seasons
+  never recorded (per-team EX, raw goal scores, S1-S2 spread/interest/DSCR)
+  stay blank. Open: S3's 252 unrecorded hosts (matchdays 1, 2, 4, 5 and the
+  conference cups' first round); S3's Divisions sheet holds its pod schedule
+  with host rules ("4 at 1, 3 at 2", "Week 3 - at Higher"...), so they could
+  be rebuilt the way S1-S2's were, checked against the 1,080 recorded hosts.
+  Next otherwise: an all-time database or dashboard tab.
 - **End of S10 (B13):** append its Legacy column to `legacy_points.json` and its
   Hall of Fame season, then `freeze_season.py 10` and
   `freeze_season_inputs.py 10`; S11 is `prepare_season.py 11` +
