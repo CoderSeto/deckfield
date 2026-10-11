@@ -470,9 +470,28 @@ new conference's teams were ranked in among the old (S3's "Preseason" rank
 equals S2's final order exactly); S2 kept no opening rank, so S1's is not
 checked (`next_rank`).
 
-**Hosts.** S3 recorded H/A for 1,080 games; 252 early ones (matchdays 1, 2, 4,
-5, cup round 1) are blank. S1 and S2 recorded none, so they were rebuilt under
-the user's rules (2026-10-11), and `host_source` says which rule:
+**Hosts.** S3 recorded H/A for 1,080 games, but not for 252 early ones
+(matchdays 1, 2, 4 and 5, and the conference cups' round 1). **The 224 matchday
+games are rebuilt from S3's pod schedule** (per the user, 2026-10-11, with the
+odd-season rules from the Divisions sheet -- "the same as modern, just spelled
+out", Same Side 1 (U) being today's S11U): 13 weeks -- Intrapod 1, Same Side 1
+(at U), Split 1, Across 1 (at R), Diagonal 1 (at L), Split 2-3, Same Side 2 (at
+D), Split 4, Across 2 (at L), Split 5, Diagonal 2 (at R), Intrapod 3 -- with
+the first set's pods meeting 1v1 2v2 3v3 4v4 and the second set's 1v2 2v1 3v4
+4v3, Intrapod 1/2/3 "4 at 1, 3 at 2" / "1 at 3, 2 at 4" / "2 at 1, 4 at 3",
+and Intrapod 2 played inside the split weeks. Each conference's pods sit two
+by two in the sheet (upper/lower rows, left/right columns) and a team's
+position is its pod's listed order. Proved before use: every conference game
+of all 13 weeks fits its pattern, and all 280 recorded conference hosts
+(matchdays 8, 10, 12, 13 and Intrapod 2) agree; `pod_hosts` refuses on any
+disagreement (mutation-tested: a flipped host side, flipped intrapod hosts,
+reversed positions and swapped left/right pods all refuse). The first-set host
+sides (U, R, L) cannot be checked against a recorded week -- none survives --
+but the layout they act on is pinned by the second set. The 28 cup round-1
+games stay blank: the recorded cup rounds follow no "better rank hosts" rule
+(17 of 28 in round 2, 14 of 28 in the quarterfinals). S1 and S2 recorded no
+hosts, so they were rebuilt under the user's rules (2026-10-11), and
+`host_source` says which rule:
 
 - **"schedule"**: S2 Divisions' template -- seven division rounds of "x=y"
   position pairs (G15:M18), each tagged A/B/C/X (G14:M14: rounds 1 and 7 A,
@@ -5445,11 +5464,8 @@ page errors on either path.
 - **Historical archive:** all eight seasons extracted (2026-10-11). **No
   relitigation layer** -- per the user (2026-10-11), the gaps the early seasons
   never recorded (per-team EX, raw goal scores, S1-S2 spread/interest/DSCR)
-  stay blank. Open: S3's 252 unrecorded hosts (matchdays 1, 2, 4, 5 and the
-  conference cups' first round); S3's Divisions sheet holds its pod schedule
-  with host rules ("4 at 1, 3 at 2", "Week 3 - at Higher"...), so they could
-  be rebuilt the way S1-S2's were, checked against the 1,080 recorded hosts.
-  Next otherwise: an all-time database or dashboard tab.
+  stay blank, as do the hosts of S3's 28 conference-cup round-1 games (no rule
+  for them). Next: an all-time database or dashboard tab.
 - **End of S10 (B13):** append its Legacy column to `legacy_points.json` and its
   Hall of Fame season, then `freeze_season.py 10` and
   `freeze_season_inputs.py 10`; S11 is `prepare_season.py 11` +

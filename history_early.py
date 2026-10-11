@@ -15,7 +15,9 @@ from its event, and its Elo from the weekly sheet: each team plays at most once
 a week, so a game's "Elo after" is its team's figure for that week and the
 game's K is the change.
 
-Hosts: S3 recorded H/A for most games. S1 and S2 recorded none; their hosts
+Hosts: S3 recorded H/A for most games; its 224 unrecorded conference games
+take the pod schedule's host ("schedule", see pod_hosts), which first has to
+reproduce every recorded conference host. S1 and S2 recorded none; their hosts
 are rebuilt from the season's own schedule documents under rules the user set
 (2026-10-11), and each game says which in `host_source`:
 
@@ -502,3 +504,84 @@ def apply_hosts(hosts, games):
             h, src = hosts[g["row"]]
             g["home_away"] = "H" if h == g["winner_name"] else "A"
             g["host_source"] = src
+
+
+# ---------------------------------------------------------------------------
+# S3: the pod schedule
+# ---------------------------------------------------------------------------
+
+POD_INTRA = {"I1": {(1, 4): 1, (2, 3): 2},      # "4 at 1, 3 at 2"
+             "I2": {(1, 3): 3, (2, 4): 4},      # "1 at 3, 2 at 4"
+             "I3": {(1, 2): 1, (3, 4): 3}}      # "2 at 1, 4 at 3"
+# Pod pairings: which pods meet, which side hosts, and the position pattern
+# (0: 1v1 2v2 3v3 4v4; 1: 1v2 2v1 3v4 4v3).
+POD_CROSS = {"SS1": ("same", "U", 0), "AC1": ("across", "R", 0), "DG1": ("diagonal", "L", 0),
+             "SS2": ("same", "D", 1), "AC2": ("across", "L", 1), "DG2": ("diagonal", "R", 1)}
+
+
+def read_pods(wb):
+    """S3 Divisions: each conference's four pods laid out two by two (upper /
+    lower rows, left / right columns), each pod's teams in position order."""
+    rows = list(wb["Divisions"].iter_rows(min_row=1, max_row=25, values_only=True))
+
+    def cell(r, c):
+        row = rows[r - 1]
+        return row[c] if c < len(row) else None
+    pods = {}
+    for hr in (2, 14):
+        for c in range(len(rows[hr - 1])):
+            v = cell(hr, c)
+            if not (isinstance(v, str) and v.endswith(" Conference")):
+                continue
+            conf = REGION_NAME_FIX.get(v[:-len(" Conference")], v[:-len(" Conference")])
+            for ud, pr in (("U", hr + 1), ("D", hr + 6)):
+                for lr, pc in (("L", c), ("R", c + 4)):
+                    for i in range(4):
+                        pods[cell(pr + 1 + i, pc)] = dict(conf=conf, pod=cell(pr, pc), ud=ud,
+                                                          lr=lr, pos=i + 1)
+    return pods
+
+
+def pod_hosts(wb, cfg, teams, games):
+    """S3's conference games against its pod schedule (the Divisions sheet,
+    odd-season version, per the user): a recorded host must agree with it, and
+    a game with none takes the schedule's. Returns (filled rows, errors)."""
+    pods = read_pods(wb)
+    names = {t["name"] for t in teams.values()}
+    if set(pods) != names:
+        return 0, [f"Divisions: pod teams differ from Rankings ({sorted(set(pods) ^ names)[:4]})"]
+    kinds = cfg["pod_schedule"]
+    filled, errors = 0, []
+    for g in games:
+        kind = kinds.get(g["event"]["code"])
+        if kind is None or g["w"][1] != "R":
+            continue
+        a, b = g["winner_name"], g["loser_name"]
+        pa, pb = pods[a], pods[b]
+        host = None
+        if kind in POD_INTRA:
+            if pa["pod"] == pb["pod"]:
+                h = POD_INTRA[kind].get(tuple(sorted((pa["pos"], pb["pos"]))))
+                host = None if h is None else (a if pa["pos"] == h else b)
+        else:
+            rel, side, pattern = POD_CROSS[kind]
+            same_lr, same_ud = pa["lr"] == pb["lr"], pa["ud"] == pb["ud"]
+            meets = {"same": same_lr and not same_ud, "across": same_ud and not same_lr,
+                     "diagonal": not same_lr and not same_ud}[rel]
+            fits = (pa["pos"] == pb["pos"]) if pattern == 0 else \
+                ({pa["pos"], pb["pos"]} in ({1, 2}, {3, 4}))
+            if meets and fits:
+                key = "ud" if side in "UD" else "lr"
+                host = a if pa[key] == side else b
+        if host is None:
+            errors.append(f"row {g['row']}: {a} v {b} ({g['event']['code']}) fits no pod pairing "
+                          f"for {kind}")
+        elif g["home_away"]:
+            recorded = a if g["home_away"] == "H" else b
+            if recorded != host:
+                errors.append(f"row {g['row']}: recorded host {recorded}, pod schedule says {host}")
+        else:
+            g["home_away"] = "H" if host == a else "A"
+            g["host_source"] = "schedule"
+            filled += 1
+    return filled, errors

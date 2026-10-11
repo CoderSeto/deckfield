@@ -394,7 +394,16 @@ SEASONS.update({
         "type_by_code": EARLY_TYPES,
         "mixed_types": {"R", "I"},
         "round_robins": [],
-        # 252 early games (matchdays 1, 2, 4 and 5, cup round 1) recorded no host.
+        # 252 early games (matchdays 1, 2, 4 and 5, cup round 1) recorded no
+        # host. The matchday ones are conference games, rebuilt from S3's pod
+        # schedule (the Divisions sheet: positions are each pod's listed order;
+        # the odd-season host rules as the user gave them, 2026-10-11 -- the
+        # modern outline spelled out). Every recorded conference host must
+        # agree with it (all 280 do). The 28 cup round-1 games have no rule
+        # and stay blank.
+        "pod_schedule": {"MD1": "I1", "MD2": "SS1", "MD4": "AC1", "MD5": "DG1",
+                         "MD8": "SS2", "MD10": "AC2", "MD12": "DG2", "MD13": "I3",
+                         "MD3": "I2", "MD6": "I2", "MD7": "I2", "MD9": "I2", "MD11": "I2"},
         "host_optional": True,
         "next_rank": "order",
         "cup": ("wcs", "two_leg_final", ["WCS-F-1", "WCS-F-2"]),
@@ -1503,6 +1512,8 @@ def main(season, workbook):
         if cfg.get("schedule"):
             hosts, host_errors, _ = history_early.schedule_hosts(wb, cfg, teams, games)
             history_early.apply_hosts(hosts, games)
+        if cfg.get("pod_schedule"):
+            _, host_errors = history_early.pod_hosts(wb, cfg, teams, games)
     else:
         teams = read_teams(wb, cfg)
         events, games = read_games(wb, cfg, {t["name"]: d for d, t in teams.items()},
