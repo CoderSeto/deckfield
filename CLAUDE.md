@@ -2167,6 +2167,53 @@ got it to ~439px. `#rt-grid` now has its own `minmax(470px)` track -- three
 across at 1600px+ -- and 0 boxes clip at 1920-600px in either state. The
 horizontal page scroll at 800-1400px is pre-existing (same on main).
 
+### The Regional Playoffs tab is a bracket per region (2026-10-11, per explicit request)
+
+"Make the Regional Playoffs tab brackets like we did the bracket phase of the
+World Championship -- with each region getting its own sub-tab. Instead of G1
+G2 G3 they can be G1 G2 AGG, and of course the first round is just a single
+game." It replaced the ten-boxes grid of score rows (`#rt-grid`, `rtRowHtml`,
+and the now-unused `RT_MD_LABELS` constant are gone).
+
+- **Ten region buttons** (`#rt-region-toggle`), one bracket at a time
+  (`rtRegion`, a `let`).
+- **Built on the WC bracket's `.wcb` boxes and connectors**, under a `.rtb`
+  modifier: a box per tie, better seed on top, each game's winning score lit,
+  the loser dimmed once the tie is decided, a score's tooltip naming its host.
+  Two-legged ties read **G1 / G2 / AGG** (G1 = leg 1, hosted by the worse
+  seed); the **Play-In is one game, G1 only**.
+- **Seven columns, not five.** A lane (`RT_LANES`, the engine's
+  `REGIONAL_TOURNAMENT_LANES`, in `STATIC_CONSTS`) never merges before the
+  semifinal, so each half is two lanes running straight across -- Play-In ->
+  Round 1 -> Quarterfinal -- with straight connectors (`.wcb-thru`), then the
+  WC's merge into the middle column, which holds the region's Final above the
+  two Semifinals. Left half: lanes 1 and 4 (they meet in a semifinal); right
+  half mirrored: lane 3 above lane 2, so seed 2 sits bottom right as #2 does
+  on the WC.
+- **Every slot is drawn from preseason.** `RT_DATA` now carries each region's
+  16 seeds (`{region: {"seeds": [...], "matchdays": {...}}}`), so seeds 1-8
+  are shown waiting in their rounds from the start, and a slot not yet decided
+  reads as where its team will come from ("Play-In winner", "Round 1 winner"...).
+  Once a pairing is resolvable both teams come from the engine's own entry.
+  `draw_schedule.py` and `check_schedule.py` read the previous season's frozen
+  `RT_DATA` and accept both shapes (S9's archive is the old one).
+- **No "Champion" label on the Final** (`.rtb .wcb-champ` hidden): the winner
+  is bold and the loser dimmed like every box, and the label alone cost the
+  middle column ~120px.
+- **Fit, measured in played and unplayed states** (preseason, MD3, MD7 and a
+  finished synthetic tournament, all ten regions): 0 names wrapped or cut and
+  0 overlapping or spilling boxes at 1920 and 1600px. Below ~1500px a name
+  wraps between words rather than being cut (the WC rule); the page itself
+  already scrolls sideways under ~1560px. Column weights (Play-In .8, middle
+  1.22) and type (12px, Final 14px; 11.5/13px under 1700px) were set from
+  measured natural widths, not by eye.
+
+Verified against the engine on the finished synthetic tournament: in all ten
+regions one lit score per game played plus one per decided aggregate (37 =
+26 + 11), 15 decided boxes, and the Final's winner equal to `rt_champions()`;
+mid-tournament (MD3) the counts match too (16 = 12 + 4) with six slots still
+pending; zero `pageerror` across every tab and sub-view.
+
 **An exact aggregate tie goes to the higher seed** (per explicit instruction,
 2026-10-03). `_rt_tie_winner` used to return `team_a`, which every caller
 passed as leg 1's HOST -- the **worse** seed; it now takes the better seed as
@@ -3076,8 +3123,8 @@ inline `const X = {...}` JSON blocks. Tabs: Rankings (with Rank History and
 Elo History as sub-views -- see below), Standings, RL Strength, Schedule,
 RDS Cup, PA Cup, Next Matchday (matchup table + copy-paste boxes for
 DECKFIELD's Schedule/Teams/Region Climate inputs), Calendar (the full
-33-week schedule, played/next/pending status), Regional Playoffs (all 10
-regions at once in a grid, no dropdown), Qualification, and World
+33-week schedule, played/next/pending status), Regional Playoffs (a bracket per region,
+one sub-tab each), Qualification, and World
 Championship (Groups / Play-in / Bracket).
 
 **Per explicit instruction, the dashboard must always be regenerated

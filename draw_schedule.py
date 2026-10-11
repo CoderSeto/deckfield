@@ -142,6 +142,7 @@ def draw(season):
     for region, pods in db.load_conf_pods().items():
         s = db.generate_pod_schedule({k: v["teams"] for k, v in pods.items()}, season)
         rt = final["RT_DATA"][region]
+        rt = rt.get("matchdays", rt)      # {"seeds", "matchdays"} from S10 on
         forbid = {}
         protected = [((rt["8"][0]["home"], rt["8"][0]["away"]), 8)]
         protected += [((m["home"], m["away"]), 4) for m in rt["6"]]

@@ -94,6 +94,7 @@ def main():
         check(is_rivalry(g["games"]["15"], pods), f"{region}: game 15 is not Rivalry Week")        # rule 1
         run_ok(g, region)
         rt = A["RT_DATA"][region]                                                                  # rule 3
+        rt = rt.get("matchdays", rt)      # {"seeds", "matchdays"} from S10 on
         f = rt["8"][0]
         check(gp[frozenset((f["home"], f["away"]))][0] >= 8, f"{region}: RT finalists meet before game 8")
         for m in rt["6"]:

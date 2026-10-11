@@ -473,9 +473,11 @@ def build_pa_cup():
 
 
 def build_rt_data():
-    """RT_DATA -- the Regional Playoffs tab's per-region Regional Tournament
-    matchups: {region: {matchday_str: [{home, away, home_seed, away_seed,
-    home_dex, away_dex}]}}.
+    """RT_DATA -- the Regional Playoffs tab's per-region Regional Tournament:
+    {region: {"seeds": [16 names, seed 1 first], "matchdays": {matchday_str:
+    [{home, away, home_seed, away_seed, home_dex, away_dex, result, agg?}]}}}.
+    The seeds let the tab's bracket place every team that is waiting to enter
+    (seeds 1-8) from the start, not only once their round is resolvable.
 
     Real staleness bug, fixed 2026-09-03. RT_DATA had been baked into the
     dashboard once by an early one-time script and never regenerated -- the
@@ -502,7 +504,8 @@ def build_rt_data():
 
     rt = {}
     for region in REGION_COLORS:
-        seed_of = {name: seed for seed, name in regional_standings_seeds(SEASON, region).items()}
+        seeds = regional_standings_seeds(SEASON, region)
+        seed_of = {name: seed for seed, name in seeds.items()}
         rounds = {}
         for md in range(1, 10):
             games = regional_tournament_games(SEASON, region, md)
@@ -531,7 +534,7 @@ def build_rt_data():
                                         "winner": home if h > a else away if a > h else better}
                 entries.append(entry)
             rounds[str(md)] = entries
-        rt[region] = rounds
+        rt[region] = {"seeds": [seeds[s] for s in sorted(seeds)], "matchdays": rounds}
     return rt
 
 
@@ -609,7 +612,7 @@ STATIC_CONSTS = {
     "REGION_COLORS": "fixed palette, mirrored from deckfield.html",
     "REGION_DISPLAY": "internal -> display region names",
     "REGION_ORDER": "fixed display order of the 10 regions",
-    "RT_MD_LABELS": "static label strings",
+    "RT_LANES": "the Regional Tournament's fixed lane structure, the engine's REGIONAL_TOURNAMENT_LANES",
 }
 
 
