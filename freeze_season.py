@@ -105,7 +105,9 @@ def main():
     subtitle = re.search(r'<div class="subtitle">Season (\d+) &mdash; through round (\d+)</div>', html)
     through_round = int(subtitle.group(2)) if subtitle else data.get("round")
 
-    kept = [n for n in names if n not in EXCLUDED]
+    # S<N>_PAGE is an earlier season's whole frozen page, embedded for the
+    # history tab -- already frozen in its own right, never part of this one.
+    kept = [n for n in names if n not in EXCLUDED and not re.fullmatch(r"S\d+_PAGE", n)]
     meta = {
         "season": season,
         "through_round": through_round,
