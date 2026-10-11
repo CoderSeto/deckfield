@@ -101,6 +101,7 @@ SQRT_CUPS_FROM_SEASON = 10  # SEASON10_PLAN B8: OVR's Cups component on the squa
 TIEBREAK_DSCR_CAP = 400.0  # SEASON10_PLAN B9a: per-game DSCR cap for the standings tiebreak only
 TIEBREAK_DSCR_CAP_FROM_SEASON = 10
 GAPFILL_FROM_SEASON = 9  # recompute_from_round fills rounds that never got ratings (see there); S9 amended 2026-10-11
+RDS_BYE_WALKOVERS_FROM_SEASON = 10  # start_season writes the RDS round-1 bye walkovers (S9's came from its workbook)
 GAME_TYPE_POINT_MULTIPLIER = {"R": 1, "L": 1, "S": 2, "P": 8, "F": 12}
 
 # ---------------------------------------------------------------- schema --
@@ -1469,10 +1470,41 @@ def start_season(season=None):
             "INSERT INTO season_carryover_seeds (team_id, season, ovr_seed, fatigue_seed, dscr_seed, "
             "pf_seed, pa_seed) VALUES (?,?,?,?,?,?,?)",
             (int(dex), season, sd["ovr"], sd["fatigue"], sd["dscr"], sd["pf"], sd["pa"]))
+    if season >= RDS_BYE_WALKOVERS_FROM_SEASON:
+        for round_num, team_id in rds_bye_walkovers(conn, season):
+            conn.execute("INSERT INTO walkovers (season, round, game_type, team_id, result) "
+                         "VALUES (?, ?, 'S', ?, 3)", (season, round_num, team_id))
     conn.commit()
     conn.close()
     write_opening_ratings(season)
     return len(start["teams"])
+
+
+def rds_bye_walkovers(conn, season):
+    """[(abs_round, team_id)] -- one walkover per RDS round-1 bye, per explicit
+    instruction (2026-10-11): "RDS byes - yes they should" award points in
+    Season 10, as they did in Season 9.
+
+    Dream and Star have 48 teams, so seeds 49-64 are byes and seeds 1-16 bye
+    round 1 of BOTH the Draw and the Process -- 32 teams, two walkovers each,
+    exactly S9's shape (its 64 came from the workbook at the two round-1
+    rounds). Each is a cup win with no game (result 3, game type S): it adds
+    the win's points to SP/TOT and a cup win, never a game played or any
+    per-game average, and stays out of every displayed record ("Byes are not
+    wins in a displayed record"). Dated at that bracket's round-1 round, so it
+    counts from the round the bye is taken, never before. Derived from the
+    committed seed file, so start-season plus the results replay rebuilds it."""
+    seeds = load_season_json("rds_seeds.json", season)
+    team_id = {r["name"]: r["team_id"] for r in conn.execute("SELECT team_id, name FROM teams")}
+    out = []
+    for bracket in ("Draw", "Process"):
+        round_num = abs_round_for_event(("RDS", bracket, 1))
+        for cup in ("Ribbon", "Dream", "Star"):
+            seed_to_team = {int(k): v for k, v in seeds[cup].items()}
+            for e in generate_cup_bracket(seed_to_team, bracket.lower())[1]:
+                if e["bye"]:
+                    out.append((round_num, team_id[e["home"]]))
+    return out
 
 
 def write_opening_ratings(season):

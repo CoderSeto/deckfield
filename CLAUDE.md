@@ -214,6 +214,7 @@ season number so the Season 9 audit rebuild still reproduces the archive:
 | square-root Cups | `compute_round_ratings` | `SQRT_CUPS_FROM_SEASON` |
 | 400 per-game DSCR cap in the standings tiebreak | `_standings_order` + the dashboard's `tbOf` | `TIEBREAK_DSCR_CAP_FROM_SEASON` |
 | recompute fills a round that never got ratings | `recompute_from_round` | `GAPFILL_FROM_SEASON` (9, since the amendment) |
+| RDS round-1 byes are walkovers worth a win (`start-season` writes them) | `rds_bye_walkovers()` | `RDS_BYE_WALKOVERS_FROM_SEASON` |
 
 **Starting point.** `prepare_season.py 10` wrote `seasons/s10/` once from the
 frozen record: `league_pods.json` (promotion/relegation applied, seeded by old
@@ -246,6 +247,19 @@ starting fatigue, already inside the raw value, so blending it again would
 count the seed twice -- the Raw vs Blended view shows it that way and says so.
 Verified on a synthetic season: `ovr_blend` matched the formula with zero
 error at rounds 0-14, and the roster is pure raw from round 8.
+
+**RDS byes pay as they did in S9** (per explicit instruction, 2026-10-11: "RDS
+byes - yes they should"). Dream and Star have 48 teams, so their seeds 1-16
+bye round 1 of both the Draw and the Process. S9's 64 walkovers came from its
+workbook; nothing creates them from results, so `start-season` writes them
+from the committed seed file (`rds_bye_walkovers()`): 32 teams, one walkover
+each at the Draw's and the Process's round-1 round (3 and 4), result 3, game
+type S. Each adds +6 SP/TOT and a cup win from that round on and never a game
+played, an average or a displayed record. Verified on the synthetic season
+against the same build with the walkovers deleted: the 32 bye teams +6 SP/TOT
+at round 3 and +12 from round 4, every other team's SP/TOT unchanged, nothing
+before round 3 moved, and every displayed record still reconciles (home + away
+= overall = regional + league + cup + P/F, all 160).
 
 **Elo carries.** `team_seasons.starting_elo` holds S9's final Elo;
 `_opening_elo()` replaces the STARTING_ELO fallback everywhere a team has no
@@ -4875,11 +4889,6 @@ page errors on either path.
 
 ## Known open items
 
-- **RDS byes award nothing in S10 -- a decision is pending.** In S9 the
-  Dream/Star bye seeds (49-64 empty, so 16 teams per bracket bye rounds 1-2)
-  got walkover rows from the workbook worth a win's points (+12 SP/TOT each,
-  see "Byes are not wins in a displayed record"). Nothing creates walkovers
-  from results, so S10's byes earn no points unless that is decided and built.
 - **End of S10 (B13):** append its Legacy column to `legacy_points.json` and its
   Hall of Fame season, then `freeze_season.py 10` and
   `freeze_season_inputs.py 10`; S11 is `prepare_season.py 11` +
