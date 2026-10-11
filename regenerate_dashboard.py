@@ -552,7 +552,8 @@ def build_strength_data():
 
     def _fmt(breakdown):
         return {
-            g: {k: round(v, 4 if k in ("weighted", "final") else 2) for k, v in vals.items()}
+            g: {k: v if k == "x" else round(v, 4 if k in ("weighted", "final", "raw", "seed") else 2)
+                for k, v in vals.items()}
             for g, vals in breakdown.items()
         }
 

@@ -101,6 +101,7 @@ SQRT_CUPS_FROM_SEASON = 10  # SEASON10_PLAN B8: OVR's Cups component on the squa
 TIEBREAK_DSCR_CAP = 400.0  # SEASON10_PLAN B9a: per-game DSCR cap for the standings tiebreak only
 TIEBREAK_DSCR_CAP_FROM_SEASON = 10
 GAPFILL_FROM_SEASON = 9  # recompute_from_round fills rounds that never got ratings (see there); S9 amended 2026-10-11
+RLSTR_BLEND_FROM_SEASON = 10  # Regional/League Strength blended with last season's over matchdays 1-8
 RDS_BYE_WALKOVERS_FROM_SEASON = 10  # start_season writes the RDS round-1 bye walkovers (S9's came from its workbook)
 GAME_TYPE_POINT_MULTIPLIER = {"R": 1, "L": 1, "S": 2, "P": 8, "F": 12}
 
@@ -1428,7 +1429,34 @@ def compute_strength_breakdown(season, round_num):
 
     regional_breakdown = _strength_formula_breakdown(inputs, "region", "intl_w")
     league_breakdown = _strength_formula_breakdown(inputs, "division", "dom_w")
+    seeds = strength_seeds(season)
+    if seeds is not None:
+        x = min(max(round_num or 0, 0), 8)
+        for kind, breakdown in (("regional", regional_breakdown), ("league", league_breakdown)):
+            for g, v in breakdown.items():
+                v["raw"], v["seed"], v["x"] = v["final"], seeds[kind][str(g)], x
+                v["final"] = (v["raw"] * x + v["seed"] * (8 - x)) / 8
     return regional_breakdown, league_breakdown
+
+
+def strength_seeds(season):
+    """{"regional": {region: seed}, "league": {division: seed}} -- last
+    season's strength, which Regional and League Strength are BLENDED with
+    over matchdays 1-8 (per explicit instruction, 2026-10-11: "Regional and
+    League Strength is a blended value"), or None before
+    RLSTR_BLEND_FROM_SEASON. Written to start.json by prepare_season.py from
+    the frozen record: a region's own final Regional Strength, and for each
+    rebuilt division the mean of its members' final League Strength.
+
+    Unlike the OVR blend, which is outputs only, this blend is what the
+    engine USES: compute_strength_breakdown's `final` -- and so each team's
+    rlstr_own, which multiplies into SOS -- is (S10 strength x X + seed x
+    (8-X)) / 8 with X the round (capped at 8), the same weights ovr_blend
+    uses for the state after that round. `raw` keeps the S10 formula alone;
+    the region allocation reads it, so the S9 term is never counted twice."""
+    if season < RLSTR_BLEND_FROM_SEASON:
+        return None
+    return load_season_json("start.json", season).get("strength_seeds")
 
 
 def compute_strength_scores(season, round_num):
@@ -1519,8 +1547,8 @@ def write_opening_ratings(season):
     row itself carries only what is REAL before a game is played, per explicit
     instruction (2026-10-11: "only raw stats should be in those component
     columns"): OVR (the seed, which rank, grade and climate need), fatigue
-    (the starting fatigue -- never blended), TOT (the 20 floor), the opening
-    RL Strength (1.0) and EX, whose component needs no game: it is the EX seed
+    (the starting fatigue -- never blended), TOT (the 20 floor), RL Strength
+    (8/8 its seed -- the strength blend is real, see strength_seeds) and EX, whose component needs no game: it is the EX seed
     normalised across the league, exactly as compute_round_ratings does it
     every round. PF, PA, raw DSCR and every other game-built component (PDG,
     SOS, SOV, DSCR, EYE, Elo, Cups) stay NULL until a game is played. Round 0
@@ -1532,12 +1560,19 @@ def write_opening_ratings(season):
         JOIN team_seasons ts ON ts.team_id = s.team_id AND ts.season = s.season
         WHERE s.season = ?""", (season,)).fetchall()
     ex_vals = [r["ex"] for r in rows]
+    place = {r["team_id"]: (r["region"], str(r["league_division"])) for r in conn.execute("""
+        SELECT t.team_id, t.region, ts.league_division FROM teams t
+        JOIN team_seasons ts ON ts.team_id = t.team_id AND ts.season = ?""", (season,))}
+    seeds = strength_seeds(season)
     out = []
     for r in rows:
         ovr = r["ovr_seed"]
+        region, division = place[r["team_id"]]
+        # Before any game the strength blend is 8/8 seed (strength_seeds).
+        rlstr = ((seeds["regional"][region] + seeds["league"][division]) / 2) if seeds else 1.0
         out.append((r["team_id"], season, 0, 0, 0, 0, 0, 0, 0, 0, STARTING_TOT,
                     normalize(r["ex"], ex_vals), ovr, grade_for(ovr), (r["basclm"] / 100) * (ovr + 50),
-                    1.0, r["starting_fatigue"], ovr))
+                    rlstr, r["starting_fatigue"], ovr))
     conn.executemany("""
         INSERT OR REPLACE INTO team_round_ratings
         (team_id, season, round, rp, lp, sp, p, f, b, tb, tot,
@@ -5451,7 +5486,9 @@ def region_allocation_ranking(season, round_num=None):
     round_num = min(round_num, abs_round_for_event(("RT", 9)))
 
     regional_bd, _ = compute_strength_breakdown(season, round_num)
-    live = {g: v["final"] for g, v in regional_bd.items()}
+    # The S10 formula alone (`raw`), never the blended value: the blend's seed
+    # IS last season's strength, which the allocation already weights.
+    live = {g: v.get("raw", v["final"]) for g, v in regional_bd.items()}
     p1, p2 = _normalized_prior_strength(season - 1), _normalized_prior_strength(season - 2)
     w0, w1, w2 = WC_ALLOCATION_WEIGHTS
     k0, k1, k2 = f"s{season}", f"s{season - 1}", f"s{season - 2}"

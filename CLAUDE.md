@@ -215,6 +215,7 @@ season number so the Season 9 audit rebuild still reproduces the archive:
 | 400 per-game DSCR cap in the standings tiebreak | `_standings_order` + the dashboard's `tbOf` | `TIEBREAK_DSCR_CAP_FROM_SEASON` |
 | recompute fills a round that never got ratings | `recompute_from_round` | `GAPFILL_FROM_SEASON` (9, since the amendment) |
 | RDS round-1 byes are walkovers worth a win (`start-season` writes them) | `rds_bye_walkovers()` | `RDS_BYE_WALKOVERS_FROM_SEASON` |
+| Regional and League Strength blended with last season's over matchdays 1-8 | `compute_strength_breakdown`, `strength_seeds()` | `RLSTR_BLEND_FROM_SEASON` |
 
 **Starting point.** `prepare_season.py 10` wrote `seasons/s10/` once from the
 frozen record: `league_pods.json` (promotion/relegation applied, seeded by old
@@ -230,7 +231,8 @@ them.
 at round 0 holding only what is real before a game (per explicit instruction,
 2026-10-11: "only raw stats should be in those component columns"): OVR is
 the seed (rank, grade and climate need one), fatigue the starting fatigue, TOT
-20, RL Strength 1.0, and **EX** -- its component needs no game, it is the EX
+20, RL Strength its seed (see "Regional and League Strength are blended"), and
+**EX** -- its component needs no game, it is the EX
 seed normalised across the league, and it equals round 1's EX exactly
 (verified, all 160). PF, PA, raw DSCR and every other game-built component
 (PDG, SOS, SOV, DSCR, EYE, Elo, Cups) are NULL and show as a dash. The roster
@@ -258,6 +260,28 @@ Raw/Seed/Blended triple, which read as though it were blended, and no longer
 shows it.
 Verified on a synthetic season: `ovr_blend` matched the formula with zero
 error at rounds 0-14, and the roster is pure raw from round 8.
+
+**Regional and League Strength are blended** (per explicit instruction,
+2026-10-11: "Regional and League Strength is a blended value", with the choice
+to blend with an S9 seed). Unlike the OVR blend this one is REAL -- it is what
+the engine uses: each region's and division's Strength is (S10 formula x X +
+seed x (8-X)) / 8, X = the round capped at 8 (the weights `ovr_blend` uses), so
+each team's `rlstr_own`, and through it SOS and OVR, carries the seed during
+matchdays 1-8 and is pure S10 from round 8. Seeds live in `start.json`
+(`strength_seeds`, written by `prepare_season.py` from the frozen record): a
+region's own S9 final Regional Strength, and for each rebuilt division the
+mean of its 16 members' S9 final League Strength (Division 1 1.358 down to
+Division 10 0.662). Before any game RLStr is the seed alone (round 0 writes
+it). `compute_strength_breakdown` keeps `raw` (the S10 formula), `seed` and
+`x` beside the blended `final`; **the region allocation reads `raw`**, since
+its S9 term is already last season's strength (by RT9, when bids are dealt,
+the two are identical anyway). The RL Strength tab shows S10 formula / S9
+seed / Strength columns and a note while the blend is on, with the two tables
+stacked so they fit. RL Strength's rank z-score still reads RAW rank.
+Verified on the synthetic season: every team's stored RLStr equals the blend
+formula exactly at rounds 0-11, an incremental build equals a full `recompute
+--from 1` on all 1,920 rating rows, and the Season 9 audit still reproduces
+S9's frozen strength and allocation.
 
 **RDS byes pay as they did in S9** (per explicit instruction, 2026-10-11: "RDS
 byes - yes they should"). Dream and Star have 48 teams, so their seeds 1-16
