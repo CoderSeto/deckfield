@@ -102,6 +102,7 @@ TIEBREAK_DSCR_CAP = 400.0  # SEASON10_PLAN B9a: per-game DSCR cap for the standi
 TIEBREAK_DSCR_CAP_FROM_SEASON = 10
 GAPFILL_FROM_SEASON = 9  # recompute_from_round fills rounds that never got ratings (see there); S9 amended 2026-10-11
 RLSTR_BLEND_FROM_SEASON = 10  # Regional/League Strength blended with last season's over matchdays 1-8
+OVERTIMES_FROM_SEASON = 10  # results CSVs carry an `overtimes` column (the count, not just the 2/1 flag)
 RDS_BYE_WALKOVERS_FROM_SEASON = 10  # start_season writes the RDS round-1 bye walkovers (S9's came from its workbook)
 GAME_TYPE_POINT_MULTIPLIER = {"R": 1, "L": 1, "S": 2, "P": 8, "F": 12}
 
@@ -204,7 +205,10 @@ def init_db():
                                             -- used to be computed and thrown away by both writers.
         cup_name TEXT,                      -- Ribbon/Dream/Star/PA -- which cup this game belongs to, if any
         cup_bracket TEXT,                   -- Draw/Process
-        cup_round INTEGER                   -- 1st/2nd/... round WITHIN the cup (not the absolute season round)
+        cup_round INTEGER,                  -- 1st/2nd/... round WITHIN the cup (not the absolute season round)
+        overtimes INTEGER                   -- overtime periods played (0 = none), from deckfield.html's
+                                            -- Results CSV from Season 10 on; NULL where never recorded
+                                            -- (S9 kept only whether a game went to OT, via result_a 2/1)
     );
 
     CREATE TABLE IF NOT EXISTS team_round_ratings (
@@ -432,18 +436,18 @@ def add_game(season, round_num, game_type, team_a, team_b, pf_a, pa_a, result_a,
              interest_score=None, dscr_a=None, dscr_b=None,
              ex_bonus_a=0, ex_bonus_b=0, elo_a_after=None, elo_b_after=None,
              host_region=None, cup_name=None, cup_bracket=None, cup_round=None,
-             host_team_id=None):
+             host_team_id=None, overtimes=None):
     conn = get_connection()
     conn.execute("""
         INSERT INTO games (season, round, game_type, team_a, team_b, pf_a, pa_a, result_a,
                             raw_goal_score_a, raw_goal_score_b, spread_a, interest_score,
                             dscr_a, dscr_b, ex_bonus_a, ex_bonus_b, elo_a_after, elo_b_after,
-                            host_region, cup_name, cup_bracket, cup_round, host_team_id)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                            host_region, cup_name, cup_bracket, cup_round, host_team_id, overtimes)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, (season, round_num, game_type, team_a, team_b, pf_a, pa_a, result_a,
           raw_goal_score_a, raw_goal_score_b, spread_a, interest_score,
           dscr_a, dscr_b, ex_bonus_a, ex_bonus_b, elo_a_after, elo_b_after,
-          host_region, cup_name, cup_bracket, cup_round, host_team_id))
+          host_region, cup_name, cup_bracket, cup_round, host_team_id, overtimes))
     conn.commit()
     conn.close()
 
@@ -462,6 +466,20 @@ CSV_GAME_OPTIONAL_FIELDS = ["ex_a", "ex_b"]
 # file in results/.
 CSV_GAME_CUP_FIELDS = ["cup_name", "cup_bracket", "cup_round"]
 CSV_GAME_ALL_FIELDS = CSV_GAME_FIELDS + CSV_GAME_OPTIONAL_FIELDS + CSV_GAME_CUP_FIELDS
+
+# How many overtime periods the game went to -- 0, 1, 2, ... -- kept for the
+# record (result_a only says WHETHER a game went to overtime: 2/1). The last
+# column of deckfield.html's Results CSV, and written by export_results_csv()
+# from OVERTIMES_FROM_SEASON on, so Season 9's committed files (which never
+# had it) still re-export byte for byte. Optional on ingest.
+CSV_GAME_OT_FIELD = "overtimes"
+
+
+def csv_game_columns(season=None):
+    """The results CSV header for a season: every column, plus `overtimes`
+    from OVERTIMES_FROM_SEASON on."""
+    season = CURRENT_SEASON if season is None else season
+    return CSV_GAME_ALL_FIELDS + ([CSV_GAME_OT_FIELD] if season >= OVERTIMES_FROM_SEASON else [])
 
 
 def _round_file_stems(year=2026):
@@ -570,7 +588,7 @@ def export_results_csv(season, from_round=None, to_round=None):
         "dscr_a": 1, "dscr_b": 1,
     }
     INTEGERS = {"elo_a_after", "elo_b_after", "ex_bonus_a", "ex_bonus_b",
-                "pf_a", "pa_a", "result_a", "round", "cup_round"}
+                "pf_a", "pa_a", "result_a", "round", "cup_round", "overtimes"}
 
     def fmt(col, v):
         if v is None:
@@ -588,7 +606,8 @@ def export_results_csv(season, from_round=None, to_round=None):
     stems = _round_file_stems()
     out = []
     for rnd in sorted(by_round):
-        lines = [",".join(CSV_GAME_ALL_FIELDS)]
+        with_ot = season >= OVERTIMES_FROM_SEASON
+        lines = [",".join(csv_game_columns(season))]
         for r in by_round[rnd]:
             home = "A" if r["host_region"] == r["a_region"] else "B"
             if r["host_region"] not in (r["a_region"], r["b_region"]):
@@ -610,7 +629,7 @@ def export_results_csv(season, from_round=None, to_round=None):
                 ("ex_bonus_a", r["ex_bonus_a"]), ("ex_bonus_b", r["ex_bonus_b"]),
                 ("cup_name", r["cup_name"]), ("cup_bracket", r["cup_bracket"]),
                 ("cup_round", r["cup_round"]),
-            ]))
+            ] + ([("overtimes", r["overtimes"])] if with_ot else [])))
         stem = stems.get(rnd, f"{'2026' if CURRENT_SEASON == 9 else f's{CURRENT_SEASON}'}-round-{rnd:02d}")
         # No trailing newline: matches what deckfield.html's "Download CSV"
         # writes (csvLines.join("\n")), so the two producers agree byte for
@@ -694,7 +713,10 @@ def add_game_from_dict(season, values):
 
     Required keys: round, game_type, team_a, team_b, result_a, pf_a, pa_a,
     raw_goal_a, raw_goal_b, spread_a, interest, dscr_a, dscr_b, elo_a_after,
-    elo_b_after, home. Optional: ex_a, ex_b (default 0).
+    elo_b_after, home. Optional: ex_a, ex_b (default 0), the cup tags, and
+    overtimes (the number of overtime periods; NULL when absent). An
+    overtimes count is checked against result_a -- 2/1 means at least one
+    overtime, 3/0 means none -- and a row where they disagree is refused.
 
     - result_a: points team_a earned -- 3 win, 2 OT win, 1 OT loss, 0 loss
     - home: "A" or "B" -- which team hosted
@@ -702,6 +724,15 @@ def add_game_from_dict(season, values):
     home_side = str(values["home"]).strip().upper()
     if home_side not in ("A", "B"):
         raise ValueError(f"home must be 'A' or 'B', got {values['home']!r}")
+    overtimes = values.get("overtimes")
+    overtimes = None if overtimes in (None, "") else int(overtimes)
+    if overtimes is not None:
+        if overtimes < 0:
+            raise ValueError(f"overtimes must be 0 or more, got {overtimes}")
+        if (int(values["result_a"]) in (1, 2)) != (overtimes > 0):
+            raise ValueError(
+                f"overtimes {overtimes} disagrees with result_a {values['result_a']} "
+                f"(2/1 = an overtime result, 3/0 = decided in regulation)")
 
     conn = get_connection()
     team_a_id, team_b_id = int(values["team_a"]), int(values["team_b"])
@@ -731,6 +762,7 @@ def add_game_from_dict(season, values):
         cup_name=values.get("cup_name") or None,
         cup_bracket=values.get("cup_bracket") or None,
         cup_round=int(values["cup_round"]) if values.get("cup_round") else None,
+        overtimes=overtimes,
     )
     return {"round": round_num, "host_region": host_region, "fatigue_delta_a": delta_a, "fatigue_delta_b": delta_b}
 

@@ -635,7 +635,8 @@ nothing is estimated -- and a re-run is byte-identical.
   after-minus-K in Archive order and broke 672 times.)
 - **Overtimes**: a note opening "2OT" ... "5OT" gives the count (S1-S8); "OT -"
   is one. S9 recorded only whether a game went to overtime, so its count as one
-  (`overtimes` in the database).
+  (`overtimes` in the database). From S10 the results CSVs carry the real count
+  (`games.overtimes`); read that, not a note, when S10 joins the archive.
 - **Dashboard tabs**: Teams (sortable all-time table), Team (honours, Elo
   across all nine seasons, season by season, record against every opponent),
   Head-to-Head (any pair's games; most-played and most one-sided
@@ -1337,7 +1338,7 @@ dashboard — follow **THE RUNBOOK** near the top of this file.)*
 teams at once:
 
 ```
-round,game_type,team_a,team_b,result_a,pf_a,pa_a,raw_goal_a,raw_goal_b,spread_a,interest,dscr_a,dscr_b,elo_a_after,elo_b_after,home,ex_a,ex_b,cup_name,cup_bracket,cup_round
+round,game_type,team_a,team_b,result_a,pf_a,pa_a,raw_goal_a,raw_goal_b,spread_a,interest,dscr_a,dscr_b,elo_a_after,elo_b_after,home,ex_a,ex_b,cup_name,cup_bracket,cup_round,overtimes
 ```
 
 - `team_a`/`team_b` are `team_id` (dex) integers, not names.
@@ -1354,6 +1355,20 @@ round,game_type,team_a,team_b,result_a,pf_a,pa_a,raw_goal_a,raw_goal_b,spread_a,
   game** (`Ribbon`/`Dream`/`Star`/`PA`, `Draw`/`Process`, integer round) — the
   weekly-schedule completion check (`next_matchday`) can't tell a cup game
   was played without these, and would loop on the same event forever.
+- `overtimes` (2026-10-12, per explicit request: "make it so the current game
+  tracks the number of overtimes for posterity purposes"): how many overtime
+  periods the game went to, 0 for none -- `result_a`'s 2/1 says only WHETHER
+  it went to overtime. `deckfield.html` writes it as the LAST column
+  (`periodIndex - 2`, the same count its "Final / 2OT" tag shows), so every
+  existing column index -- `matchdayCheck`'s `row[20]` included -- is
+  unchanged. Stored in `games.overtimes`. Optional on ingest (a file without
+  it stores NULL), but a count that disagrees with `result_a` (an OT count on a
+  3/0, or 0 on a 2/1) or is negative is **refused**. `export_results_csv`
+  writes the column only from `OVERTIMES_FROM_SEASON` (10), so Season 9's
+  committed files, which never had it, still re-export byte for byte.
+  Verified: a real S10 R1 played in `deckfield.html` from the dashboard's
+  Matchday Pack (80 games, three of them OT) ingested and re-exported byte for
+  byte; the three bad cases refuse.
 
 Ingest via `deckfield add-results results.csv` (recomputes ratings
 automatically from the earliest affected round) or `add_game_from_dict()` /

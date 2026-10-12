@@ -3764,7 +3764,9 @@
 
   // ---------- Results log ----------
   // One row per completed game, matching deckfield_ratings.py's CSV_GAME_FIELDS order
-  // exactly (plus the optional ex_a/ex_b and cup_name/cup_bracket/cup_round columns) --
+  // exactly (plus the optional ex_a/ex_b and cup_name/cup_bracket/cup_round columns,
+  // and last, `overtimes`: how many overtime periods were played, 0 for none -- kept
+  // for the record, since result_a's 2/1 only says WHETHER a game went to OT) --
   // this is the `deckfield add-results results.csv` format, not the old packed-string
   // Excel Archive format. team_a is always the home team, team_b always away, so `home`
   // is always "A" -- a valid, if unvaried, use of the schema.
@@ -3772,7 +3774,7 @@
     'round', 'game_type', 'team_a', 'team_b', 'result_a', 'pf_a', 'pa_a',
     'raw_goal_a', 'raw_goal_b', 'spread_a', 'interest', 'dscr_a', 'dscr_b',
     'elo_a_after', 'elo_b_after', 'home', 'ex_a', 'ex_b',
-    'cup_name', 'cup_bracket', 'cup_round'
+    'cup_name', 'cup_bracket', 'cup_round', 'overtimes'
   ];
   let RESULTS_LOG = [];
 
@@ -3837,7 +3839,8 @@
       exAway,
       hasCupTag ? CUP_NAME : '',
       hasCupTag ? CUP_BRACKET : '',
-      hasCupTag ? CUP_ROUND_NUM : ''
+      hasCupTag ? CUP_ROUND_NUM : '',
+      Math.max(0, g.periodIndex - 2)
     ];
   }
 
