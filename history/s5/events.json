@@ -60,42 +60,55 @@
  },
  "anomalies": [
   {
-   "source_row": 1750,
-   "check": "calcs",
-   "reason": "WCS fifth round (Justice): Calcs gives the winner's Elo as 2352, the Archive 2349. The Archive's is archived."
-  },
-  {
-   "source_row": 1751,
-   "check": "calcs",
-   "reason": "WCS fifth round (Justice): Calcs gives the winner's Elo as 2144, the Archive 2128. The Archive's is archived."
-  },
-  {
-   "source_row": 1752,
-   "check": "calcs",
-   "reason": "WCS fifth round (Justice): Calcs gives the winner's Elo as 2280, the Archive 2267. The Archive's is archived."
-  },
-  {
-   "source_row": 1775,
-   "check": "calcs",
-   "reason": "Regional matchday 10: Calcs gives the winner's Elo as 2282, the Archive 2269. The Archive's is archived."
-  },
-  {
-   "source_row": 1778,
-   "check": "calcs",
-   "reason": "Regional matchday 10: Calcs gives the winner's Elo as 2353, the Archive 2350. The Archive's is archived."
-  },
-  {
-   "source_row": 1822,
-   "check": "calcs",
-   "reason": "Regional matchday 10: Calcs gives the loser's Elo as 2123, the Archive 2107. The Archive's is archived."
-  },
-  {
    "source_row": 2898,
    "check": "interest",
    "reason": "Regional SF leg 2, Wild Area v Spikemuth, decided in aggregate OT: the interest column reads 99.15 while the game string's interest is 95. Both kept as written."
   }
  ],
- "corrections": [],
+ "corrections": [
+  {
+   "source_row": 1750,
+   "field": "winner string field 9",
+   "sheet": "2349",
+   "corrected": "2352",
+   "reason": "WCS fifth round (Justice), Resort Area. Calcs' Elo is the right one (per the user, 2026-10-12: the Calcs Elo table is correct and in order)."
+  },
+  {
+   "source_row": 1751,
+   "field": "winner string field 9",
+   "sheet": "2128",
+   "corrected": "2144",
+   "reason": "WCS fifth round (Justice), Pyrite Town. Calcs' Elo is the right one (per the user, 2026-10-12: the Calcs Elo table is correct and in order)."
+  },
+  {
+   "source_row": 1752,
+   "field": "winner string field 9",
+   "sheet": "2267",
+   "corrected": "2280",
+   "reason": "WCS fifth round (Justice), Cinnabar Island. Calcs' Elo is the right one (per the user, 2026-10-12: the Calcs Elo table is correct and in order)."
+  },
+  {
+   "source_row": 1775,
+   "field": "winner string field 9",
+   "sheet": "2269",
+   "corrected": "2282",
+   "reason": "Regional matchday 10, Cinnabar Island. Calcs' Elo is the right one (per the user, 2026-10-12: the Calcs Elo table is correct and in order)."
+  },
+  {
+   "source_row": 1778,
+   "field": "winner string field 9",
+   "sheet": "2350",
+   "corrected": "2353",
+   "reason": "Regional matchday 10, Resort Area. Calcs' Elo is the right one (per the user, 2026-10-12: the Calcs Elo table is correct and in order)."
+  },
+  {
+   "source_row": 1822,
+   "field": "loser string field 9",
+   "sheet": "2107",
+   "corrected": "2123",
+   "reason": "Regional matchday 10, Pyrite Town. Calcs' Elo is the right one (per the user, 2026-10-12: the Calcs Elo table is correct and in order)."
+  }
+ ],
  "events": [
   {
    "round": 1,

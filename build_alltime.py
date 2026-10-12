@@ -16,13 +16,14 @@ estimated. Two rules shape the numbers:
   one unbroken, checked chain from S1's 1800 to S9.
 - Game types differ by era, so records are split into classes that mean the
   same thing everywhere: Regional (games within a team's conference/region),
-  League (S5-S9 leagues; S3-S4's MRL/UTL), Interconference (S1-S4), Cup (the
-  WCS, the Grand Swiss, the PA and RDS cups, S3's conference cups),
-  Playoffs (P) and Finals (F). Byes (walkovers) are not games and count in
-  no record.
+  League (S5-S9 leagues; S3-S4's MRL/UTL; and S1-S4's interconference games,
+  the leagues' precursor), Cup (the WCS, the Grand Swiss, the PA and RDS
+  cups, S3's conference cups), Playoffs (P) and Finals (F). Byes (walkovers)
+  are not games and count in no record.
 """
 import csv
 import json
+import re
 import os
 import sqlite3
 from collections import Counter, defaultdict
@@ -33,9 +34,12 @@ SEASONS = range(1, 10)
 DB_PATH = os.path.join(ROOT, "alltime.db")
 PAGE_PATH = os.path.join(ROOT, "alltime_dashboard.html")
 
-CLASS_OF = {"R": "Regional", "L": "League", "M": "League", "I": "Interconference",
+# Interconference (S1-S4) was the leagues' precursor and counts as League.
+CLASS_OF = {"R": "Regional", "L": "League", "M": "League", "I": "League",
             "S": "Cup", "W": "Cup", "C": "Cup", "P": "Playoffs", "F": "Finals"}
-CLASSES = ["Regional", "League", "Interconference", "Cup", "Playoffs", "Finals"]
+CLASSES = ["Regional", "League", "Cup", "Playoffs", "Finals"]
+REGULAR = ("Regional", "League")
+OT_NOTE = re.compile(r"^(\d)OT\b")
 RENAMED_SINCE = {"Resort Area": "Battle Zone", "Fight Area": "Cabo Poco", "South Lakes": "Wild Area",
                  "South Kalos": "Blueberry Terarium", "East Paldea": "Mossui Town"}
 
@@ -84,6 +88,11 @@ def load():
                 "final_elo": num(r["final_elo"]), "final_rank": num(r["final_rank"]),
             })
         rows = list(csv.DictReader(open(os.path.join(HISTORY, f"s{s}", "games.csv"))))
+        # Where a season's Elo table gives the order its Elo was applied (S5),
+        # each side's Elo going in and after come from it.
+        order_path = os.path.join(HISTORY, f"s{s}", "elo_order.csv")
+        elo_order = ({o["seq"]: o for o in csv.DictReader(open(order_path))}
+                     if os.path.exists(order_path) else {})
         for r in rows:
             a, b = int(r["team_a"]), int(r["team_b"])
             a_won = r["winner"] == "A"
@@ -93,6 +102,17 @@ def load():
             wg, lg = pick(num(r["goals_a"]), num(r["goals_b"]))
             we, le = pick(num(r["elo_a_after"]), num(r["elo_b_after"]))
             k = num(r["elo_k"])
+            wb, lb = (we - k, le + k) if we is not None and k is not None else (None, None)
+            order = int(r["seq"])
+            o = elo_order.get(r["seq"])
+            if o:
+                wb, lb = pick(num(o["elo_a_before"]), num(o["elo_b_before"]))
+                we, le = pick(num(o["elo_a_after"]), num(o["elo_b_after"]))
+                order = int(o["elo_order"]) * 10000 + int(r["seq"])
+            # Overtimes: the note opens "2OT", "3OT"... past one; S9 kept only
+            # whether a game went to overtime.
+            m = OT_NOTE.match(r.get("note") or "")
+            ot_n = int(m.group(1)) if m else int(r["ot"])
             host = None
             if r["home"] == "A":
                 host = a
@@ -100,10 +120,9 @@ def load():
                 "season": s, "era": era(s), "seq": int(r["seq"]), "event": ev_index[r["event"]],
                 "event_code": r["event"], "game_type": r["game_type"], "cls": CLASS_OF[r["game_type"]],
                 "winner": w, "loser": l, "w_pts": wp, "l_pts": lp, "w_goals": wg, "l_goals": lg,
-                "host": host, "host_source": r["host_source"], "ot": int(r["ot"]),
+                "host": host, "host_source": r["host_source"], "ot": int(r["ot"]), "ot_n": ot_n,
                 "w_elo_after": we, "l_elo_after": le, "k": k,
-                "w_elo_before": we - k if we is not None and k is not None else None,
-                "l_elo_before": le + k if le is not None and k is not None else None,
+                "w_elo_before": wb, "l_elo_before": lb, "elo_order": order,
             })
         seasons[s] = {"season": s, "era": era(s), "teams": sum(1 for t in team_seasons if t["season"] == s),
                       "games": len(rows)}
@@ -232,11 +251,17 @@ def team_stats(names, games, team_seasons, titles):
     return out
 
 
-def streaks(games):
+STREAK_SCOPES = {"all": None, "regular": REGULAR, "Regional": ("Regional",), "League": ("League",)}
+
+
+def streaks(games, classes=None):
     """Each team's longest winning and losing run, in play order, across
-    season boundaries."""
+    season boundaries -- in every game, or only in the given classes (the
+    regular season is Regional and League)."""
     seq = defaultdict(list)
     for g in sorted(games, key=lambda g: (g["season"], g["seq"])):
+        if classes is not None and g["cls"] not in classes:
+            continue
         seq[g["winner"]].append((True, g["season"], g["event"]))
         seq[g["loser"]].append((False, g["season"], g["event"]))
     best = []
@@ -296,17 +321,23 @@ def records(games, team_seasons):
                           key=lambda r: (r["wins"] / (r["wins"] + r["losses"]), r["wins"]), reverse=True)[:20],
         "wins": sorted(rows, key=lambda r: r["wins"], reverse=True)[:15],
         # No team has gone a whole season unbeaten (every season ends in a
-        # postseason), so: fewest losses over a full season.
-        "fewest_losses": sorted([r for r in rows if r["wins"] + r["losses"] >= 15],
+        # postseason), so: fewest losses over a full season -- from S5, when
+        # Regional and League play became full round robins.
+        "fewest_losses": sorted([r for r in rows if r["wins"] + r["losses"] >= 15 and r["season"] >= 5],
                                 key=lambda r: (r["losses"], -r["wins"]))[:15],
     }
     # Elo: upsets (the winner's Elo before, below the loser's), and seasons.
     eg = [g for g in games if g["w_elo_before"] is not None]
-    # Upsets need each side's Elo GOING IN (after less K). S5 applied Elo out
-    # of game order and its per-game K does not add up to a team's season, so
-    # its Elo-before is not reliable there: S5 is left out of upsets.
+    # Upsets need each side's Elo GOING IN: Elo after less (plus) K, except S5,
+    # whose Calcs Elo table gives it directly.
     out["elo"]["upsets"] = [compact(g) for g in sorted(
-        (g for g in eg if g["season"] != 5), key=lambda g: g["w_elo_before"] - g["l_elo_before"])[:20]]
+        eg, key=lambda g: g["w_elo_before"] - g["l_elo_before"])[:20]]
+    # Every shutout, and the games that went furthest into overtime.
+    out["shutouts"] = [compact(g) for g in sorted(games, key=lambda g: (g["season"], g["seq"]))
+                       if g["l_pts"] == 0]
+    out["overtimes"] = [compact(g) for g in sorted(
+        (g for g in games if g["ot_n"] >= 3), key=lambda g: (-g["ot_n"], g["season"], g["seq"]))]
+    out["overtime_counts"] = dict(sorted(Counter(g["ot_n"] for g in games if g["ot_n"]).items()))
     out["elo"]["k"] = [compact(g) for g in sorted(eg, key=lambda g: -g["k"])[:15]]
     ts = [t for t in team_seasons if t["opening_elo"] is not None and t["final_elo"] is not None]
     out["elo"]["season_gain"] = sorted(
@@ -321,9 +352,10 @@ def records(games, team_seasons):
 def compact(g):
     """A game as the dashboard keeps it."""
     return [g["season"], g["event"], g["winner"], g["loser"], g["w_pts"], g["l_pts"],
-            0 if g["host"] is None else (1 if g["host"] == g["winner"] else 2), g["ot"],
+            0 if g["host"] is None else (1 if g["host"] == g["winner"] else 2), g["ot_n"],
             g["w_elo_after"], g["l_elo_after"], g["k"],
-            g["w_goals"], g["l_goals"], CLASSES.index(g["cls"])]
+            g["w_goals"], g["l_goals"], CLASSES.index(g["cls"]),
+            g["w_elo_before"], g["l_elo_before"], g["elo_order"]]
 
 
 # ---------------------------------------------------------------------------
@@ -342,10 +374,11 @@ CREATE TABLE events (event INTEGER PRIMARY KEY, season INTEGER, code TEXT, title
     games INTEGER);
 CREATE TABLE games (game INTEGER PRIMARY KEY, season INTEGER, era TEXT, seq INTEGER, event INTEGER,
     game_type TEXT, class TEXT, winner INTEGER, loser INTEGER, w_pts INTEGER, l_pts INTEGER,
-    w_goals INTEGER, l_goals INTEGER, host INTEGER, host_source TEXT, ot INTEGER,
-    w_elo_before REAL, w_elo_after REAL, l_elo_before REAL, l_elo_after REAL, elo_k REAL);
--- w/l_elo_before = Elo after less (plus) the game's K. Exact in every season
--- but S5, which applied Elo out of game order: there only Elo after is sure.
+    w_goals INTEGER, l_goals INTEGER, host INTEGER, host_source TEXT, ot INTEGER, overtimes INTEGER,
+    w_elo_before REAL, w_elo_after REAL, l_elo_before REAL, l_elo_after REAL, elo_k REAL, elo_order INTEGER);
+-- w/l_elo_before = Elo after less (plus) the game's K; for S5, both Elos come
+-- from its Calcs Elo table, and elo_order is the order that table applied them
+-- (elsewhere it is seq). overtimes: how many (S9 recorded only whether, so 1).
 CREATE TABLE titles (season INTEGER, kind TEXT, label TEXT, team INTEGER, place INTEGER);
 CREATE INDEX games_w ON games(winner); CREATE INDEX games_l ON games(loser);
 CREATE VIEW team_games AS
@@ -398,11 +431,11 @@ def write_db(names, teams_s9, seasons, games, team_seasons, events, titles):
                     t["final_elo"], t["final_rank"]) for t in team_seasons])
     c.executemany("INSERT INTO events VALUES (?,?,?,?,?,?)",
                   [(i, e["season"], e["code"], e["title"], e["round"], e["games"]) for i, e in enumerate(events)])
-    c.executemany("INSERT INTO games VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+    c.executemany("INSERT INTO games VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                   [(i, g["season"], g["era"], g["seq"], g["event"], g["game_type"], g["cls"], g["winner"],
                     g["loser"], g["w_pts"], g["l_pts"], g["w_goals"], g["l_goals"], g["host"],
-                    g["host_source"], g["ot"], g["w_elo_before"], g["w_elo_after"], g["l_elo_before"],
-                    g["l_elo_after"], g["k"]) for i, g in enumerate(games)])
+                    g["host_source"], g["ot"], g["ot_n"], g["w_elo_before"], g["w_elo_after"],
+                    g["l_elo_before"], g["l_elo_after"], g["k"], g["elo_order"]) for i, g in enumerate(games)])
     c.executemany("INSERT INTO titles VALUES (?,?,?,?,?)",
                   [(x["season"], x["kind"], x["label"], x["team"], x["place"]) for x in titles])
     c.commit()
@@ -433,7 +466,7 @@ def main():
                           t["final_elo"], t["final_rank"]] for t in team_seasons],
         "games": [compact(g) for g in sorted(games, key=lambda g: (g["season"], g["seq"]))],
         "titles": [[x["season"], x["kind"], x["label"], x["team"], x["place"]] for x in titles],
-        "streaks": streaks(games),
+        "streaks": {k: streaks(games, v) for k, v in STREAK_SCOPES.items()},
         "records": records(games, team_seasons),
         "classes": CLASSES,
         "region_colors": frozen["REGION_COLORS"], "region_display": frozen["REGION_DISPLAY"],

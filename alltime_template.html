@@ -98,15 +98,17 @@
   <button data-tab="h2h">Head-to-Head</button>
   <button data-tab="titles">Titles</button>
   <button data-tab="elo">Elo</button>
-  <button data-tab="records">Records</button>
+  <button data-tab="scoring">Scoring</button>
+  <button data-tab="wins">Wins</button>
+  <button data-tab="streaks">Streaks</button>
 </nav>
 <main>
   <section class="panel active" id="panel-teams">
     <div class="controls"><input type="search" id="teams-search" placeholder="Search teams"></div>
     <div class="scroll"><table id="teams-table"></table></div>
     <p class="note">Every game of Seasons 1-9, as recorded. Classes mean the same thing in every season:
-      Regional is a team's own conference; League is S5-S9's leagues and S3-S4's MRL/UTL;
-      Interconference existed in S1-S4; Cup is the WCS, Grand Swiss, PA, RDS and S3's conference cups;
+      Regional is a team's own conference; League is S5-S9's leagues, S3-S4's MRL/UTL and S1-S4's
+      interconference games (the leagues' precursor); Cup is the WCS, Grand Swiss, PA, RDS and S3's conference cups;
       Postseason is playoffs and finals. Byes count in no record. Some S1-S3 hosts were rebuilt from each
       season's own schedule (see the archive); every game has one.</p>
   </section>
@@ -145,19 +147,19 @@
     <div class="card"><svg class="chart" id="elo-chart"></svg><div class="legend" id="elo-legend"></div></div>
     <p class="note">One continuous chain: every team opened S1 at 1800 (Lanakila's at 1800 in S2, Dynamax's
       from their S3 preseason, Phoenix's from S4's), and each season opens where the last one closed.
-      S1-S3's Elo was computed afterwards, week by week. S5 applied its Elo out of game order, so a
-      team's S5 stretch can jump; its values are as recorded.</p>
+      S1-S3's Elo was computed afterwards, week by week. S5 is drawn in the order its Calcs sheet
+      applied the Elo, which differs from the order its games are listed.</p>
     <div class="grid2">
       <div><h2>Highest Elo ever</h2><div class="scroll"><table id="elo-peak"></table></div></div>
       <div><h2>Lowest Elo ever</h2><div class="scroll"><table id="elo-low"></table></div></div>
       <div><h2>Biggest season gains</h2><div class="scroll"><table id="elo-gain"></table></div></div>
       <div><h2>Biggest season losses</h2><div class="scroll"><table id="elo-loss"></table></div></div>
-      <div><h2>Biggest upsets <span class="dim" style="font-size:13px;text-transform:none;letter-spacing:0">(Elo going in; not S5)</span></h2><div class="scroll"><table id="elo-upsets"></table></div></div>
+      <div><h2>Biggest upsets <span class="dim" style="font-size:13px;text-transform:none;letter-spacing:0">(Elo going in)</span></h2><div class="scroll"><table id="elo-upsets"></table></div></div>
       <div><h2>Biggest single-game swings</h2><div class="scroll"><table id="elo-k"></table></div></div>
     </div>
   </section>
 
-  <section class="panel" id="panel-records">
+  <section class="panel" id="panel-scoring">
     <div class="controls">
       <span class="dim">Scoring era</span>
       <div class="toggle" id="era-toggle"><button data-era="S1-S6" class="active">S1–S6</button><button data-era="S7-S9">S7–S9</button></div>
@@ -174,18 +176,43 @@
     </div>
     <h2 style="margin-top:36px">All seasons</h2>
     <div class="grid2">
+      <div><h2>Every shutout</h2><div class="scroll"><table id="rec-shutouts"></table></div></div>
+      <div><h2>Most overtimes</h2><div class="scroll"><table id="rec-ot"></table></div>
+        <p class="note" id="rec-ot-note"></p></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-wins">
+    <div class="grid2">
       <div><h2>Best win percentage (season)</h2><div class="scroll"><table id="rec-winpct"></table></div></div>
       <div><h2>Most wins (season)</h2><div class="scroll"><table id="rec-wins"></table></div></div>
-      <div><h2>Longest winning streaks</h2><div class="scroll"><table id="rec-wstreak"></table></div></div>
-      <div><h2>Longest losing streaks</h2><div class="scroll"><table id="rec-lstreak"></table></div></div>
-      <div><h2>Fewest losses (season, 15+ games)</h2><div class="scroll"><table id="rec-fewest"></table></div></div>
+      <div><h2>Fewest losses (season, S5 on, 15+ games)</h2><div class="scroll"><table id="rec-fewest"></table></div></div>
     </div>
+    <p class="note">Every game counts, postseason included. Fewest losses starts at S5, when Regional and
+      League play became full round robins.</p>
+  </section>
+
+  <section class="panel" id="panel-streaks">
+    <div class="grid2">
+      <div><h2>Longest winning streaks</h2><div class="scroll"><table id="str-all-W"></table></div></div>
+      <div><h2>Longest losing streaks</h2><div class="scroll"><table id="str-all-L"></table></div></div>
+      <div><h2>Regular season winning streaks</h2><div class="scroll"><table id="str-regular-W"></table></div></div>
+      <div><h2>Regular season losing streaks</h2><div class="scroll"><table id="str-regular-L"></table></div></div>
+      <div><h2>Regional winning streaks</h2><div class="scroll"><table id="str-Regional-W"></table></div></div>
+      <div><h2>Regional losing streaks</h2><div class="scroll"><table id="str-Regional-L"></table></div></div>
+      <div><h2>League winning streaks</h2><div class="scroll"><table id="str-League-W"></table></div></div>
+      <div><h2>League losing streaks</h2><div class="scroll"><table id="str-League-L"></table></div></div>
+    </div>
+    <p class="note">Streaks run across seasons, in the order games were played. The regular season is
+      Regional and League games (League includes S3-S4's MRL/UTL and S1-S4's interconference games); a
+      Regional or League streak counts only those games and ignores everything played in between.</p>
   </section>
 </main>
 <script>
 const D = /*__ALLTIME_DATA__*/null;
 const TEAM = Object.fromEntries(D.teams.map(t => [t.team, t]));
 const PALETTE = ['#e8a33d', '#7fb8e0', '#6fcf97', '#e0685c', '#c39bd3', '#f0d264'];
+const otTag = n => n ? ` <span class="dim">${n > 1 ? n : ''}OT</span>` : '';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
 const color = t => (D.region_colors[TEAM[t].region] || {}).bright || 'var(--text)';
 const nameHtml = (t, plain) => `<span class="team" data-team="${t}" style="color:${color(t)}">${esc(TEAM[t].name)}</span>`;
@@ -249,7 +276,7 @@ function renderTeams() {
     {key: 'w', label: 'W-L', html: r => rec(r.records.Overall)},
     {key: 'pct', label: 'Pct', html: r => pct(r.records.Overall)},
     recCol('reg', 'Regional', r => r.records.Regional), recCol('lg', 'League', r => r.records.League),
-    recCol('ic', 'Interconf.', r => r.records.Interconference), recCol('cup_r', 'Cup', r => r.records.Cup),
+    recCol('cup_r', 'Cup', r => r.records.Cup),
     recCol('post', 'Postseason', r => r.records.Postseason), recCol('home', 'Home', r => r.records.Home),
     recCol('away', 'Away', r => r.records.Away), recCol('ot', 'OT', r => r.records.OT),
     {key: 'world', label: 'World', title: 'World Championships'},
@@ -268,13 +295,14 @@ D.games.forEach(g => { (GAMES_OF[g[2]] = GAMES_OF[g[2]] || []).push(g); (GAMES_O
 const TS = {};
 D.team_seasons.forEach(r => { (TS[r[1]] = TS[r[1]] || {})[r[0]] = r; });
 function eloSeries(t) {
-  // A team's recorded Elo after each of its games, in Archive order. (S5
-  // applied Elo out of that order, so its stretch of a line can jump.)
+  // A team's recorded Elo after each of its games, in the order the Elo was
+  // applied (S5's Calcs order; elsewhere the order games were played).
   const pts = [];
   const games = GAMES_OF[t] || [];
   for (const s of Object.keys(TS[t]).map(Number).sort((a, b) => a - b)) {
     pts.push({s, e: TS[t][s][5]});
-    games.filter(g => g[0] === s).forEach(g => pts.push({s, e: g[2] === t ? g[8] : g[9]}));
+    games.filter(g => g[0] === s).sort((x, y) => x[16] - y[16])
+      .forEach(g => pts.push({s, e: g[2] === t ? g[8] : g[9]}));
   }
   return pts;
 }
@@ -322,7 +350,7 @@ function renderTeam(t) {
     {key: 'region', label: 'Region', l: 1, html: r => esc(D.region_display[r.region] || r.region)},
     {key: 'div', label: 'Div.', l: 1, html: r => esc(r.div || '')},
     {key: 'pct', label: 'W-L', html: r => `${r.w}-${r.l}`},
-    recCol('reg', 'Regional', r => r.byc.Regional), recCol('lg', 'League', r => r.byc.League || r.byc.Interconference),
+    recCol('reg', 'Regional', r => r.byc.Regional), recCol('lg', 'League', r => r.byc.League),
     recCol('cup', 'Cup', r => r.byc.Cup), recCol('post', 'Post.', r => r.post),
     {key: 'pfg', label: 'PF/G', html: r => r.pfg == null ? '–' : r.pfg.toFixed(1)},
     {key: 'pag', label: 'PA/G', html: r => r.pag == null ? '–' : r.pag.toFixed(1)},
@@ -408,7 +436,7 @@ function renderH2H() {
     {key: 's', label: 'Season', html: r => sTag(r.s)},
     {key: 'ev', label: 'Event', l: 1, nosort: 1},
     {key: 'w', label: 'Winner', l: 1, nosort: 1, html: r => nameHtml(r.w)},
-    {key: 'score', label: 'Score', nosort: 1, html: r => r.score + (r.ot ? ' <span class="dim">OT</span>' : '')},
+    {key: 'score', label: 'Score', nosort: 1, html: r => r.score + otTag(r.ot)},
     {key: 'host', label: 'Host', l: 1, nosort: 1, html: r => r.host ? esc(TEAM[r.host].name) : '<span class="dim">–</span>'},
   ], gs.map(gameRow), {sort: null});
 }
@@ -482,9 +510,9 @@ function renderEloTables() {
   table(document.getElementById('elo-gain'), gainCols, D.records.elo.season_gain, {sort: null});
   table(document.getElementById('elo-loss'), gainCols, D.records.elo.season_loss, {sort: null});
   const upCols = [{key: 's', label: 'Season', html: r => sTag(r[0])},
-    {key: 'w', label: 'Winner', l: 1, nosort: 1, html: r => `${nameHtml(r[2])} <span class="dim">${Math.round(r[8] - r[10])}</span>`},
-    {key: 'l', label: 'Loser', l: 1, nosort: 1, html: r => `${nameHtml(r[3])} <span class="dim">${Math.round(r[9] + r[10])}</span>`},
-    {key: 'gap', label: 'Elo gap', html: r => Math.round((r[9] + r[10]) - (r[8] - r[10]))},
+    {key: 'w', label: 'Winner', l: 1, nosort: 1, html: r => `${nameHtml(r[2])} <span class="dim">${Math.round(r[14])}</span>`},
+    {key: 'l', label: 'Loser', l: 1, nosort: 1, html: r => `${nameHtml(r[3])} <span class="dim">${Math.round(r[15])}</span>`},
+    {key: 'gap', label: 'Elo gap', html: r => Math.round(r[15] - r[14])},
     {key: 'sc', label: 'Score', nosort: 1, html: r => `${r[4]}-${r[5]}`},
     {key: 'ev', label: 'Event', l: 1, nosort: 1, html: r => esc(evTitle(r[1]))}];
   table(document.getElementById('elo-upsets'), upCols, D.records.elo.upsets, {sort: null});
@@ -507,7 +535,7 @@ const gameCols = extra => [{key: 's', label: 'Season', html: r => sTag(r[0])},
   [{key: 'ev', label: 'Event', l: 1, nosort: 1, html: r => esc(evTitle(r[1]))}]);
 function renderRecords() {
   const g = D.records.game[era], s = D.records.season[era];
-  const sc = {key: 'sc', label: 'Score', nosort: 1, html: r => `${r[4]}-${r[5]}${r[7] ? ' <span class="dim">OT</span>' : ''}`};
+  const sc = {key: 'sc', label: 'Score', nosort: 1, html: r => `${r[4]}-${r[5]}${otTag(r[7])}`};
   table(document.getElementById('rec-score'), gameCols([sc]), g.score, {sort: null});
   table(document.getElementById('rec-margin'), gameCols([sc, {key: 'm', label: 'Margin', nosort: 1, html: r => r[4] - r[5]}]), g.margin, {sort: null});
   table(document.getElementById('rec-combined'), gameCols([sc, {key: 'c', label: 'Total', nosort: 1, html: r => r[4] + r[5]}]), g.combined, {sort: null});
@@ -517,6 +545,18 @@ function renderRecords() {
     {key: 'gp', label: 'GP', nosort: 1, html: r => r.games}];
   table(document.getElementById('rec-pfpg'), seasonCols('PF/G', r => (r.pf / r.games).toFixed(2)), s.pf_per_game, {sort: null});
   table(document.getElementById('rec-pdpg'), seasonCols('PD/G', r => '+' + ((r.pf - r.pa) / r.games).toFixed(2)), s.pd_per_game, {sort: null});
+}
+function renderAllSeasonGames() {
+  const sc = {key: 'sc', label: 'Score', nosort: 1, html: r => `${r[4]}-${r[5]}${otTag(r[7])}`};
+  table(document.getElementById('rec-shutouts'), gameCols([sc]), D.records.shutouts, {sort: null});
+  table(document.getElementById('rec-ot'), gameCols([{key: 'n', label: 'OTs', nosort: 1, html: r => r[7]},
+    {key: 'sc', label: 'Score', nosort: 1, html: r => `${r[4]}-${r[5]}`}]), D.records.overtimes, {sort: null});
+  const oc = D.records.overtime_counts;
+  document.getElementById('rec-ot-note').textContent = `Games with three or more overtimes. Overtime games in all: `
+    + Object.entries(oc).map(([n, c]) => `${c.toLocaleString()} went to ${n === '1' ? 'one' : n}`).join(', ')
+    + '. S9 recorded only whether a game went to overtime, so each of its overtime games counts as one.';
+}
+function renderWins() {
   const all = D.records.season.all;
   const wl = [{key: 'team', label: 'Team', l: 1, nosort: 1, html: r => nameHtml(r.team)},
     {key: 'season', label: 'Season', html: r => sTag(r.season)},
@@ -525,12 +565,16 @@ function renderRecords() {
   table(document.getElementById('rec-winpct'), wl, all.win_pct, {sort: null});
   table(document.getElementById('rec-wins'), wl, all.wins, {sort: null});
   table(document.getElementById('rec-fewest'), wl, all.fewest_losses, {sort: null});
+}
+function renderStreaks() {
   const strCols = [{key: 'team', label: 'Team', l: 1, nosort: 1, html: r => nameHtml(r.team)},
     {key: 'length', label: 'Games'},
     {key: 'from', label: 'From', l: 1, nosort: 1, html: r => `${sTag(r.from[0])} <span class="dim">${esc(evCode(r.from[1]))}</span>`},
     {key: 'to', label: 'To', l: 1, nosort: 1, html: r => `${sTag(r.to[0])} <span class="dim">${esc(evCode(r.to[1]))}</span>`}];
-  table(document.getElementById('rec-wstreak'), strCols, D.streaks.filter(x => x.kind === 'W').sort((a, b) => b.length - a.length).slice(0, 20), {sort: null});
-  table(document.getElementById('rec-lstreak'), strCols, D.streaks.filter(x => x.kind === 'L').sort((a, b) => b.length - a.length).slice(0, 20), {sort: null});
+  for (const [scope, list] of Object.entries(D.streaks))
+    for (const kind of ['W', 'L'])
+      table(document.getElementById(`str-${scope}-${kind}`), strCols,
+        list.filter(x => x.kind === kind).sort((a, b) => b.length - a.length).slice(0, 15), {sort: null});
 }
 
 // ---------------------------------------------------------------- go
@@ -543,7 +587,7 @@ renderTitles();
 const best = D.teams.slice().sort((a, b) => (b.peak ? b.peak[0] : 0) - (a.peak ? a.peak[0] : 0));
 best.slice(0, 3).forEach(t => eloSel.push(t.team));
 renderEloTables();
-renderRecords();
+renderRecords(); renderAllSeasonGames(); renderWins(); renderStreaks();
 window.addEventListener('resize', () => { renderEloChart(); if (document.getElementById('team-elo')) renderTeam(+teamSel.value); });
 // Charts need a laid-out size: draw them the first time their tab opens.
 document.getElementById('tabs').addEventListener('click', e => {

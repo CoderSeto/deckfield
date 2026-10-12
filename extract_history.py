@@ -119,6 +119,9 @@ DEFAULT_BUCKETS = {"R": "R", "L": "L", "S": "S", "P": "p", "F": "p"}
 # Rankings columns are 0-based. Common to S7 and S8: A dex, B region, C name,
 # F..M the W-L the workbook kept per bucket, AQ OVR, BL Elo, BQ base climate,
 # BV division, CG the name keying the rank-checkpoint block (checked equal to C).
+S5_ELO_WHY = ("Calcs' Elo is the right one (per the user, 2026-10-12: the Calcs Elo table "
+              "is correct and in order).")
+
 SEASONS = {
     8: {
         # BY primary type, CA accolades, CK the FINAL rank checkpoint, EU
@@ -327,20 +330,32 @@ SEASONS = {
             2898: ("interest", "Regional SF leg 2, Wild Area v Spikemuth, decided in "
                                "aggregate OT: the interest column reads 99.15 while the "
                                "game string's interest is 95. Both kept as written."),
-            1750: ("calcs", "WCS fifth round (Justice): Calcs gives the winner's Elo as "
-                            "2352, the Archive 2349. The Archive's is archived."),
-            1751: ("calcs", "WCS fifth round (Justice): Calcs gives the winner's Elo as "
-                            "2144, the Archive 2128. The Archive's is archived."),
-            1752: ("calcs", "WCS fifth round (Justice): Calcs gives the winner's Elo as "
-                            "2280, the Archive 2267. The Archive's is archived."),
-            1775: ("calcs", "Regional matchday 10: Calcs gives the winner's Elo as 2282, "
-                            "the Archive 2269. The Archive's is archived."),
-            1778: ("calcs", "Regional matchday 10: Calcs gives the winner's Elo as 2353, "
-                            "the Archive 2350. The Archive's is archived."),
-            1822: ("calcs", "Regional matchday 10: Calcs gives the loser's Elo as 2123, "
-                            "the Archive 2107. The Archive's is archived."),
         },
         "corrections": {},
+        # The Archive wrote six games' Elo differently from Calcs; Calcs' is the
+        # one that follows from the team's Elo going in and the game's K.
+        "string_corrections": {
+            1750: ("w", 9, "2349", "2352", "WCS fifth round (Justice), Resort Area. " + S5_ELO_WHY),
+            1751: ("w", 9, "2128", "2144", "WCS fifth round (Justice), Pyrite Town. " + S5_ELO_WHY),
+            1752: ("w", 9, "2267", "2280", "WCS fifth round (Justice), Cinnabar Island. " + S5_ELO_WHY),
+            1775: ("w", 9, "2269", "2282", "Regional matchday 10, Cinnabar Island. " + S5_ELO_WHY),
+            1778: ("w", 9, "2350", "2353", "Regional matchday 10, Resort Area. " + S5_ELO_WHY),
+            1822: ("l", 9, "2107", "2123", "Regional matchday 10, Pyrite Town. " + S5_ELO_WHY),
+        },
+        # Calcs from column ANU: each team's Elo after every event, in the order
+        # it was applied (per the user, 2026-10-12, correct and in order). It
+        # gives each game's Elo going in (history/s5/elo_order.csv).
+        "elo_table": {
+            "sheet": "Calcs", "header_row": 2, "first_col": "ANU", "groups": "s5_elo_columns",
+            # Four WCS columns, all before L3, do not total 288,000; the next
+            # Regional or League column is back to exactly 288,000.
+            "unbalanced": {
+                "ANY": "WCS preliminary (Nature): 288,107; R4 is back to 288,000",
+                "ANZ": "WCS preliminary (Justice): 288,107; R4 is back to 288,000",
+                "AOE": "WCS first round (Nature), first column: 288,193; L3 is back to 288,000",
+                "AOF": "WCS first round (Nature), second column: 288,165; L3 is back to 288,000",
+            },
+        },
     },
 }
 
@@ -1000,6 +1015,152 @@ def fill_short_from_calcs(games, grid, cfg, name_to_dex):
         g["string_source"] = "calcs"
 
 
+def apply_string_corrections(games, fixes):
+    """Replace one field of a game's parsed string (side "w" or "l", field
+    index) where the user has ruled the sheet's value wrong, refusing if the
+    sheet no longer holds the value the correction names."""
+    by_row = {g["row"]: g for g in games}
+    for row, (side, idx, sheet, fixed, _why) in fixes.items():
+        g = by_row.get(row)
+        if g is None or str(g[side][idx]) != str(sheet):
+            raise SystemExit(f"string correction at Archive row {row}: expected {side}[{idx}]={sheet!r}, "
+                             f"sheet has {None if g is None else g[side][idx]!r}")
+        g[side] = tuple(g[side][:idx]) + (str(fixed),) + tuple(g[side][idx + 1:])
+
+
+def s5_elo_columns(code, cols):
+    """S5's Calcs Elo table names its columns by event (R1, L1, D256 = WCS
+    Nature preliminary, P128 = Justice first round, LPO, RPO, T8...); the
+    columns each Archive event's games may sit in. None: look anywhere (the
+    MGGG promotion games have no column of their own)."""
+    m = re.fullmatch(r"[RL]\d+", code)
+    if m:
+        return cols[code]
+    m = re.fullmatch(r"WCS-(PR|R\d)-([NJ])", code)
+    if m:
+        size = {"PR": 256, "R1": 128, "R2": 64, "R3": 32, "R4": 16, "R5": 8}[m[1]]
+        return cols[("D" if m[2] == "N" else "P") + str(size)]
+    if re.fullmatch(r"WCS-QF-[NJ]-\d", code):
+        return cols["D4"] + cols["P4"]
+    if re.fullmatch(r"WCS-SF-\d", code):
+        return cols["D2"] + cols["P2"]
+    m = re.fullmatch(r"WCS-2P-(\d)", code)
+    if m:
+        return [cols["G2"][int(m[1]) - 1]]
+    lp = ["LP-SF-1", "LP-SF-2", "LP-F-1", "LP-F-2"]
+    if code in lp:
+        return [cols["LPO"][lp.index(code)]]
+    rp = ["RP-R1", "RP-QF-1", "RP-QF-2", "RP-SF-1", "RP-SF-2", "RP-F-1", "RP-F-2"]
+    if code in rp:
+        return [cols["RPO"][rp.index(code)]]
+    wc = {"WC-G-R1": "PR1", "WC-G-R2": "PR2", "WC-G-R3": "PLF", "WC-G-R4": "PF1", "WC-G-R4R": "PF2",
+          "WC-U-R1": "FR1", "WC-U-R2": "FR2", "WC-U-R3": "RLF", "WC-U-R4": "FF1"}
+    if code in wc:
+        return cols[wc[code]]
+    m = re.fullmatch(r"WC-M-(QF|SF)-(\d)", code)
+    if m:
+        return [cols["T8" if m[1] == "QF" else "T4"][int(m[2]) - 1]]
+    m = re.fullmatch(r"WC-F-(\d)", code)
+    if m:
+        return [cols["Final"][int(m[1]) - 1]]
+    return None
+
+
+def read_elo_table(wb, cfg):
+    """A per-team table of Elo by event, in the order the Elo was applied
+    (S5's Calcs from column ANU): an opening "ELO" column, then each team's
+    Elo after every event, carried across events it did not play."""
+    spec = cfg["elo_table"]
+    ws = wb[spec["sheet"]]
+    start = openpyxl.utils.column_index_from_string(spec["first_col"]) - 1
+    rows = list(ws.iter_rows(min_row=spec["header_row"], values_only=True))
+    header = rows[0]
+    idx = []
+    j = start
+    while j < len(header) and header[j] not in (None, "EXTRA"):
+        idx.append(j)
+        j += 1
+    labels = [header[j] for j in idx]
+    letters = [openpyxl.utils.get_column_letter(j + 1) for j in idx]
+    table = {int(r[0]): [int(float(r[j])) for j in idx]
+             for r in rows[1:] if isinstance(r[0], (int, float)) and r[1]}
+    return labels, letters, table
+
+
+def elo_table_track(games, teams, opening, cfg, labels, letters, table):
+    """Place every game in the Elo table's column for its event and read each
+    side's Elo going in (the column before) and after (its column). Checks: the
+    table holds every team, opens at each team's opening Elo and ends at its
+    final Elo; every column totals 1800 per team (but the listed ones); a team's
+    Elo never moves in a column where it had no game; and each game's Elo after
+    is the table's -- except in a misfiled event, whose column must hold the
+    same values as its games, team to team in some order. Returns
+    ({game row: track}, errors)."""
+    errors = []
+    name_to_dex = {t["name"]: d for d, t in teams.items()}
+    cols = defaultdict(list)
+    for j, h in enumerate(labels):
+        cols[h].append(j)
+    if set(table) != set(teams):
+        errors.append(f"Elo table teams {sorted(set(table) ^ set(teams))} differ from Rankings")
+        return {}, errors
+    for d, t in teams.items():
+        if table[d][0] != opening.get(d):
+            errors.append(f"{t['name']}: Elo table opens at {table[d][0]}, the games at {opening.get(d)}")
+        if table[d][-1] != float(t["final_elo"]):
+            errors.append(f"{t['name']}: Elo table ends at {table[d][-1]}, final Elo {t['final_elo']}")
+    unbalanced = cfg["elo_table"].get("unbalanced", {})
+    for j in range(len(labels)):
+        total = sum(v[j] for v in table.values())
+        if (total != 1800 * len(table)) != (letters[j] in unbalanced):
+            errors.append(f"Elo table column {letters[j]} ({labels[j]}) totals {total}"
+                          + (" (listed as unbalanced)" if letters[j] in unbalanced else ""))
+    groups = globals()[cfg["elo_table"]["groups"]]
+    used, track = set(), {}
+    for g in games:
+        wd, ld = name_to_dex[g["winner_name"]], name_to_dex[g["loser_name"]]
+        we, le = int(float(g["w"][9])), int(float(g["l"][9]))
+        tw, tl = table[wd], table[ld]
+        cand = groups(g["event"]["code"], cols)
+        cand = [j for j in (range(1, len(labels)) if cand is None else cand)
+                if (wd, j) not in used and (ld, j) not in used]
+        moved = lambda j, v: v[j] != v[j - 1]
+        tiers = [[j for j in cand if tw[j] == we and tl[j] == le and moved(j, tw) and moved(j, tl)],
+                 [j for j in cand if moved(j, tw) and moved(j, tl)],
+                 [j for j in cand if moved(j, tw) or moved(j, tl)], cand]
+        pick = next((t for t in tiers if t), None)
+        if not pick:
+            errors.append(f"row {g['row']}: no Elo table column for {g['event']['code']}")
+            continue
+        j = pick[0]
+        used.update({(wd, j), (ld, j)})
+        track[g["row"]] = {"col": j, "w_before": tw[j - 1], "w_after": tw[j],
+                           "l_before": tl[j - 1], "l_after": tl[j]}
+    for d, v in table.items():
+        for j in range(1, len(labels)):
+            if v[j] != v[j - 1] and (d, j) not in used:
+                errors.append(f"{teams[d]['name']}: Elo moves {v[j - 1]} -> {v[j]} in table column "
+                              f"{letters[j]} ({labels[j]}) with no game there")
+    misfiled = set(cfg.get("calcs_misfiled", {}))
+    pooled = defaultdict(lambda: [Counter(), Counter()])
+    for g in games:
+        tr = track.get(g["row"])
+        if tr is None:
+            continue
+        got = (tr["w_after"], tr["l_after"])
+        want = (int(float(g["w"][9])), int(float(g["l"][9])))
+        if g["event"]["code"] in misfiled:
+            pooled[tr["col"]][0].update(got)
+            pooled[tr["col"]][1].update(want)
+        elif got != want:
+            errors.append(f"row {g['row']}: Elo after {want} in the game, {got} in the Elo table "
+                          f"column {letters[tr['col']]}")
+    for j, (got, want) in pooled.items():
+        if got != want:
+            errors.append(f"Elo table column {letters[j]} (misfiled) does not hold its games' Elo values")
+    return track, errors
+
+
 def read_walkovers(wb, cfg, events):
     """Calcs' "3S-" cells: byes scored as wins. The Calcs column's header names
     the slot (S1, S2...), which is matched to that Grand Swiss round's event."""
@@ -1524,6 +1685,7 @@ def main(season, workbook):
                                    {t["name"]: t["region"] for t in teams.values()})
     corrections = cfg["corrections"]
     apply_corrections(games, corrections)
+    apply_string_corrections(games, cfg.get("string_corrections", {}))
     if "calcs_grid" in cfg:
         name_to_dex = {t["name"]: d for d, t in teams.items()}
         cfg["_grid"] = read_calcs_grid(wb, cfg)
@@ -1535,6 +1697,12 @@ def main(season, workbook):
     anomalies = cfg["anomalies"]
     errors, accepted = validate(season, teams, games, walkovers, canon, events, anomalies, cfg)
     errors = host_errors + errors
+    elo_track = {}
+    if "elo_table" in cfg:
+        labels, letters, table = read_elo_table(wb, cfg)
+        elo_track, table_errors = elo_table_track(games, teams, opening_elos(games, teams, cfg),
+                                                  cfg, labels, letters, table)
+        errors += table_errors
     for e in accepted:
         print("  accepted (listed anomaly): " + e)
     if errors:
@@ -1547,7 +1715,23 @@ def main(season, workbook):
     os.makedirs(out, exist_ok=True)
     name_to_dex = {t["name"]: d for d, t in teams.items()}
 
-    write_csv(os.path.join(out, "games.csv"), GAME_FIELDS, build_game_rows(games, name_to_dex, canon, cfg))
+    game_rows = build_game_rows(games, name_to_dex, canon, cfg)
+    write_csv(os.path.join(out, "games.csv"), GAME_FIELDS, game_rows)
+    if elo_track:
+        # Each game's place in the order the Elo was applied, and each side's
+        # Elo going in and after, from the Elo table (team_a/team_b as in
+        # games.csv).
+        order = []
+        for r in game_rows:
+            tr = elo_track[r["source_row"]]
+            a_won = r["winner"] == "A"
+            order.append({"seq": r["seq"], "event": r["event"], "elo_col": letters[tr["col"]],
+                          "elo_label": labels[tr["col"]], "elo_order": tr["col"],
+                          "elo_a_before": tr["w_before"] if a_won else tr["l_before"],
+                          "elo_a_after": tr["w_after"] if a_won else tr["l_after"],
+                          "elo_b_before": tr["l_before"] if a_won else tr["w_before"],
+                          "elo_b_after": tr["l_after"] if a_won else tr["w_after"]})
+        write_csv(os.path.join(out, "elo_order.csv"), list(order[0]), order)
     write_csv(os.path.join(out, "walkovers.csv"),
               ["round", "event", "team", "game_type", "result"],
               [{"round": w["round"], "event": w["event"], "team": canon[w["dex"]],
@@ -1584,7 +1768,10 @@ def main(season, workbook):
                           for r, (c, why) in sorted(anomalies.items(), key=lambda kv: str(kv[0]))],
             "corrections": [{"source_row": r, "field": f, "sheet": a, "corrected": b, "reason": why}
                             for r, (f, a, b, why) in sorted({**corrections,
-                                                            **cfg.get("cell_corrections", {})}.items())],
+                                                            **cfg.get("cell_corrections", {})}.items())]
+                           + [{"source_row": r, "field": f"{'winner' if side == 'w' else 'loser'} string "
+                                                         f"field {i}", "sheet": a, "corrected": b, "reason": why}
+                              for r, (side, i, a, b, why) in sorted(cfg.get("string_corrections", {}).items())],
             "events": [{"round": e["round"], "code": e["code"], "title": e["title"],
                         "sub": e["sub"], "dates": e["dates"], "notes": e["notes"],
                         "games": e["games"], "empty": e["games"] == 0,
