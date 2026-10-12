@@ -1350,6 +1350,18 @@ round,game_type,team_a,team_b,result_a,pf_a,pa_a,raw_goal_a,raw_goal_b,spread_a,
   (`winnerEX.ex - loserEX.ex`), never a raw per-team score. Going forward,
   `deckfield.html`'s Results tab exports each team's own raw EX score
   independently for both `ex_a` and `ex_b`.
+- `goals_a`/`goals_b` (2026-10-12, per explicit instruction: "Goals will need
+  to be readily recorded in S10, as I've been informed they weren't in S9"):
+  each side's goals scored, two trailing columns after the cup tags, stored in
+  `games.goals_a`/`goals_b`. `deckfield.html` writes `g.goalsScored` into them
+  on every row (it always counted goals; only `raw_goal` -- points per goal --
+  ever left the game). **Required from `GOALS_REQUIRED_FROM_SEASON` (10)**:
+  `add-results` refuses an S10 row without them rather than storing a game with
+  no goals. Optional before that, so every S9 file still ingests, and
+  `export-results` writes the two columns only for a round whose games carry
+  them -- S9's 83 files still round-trip byte for byte. The names match the
+  all-time history's `games.csv` (`build_alltime.py` reads `goals_a`/`goals_b`;
+  S9's are blank there for exactly this reason). Not displayed anywhere yet.
 - `cup_name`/`cup_bracket`/`cup_round`: optional, but **required for any cup
   game** (`Ribbon`/`Dream`/`Star`/`PA`, `Draw`/`Process`, integer round) — the
   weekly-schedule completion check (`next_matchday`) can't tell a cup game
