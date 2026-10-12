@@ -608,6 +608,13 @@ nothing is estimated -- and a re-run is byte-identical.
   points per game, point difference, win %, wins and fewest losses; plus the
   longest winning and losing streaks). Verified in Chromium
   at 1600/1000/390px: zero `pageerror`, no horizontal scroll.
+- **Reached like the season dashboard** (2026-10-12, per explicit request):
+  committed beside it and served by GitHub Pages from `main`. Each header links
+  to the other (`.dash-link`: "All-Time" on the season dashboard, "Current
+  season" back) -- the season dashboard's link is plain header markup, which
+  `regenerate_dashboard.py` leaves alone (verified: a regenerate changes
+  nothing but `TEAMS_EXPORT_TSV`). Rebuild the page with `build_alltime.py`
+  whenever `history/` or `hall_of_fame.json` changes.
 
 ## Season 9 is frozen (2026-10-10, per explicit instruction)
 

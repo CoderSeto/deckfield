@@ -17,6 +17,10 @@
   body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
   header { padding: 28px 32px 20px; border-bottom: 1px solid var(--border); display: flex;
     align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .dash-link { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); text-decoration: none;
+    border: 1px solid var(--border); border-radius: 4px; padding: 6px 12px; }
+  .dash-link:hover { border-color: var(--accent); }
   .wordmark { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 32px;
     letter-spacing: 0.03em; text-transform: uppercase; }
   .wordmark span { color: var(--accent); }
@@ -82,8 +86,11 @@
 </head>
 <body>
 <header>
-  <div class="wordmark">Deck<span>field</span> All-Time</div>
-  <div class="subtitle" id="subtitle"></div>
+  <div>
+    <div class="wordmark">Deck<span>field</span> All-Time</div>
+    <div class="subtitle" id="subtitle"></div>
+  </div>
+  <a class="dash-link" href="deckfield_dashboard.html">&larr; Current season</a>
 </header>
 <nav class="tabs" id="tabs">
   <button data-tab="teams" class="active">Teams</button>

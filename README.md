@@ -92,12 +92,13 @@ python3 deckfield_cli.py add-results results/s10/<file2>.csv
 
 ## Running the HTML files
 
-Both `deckfield.html` and `deckfield_dashboard.html` are self-contained —
-no server needed. Double-click, or open via `file:///path/to/file.html`.
+`deckfield.html`, `deckfield_dashboard.html` and `alltime_dashboard.html`
+(Seasons 1-9, rebuilt by `python3 build_alltime.py`) are self-contained —
+no server needed. The two dashboards link to each other from their headers. Double-click, or open via `file:///path/to/file.html`.
 
 To make them reachable from anywhere without needing local copies, enable
 **GitHub Pages** on this repo (Settings → Pages → deploy from branch).
-Both files become plain URLs. The dashboard still only updates when you
+All three become plain URLs. The dashboard still only updates when you
 regenerate and push a fresh snapshot — Pages just makes it a link instead
 of a local file.
 
