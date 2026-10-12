@@ -114,6 +114,8 @@ GAME_TYPE_POINT_MULTIPLIER = {"R": 1, "L": 1, "S": 2, "P": 8, "F": 12}
 _LATER_COLUMNS = (
     ("team_round_ratings", "ovr_blend", "REAL"),   # SEASON10_PLAN B4: blended OVR, outputs only
     ("team_seasons", "starting_elo", "REAL"),      # B4: Elo carried from the previous season
+    ("games", "goals_a", "INTEGER"),               # goals scored, recorded from S10 (NULL before)
+    ("games", "goals_b", "INTEGER"),
 )
 _SCHEMA_CHECKED = set()
 
@@ -188,6 +190,8 @@ def init_db():
         result_a INTEGER NOT NULL CHECK(result_a IN (0,1,2,3)),
         raw_goal_score_a REAL,
         raw_goal_score_b REAL,
+        goals_a INTEGER,                    -- goals scored by team_a (recorded from S10; NULL before)
+        goals_b INTEGER,
         spread_a REAL,                      -- positive = team_a favored
         interest_score REAL,                -- game-level (GI)
         dscr_a REAL,                        -- per-game DMAX Score, team_a
@@ -432,18 +436,20 @@ def add_game(season, round_num, game_type, team_a, team_b, pf_a, pa_a, result_a,
              interest_score=None, dscr_a=None, dscr_b=None,
              ex_bonus_a=0, ex_bonus_b=0, elo_a_after=None, elo_b_after=None,
              host_region=None, cup_name=None, cup_bracket=None, cup_round=None,
-             host_team_id=None):
+             host_team_id=None, goals_a=None, goals_b=None):
     conn = get_connection()
     conn.execute("""
         INSERT INTO games (season, round, game_type, team_a, team_b, pf_a, pa_a, result_a,
                             raw_goal_score_a, raw_goal_score_b, spread_a, interest_score,
                             dscr_a, dscr_b, ex_bonus_a, ex_bonus_b, elo_a_after, elo_b_after,
-                            host_region, cup_name, cup_bracket, cup_round, host_team_id)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                            host_region, cup_name, cup_bracket, cup_round, host_team_id,
+                            goals_a, goals_b)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, (season, round_num, game_type, team_a, team_b, pf_a, pa_a, result_a,
           raw_goal_score_a, raw_goal_score_b, spread_a, interest_score,
           dscr_a, dscr_b, ex_bonus_a, ex_bonus_b, elo_a_after, elo_b_after,
-          host_region, cup_name, cup_bracket, cup_round, host_team_id))
+          host_region, cup_name, cup_bracket, cup_round, host_team_id,
+          goals_a, goals_b))
     conn.commit()
     conn.close()
 
@@ -462,6 +468,16 @@ CSV_GAME_OPTIONAL_FIELDS = ["ex_a", "ex_b"]
 # file in results/.
 CSV_GAME_CUP_FIELDS = ["cup_name", "cup_bracket", "cup_round"]
 CSV_GAME_ALL_FIELDS = CSV_GAME_FIELDS + CSV_GAME_OPTIONAL_FIELDS + CSV_GAME_CUP_FIELDS
+
+# Goals scored, each side's own count (per explicit instruction, 2026-10-12:
+# "Goals will need to be readily recorded in S10, as ... they weren't in S9").
+# Two trailing columns after the cup tags; deckfield.html writes them on every
+# row. A file without them (every S9 file) still ingests, and export writes
+# them only for a round whose games carry them, so S9's files round-trip
+# byte for byte. From GOALS_REQUIRED_FROM_SEASON a row without them is
+# refused rather than silently stored without goals.
+CSV_GAME_GOAL_FIELDS = ["goals_a", "goals_b"]
+GOALS_REQUIRED_FROM_SEASON = 10
 
 
 def _round_file_stems(year=2026):
@@ -570,7 +586,7 @@ def export_results_csv(season, from_round=None, to_round=None):
         "dscr_a": 1, "dscr_b": 1,
     }
     INTEGERS = {"elo_a_after", "elo_b_after", "ex_bonus_a", "ex_bonus_b",
-                "pf_a", "pa_a", "result_a", "round", "cup_round"}
+                "pf_a", "pa_a", "result_a", "round", "cup_round", "goals_a", "goals_b"}
 
     def fmt(col, v):
         if v is None:
@@ -588,7 +604,8 @@ def export_results_csv(season, from_round=None, to_round=None):
     stems = _round_file_stems()
     out = []
     for rnd in sorted(by_round):
-        lines = [",".join(CSV_GAME_ALL_FIELDS)]
+        with_goals = any(r["goals_a"] is not None for r in by_round[rnd])
+        lines = [",".join(CSV_GAME_ALL_FIELDS + (CSV_GAME_GOAL_FIELDS if with_goals else []))]
         for r in by_round[rnd]:
             home = "A" if r["host_region"] == r["a_region"] else "B"
             if r["host_region"] not in (r["a_region"], r["b_region"]):
@@ -610,7 +627,7 @@ def export_results_csv(season, from_round=None, to_round=None):
                 ("ex_bonus_a", r["ex_bonus_a"]), ("ex_bonus_b", r["ex_bonus_b"]),
                 ("cup_name", r["cup_name"]), ("cup_bracket", r["cup_bracket"]),
                 ("cup_round", r["cup_round"]),
-            ]))
+            ] + ([("goals_a", r["goals_a"]), ("goals_b", r["goals_b"])] if with_goals else [])))
         stem = stems.get(rnd, f"{'2026' if CURRENT_SEASON == 9 else f's{CURRENT_SEASON}'}-round-{rnd:02d}")
         # No trailing newline: matches what deckfield.html's "Download CSV"
         # writes (csvLines.join("\n")), so the two producers agree byte for
@@ -703,6 +720,16 @@ def add_game_from_dict(season, values):
     if home_side not in ("A", "B"):
         raise ValueError(f"home must be 'A' or 'B', got {values['home']!r}")
 
+    goals = [values.get(k) for k in CSV_GAME_GOAL_FIELDS]
+    goals = [int(str(g).strip()) if g not in (None, "") and str(g).strip() != "" else None for g in goals]
+    if season >= GOALS_REQUIRED_FROM_SEASON and None in goals:
+        raise ValueError(
+            f"round {values.get('round')}, {values.get('team_a')} v {values.get('team_b')}: "
+            f"goals_a/goals_b are required from Season {GOALS_REQUIRED_FROM_SEASON} -- "
+            f"export the results from deckfield.html, which writes them")
+    if any(g is not None and g < 0 for g in goals):
+        raise ValueError(f"negative goals in round {values.get('round')}: {goals}")
+
     conn = get_connection()
     team_a_id, team_b_id = int(values["team_a"]), int(values["team_b"])
     round_num = int(values["round"])
@@ -731,6 +758,7 @@ def add_game_from_dict(season, values):
         cup_name=values.get("cup_name") or None,
         cup_bracket=values.get("cup_bracket") or None,
         cup_round=int(values["cup_round"]) if values.get("cup_round") else None,
+        goals_a=goals[0], goals_b=goals[1],
     )
     return {"round": round_num, "host_region": host_region, "fatigue_delta_a": delta_a, "fatigue_delta_b": delta_b}
 
@@ -745,22 +773,22 @@ def add_game_csv(season, row):
     Column order:
       round, game_type, team_a_dex, team_b_dex, result_a, pf_a, pa_a,
       raw_goal_a, raw_goal_b, spread_a, interest, dscr_a, dscr_b,
-      elo_a_after, elo_b_after, home, [ex_a, ex_b]
+      elo_a_after, elo_b_after, home, [ex_a, ex_b,
+      [cup_name, cup_bracket, cup_round, [goals_a, goals_b]]]
 
     ex_a, ex_b: optional, default 0 -- can be added later once a winner's
-    EX Bonus Score is known
+    EX Bonus Score is known. goals_a, goals_b: required from
+    GOALS_REQUIRED_FROM_SEASON (deckfield.html's own export writes all 23).
 
     Example:
       "12,S,50,113,3,36,33,4.13,3.9,0.93,102,42.7,38.1,2183,2091,A"
     """
     parts = [p.strip() for p in row.split(",")]
-    if len(parts) not in (len(CSV_GAME_FIELDS), len(CSV_GAME_FIELDS) + len(CSV_GAME_OPTIONAL_FIELDS)):
-        raise ValueError(
-            f"Expected {len(CSV_GAME_FIELDS)} or {len(CSV_GAME_FIELDS)+len(CSV_GAME_OPTIONAL_FIELDS)} "
-            f"fields, got {len(parts)}: {row!r}"
-        )
-    fields = CSV_GAME_FIELDS + CSV_GAME_OPTIONAL_FIELDS
-    values = dict(zip(fields, parts))
+    shapes = {len(f): f for f in (CSV_GAME_FIELDS, CSV_GAME_FIELDS + CSV_GAME_OPTIONAL_FIELDS,
+                                  CSV_GAME_ALL_FIELDS, CSV_GAME_ALL_FIELDS + CSV_GAME_GOAL_FIELDS)}
+    if len(parts) not in shapes:
+        raise ValueError(f"Expected {', '.join(map(str, sorted(shapes)))} fields, got {len(parts)}: {row!r}")
+    values = dict(zip(shapes[len(parts)], parts))
     result = add_game_from_dict(season, values)
     return {"host_region": result["host_region"], "fatigue_delta_a": result["fatigue_delta_a"],
             "fatigue_delta_b": result["fatigue_delta_b"]}
@@ -4179,6 +4207,52 @@ def _event_adv_by_dex(season, event, games):
     return {}
 
 
+# R1 honours last season's top 16 (per explicit instruction, 2026-10-12):
+# "traditionally, in R1, the last 16 games of the week are the top 16 (per the
+# HoF tab) from the previous season". This only ever affects R1.
+R1_TOP16_LAST_FROM_SEASON = 10
+
+
+def previous_season_top16(season):
+    """Last season's World Championship top 16 in finishing order -- champion,
+    finalist, then the Hall of Fame's No. 3-16 -- as team names, read from
+    hall_of_fame.json (a finished season's record). [] if it is not there."""
+    with open(HOF_PATH) as f:
+        hof = json.load(f)
+    prev = str(season - 1)
+    final = hof["plaques"]["world"]["seasons"].get(prev)
+    placings = hof["placings"].get(prev)
+    if not final or not placings:
+        return []
+    return [t["name"] for t in final["teams"]] + [t["name"] for t in placings]
+
+
+def _play_order(season, event, games, ranks):
+    """Play order for a matchday's (home, away) games.
+
+    Worst-ranked team first, not the source bracket/pod order (e.g. PA Cup's
+    ladder-row order) -- each game sorted by its lowest-ranked (highest rank
+    number) team, descending. R1 alone (from R1_TOP16_LAST_FROM_SEASON) then
+    moves every game holding one of last season's top 16 to the end, No. 16's
+    first and the world champion's last; a game holding two goes by the better
+    finish. Everything else keeps the worst-ranked-first order ahead of them.
+    """
+    games = sorted(games, key=lambda hg: max(ranks[hg[0]], ranks[hg[1]]), reverse=True)
+    if tuple(event) != ("R", 1) or season < R1_TOP16_LAST_FROM_SEASON:
+        return games
+    top16 = previous_season_top16(season)
+    if not top16:
+        return games
+    conn = get_connection()
+    dex_of = {r["name"]: r["team_id"] for r in conn.execute("SELECT team_id, name FROM teams")}
+    conn.close()
+    finish = {dex_of[n]: i for i, n in enumerate(top16, 1) if n in dex_of}
+    best = lambda hg: min(finish.get(hg[0], 99), finish.get(hg[1], 99))
+    rest = [g for g in games if best(g) == 99]
+    honoured = sorted((g for g in games if best(g) != 99), key=best, reverse=True)
+    return rest + honoured
+
+
 def export_matchday_for_deckfield(season, event=None):
     """
     Returns the next (or a specified) matchday's games in DECKFIELD's
@@ -4204,10 +4278,7 @@ def export_matchday_for_deckfield(season, event=None):
 
     games = _games_for_event(season, event, info.get("week"), info.get("day"))
     ranks = current_rank_lookup(season)
-    # Play order is worst-ranked team first, not the source bracket/pod
-    # order (e.g. PA Cup's ladder-row order) -- sort each game by its
-    # lowest-ranked (highest rank number) team, descending.
-    games = sorted(games, key=lambda hg: max(ranks[hg[0]], ranks[hg[1]]), reverse=True)
+    games = _play_order(season, event, games, ranks)
     adv = _event_adv_by_dex(season, event, games)
     lines = ["Away Team Rank\tHome Team Rank\tAdv"]
     lines += [f"{ranks[away]}\t{ranks[home]}\t{_fmt_adv(adv.get((home, away)))}" for home, away in games]
@@ -4286,7 +4357,7 @@ def export_matchday_batches(season, event=None):
 
     def build_batch(label, game_type, agg, cup_name, cup_bracket, cup_round, games, cup_per_game=None,
                     adv_per_game=None):
-        games = sorted(games, key=lambda hg: max(ranks[hg[0]], ranks[hg[1]]), reverse=True)
+        games = _play_order(season, event, games, ranks)
         adv_per_game = adv_per_game or {}
         adv = lambda hg: _fmt_adv(adv_per_game.get(hg))
         settings_row = _batch_settings_row(game_type, agg, weekend, label, info["abs_round"],
