@@ -1366,7 +1366,8 @@ round,game_type,team_a,team_b,result_a,pf_a,pa_a,raw_goal_a,raw_goal_b,spread_a,
   3/0, or 0 on a 2/1) or is negative is **refused**. `export_results_csv`
   writes the column only from `OVERTIMES_FROM_SEASON` (10), so Season 9's
   committed files, which never had it, still re-export byte for byte.
-  Verified: a real S10 R1 played in `deckfield.html` from the dashboard's
+  Verified: all 83 `results/s9/` files "already match" after a clean S9 audit
+  rebuild; a real S10 R1 played in `deckfield.html` from the dashboard's
   Matchday Pack (80 games, three of them OT) ingested and re-exported byte for
   byte; the three bad cases refuse.
 
