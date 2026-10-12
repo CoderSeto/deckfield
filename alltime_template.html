@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DECKFIELD — All-Time</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #14161a; --surface: #1b1e24; --surface-2: #22262e; --border: #2c303a;
+    --text: #ecebe6; --text-dim: #9a978f; --accent: #e8a33d; --accent-dim: #b87f2e;
+    --good: #6fcf97; --bad: #e0685c;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+  header { padding: 28px 32px 20px; border-bottom: 1px solid var(--border); display: flex;
+    align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .dash-link { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); text-decoration: none;
+    border: 1px solid var(--border); border-radius: 4px; padding: 6px 12px; }
+  .dash-link:hover { border-color: var(--accent); }
+  .wordmark { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 32px;
+    letter-spacing: 0.03em; text-transform: uppercase; }
+  .wordmark span { color: var(--accent); }
+  .subtitle { font-size: 13px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; }
+  nav.tabs { display: flex; gap: 4px; padding: 0 32px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  nav.tabs button { background: none; border: none; color: var(--text-dim); font: 600 14px 'Inter', sans-serif;
+    padding: 14px 16px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  nav.tabs button.active { color: var(--text); border-bottom-color: var(--accent); }
+  main { padding: 24px 32px 48px; max-width: 1600px; margin: 0 auto; }
+  section.panel { display: none; }
+  section.panel.active { display: block; }
+  h2 { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 22px; letter-spacing: 0.04em;
+    text-transform: uppercase; margin: 28px 0 10px; }
+  h2:first-child { margin-top: 0; }
+  .note { color: var(--text-dim); font-size: 13px; line-height: 1.5; max-width: 980px; margin: 6px 0 14px; }
+  .scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { padding: 7px 10px; text-align: right; white-space: nowrap; }
+  th { background: var(--surface-2); color: var(--text-dim); font-weight: 600; font-size: 12px;
+    letter-spacing: 0.04em; text-transform: uppercase; position: sticky; top: 0; cursor: pointer; user-select: none; }
+  th.nosort { cursor: default; }
+  th.sorted { color: var(--accent); }
+  td.l, th.l { text-align: left; }
+  tbody tr { border-top: 1px solid var(--border); }
+  tbody tr:hover { background: var(--surface-2); }
+  .team { font-weight: 600; cursor: pointer; }
+  .team:hover { text-decoration: underline; }
+  .dim { color: var(--text-dim); }
+  .win { color: var(--good); }
+  .loss { color: var(--bad); }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 0 0 12px; }
+  input[type=search], select { background: var(--surface); color: var(--text); border: 1px solid var(--border);
+    border-radius: 5px; padding: 8px 10px; font: 14px 'Inter', sans-serif; }
+  .toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 5px; overflow: hidden; }
+  .toggle button { background: var(--surface); color: var(--text-dim); border: none; padding: 8px 14px;
+    font: 600 13px 'Inter', sans-serif; cursor: pointer; }
+  .toggle button.active { background: var(--surface-2); color: var(--accent); }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); gap: 0 24px; }
+  .grid2 > * { min-width: 0; }   /* a table's width must not size the column (it scrolls instead) */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 16px 18px; }
+  .teamhead { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-end; margin-bottom: 8px; }
+  .teamhead .big { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 40px;
+    text-transform: uppercase; letter-spacing: 0.02em; line-height: 1; }
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat .k { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; }
+  .stat .v { font-size: 20px; font-weight: 700; }
+  .honours { margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 3px 10px;
+    font-size: 12.5px; }
+  .chip.gold { border-color: var(--accent-dim); color: var(--accent); }
+  svg text { fill: var(--text-dim); font: 11px 'Inter', sans-serif; }
+  .chart { width: 100%; height: 300px; display: block; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; margin: 8px 0 0; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 14px; height: 3px; display: inline-block; border-radius: 2px; }
+  .legend button { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 14px; padding: 0 2px; }
+  @media (max-width: 700px) {
+    header, main { padding-left: 16px; padding-right: 16px; }
+    nav.tabs { padding: 0 8px; }
+    .grid2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="wordmark">Deck<span>field</span> All-Time</div>
+    <div class="subtitle" id="subtitle"></div>
+  </div>
+  <a class="dash-link" href="deckfield_dashboard.html">&larr; Current season</a>
+</header>
+<nav class="tabs" id="tabs">
+  <button data-tab="teams" class="active">Teams</button>
+  <button data-tab="team">Team</button>
+  <button data-tab="h2h">Head-to-Head</button>
+  <button data-tab="titles">Titles</button>
+  <button data-tab="elo">Elo</button>
+  <button data-tab="records">Records</button>
+</nav>
+<main>
+  <section class="panel active" id="panel-teams">
+    <div class="controls"><input type="search" id="teams-search" placeholder="Search teams"></div>
+    <div class="scroll"><table id="teams-table"></table></div>
+    <p class="note">Every game of Seasons 1-9, as recorded. Classes mean the same thing in every season:
+      Regional is a team's own conference; League is S5-S9's leagues and S3-S4's MRL/UTL;
+      Interconference existed in S1-S4; Cup is the WCS, Grand Swiss, PA, RDS and S3's conference cups;
+      Postseason is playoffs and finals. Byes count in no record. Some S1-S3 hosts were rebuilt from each
+      season's own schedule (see the archive); every game has one.</p>
+  </section>
+
+  <section class="panel" id="panel-team">
+    <div class="controls"><select id="team-select"></select></div>
+    <div id="team-body"></div>
+  </section>
+
+  <section class="panel" id="panel-h2h">
+    <div class="controls">
+      <select id="h2h-a"></select><span class="dim">vs</span><select id="h2h-b"></select>
+    </div>
+    <div id="h2h-body"></div>
+    <div class="grid2">
+      <div><h2>Most-played matchups</h2><div class="scroll"><table id="h2h-most"></table></div></div>
+      <div><h2>Most one-sided (10+ meetings)</h2><div class="scroll"><table id="h2h-lopsided"></table></div></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-titles">
+    <h2>Honours</h2>
+    <div class="scroll"><table id="titles-table"></table></div>
+    <p class="note">From the Hall of Fame, plus S3's seven conference cups (decided by their two-legged
+      finals). Cup is the season's main cup: the WCS (S3-S6), the Grand Swiss (S7-S8), the PA Cup (S9).
+      Regional Cup is S3's conference cups and S9's Ribbon/Dream/Star. League is the top tier (MRL,
+      Master, First Division); 2nd tier its next (UTL, Ultra, Second Division). Top 16 counts World
+      Championship placings from No. 3 down.</p>
+    <h2>Season by season</h2>
+    <div class="scroll"><table id="titles-seasons"></table></div>
+  </section>
+
+  <section class="panel" id="panel-elo">
+    <h2>Elo across nine seasons</h2>
+    <div class="controls"><select id="elo-add"><option value="">Add a team…</option></select></div>
+    <div class="card"><svg class="chart" id="elo-chart"></svg><div class="legend" id="elo-legend"></div></div>
+    <p class="note">One continuous chain: every team opened S1 at 1800 (Lanakila's at 1800 in S2, Dynamax's
+      from their S3 preseason, Phoenix's from S4's), and each season opens where the last one closed.
+      S1-S3's Elo was computed afterwards, week by week. S5 applied its Elo out of game order, so a
+      team's S5 stretch can jump; its values are as recorded.</p>
+    <div class="grid2">
+      <div><h2>Highest Elo ever</h2><div class="scroll"><table id="elo-peak"></table></div></div>
+      <div><h2>Lowest Elo ever</h2><div class="scroll"><table id="elo-low"></table></div></div>
+      <div><h2>Biggest season gains</h2><div class="scroll"><table id="elo-gain"></table></div></div>
+      <div><h2>Biggest season losses</h2><div class="scroll"><table id="elo-loss"></table></div></div>
+      <div><h2>Biggest upsets <span class="dim" style="font-size:13px;text-transform:none;letter-spacing:0">(Elo going in; not S5)</span></h2><div class="scroll"><table id="elo-upsets"></table></div></div>
+      <div><h2>Biggest single-game swings</h2><div class="scroll"><table id="elo-k"></table></div></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-records">
+    <div class="controls">
+      <span class="dim">Scoring era</span>
+      <div class="toggle" id="era-toggle"><button data-era="S1-S6" class="active">S1–S6</button><button data-era="S7-S9">S7–S9</button></div>
+    </div>
+    <p class="note">Scoring changed fundamentally in S7 (and again in S8 and S9), so scoring records are
+      kept per era. Goals were not recorded for most of S9.</p>
+    <div class="grid2">
+      <div><h2>Highest score</h2><div class="scroll"><table id="rec-score"></table></div></div>
+      <div><h2>Biggest margin</h2><div class="scroll"><table id="rec-margin"></table></div></div>
+      <div><h2>Highest combined score</h2><div class="scroll"><table id="rec-combined"></table></div></div>
+      <div><h2>Most goals</h2><div class="scroll"><table id="rec-goals"></table></div></div>
+      <div><h2>Most points per game (season)</h2><div class="scroll"><table id="rec-pfpg"></table></div></div>
+      <div><h2>Best point difference per game (season)</h2><div class="scroll"><table id="rec-pdpg"></table></div></div>
+    </div>
+    <h2 style="margin-top:36px">All seasons</h2>
+    <div class="grid2">
+      <div><h2>Best win percentage (season)</h2><div class="scroll"><table id="rec-winpct"></table></div></div>
+      <div><h2>Most wins (season)</h2><div class="scroll"><table id="rec-wins"></table></div></div>
+      <div><h2>Longest winning streaks</h2><div class="scroll"><table id="rec-wstreak"></table></div></div>
+      <div><h2>Longest losing streaks</h2><div class="scroll"><table id="rec-lstreak"></table></div></div>
+      <div><h2>Fewest losses (season, 15+ games)</h2><div class="scroll"><table id="rec-fewest"></table></div></div>
+    </div>
+  </section>
+</main>
+<script>
+const D = /*__ALLTIME_DATA__*/null;
+const TEAM = Object.fromEntries(D.teams.map(t => [t.team, t]));
+const PALETTE = ['#e8a33d', '#7fb8e0', '#6fcf97', '#e0685c', '#c39bd3', '#f0d264'];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const color = t => (D.region_colors[TEAM[t].region] || {}).bright || 'var(--text)';
+const nameHtml = (t, plain) => `<span class="team" data-team="${t}" style="color:${color(t)}">${esc(TEAM[t].name)}</span>`;
+const rec = r => r ? `${r[0]}-${r[1]}` : '–';
+const pct = r => r && r[0] + r[1] ? (r[0] / (r[0] + r[1])).toFixed(3).replace(/^0/, '') : '–';
+const evTitle = i => D.events[i][2];
+const evCode = i => D.events[i][1];
+const sTag = s => `S${s}`;
+
+// ---------------------------------------------------------------- tabs
+function showTab(name) {
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('section.panel').forEach(p => p.classList.toggle('active', p.id === `panel-${name}`));
+}
+document.getElementById('tabs').addEventListener('click', e => { if (e.target.dataset.tab) showTab(e.target.dataset.tab); });
+document.body.addEventListener('click', e => {
+  const t = e.target.closest('.team');
+  if (t && t.dataset.team) { openTeam(+t.dataset.team); }
+});
+
+// ---------------------------------------------------------------- sortable tables
+function table(el, cols, rows, opts = {}) {
+  const st = el._sort || {key: opts.sort, asc: !!opts.asc};
+  el._sort = st;
+  const sorted = rows.slice();
+  if (st.key != null) {
+    const c = cols.find(c => c.key === st.key);
+    sorted.sort((a, b) => {
+      const x = c.sortval ? c.sortval(a) : a[c.key], y = c.sortval ? c.sortval(b) : b[c.key];
+      if (x == null && y == null) return 0;
+      if (x == null) return 1;
+      if (y == null) return -1;
+      return (x < y ? -1 : x > y ? 1 : 0) * (st.asc ? 1 : -1);
+    });
+  }
+  el.innerHTML = `<thead><tr>${cols.map(c => `<th class="${c.l ? 'l' : ''} ${c.nosort ? 'nosort' : ''} ${st.key === c.key ? 'sorted' : ''}" data-key="${c.key}" title="${c.title || ''}">${c.label}</th>`).join('')}</tr></thead>` +
+    `<tbody>${sorted.map((r, i) => `<tr>${cols.map(c => `<td class="${c.l ? 'l' : ''}">${c.html ? c.html(r, i) : (r[c.key] ?? '–')}</td>`).join('')}</tr>`).join('')}</tbody>`;
+  el.querySelectorAll('th').forEach(th => th.onclick = () => {
+    const c = cols.find(c => c.key === th.dataset.key);
+    if (!c || c.nosort) return;
+    st.asc = st.key === c.key ? !st.asc : !!c.asc;
+    st.key = c.key;
+    table(el, cols, rows, opts);
+  });
+}
+const recCol = (key, label, path) => ({key, label, html: r => rec(path(r)), sortval: r => { const x = path(r); return x && x[0] + x[1] ? x[0] / (x[0] + x[1]) : null; }});
+
+// ---------------------------------------------------------------- Teams
+function renderTeams() {
+  const q = document.getElementById('teams-search').value.toLowerCase();
+  const rows = D.teams.filter(t => t.name.toLowerCase().includes(q)).map(t => ({
+    ...t, w: (t.records.Overall || [0, 0])[0], gp: (t.records.Overall || [0, 0]).reduce((a, b) => a + b, 0),
+    pct: (t.records.Overall || [0, 0])[0] / Math.max(1, (t.records.Overall || [0, 0]).reduce((a, b) => a + b, 0)),
+    peakv: t.peak ? t.peak[0] : null, world: t.honours.World || 0, cup: (t.honours.Cup || 0) + (t.honours['Regional Cup'] || 0),
+    regional: t.honours.Regional || 0, league: t.honours.League || 0,
+  }));
+  table(document.getElementById('teams-table'), [
+    {key: 'name', label: 'Team', l: 1, asc: 1, html: r => nameHtml(r.team)},
+    {key: 'nseasons', label: 'Seasons', html: r => r.seasons.length, sortval: r => r.seasons.length},
+    {key: 'gp', label: 'GP'},
+    {key: 'w', label: 'W-L', html: r => rec(r.records.Overall)},
+    {key: 'pct', label: 'Pct', html: r => pct(r.records.Overall)},
+    recCol('reg', 'Regional', r => r.records.Regional), recCol('lg', 'League', r => r.records.League),
+    recCol('ic', 'Interconf.', r => r.records.Interconference), recCol('cup_r', 'Cup', r => r.records.Cup),
+    recCol('post', 'Postseason', r => r.records.Postseason), recCol('home', 'Home', r => r.records.Home),
+    recCol('away', 'Away', r => r.records.Away), recCol('ot', 'OT', r => r.records.OT),
+    {key: 'world', label: 'World', title: 'World Championships'},
+    {key: 'cup', label: 'Cups', title: 'Main cup + regional cup titles'},
+    {key: 'regional', label: 'Reg. titles', title: 'Regional / conference championships'},
+    {key: 'league', label: 'League', title: 'Top-tier league titles'},
+    {key: 'peakv', label: 'Peak Elo', html: r => r.peak ? `${Math.round(r.peak[0])} <span class="dim">${sTag(r.peak[1])}</span>` : '–'},
+    {key: 'elo_s9', label: 'S9 Elo', html: r => Math.round(r.elo_s9)},
+  ], rows, {sort: 'pct'});
+}
+document.getElementById('teams-search').addEventListener('input', renderTeams);
+
+// ---------------------------------------------------------------- per-team helpers
+const GAMES_OF = {};
+D.games.forEach(g => { (GAMES_OF[g[2]] = GAMES_OF[g[2]] || []).push(g); (GAMES_OF[g[3]] = GAMES_OF[g[3]] || []).push(g); });
+const TS = {};
+D.team_seasons.forEach(r => { (TS[r[1]] = TS[r[1]] || {})[r[0]] = r; });
+function eloSeries(t) {
+  // A team's recorded Elo after each of its games, in Archive order. (S5
+  // applied Elo out of that order, so its stretch of a line can jump.)
+  const pts = [];
+  const games = GAMES_OF[t] || [];
+  for (const s of Object.keys(TS[t]).map(Number).sort((a, b) => a - b)) {
+    pts.push({s, e: TS[t][s][5]});
+    games.filter(g => g[0] === s).forEach(g => pts.push({s, e: g[2] === t ? g[8] : g[9]}));
+  }
+  return pts;
+}
+
+// ---------------------------------------------------------------- Team page
+const teamSel = document.getElementById('team-select');
+D.teams.slice().sort((a, b) => a.name.localeCompare(b.name)).forEach(t => teamSel.add(new Option(t.name, t.team)));
+teamSel.addEventListener('change', () => renderTeam(+teamSel.value));
+function openTeam(t) { teamSel.value = t; showTab('team'); renderTeam(t); window.scrollTo(0, 0); }
+function renderTeam(t) {
+  const T = TEAM[t];
+  const hon = D.titles.filter(x => x[3] === t && (x[4] === 1 || (x[1] === 'World' && x[4] === 2)))
+    .sort((a, b) => a[0] - b[0]);
+  const chips = hon.map(x => `<span class="chip ${x[1] === 'World' && x[4] === 1 ? 'gold' : ''}">${esc(x[2])} · S${x[0]}</span>`).join('');
+  const regionName = D.region_display[T.region] || T.region;
+  let html = `<div class="teamhead">
+      <div><div class="big" style="color:${color(t)}">${esc(T.name)}</div><div class="dim">${esc(regionName)} · ${T.seasons.length} seasons (S${T.seasons[0]}–S${T.seasons[T.seasons.length - 1]})</div></div>
+      <div class="stat"><span class="k">Record</span><span class="v">${rec(T.records.Overall)}</span></div>
+      <div class="stat"><span class="k">Pct</span><span class="v">${pct(T.records.Overall)}</span></div>
+      <div class="stat"><span class="k">Postseason</span><span class="v">${rec(T.records.Postseason)}</span></div>
+      <div class="stat"><span class="k">Peak Elo</span><span class="v">${T.peak ? Math.round(T.peak[0]) : '–'}</span></div>
+      <div class="stat"><span class="k">Best rank</span><span class="v">${T.best_rank ? '#' + T.best_rank : '–'}</span></div>
+    </div><div class="honours">${chips || '<span class="dim">No titles yet.</span>'}</div>`;
+  html += `<h2>Elo</h2><div class="card"><svg class="chart" id="team-elo"></svg></div>`;
+  html += `<h2>Season by season</h2><div class="scroll"><table id="team-seasons"></table></div>`;
+  html += `<h2>Against every opponent</h2><div class="scroll"><table id="team-opps"></table></div>`;
+  document.getElementById('team-body').innerHTML = html;
+  drawElo(document.getElementById('team-elo'), [{t, pts: eloSeries(t), c: color(t)}]);
+
+  const games = GAMES_OF[t] || [];
+  const rows = Object.keys(TS[t]).map(Number).sort((a, b) => a - b).map(s => {
+    const r = TS[t][s], gs = games.filter(g => g[0] === s);
+    const byc = {}; let w = 0, l = 0, pf = 0, pa = 0;
+    gs.forEach(g => { const won = g[2] === t, c = D.classes[g[13]]; (byc[c] = byc[c] || [0, 0])[won ? 0 : 1]++;
+      won ? w++ : l++; pf += won ? g[4] : g[5]; pa += won ? g[5] : g[4]; });
+    const post = [(byc.Playoffs || [0, 0])[0] + (byc.Finals || [0, 0])[0], (byc.Playoffs || [0, 0])[1] + (byc.Finals || [0, 0])[1]];
+    const h = D.titles.filter(x => x[3] === t && x[0] === s && (x[4] === 1 || (x[1] === 'World' && x[4] <= 16)));
+    return {s, name: r[2], region: r[3], div: r[4], w, l, pct: w / Math.max(1, w + l), byc, post, pfg: gs.length ? pf / gs.length : null,
+      pag: gs.length ? pa / gs.length : null, rank: r[7], e0: r[5], e1: r[6],
+      hon: h.map(x => x[1] === 'World' && x[4] > 1 ? (x[4] === 2 ? 'World finalist' : `World No. ${x[4]}`) : x[2]).join(', ')};
+  });
+  table(document.getElementById('team-seasons'), [
+    {key: 's', label: 'Season', html: r => sTag(r.s)},
+    {key: 'name', label: 'As', l: 1, html: r => r.name === T.name ? '<span class="dim">–</span>' : esc(r.name)},
+    {key: 'region', label: 'Region', l: 1, html: r => esc(D.region_display[r.region] || r.region)},
+    {key: 'div', label: 'Div.', l: 1, html: r => esc(r.div || '')},
+    {key: 'pct', label: 'W-L', html: r => `${r.w}-${r.l}`},
+    recCol('reg', 'Regional', r => r.byc.Regional), recCol('lg', 'League', r => r.byc.League || r.byc.Interconference),
+    recCol('cup', 'Cup', r => r.byc.Cup), recCol('post', 'Post.', r => r.post),
+    {key: 'pfg', label: 'PF/G', html: r => r.pfg == null ? '–' : r.pfg.toFixed(1)},
+    {key: 'pag', label: 'PA/G', html: r => r.pag == null ? '–' : r.pag.toFixed(1)},
+    {key: 'rank', label: 'Final rank', html: r => r.rank ? '#' + r.rank : '–'},
+    {key: 'e1', label: 'Elo', html: r => `${Math.round(r.e0)} → ${Math.round(r.e1)}`},
+    {key: 'hon', label: 'Honours', l: 1, nosort: 1},
+  ], rows, {sort: 's', asc: true});
+
+  const opp = {};
+  games.forEach(g => { const won = g[2] === t, o = won ? g[3] : g[2];
+    const x = opp[o] = opp[o] || {o, w: 0, l: 0, last: 0};
+    won ? x.w++ : x.l++; x.last = g[0]; });
+  table(document.getElementById('team-opps'), [
+    {key: 'o', label: 'Opponent', l: 1, html: r => nameHtml(r.o), sortval: r => TEAM[r.o].name, asc: 1},
+    {key: 'gp', label: 'GP', sortval: r => r.w + r.l, html: r => r.w + r.l},
+    {key: 'pct', label: 'W-L', sortval: r => r.w / (r.w + r.l), html: r => `${r.w}-${r.l}`},
+    {key: 'last', label: 'Last met', html: r => sTag(r.last)},
+    {key: 'h2h', label: '', nosort: 1, html: r => `<a href="#" class="dim" data-h2h="${t},${r.o}">games ›</a>`},
+  ], Object.values(opp), {sort: 'gp'});
+}
+document.body.addEventListener('click', e => {
+  const a = e.target.closest('[data-h2h]');
+  if (!a) return;
+  e.preventDefault();
+  const [x, y] = a.dataset.h2h.split(',');
+  document.getElementById('h2h-a').value = x; document.getElementById('h2h-b').value = y;
+  renderH2H(); showTab('h2h'); window.scrollTo(0, 0);
+});
+
+// ---------------------------------------------------------------- Elo chart
+function drawElo(svg, series) {
+  const W = svg.clientWidth || 900, H = svg.clientHeight || 300, L = 46, R = 10, T = 10, B = 24;
+  const seasons = D.seasons.map(s => s.season);
+  // x: each season gets width in proportion to its game count, so all seasons line up across teams.
+  const total = D.seasons.reduce((a, s) => a + s.games, 0);
+  const x0 = {}; let acc = 0;
+  D.seasons.forEach(s => { x0[s.season] = acc / total; acc += s.games; });
+  const span = s => D.seasons.find(z => z.season === s).games / total;
+  let lo = Infinity, hi = -Infinity;
+  series.forEach(sr => sr.pts.forEach(p => { lo = Math.min(lo, p.e); hi = Math.max(hi, p.e); }));
+  if (!isFinite(lo)) { svg.innerHTML = ''; return; }
+  lo = Math.floor((lo - 20) / 100) * 100; hi = Math.ceil((hi + 20) / 100) * 100;
+  const X = f => L + f * (W - L - R), Y = e => T + (hi - e) / (hi - lo) * (H - T - B);
+  let out = '';
+  for (let e = lo; e <= hi; e += 100) out += `<line x1="${L}" x2="${W - R}" y1="${Y(e)}" y2="${Y(e)}" stroke="#2c303a"/><text x="${L - 6}" y="${Y(e) + 4}" text-anchor="end">${e}</text>`;
+  seasons.forEach(s => { out += `<line x1="${X(x0[s])}" x2="${X(x0[s])}" y1="${T}" y2="${H - B}" stroke="#2c303a"/><text x="${X(x0[s] + span(s) / 2)}" y="${H - 6}" text-anchor="middle">S${s}</text>`; });
+  series.forEach(sr => {
+    // Within a season, spread a team's points evenly over the season's width.
+    const by = {};
+    sr.pts.forEach(p => (by[p.s] = by[p.s] || []).push(p));
+    const coords = [];
+    Object.keys(by).map(Number).sort((a, b) => a - b).forEach(s => {
+      const ps = by[s];
+      ps.forEach((p, i) => coords.push([X(x0[s] + span(s) * (ps.length > 1 ? i / (ps.length - 1) : 0)), Y(p.e)]));
+    });
+    out += `<polyline fill="none" stroke="${sr.c}" stroke-width="1.6" points="${coords.map(c => c.map(v => v.toFixed(1)).join(',')).join(' ')}"/>`;
+  });
+  svg.innerHTML = out;
+}
+
+// ---------------------------------------------------------------- Head-to-head
+const ha = document.getElementById('h2h-a'), hb = document.getElementById('h2h-b');
+D.teams.slice().sort((a, b) => a.name.localeCompare(b.name)).forEach(t => { ha.add(new Option(t.name, t.team)); hb.add(new Option(t.name, t.team)); });
+ha.value = D.teams.find(t => t.name === 'Rustboro City').team; hb.value = D.teams.find(t => t.name === 'Verdanturf Town').team;
+ha.onchange = hb.onchange = renderH2H;
+const PAIRS = {};
+D.games.forEach(g => { const k = g[2] < g[3] ? `${g[2]},${g[3]}` : `${g[3]},${g[2]}`; const p = PAIRS[k] = PAIRS[k] || {a: Math.min(g[2], g[3]), b: Math.max(g[2], g[3]), wa: 0, wb: 0};
+  g[2] === p.a ? p.wa++ : p.wb++; });
+function gameRow(g) {
+  const host = g[6] === 1 ? g[2] : g[6] === 2 ? g[3] : null;
+  return {s: g[0], ev: evTitle(g[1]), w: g[2], l: g[3], score: `${g[4]}-${g[5]}`, host, ot: g[7]};
+}
+function renderH2H() {
+  const a = +ha.value, b = +hb.value;
+  const gs = D.games.filter(g => (g[2] === a && g[3] === b) || (g[2] === b && g[3] === a));
+  const wa = gs.filter(g => g[2] === a).length;
+  let html = `<div class="card teamhead"><div class="stat"><span class="k">${esc(TEAM[a].name)}</span><span class="v" style="color:${color(a)}">${wa}</span></div>
+    <div class="stat"><span class="k">${esc(TEAM[b].name)}</span><span class="v" style="color:${color(b)}">${gs.length - wa}</span></div>
+    <div class="stat"><span class="k">Meetings</span><span class="v">${gs.length}</span></div></div>`;
+  html += gs.length ? `<div class="scroll" style="margin-top:12px"><table id="h2h-games"></table></div>` : `<p class="note">They never met.</p>`;
+  document.getElementById('h2h-body').innerHTML = html;
+  if (gs.length) table(document.getElementById('h2h-games'), [
+    {key: 's', label: 'Season', html: r => sTag(r.s)},
+    {key: 'ev', label: 'Event', l: 1, nosort: 1},
+    {key: 'w', label: 'Winner', l: 1, nosort: 1, html: r => nameHtml(r.w)},
+    {key: 'score', label: 'Score', nosort: 1, html: r => r.score + (r.ot ? ' <span class="dim">OT</span>' : '')},
+    {key: 'host', label: 'Host', l: 1, nosort: 1, html: r => r.host ? esc(TEAM[r.host].name) : '<span class="dim">–</span>'},
+  ], gs.map(gameRow), {sort: null});
+}
+function renderPairs() {
+  const ps = Object.values(PAIRS).map(p => ({...p, gp: p.wa + p.wb}));
+  const pairCols = [
+    {key: 'a', label: 'Matchup', l: 1, nosort: 1, html: r => `${nameHtml(r.a)} <span class="dim">v</span> ${nameHtml(r.b)}`},
+    {key: 'gp', label: 'GP'},
+    {key: 'rec', label: 'Record', nosort: 1, html: r => `${r.wa}-${r.wb}`},
+    {key: 'go', label: '', nosort: 1, html: r => `<a href="#" class="dim" data-h2h="${r.a},${r.b}">games ›</a>`},
+  ];
+  table(document.getElementById('h2h-most'), pairCols, ps.sort((x, y) => y.gp - x.gp).slice(0, 30), {sort: 'gp'});
+  const lop = ps.filter(p => p.gp >= 10).map(p => ({...p, edge: Math.max(p.wa, p.wb) / p.gp})).sort((x, y) => y.edge - x.edge || y.gp - x.gp).slice(0, 30);
+  table(document.getElementById('h2h-lopsided'), pairCols, lop, {sort: null});
+}
+
+// ---------------------------------------------------------------- Titles
+function renderTitles() {
+  const rows = D.teams.map(t => {
+    const top16 = D.titles.filter(x => x[3] === t.team && x[1] === 'World placing').length;
+    const h = t.honours;
+    return {team: t.team, name: t.name, world: h.World || 0, final: h['World final'] || 0, cup: h.Cup || 0,
+      rcup: h['Regional Cup'] || 0, regional: h.Regional || 0, league: h.League || 0, league2: h['League (2nd tier)'] || 0,
+      top16: top16 + (h.World || 0) + (h['World final'] || 0)};
+  }).filter(r => r.world + r.final + r.cup + r.rcup + r.regional + r.league + r.league2 + r.top16 > 0);
+  table(document.getElementById('titles-table'), [
+    {key: 'name', label: 'Team', l: 1, asc: 1, html: r => nameHtml(r.team)},
+    {key: 'world', label: 'World'}, {key: 'final', label: 'World final'}, {key: 'cup', label: 'Cup'},
+    {key: 'rcup', label: 'Regional Cup'}, {key: 'regional', label: 'Regional'}, {key: 'league', label: 'League'},
+    {key: 'league2', label: '2nd tier'}, {key: 'top16', label: 'Top 16', title: 'World Championship top-16 finishes'},
+  ], rows, {sort: 'world'});
+  const seasons = D.seasons.map(s => s.season);
+  const pick = (s, kind, place) => D.titles.filter(x => x[0] === s && x[1] === kind && x[4] === place);
+  const names = xs => xs.map(x => nameHtml(x[3])).join('<br>') || '<span class="dim">–</span>';
+  const srows = seasons.map(s => ({s,
+    world: names(pick(s, 'World', 1)), final: names(pick(s, 'World', 2)),
+    cup: pick(s, 'Cup', 1).map(x => `${nameHtml(x[3])} <span class="dim">${esc(x[2].replace(' Champion', ''))}</span>`).join('<br>') || '<span class="dim">–</span>',
+    league: names(pick(s, 'League', 1)),
+    regional: pick(s, 'Regional', 1).map(x => `<span class="dim">${esc(D.region_display[x[2].replace(' champion', '')] || x[2].replace(' champion', ''))}</span> ${nameHtml(x[3])}`).join('<br>')}));
+  table(document.getElementById('titles-seasons'), [
+    {key: 's', label: 'Season', html: r => sTag(r.s)},
+    {key: 'world', label: 'World champion', l: 1, nosort: 1}, {key: 'final', label: 'Finalist', l: 1, nosort: 1},
+    {key: 'cup', label: 'Cup', l: 1, nosort: 1}, {key: 'league', label: 'League', l: 1, nosort: 1},
+    {key: 'regional', label: 'Regional champions', l: 1, nosort: 1},
+  ], srows, {sort: 's', asc: true});
+}
+
+// ---------------------------------------------------------------- Elo tab
+const eloSel = [];
+const eloAdd = document.getElementById('elo-add');
+D.teams.slice().sort((a, b) => a.name.localeCompare(b.name)).forEach(t => eloAdd.add(new Option(t.name, t.team)));
+eloAdd.onchange = () => { const t = +eloAdd.value; if (t && !eloSel.includes(t) && eloSel.length < 6) eloSel.push(t); eloAdd.value = ''; renderEloChart(); };
+function renderEloChart() {
+  const series = eloSel.map((t, i) => ({t, pts: eloSeries(t), c: PALETTE[i]}));
+  drawElo(document.getElementById('elo-chart'), series);
+  document.getElementById('elo-legend').innerHTML = series.map(s => `<span><i style="background:${s.c}"></i>${esc(TEAM[s.t].name)}<button data-rm="${s.t}" title="Remove">×</button></span>`).join('');
+}
+document.getElementById('elo-legend').addEventListener('click', e => { const t = e.target.dataset.rm; if (t) { eloSel.splice(eloSel.indexOf(+t), 1); renderEloChart(); } });
+function renderEloTables() {
+  const peaks = D.teams.filter(t => t.peak).map(t => ({team: t.team, e: t.peak[0], s: t.peak[1], ev: t.peak[2]}));
+  const lows = D.teams.filter(t => t.low).map(t => ({team: t.team, e: t.low[0], s: t.low[1], ev: t.low[2]}));
+  const eloCols = [{key: 'team', label: 'Team', l: 1, nosort: 1, html: r => nameHtml(r.team)},
+    {key: 'e', label: 'Elo', html: r => Math.round(r.e)}, {key: 's', label: 'Season', html: r => sTag(r.s)},
+    {key: 'ev', label: 'After', l: 1, nosort: 1, html: r => esc(evTitle(r.ev))}];
+  table(document.getElementById('elo-peak'), eloCols, peaks.sort((a, b) => b.e - a.e).slice(0, 25), {sort: null});
+  table(document.getElementById('elo-low'), eloCols, lows.sort((a, b) => a.e - b.e).slice(0, 25), {sort: null});
+  const gainCols = [{key: 'team', label: 'Team', l: 1, nosort: 1, html: r => nameHtml(r.team)},
+    {key: 'season', label: 'Season', html: r => sTag(r.season)},
+    {key: 'd', label: 'Change', html: r => `${r.to - r.from > 0 ? '+' : ''}${Math.round(r.to - r.from)}`, sortval: r => r.to - r.from},
+    {key: 'ft', label: 'Elo', nosort: 1, html: r => `${Math.round(r.from)} → ${Math.round(r.to)}`}];
+  table(document.getElementById('elo-gain'), gainCols, D.records.elo.season_gain, {sort: null});
+  table(document.getElementById('elo-loss'), gainCols, D.records.elo.season_loss, {sort: null});
+  const upCols = [{key: 's', label: 'Season', html: r => sTag(r[0])},
+    {key: 'w', label: 'Winner', l: 1, nosort: 1, html: r => `${nameHtml(r[2])} <span class="dim">${Math.round(r[8] - r[10])}</span>`},
+    {key: 'l', label: 'Loser', l: 1, nosort: 1, html: r => `${nameHtml(r[3])} <span class="dim">${Math.round(r[9] + r[10])}</span>`},
+    {key: 'gap', label: 'Elo gap', html: r => Math.round((r[9] + r[10]) - (r[8] - r[10]))},
+    {key: 'sc', label: 'Score', nosort: 1, html: r => `${r[4]}-${r[5]}`},
+    {key: 'ev', label: 'Event', l: 1, nosort: 1, html: r => esc(evTitle(r[1]))}];
+  table(document.getElementById('elo-upsets'), upCols, D.records.elo.upsets, {sort: null});
+  const kCols = upCols.slice(0, 3).concat([{key: 'k', label: 'Elo moved', html: r => Math.round(r[10])},
+    {key: 'sc', label: 'Score', nosort: 1, html: r => `${r[4]}-${r[5]}`}, {key: 'ev', label: 'Event', l: 1, nosort: 1, html: r => esc(evTitle(r[1]))}]);
+  table(document.getElementById('elo-k'), kCols, D.records.elo.k, {sort: null});
+}
+
+// ---------------------------------------------------------------- Records
+let era = 'S1-S6';
+document.getElementById('era-toggle').addEventListener('click', e => {
+  if (!e.target.dataset.era) return;
+  era = e.target.dataset.era;
+  document.querySelectorAll('#era-toggle button').forEach(b => b.classList.toggle('active', b.dataset.era === era));
+  renderRecords();
+});
+const gameCols = extra => [{key: 's', label: 'Season', html: r => sTag(r[0])},
+  {key: 'w', label: 'Winner', l: 1, nosort: 1, html: r => nameHtml(r[2])},
+  {key: 'l', label: 'Loser', l: 1, nosort: 1, html: r => nameHtml(r[3])}].concat(extra).concat(
+  [{key: 'ev', label: 'Event', l: 1, nosort: 1, html: r => esc(evTitle(r[1]))}]);
+function renderRecords() {
+  const g = D.records.game[era], s = D.records.season[era];
+  const sc = {key: 'sc', label: 'Score', nosort: 1, html: r => `${r[4]}-${r[5]}${r[7] ? ' <span class="dim">OT</span>' : ''}`};
+  table(document.getElementById('rec-score'), gameCols([sc]), g.score, {sort: null});
+  table(document.getElementById('rec-margin'), gameCols([sc, {key: 'm', label: 'Margin', nosort: 1, html: r => r[4] - r[5]}]), g.margin, {sort: null});
+  table(document.getElementById('rec-combined'), gameCols([sc, {key: 'c', label: 'Total', nosort: 1, html: r => r[4] + r[5]}]), g.combined, {sort: null});
+  table(document.getElementById('rec-goals'), gameCols([{key: 'g', label: 'Goals', nosort: 1, html: r => `${r[11]}-${r[12]}`}, sc]), g.goals, {sort: null});
+  const seasonCols = (label, f) => [{key: 'team', label: 'Team', l: 1, nosort: 1, html: r => nameHtml(r.team)},
+    {key: 'season', label: 'Season', html: r => sTag(r.season)}, {key: 'v', label, nosort: 1, html: f},
+    {key: 'gp', label: 'GP', nosort: 1, html: r => r.games}];
+  table(document.getElementById('rec-pfpg'), seasonCols('PF/G', r => (r.pf / r.games).toFixed(2)), s.pf_per_game, {sort: null});
+  table(document.getElementById('rec-pdpg'), seasonCols('PD/G', r => '+' + ((r.pf - r.pa) / r.games).toFixed(2)), s.pd_per_game, {sort: null});
+  const all = D.records.season.all;
+  const wl = [{key: 'team', label: 'Team', l: 1, nosort: 1, html: r => nameHtml(r.team)},
+    {key: 'season', label: 'Season', html: r => sTag(r.season)},
+    {key: 'rec', label: 'W-L', nosort: 1, html: r => `${r.wins}-${r.losses}`},
+    {key: 'p', label: 'Pct', nosort: 1, html: r => (r.wins / (r.wins + r.losses)).toFixed(3).replace(/^0/, '')}];
+  table(document.getElementById('rec-winpct'), wl, all.win_pct, {sort: null});
+  table(document.getElementById('rec-wins'), wl, all.wins, {sort: null});
+  table(document.getElementById('rec-fewest'), wl, all.fewest_losses, {sort: null});
+  const strCols = [{key: 'team', label: 'Team', l: 1, nosort: 1, html: r => nameHtml(r.team)},
+    {key: 'length', label: 'Games'},
+    {key: 'from', label: 'From', l: 1, nosort: 1, html: r => `${sTag(r.from[0])} <span class="dim">${esc(evCode(r.from[1]))}</span>`},
+    {key: 'to', label: 'To', l: 1, nosort: 1, html: r => `${sTag(r.to[0])} <span class="dim">${esc(evCode(r.to[1]))}</span>`}];
+  table(document.getElementById('rec-wstreak'), strCols, D.streaks.filter(x => x.kind === 'W').sort((a, b) => b.length - a.length).slice(0, 20), {sort: null});
+  table(document.getElementById('rec-lstreak'), strCols, D.streaks.filter(x => x.kind === 'L').sort((a, b) => b.length - a.length).slice(0, 20), {sort: null});
+}
+
+// ---------------------------------------------------------------- go
+document.getElementById('subtitle').textContent =
+  `Seasons 1–9 · ${D.games.length.toLocaleString()} games · ${D.teams.length} teams`;
+renderTeams();
+renderTeam(+teamSel.options[0].value);
+renderH2H(); renderPairs();
+renderTitles();
+const best = D.teams.slice().sort((a, b) => (b.peak ? b.peak[0] : 0) - (a.peak ? a.peak[0] : 0));
+best.slice(0, 3).forEach(t => eloSel.push(t.team));
+renderEloTables();
+renderRecords();
+window.addEventListener('resize', () => { renderEloChart(); if (document.getElementById('team-elo')) renderTeam(+teamSel.value); });
+// Charts need a laid-out size: draw them the first time their tab opens.
+document.getElementById('tabs').addEventListener('click', e => {
+  if (e.target.dataset.tab === 'elo') renderEloChart();
+  if (e.target.dataset.tab === 'team') renderTeam(+teamSel.value);
+});
+</script>
+</body>
+</html>

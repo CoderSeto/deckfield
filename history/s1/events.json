@@ -1,0 +1,321 @@
+{
+ "season": 1,
+ "source": [
+  {
+   "workbook": "history/s1-3/Dice_Game_S123.xlsx",
+   "sha256": "2949b1622a8c5e5982421df200953f4451aaea02144ed0c3a0fcb08514194649"
+  },
+  {
+   "workbook": "history/s1-3/DG_MRLUCL_Experimenting.xlsx",
+   "sha256": "469c96da421424b5969a6355c471baf111120870f854f931f3ca2dd1701a7e75"
+  }
+ ],
+ "host_sources": {
+  "interc": 160,
+  "poll": 2,
+  "record": 3,
+  "schedule": 360,
+  "seed": 13
+ },
+ "games": 538,
+ "walkovers": 0,
+ "titles": {
+  "world": [
+   "Saffron City",
+   "Rustboro City"
+  ],
+  "regions": {
+   "Delta": [
+    "Rustboro City",
+    "Petalburg City"
+   ],
+   "Indigo": [
+    "Saffron City",
+    "Mahogany Town"
+   ],
+   "Kalosite": [
+    "Vaniville Town",
+    "Cyllage City"
+   ],
+   "LilyValley": [
+    "Celestic Town",
+    "Sandgem Town"
+   ],
+   "Vertress": [
+    "Castelia City",
+    "Mistralton City"
+   ]
+  }
+ },
+ "anomalies": [
+  {
+   "source_row": 228,
+   "check": "more",
+   "reason": "Week 6, Shalour City 12-8 over Geosenge Town: goals read [8-9], nine goals for a side that scored eight points. Kept as recorded."
+  }
+ ],
+ "corrections": [],
+ "events": [
+  {
+   "round": 1,
+   "code": "MD1",
+   "title": "Week 1",
+   "sub": null,
+   "dates": [
+    "2014-10-04",
+    "2014-10-05",
+    "2014-10-06",
+    "2014-10-07",
+    "2014-10-08"
+   ],
+   "notes": [],
+   "games": 40,
+   "empty": false,
+   "source_row": 2
+  },
+  {
+   "round": 2,
+   "code": "MD2",
+   "title": "Week 2",
+   "sub": null,
+   "dates": [
+    "2014-10-09",
+    "2014-10-10",
+    "2014-10-11",
+    "2014-10-12"
+   ],
+   "notes": [],
+   "games": 40,
+   "empty": false,
+   "source_row": 42
+  },
+  {
+   "round": 3,
+   "code": "MD3",
+   "title": "Week 3",
+   "sub": null,
+   "dates": [
+    "2014-10-27",
+    "2014-10-28",
+    "2014-10-29",
+    "2014-10-30",
+    "2014-11-01",
+    "2014-11-03"
+   ],
+   "notes": [],
+   "games": 40,
+   "empty": false,
+   "source_row": 82
+  },
+  {
+   "round": 4,
+   "code": "MD4",
+   "title": "Week 4",
+   "sub": null,
+   "dates": [
+    "2014-11-04",
+    "2014-11-06",
+    "2014-11-14"
+   ],
+   "notes": [],
+   "games": 40,
+   "empty": false,
+   "source_row": 122
+  },
+  {
+   "round": 5,
+   "code": "MD5",
+   "title": "Week 5",
+   "sub": null,
+   "dates": [
+    "2014-11-14"
+   ],
+   "notes": [],
+   "games": 40,
+   "empty": false,
+   "source_row": 162
+  },
+  {
+   "round": 6,
+   "code": "MD6",
+   "title": "Week 6",
+   "sub": null,
+   "dates": [
+    "2014-11-14"
+   ],
+   "notes": [],
+   "games": 40,
+   "empty": false,
+   "source_row": 202
+  },
+  {
+   "round": 7,
+   "code": "MD7",
+   "title": "Week 7",
+   "sub": null,
+   "dates": [
+    "2014-11-14"
+   ],
+   "notes": [],
+   "games": 40,
+   "empty": false,
+   "source_row": 242
+  },
+  {
+   "round": 8,
+   "code": "MD8",
+   "title": "Week 8",
+   "sub": null,
+   "dates": [
+    "2014-11-14"
+   ],
+   "notes": [],
+   "games": 40,
+   "empty": false,
+   "source_row": 282
+  },
+  {
+   "round": 9,
+   "code": "MD9",
+   "title": "Week 9",
+   "sub": null,
+   "dates": [
+    "2014-11-14"
+   ],
+   "notes": [],
+   "games": 40,
+   "empty": false,
+   "source_row": 322
+  },
+  {
+   "round": 10,
+   "code": "MD10",
+   "title": "Week 10",
+   "sub": null,
+   "dates": [
+    "2014-11-14"
+   ],
+   "notes": [],
+   "games": 40,
+   "empty": false,
+   "source_row": 362
+  },
+  {
+   "round": 11,
+   "code": "MD11",
+   "title": "Week 11",
+   "sub": null,
+   "dates": [
+    "2014-11-14"
+   ],
+   "notes": [],
+   "games": 40,
+   "empty": false,
+   "source_row": 402
+  },
+  {
+   "round": 12,
+   "code": "MD12",
+   "title": "Week 12",
+   "sub": null,
+   "dates": [
+    "2014-11-14"
+   ],
+   "notes": [],
+   "games": 40,
+   "empty": false,
+   "source_row": 442
+  },
+  {
+   "round": 13,
+   "code": "MD13",
+   "title": "Week 13",
+   "sub": null,
+   "dates": [
+    "2014-11-14"
+   ],
+   "notes": [],
+   "games": 40,
+   "empty": false,
+   "source_row": 482
+  },
+  {
+   "round": 14,
+   "code": "CC-F",
+   "title": "Conference Championships",
+   "sub": null,
+   "dates": [
+    "2014-11-14"
+   ],
+   "notes": [],
+   "games": 5,
+   "empty": false,
+   "source_row": 522
+  },
+  {
+   "round": 15,
+   "code": "WC-G1",
+   "title": "World Championship - Group Stage, Opening Games",
+   "sub": null,
+   "dates": [
+    "2014-11-14"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 527
+  },
+  {
+   "round": 16,
+   "code": "WC-G2",
+   "title": "World Championship - Group Stage, Winners and Losers",
+   "sub": null,
+   "dates": [
+    "2014-11-14"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 531
+  },
+  {
+   "round": 17,
+   "code": "WC-G3",
+   "title": "World Championship - Group Stage, Deciders",
+   "sub": null,
+   "dates": [
+    "2014-11-14"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 535
+  },
+  {
+   "round": 18,
+   "code": "WC-SF",
+   "title": "World Championship - Semifinals",
+   "sub": null,
+   "dates": [
+    "2014-11-14"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 537
+  },
+  {
+   "round": 19,
+   "code": "WC-F",
+   "title": "World Championship - Final",
+   "sub": null,
+   "dates": [
+    "2014-11-14"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 539
+  }
+ ]
+}

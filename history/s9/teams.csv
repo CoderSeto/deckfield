@@ -1,0 +1,161 @@
+team,season_dex,name,region,division,tier,primary_type,basclm,opening_rank,opening_elo,final_rank,final_ovr,final_elo,accolades
+1,1,Cycling Road,Indigo,8,,8,4.0,,1791,145,37.85,1562,
+2,2,Fighting Dojo,Indigo,10,,7,9.0,,1391,139,39.8,1400,
+3,3,Cerulean Cape,Indigo,4,,4,3.0,,2180,108,52.27,1800,
+4,4,Lavender Town,Indigo,4,,14,7.0,,1646,123,46.45,1616,Indigo S6
+5,5,Pallet Town,Indigo,8,,1,5.0,,1669,75,62.38,1876,
+6,6,Sevii Islands,Indigo,5,,2,5.0,,1837,77,62.03,1848,
+7,7,Mount Moon,Indigo,1,,18,3.0,,2129,43,71.64,2033,Indigo S8
+8,8,Victory Road,Indigo,6,,15,4.0,,1927,14,84.95,2150,Indigo S9
+9,9,Celadon City,Indigo,9,,5,10.0,,1691,97,54.69,1695,
+10,10,Cerulean City,Indigo,9,,3,9.0,,1656,122,46.98,1586,
+11,11,Saffron City,Indigo,8,,11,10.0,,1601,138,39.96,1536,World Champion S1; Indigo S1
+12,12,Vermilion City,Indigo,2,,4,10.0,,1925,26,77.81,2023,Indigo S7
+13,13,Cinnabar Island,Indigo,3,,2,10.0,,1849,66,66.11,1924,"WCS S3; Indigo S3, S4, S5"
+14,14,Fuchsia City,Indigo,4,,8,10.0,,1587,111,51.31,1662,
+15,15,Pewter City,Indigo,7,,13,9.0,,1780,100,53.23,1767,
+16,16,Viridian City,Indigo,9,,9,9.0,,1708,84,60.04,1814,Indigo S2
+17,17,Dewford Town,Delta,9,,3,10.0,,1522,110,51.57,1630,Delta S4
+18,18,Littleroot Town,Delta,7,,1,4.0,,1736,67,66.01,1891,
+19,19,Oldale Town,Delta,5,,12,5.0,,1753,101,53.19,1733,
+20,20,Petalburg City,Delta,5,,1,10.0,,1837,13,85.48,2221,Delta S9
+21,21,Fallarbor Town,Delta,3,,9,6.0,,2040,89,58.93,1829,
+22,22,Lavaridge Town,Delta,5,,2,8.0,,1804,136,41.01,1562,
+23,23,Rustboro City,Delta,3,,13,9.0,,1708,128,44.39,1645,"World Finalist S1; Delta S1, S2"
+24,24,Verdanturf Town,Delta,6,,10,5.0,,1770,140,39.75,1597,
+25,25,Ever Grande City,Delta,2,,17,7.0,,1849,135,41.84,1666,"Delta S3, S7"
+26,26,Mossdeep City,Delta,7,,11,10.0,,1652,78,61.54,1804,
+27,27,Pacifidlog Town,Delta,9,,3,6.0,,1628,72,62.69,1845,
+28,28,Sootopolis City,Delta,5,,3,10.0,,1996,44,71.49,1923,
+29,29,Fortree City,Delta,4,,10,8.0,,2051,68,64.95,1915,
+30,30,Lilycove City,Delta,3,,16,8.0,,2179,65,66.26,1960,Delta S8
+31,31,Mauville City,Delta,8,,4,10.0,,1471,153,30.78,1407,
+32,32,Slateport City,Delta,3,,3,8.0,,1577,157,24.61,1412,"World Champion S5; Delta S5, S6"
+33,33,Canalave City,LilyValley,1,,17,8.0,,2505,3,104.1,2348,"World Champion S6 · Finalist S7; Division One S9; Swiss S8 · Ribbon S9; Lily Valley S6, S7, S8"
+34,34,Jubilife City,LilyValley,7,,4,8.0,,1827,148,34.46,1515,
+35,35,Sandgem Town,LilyValley,5,,9,5.0,,1950,35,73.47,1832,
+36,36,Twinleaf Town,LilyValley,10,,1,4.0,,1320,131,43.48,1427,
+37,37,Eterna City,LilyValley,6,,5,10.0,,1897,29,75.8,1994,
+38,38,Floaroma City,LilyValley,3,,5,6.0,,1736,76,62.04,1739,
+39,39,Oreburgh City,LilyValley,7,,13,10.0,,1719,103,53.05,1618,
+40,40,Snowpoint City,LilyValley,4,,6,9.0,,2304,4,101.07,2193,Lily Valley S9
+41,41,Mossui Town,LilyValley,8,,18,4.0,,1893,21,81.11,2052,
+42,42,Battle Zone,LilyValley,5,,17,10.0,,1475,137,40.15,1498,"World Champion S3 · WCS S5; Division One S5; Lily Valley S3, S4, S5"
+43,43,Sunyshore City,LilyValley,4,,4,9.0,,1919,59,67.44,1912,
+44,44,Veilstone City,LilyValley,2,,7,9.0,,1942,33,74.61,1986,
+45,45,Celestic Town,LilyValley,6,,15,5.0,,2069,24,80.06,2083,Lily Valley S1
+46,46,Hearthome City,LilyValley,7,,14,10.0,,1781,39,72.95,1943,
+47,47,Pastoria City,LilyValley,3,,3,10.0,,1687,102,53.08,1698,
+48,48,Solaceon Town,LilyValley,8,,9,5.0,,1587,143,38.18,1427,Lily Valley S2
+49,49,Anville Town,Vertress,1,,17,4.0,,1995,17,83.89,2013,
+50,50,Aspertia City,Vertress,9,,1,8.0,,1457,63,66.48,1721,
+51,51,Floccesy Town,Vertress,9,,5,6.0,,1508,127,45.1,1542,
+52,52,Mistralton City,Vertress,5,,10,9.0,,1844,7,95.6,2221,Vertress S9
+53,53,Driftveil City,Vertress,4,,9,9.0,,1964,117,48.91,1744,
+54,54,Icirrus City,Vertress,10,,6,9.0,,1511,94,56.77,1630,
+55,55,Nimbasa City,Vertress,2,,4,10.0,,2178,2,106.68,2356,
+56,56,Virbank City,Vertress,1,,8,10.0,,2270,25,78.21,1997,Division One S4; Vertress S7
+57,57,Accumula Town,Vertress,5,,16,5.0,,2137,36,73.02,1968,
+58,58,Castelia City,Vertress,1,,12,10.0,,2212,105,52.8,1823,"World Finalist S2; Division One S3; Vertress S1, S2, S3, S4, S8"
+59,59,Nacrene City,Vertress,5,,1,9.0,,1808,96,55.06,1710,
+60,60,Striaton City,Vertress,1,,1,9.0,,2047,82,60.32,1875,"World Finalist S6; Vertress S5, S6"
+61,61,Humilau City,Vertress,7,,3,9.0,,1855,46,71.12,2005,
+62,62,Lacunosa Town,Vertress,10,,8,5.0,,1352,149,33.84,1309,
+63,63,Opelucid City,Vertress,5,,15,9.0,,1618,56,68.13,1831,
+64,64,Undella Town,Vertress,7,,3,7.0,,1682,37,72.99,1939,
+65,65,Ambrette Town,Kalosite,10,,13,4.0,,1317,132,42.61,1515,
+66,66,Cyllage City,Kalosite,2,,13,9.0,,2110,16,84.37,2060,
+67,67,Geosenge Town,Kalosite,7,,13,5.0,,1561,81,60.46,1708,World Champion S2
+68,68,Shalour City,Kalosite,4,,7,9.0,,1930,38,72.95,1929,
+69,69,Camphrier Town,Kalosite,4,,1,5.0,,2447,5,99.62,2329,"World Finalist S8; Kalosite S8, S9"
+70,70,Coumarine City,Kalosite,9,,5,9.0,,1478,69,64.0,1792,
+71,71,Laverre City,Kalosite,10,,18,9.0,,1335,151,32.82,1296,
+72,72,Lumiose City,Kalosite,2,,4,10.0,,2006,15,84.74,2097,"World Champion S4; Swiss S4; Kalosite S3, S4, S6"
+73,73,Anistar City,Kalosite,5,,11,9.0,,1900,12,88.02,2055,
+74,74,Couriway Town,Kalosite,8,,3,5.0,,1664,106,52.45,1687,Kalosite S5
+75,75,Dendemille Town,Kalosite,8,,6,6.0,,1672,60,67.02,1854,
+76,76,Snowbelle City,Kalosite,6,,6,9.0,,1825,126,45.99,1612,Kalosite S7
+77,77,Aquacorde Town,Kalosite,6,,3,5.0,,1656,133,42.28,1521,
+78,78,Kiloude City,Kalosite,8,,1,5.0,,1758,112,51.25,1609,
+79,79,Santalune City,Kalosite,3,,12,9.0,,2257,61,66.94,2001,
+80,80,Vaniville Town,Kalosite,3,,1,4.0,,1708,18,82.51,2048,Kalosite S1
+81,81,Exeggutor Island,Lanakila,2,,5,6.0,,2012,73,62.65,1849,
+82,82,Poni Meadow,Lanakila,8,,5,3.0,,1617,120,47.62,1607,
+83,83,Seafolk Village,Lanakila,2,,18,10.0,,1934,47,70.93,1841,"Swiss S6; Lanakila S6, S7"
+84,84,Vast Poni Canyon,Lanakila,10,,9,5.0,,1362,58,67.49,1663,
+85,85,Hau'oli City,Lanakila,10,,1,10.0,,1299,159,13.19,1068,
+86,86,Iki Town,Lanakila,9,,7,7.0,,1666,141,39.38,1488,
+87,87,Kala'e Bay,Lanakila,2,,3,3.0,,1837,64,66.48,1808,"World Finalist S3; Lanakila S3, S4"
+88,88,Ultra Megalopolis,Lanakila,1,,8,4.0,,2078,52,69.74,1934,Lanakila S5
+89,89,Malie City,Lanakila,2,,8,10.0,,1984,54,69.07,1959,
+90,90,Mount Hokulani,Lanakila,10,,4,5.0,,1308,20,81.88,2090,
+91,91,Po Town,Lanakila,4,,12,4.0,,1979,10,93.08,2141,Lanakila S9
+92,92,Tapu Village,Lanakila,8,,18,6.0,,1642,91,58.22,1725,
+93,93,Aether Paradise,Lanakila,4,,1,6.0,,1861,93,56.91,1739,
+94,94,Heahea City,Lanakila,10,,1,8.0,,1547,50,70.31,1857,
+95,95,Konikoni City,Lanakila,6,,3,8.0,,2060,34,74.01,1891,Lanakila S8
+96,96,Paniola Town,Lanakila,9,,5,6.0,,1601,98,54.51,1676,Lanakila S2
+97,97,Ballonlea,Dynamax,4,,18,8.0,,1900,118,48.84,1723,
+98,98,Stow-on-Side,Dynamax,7,,14,9.0,,1721,22,80.96,2096,Dynamax S9
+99,99,Wyndon North,Dynamax,8,,17,9.0,,1840,114,50.02,1633,
+100,100,Wyndon South,Dynamax,2,,2,9.0,,2030,62,66.49,1995,Dynamax S6
+101,101,City of Circhester,Dynamax,9,,13,9.0,,1611,125,46.35,1615,
+102,102,Circhester Bay,Dynamax,10,,6,3.0,,1279,107,52.37,1575,
+103,103,Hammerlocke,Dynamax,3,,15,10.0,,1932,156,25.79,1512,
+104,104,Spikemuth,Dynamax,1,,16,8.0,,2225,74,62.42,1923,"Division One S7; Dynamax S4, S5, S7, S8"
+105,105,Crown Tundra,Dynamax,4,,6,6.0,,1913,92,57.93,1877,
+106,106,Postwick,Dynamax,3,,1,4.0,,1928,70,63.6,1872,
+107,107,Wild Area,Dynamax,3,,1,4.0,,1726,57,67.95,1927,Dynamax S3
+108,108,Wedgehurst,Dynamax,10,,17,5.0,,1560,104,52.99,1630,
+109,109,Hulbury,Dynamax,4,,3,9.0,,1743,124,46.44,1655,World Finalist S4
+110,110,Isle of Armor,Dynamax,6,,7,6.0,,1775,87,59.11,1804,
+111,111,Motostoke,Dynamax,2,,2,10.0,,2226,45,71.42,2009,
+112,112,Turffield,Dynamax,10,,5,9.0,,1414,147,34.87,1413,
+113,113,Agate Village,Phoenix,1,,5,5.0,,2471,51,70.28,2047,"World Champion S8; Phoenix S6, S8"
+114,114,Gateon Port,Phoenix,9,,3,7.0,,1455,113,50.44,1681,
+115,115,Phenac City,Phoenix,6,,9,7.0,,1715,95,55.5,1753,
+116,116,Pyrite Town,Phoenix,3,,16,6.0,,1961,55,68.25,1998,Phoenix S5
+117,117,Fall City,Phoenix,4,,3,8.0,,1693,71,63.59,1898,Phoenix S4
+118,118,Ringtown,Phoenix,7,,2,7.0,,1903,28,75.98,1987,
+119,119,Summerland,Phoenix,10,,5,7.0,,1486,158,22.88,1297,
+120,120,Wintown,Phoenix,5,,6,6.0,,2351,90,58.78,1941,
+121,121,Boyleland,Phoenix,5,,2,6.0,,1434,160,7.12,1210,
+122,122,Haruba Village,Phoenix,6,,9,6.0,,1635,150,33.61,1436,
+123,123,Pueltown,Phoenix,1,,3,8.0,,2105,19,82.09,2168,World Champion S7; Swiss S7; Phoenix S7
+124,124,Vientown,Phoenix,7,,1,5.0,,1771,134,41.93,1606,
+125,125,Aqua Resort,Phoenix,1,,1,8.0,,2164,27,76.49,2101,
+126,126,Cocona Village,Phoenix,3,,10,5.0,,1974,40,72.43,1975,Dream S9
+127,127,Dolce Island,Phoenix,8,,5,4.0,,1762,31,75.29,2127,Phoenix S9
+128,128,Tilt Village,Phoenix,8,,9,6.0,,1582,154,29.49,1436,
+129,129,Cianwood City,Silver,1,,7,8.0,,2149,30,75.29,2042,World Finalist S5; Division One S6
+130,130,Olivine City,Silver,2,,17,9.0,,1895,83,60.16,1856,Silver S6
+131,131,Goldenrod City,Silver,3,,1,10.0,,1947,130,44.25,1715,
+132,132,National Park,Silver,1,,12,4.0,,2321,11,92.8,2250,"Silver S8, S9"
+133,133,Azalea Town,Silver,7,,5,9.0,,1558,152,31.59,1461,
+134,134,Ilex Forest,Silver,6,,12,3.0,,1880,99,53.82,1733,
+135,135,Violet City,Silver,9,,10,10.0,,1703,85,59.85,1712,
+136,136,Ruins of Alph,Silver,6,,13,4.0,,1799,32,75.06,2001,
+137,137,Mahogany Town,Silver,10,,6,10.0,,1346,109,51.67,1639,
+138,138,Lake of Rage,Silver,6,,3,2.0,,1853,23,80.96,2128,
+139,139,Ecruteak City,Silver,9,,14,10.0,,1456,155,29.32,1353,
+140,140,Mount Mortar,Silver,7,,9,3.0,,1573,119,48.72,1624,
+141,141,New Bark Town,Silver,8,,1,5.0,,1668,142,38.9,1489,
+142,142,Cherrygrove City,Silver,3,,5,6.0,,2132,79,61.47,1921,
+143,143,Blackthorn City,Silver,10,,15,9.0,,1493,80,60.85,1750,
+144,144,Mount Silver,Silver,1,,4,4.0,,2237,48,70.47,1998,"Silver S5, S7"
+145,145,Montenevera,Terastal,6,,14,8.0,,1781,115,49.95,1636,
+146,146,Glaseado Mountain,Terastal,4,,6,8.0,,1815,88,59.04,1791,
+147,147,Tagtree Thicket,Terastal,5,,12,2.0,,1873,49,70.4,1861,
+148,148,Blueberry Terarium,Terastal,7,,15,9.0,,1648,8,94.3,2195,
+149,149,Porto Marinada,Terastal,1,,3,2.0,,1985,41,71.86,1905,"Terastal S6, S7"
+150,150,Cascarrafa,Terastal,2,,3,10.0,,1829,86,59.28,1825,
+151,151,Casseroya Lake,Terastal,6,,15,3.0,,1783,1,114.58,2519,Star S9; Terastal S9
+152,152,Medali,Terastal,9,,1,10.0,,1387,144,38.01,1450,
+153,153,Zapapico,Terastal,2,,9,2.0,,1834,116,48.91,1659,
+154,154,Artazon,Terastal,9,,5,10.0,,1405,146,37.01,1399,
+155,155,Levincia,Terastal,7,,4,10.0,,1768,42,71.66,1810,
+156,156,Cabo Poco,Terastal,6,,3,2.0,,1634,6,97.7,2229,PA S9
+157,157,Alfornada,Terastal,8,,11,9.0,,1732,129,44.33,1604,
+158,158,Cortondo,Terastal,1,,12,10.0,,1864,121,47.29,1641,Terastal S5
+159,159,Los Platos,Terastal,5,,1,3.0,,1974,53,69.16,1941,
+160,160,Mesagoza,Terastal,2,,1,9.0,,1993,9,93.84,2213,Terastal S8

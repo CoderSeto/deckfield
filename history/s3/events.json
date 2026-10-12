@@ -1,0 +1,2944 @@
+{
+ "season": 3,
+ "source": [
+  {
+   "workbook": "history/s1-3/Dice_Game_S123.xlsx",
+   "sha256": "2949b1622a8c5e5982421df200953f4451aaea02144ed0c3a0fcb08514194649"
+  },
+  {
+   "workbook": "history/s1-3/DG_MRLUCL_Experimenting.xlsx",
+   "sha256": "469c96da421424b5969a6355c471baf111120870f854f931f3ca2dd1701a7e75"
+  }
+ ],
+ "host_sources": {
+  "recorded": 1080,
+  "schedule": 224,
+  "seed": 28
+ },
+ "games": 1332,
+ "walkovers": 0,
+ "titles": {
+  "world": [
+   "Resort Area",
+   "Kala'e Bay"
+  ],
+  "wcs": [
+   "Cinnabar Island",
+   "Kala'e Bay"
+  ],
+  "league": [
+   "Castelia City",
+   "Virbank City",
+   "Resort Area",
+   "Olivine City"
+  ],
+  "regions": {
+   "Delta": [
+    "Ever Grande City",
+    "Fallarbor Town"
+   ],
+   "Dynamax": [
+    "South Lakes",
+    "Hulbury"
+   ],
+   "Indigo": [
+    "Cinnabar Island",
+    "Olivine City"
+   ],
+   "Kalosite": [
+    "Lumiose City",
+    "Vaniville Town"
+   ],
+   "Lanakila": [
+    "Kala'e Bay",
+    "Ultra Megalopolis"
+   ],
+   "LilyValley": [
+    "Resort Area",
+    "Veilstone City"
+   ],
+   "Vertress": [
+    "Castelia City",
+    "Virbank City"
+   ]
+  }
+ },
+ "anomalies": [
+  {
+   "finding": "Celestic Town: ExL",
+   "check": "records",
+   "reason": "Rankings counts 5 non-matchday losses; the games hold 6. The games are archived."
+  },
+  {
+   "finding": "Cinnabar Island: ExW",
+   "check": "records",
+   "reason": "Rankings counts 19 non-matchday wins; the games hold 20. The games are archived."
+  },
+  {
+   "finding": "Solaceon Town: ExW",
+   "check": "records",
+   "reason": "Rankings counts 8 non-matchday wins; the games hold 9. The games are archived."
+  }
+ ],
+ "corrections": [
+  {
+   "source_row": 177,
+   "field": "dscr",
+   "sheet": "{42.2-4.8)",
+   "corrected": "{42.2-4.8}",
+   "reason": "Matchday 4, Hau'oli City over Heahea City: the DSCR pair's closing brace is typed as a parenthesis."
+  }
+ ],
+ "events": [
+  {
+   "round": 1,
+   "code": "MD1",
+   "title": "Matchday One",
+   "sub": null,
+   "dates": [
+    "D1 5/8",
+    "D2 5/9",
+    "D3 5/10",
+    "D4 5/11",
+    "D5 5/12"
+   ],
+   "notes": [],
+   "games": 56,
+   "empty": false,
+   "source_row": 2
+  },
+  {
+   "round": 2,
+   "code": "MD2",
+   "title": "Matchday Two",
+   "sub": null,
+   "dates": [
+    "D5 5/12",
+    "D6 5/13",
+    "D7 5/18",
+    "D8 5/19",
+    "D10 5/20",
+    "D11 5/21",
+    "D12 5/22"
+   ],
+   "notes": [],
+   "games": 56,
+   "empty": false,
+   "source_row": 58
+  },
+  {
+   "round": 3,
+   "code": "MD3",
+   "title": "Matchday Three",
+   "sub": null,
+   "dates": [
+    "D13",
+    "D14 6/2",
+    "D15 6/3",
+    "D16 6/4",
+    "D17 6/5"
+   ],
+   "notes": [],
+   "games": 56,
+   "empty": false,
+   "source_row": 114
+  },
+  {
+   "round": 4,
+   "code": "MD4",
+   "title": "Matchday Four",
+   "sub": null,
+   "dates": [
+    "D18 6/25",
+    "D19 6/26",
+    "D20 7/1",
+    "D21 7/2",
+    "D22 7/4",
+    "D23 7/5",
+    "D24 7/6"
+   ],
+   "notes": [
+    "New Climate System, Cups System instituted"
+   ],
+   "games": 56,
+   "empty": false,
+   "source_row": 170
+  },
+  {
+   "round": 5,
+   "code": "WCS-R1",
+   "title": "WCS First Round",
+   "sub": null,
+   "dates": [
+    "D25 7/8",
+    "D26 7/9"
+   ],
+   "notes": [],
+   "games": 20,
+   "empty": false,
+   "source_row": 226
+  },
+  {
+   "round": 6,
+   "code": "CRY-R1",
+   "title": "Crystal Cup First Round",
+   "sub": null,
+   "dates": [
+    "D26 7/9"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 246
+  },
+  {
+   "round": 7,
+   "code": "EME-R1",
+   "title": "Emerald Cup First Round",
+   "sub": null,
+   "dates": [
+    "D26 7/9"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 250
+  },
+  {
+   "round": 8,
+   "code": "PLA-R1",
+   "title": "Platinum Cup First Round",
+   "sub": null,
+   "dates": [
+    "D27 7/10"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 254
+  },
+  {
+   "round": 9,
+   "code": "GRA-R1",
+   "title": "Gray Cup First Round",
+   "sub": null,
+   "dates": [
+    "D27 7/10"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 258
+  },
+  {
+   "round": 10,
+   "code": "PRI-R1",
+   "title": "Prism Cup First Round",
+   "sub": null,
+   "dates": [
+    "D27 7/10",
+    "D28 7/11"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 262
+  },
+  {
+   "round": 11,
+   "code": "KAH-R1",
+   "title": "Kahuna Cup First Round",
+   "sub": null,
+   "dates": [
+    "D28 7/11"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 266
+  },
+  {
+   "round": 12,
+   "code": "GIG-R1",
+   "title": "Gigantamax Cup First Round",
+   "sub": null,
+   "dates": [
+    "D28 7/11"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 270
+  },
+  {
+   "round": 13,
+   "code": "MD5",
+   "title": "Matchday Five",
+   "sub": null,
+   "dates": [
+    "D29 7/12",
+    "D30 7/13",
+    "D31 7/14",
+    "D32 7/15"
+   ],
+   "notes": [
+    "First game played with a virtual deck of cards"
+   ],
+   "games": 56,
+   "empty": false,
+   "source_row": 274
+  },
+  {
+   "round": 14,
+   "code": "WCS-R2",
+   "title": "WCS Second Round",
+   "sub": null,
+   "dates": [
+    "D32 7/15",
+    "D33 7/16",
+    "D34 7/17"
+   ],
+   "notes": [],
+   "games": 20,
+   "empty": false,
+   "source_row": 330
+  },
+  {
+   "round": 15,
+   "code": "CRY-R2",
+   "title": "Crystal Cup Second Round",
+   "sub": null,
+   "dates": [
+    "D35 7/20"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 350
+  },
+  {
+   "round": 16,
+   "code": "EME-R2",
+   "title": "Emerald Cup Second Round",
+   "sub": null,
+   "dates": [
+    "D36 7/21"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 354
+  },
+  {
+   "round": 17,
+   "code": "PLA-R2",
+   "title": "Platinum Cup Second Round",
+   "sub": null,
+   "dates": [
+    "D36 7/21"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 358
+  },
+  {
+   "round": 18,
+   "code": "GRA-R2",
+   "title": "Gray Cup Second Round",
+   "sub": null,
+   "dates": [
+    "D36 7/21"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 362
+  },
+  {
+   "round": 19,
+   "code": "PRI-R2",
+   "title": "Prism Cup Second Round",
+   "sub": null,
+   "dates": [
+    "D36 7/21"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 366
+  },
+  {
+   "round": 20,
+   "code": "KAH-R2",
+   "title": "Kahuna Cup Second Round",
+   "sub": null,
+   "dates": [
+    "D36 7/21"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 370
+  },
+  {
+   "round": 21,
+   "code": "GIG-R2",
+   "title": "Gigantamax Cup Second Round",
+   "sub": null,
+   "dates": [
+    "D36 7/21"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 374
+  },
+  {
+   "round": 22,
+   "code": "MD6",
+   "title": "Matchday Six",
+   "sub": null,
+   "dates": [
+    "D36 7/21",
+    "D37 7/23",
+    "D38 7/24",
+    "D39 7/25",
+    "D40 7/27",
+    "D41 7/28"
+   ],
+   "notes": [
+    "New Exposure System instituted"
+   ],
+   "games": 56,
+   "empty": false,
+   "source_row": 378
+  },
+  {
+   "round": 23,
+   "code": "WCS-R3-1",
+   "title": "WCS Third Round - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D41 7/28",
+    "D42 7/29"
+   ],
+   "notes": [],
+   "games": 20,
+   "empty": false,
+   "source_row": 434
+  },
+  {
+   "round": 24,
+   "code": "WCS-R3-2",
+   "title": "WCS Third Round - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D41 7/28",
+    "D42 7/29"
+   ],
+   "notes": [],
+   "games": 20,
+   "empty": false,
+   "source_row": 435
+  },
+  {
+   "round": 25,
+   "code": "MRL-A1-1",
+   "title": "MRL Group A - Match 1 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D42 7/29"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 474
+  },
+  {
+   "round": 26,
+   "code": "MRL-A1-2",
+   "title": "MRL Group A - Match 1 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D42 7/29"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 475
+  },
+  {
+   "round": 27,
+   "code": "MRL-C1-1",
+   "title": "MRL Group C - Match 1 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D42 7/29",
+    "D43 7/30"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 478
+  },
+  {
+   "round": 28,
+   "code": "MRL-C1-2",
+   "title": "MRL Group C - Match 1 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D42 7/29",
+    "D43 7/30"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 479
+  },
+  {
+   "round": 29,
+   "code": "MRL-E1-1",
+   "title": "MRL Group E - Match 1 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D44 8/2"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 482
+  },
+  {
+   "round": 30,
+   "code": "MRL-E1-2",
+   "title": "MRL Group E - Match 1 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D44 8/2"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 483
+  },
+  {
+   "round": 31,
+   "code": "MRL-G1-1",
+   "title": "MRL Group G - Match 1 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D44 8/2",
+    "D45 8/5"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 486
+  },
+  {
+   "round": 32,
+   "code": "MRL-G1-2",
+   "title": "MRL Group G - Match 1 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D44 8/2",
+    "D45 8/5"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 487
+  },
+  {
+   "round": 33,
+   "code": "MRL-B1-1",
+   "title": "MRL Group B - Match 1 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D45 8/5"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 490
+  },
+  {
+   "round": 34,
+   "code": "MRL-B1-2",
+   "title": "MRL Group B - Match 1 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D45 8/5"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 491
+  },
+  {
+   "round": 35,
+   "code": "MRL-D1-1",
+   "title": "MRL Group D - Match 1 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D46 8/6"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 494
+  },
+  {
+   "round": 36,
+   "code": "MRL-D1-2",
+   "title": "MRL Group D - Match 1 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D46 8/6"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 495
+  },
+  {
+   "round": 37,
+   "code": "MRL-F1-1",
+   "title": "MRL Group F - Match 1 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D46 8/6"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 498
+  },
+  {
+   "round": 38,
+   "code": "MRL-F1-2",
+   "title": "MRL Group F - Match 1 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D46 8/6"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 499
+  },
+  {
+   "round": 39,
+   "code": "MRL-H1-1",
+   "title": "MRL Group H - Match 1 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D46 8/6"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 502
+  },
+  {
+   "round": 40,
+   "code": "MRL-H1-2",
+   "title": "MRL Group H - Match 1 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D46 8/6"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 503
+  },
+  {
+   "round": 41,
+   "code": "UTL-A1-1",
+   "title": "UTL Group A - Match 1 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D46 8/6",
+    "D47 8/7"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 506
+  },
+  {
+   "round": 42,
+   "code": "UTL-A1-2",
+   "title": "UTL Group A - Match 1 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D46 8/6",
+    "D47 8/7"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 507
+  },
+  {
+   "round": 43,
+   "code": "UTL-C1-1",
+   "title": "UTL Group C - Match 1 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D47 8/7"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 510
+  },
+  {
+   "round": 44,
+   "code": "UTL-C1-2",
+   "title": "UTL Group C - Match 1 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D47 8/7"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 511
+  },
+  {
+   "round": 45,
+   "code": "UTL-E1-1",
+   "title": "UTL Group E - Match 1 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D48 8/13"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 514
+  },
+  {
+   "round": 46,
+   "code": "UTL-E1-2",
+   "title": "UTL Group E - Match 1 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D48 8/13"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 515
+  },
+  {
+   "round": 47,
+   "code": "UTL-B1-1",
+   "title": "UTL Group B - Match 1 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D48 8/13"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 518
+  },
+  {
+   "round": 48,
+   "code": "UTL-B1-2",
+   "title": "UTL Group B - Match 1 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D48 8/13"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 519
+  },
+  {
+   "round": 49,
+   "code": "UTL-D1-1",
+   "title": "UTL Group D - Match 1 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D48 8/13"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 522
+  },
+  {
+   "round": 50,
+   "code": "UTL-D1-2",
+   "title": "UTL Group D - Match 1 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D48 8/13"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 523
+  },
+  {
+   "round": 51,
+   "code": "UTL-F1-1",
+   "title": "UTL Group F - Match 1 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D49 8/14"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 526
+  },
+  {
+   "round": 52,
+   "code": "UTL-F1-2",
+   "title": "UTL Group F - Match 1 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D49 8/14"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 527
+  },
+  {
+   "round": 53,
+   "code": "MD7",
+   "title": "Matchday Seven",
+   "sub": null,
+   "dates": [
+    "D50 8/17",
+    "D51 8/18",
+    "D52 8/19",
+    "D53 8/20",
+    "D54 8/21",
+    "D55 8/25"
+   ],
+   "notes": [
+    "New Spread Formula instituted"
+   ],
+   "games": 56,
+   "empty": false,
+   "source_row": 530
+  },
+  {
+   "round": 54,
+   "code": "MRL-A2-1",
+   "title": "MRL Group A - Match 2 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D56 9/1"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 586
+  },
+  {
+   "round": 55,
+   "code": "MRL-A2-2",
+   "title": "MRL Group A - Match 2 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D56 9/1"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 587
+  },
+  {
+   "round": 56,
+   "code": "MRL-C2-1",
+   "title": "MRL Group C - Match 2 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D57 9/4"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 590
+  },
+  {
+   "round": 57,
+   "code": "MRL-C2-2",
+   "title": "MRL Group C - Match 2 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D57 9/4"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 591
+  },
+  {
+   "round": 58,
+   "code": "MRL-E2-1",
+   "title": "MRL Group E - Match 2 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D58 9/5"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 594
+  },
+  {
+   "round": 59,
+   "code": "MRL-E2-2",
+   "title": "MRL Group E - Match 2 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D58 9/5"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 595
+  },
+  {
+   "round": 60,
+   "code": "MRL-G2-1",
+   "title": "MRL Group G - Match 2 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D58 9/5"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 598
+  },
+  {
+   "round": 61,
+   "code": "MRL-G2-2",
+   "title": "MRL Group G - Match 2 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D58 9/5"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 599
+  },
+  {
+   "round": 62,
+   "code": "MRL-B2-1",
+   "title": "MRL Group B - Match 2 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D58 9/5"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 602
+  },
+  {
+   "round": 63,
+   "code": "MRL-B2-2",
+   "title": "MRL Group B - Match 2 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D58 9/5"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 603
+  },
+  {
+   "round": 64,
+   "code": "MRL-D2-1",
+   "title": "MRL Group D - Match 2 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D58 9/5"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 606
+  },
+  {
+   "round": 65,
+   "code": "MRL-D2-2",
+   "title": "MRL Group D - Match 2 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D58 9/5"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 607
+  },
+  {
+   "round": 66,
+   "code": "MRL-F2-1",
+   "title": "MRL Group F - Match 2 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D58 9/5"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 610
+  },
+  {
+   "round": 67,
+   "code": "MRL-F2-2",
+   "title": "MRL Group F - Match 2 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D58 9/5"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 611
+  },
+  {
+   "round": 68,
+   "code": "MRL-H2-1",
+   "title": "MRL Group H - Match 2 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D58 9/5"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 614
+  },
+  {
+   "round": 69,
+   "code": "MRL-H2-2",
+   "title": "MRL Group H - Match 2 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D58 9/5"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 615
+  },
+  {
+   "round": 70,
+   "code": "CRY-QF",
+   "title": "Crystal Cup Quarterfinal",
+   "sub": null,
+   "dates": [
+    "D58 9/5",
+    "D59 9/6"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 618
+  },
+  {
+   "round": 71,
+   "code": "EME-QF",
+   "title": "Emerald Cup Quarterfinal",
+   "sub": null,
+   "dates": [
+    "D59 9/6"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 622
+  },
+  {
+   "round": 72,
+   "code": "PLA-QF",
+   "title": "Platinum Cup Quarterfinal",
+   "sub": null,
+   "dates": [
+    "D59 9/6"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 626
+  },
+  {
+   "round": 73,
+   "code": "GRA-QF",
+   "title": "Gray Cup Quarterfinal",
+   "sub": null,
+   "dates": [
+    "D59 9/6",
+    "D60 9/7"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 630
+  },
+  {
+   "round": 74,
+   "code": "PRI-QF",
+   "title": "Prism Cup Quarterfinal",
+   "sub": null,
+   "dates": [
+    "D60 9/7"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 634
+  },
+  {
+   "round": 75,
+   "code": "KAH-QF",
+   "title": "Kahuna Cup Quarterfinal",
+   "sub": null,
+   "dates": [
+    "D61 9/8"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 638
+  },
+  {
+   "round": 76,
+   "code": "GIG-QF",
+   "title": "Gigantamax Cup Quarterfinal",
+   "sub": null,
+   "dates": [
+    "D61 9/8"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 642
+  },
+  {
+   "round": 77,
+   "code": "MD8",
+   "title": "Matchday Eight",
+   "sub": null,
+   "dates": [
+    "D61 9/8",
+    "D62 9/10",
+    "D63 9/18",
+    "D64 9/23",
+    "D65 9/24",
+    "D66 9/25"
+   ],
+   "notes": [
+    "New Spread Application Instituted",
+    "& New Off/Def Bonuses Instituted"
+   ],
+   "games": 56,
+   "empty": false,
+   "source_row": 646
+  },
+  {
+   "round": 78,
+   "code": "WCS-R4-1",
+   "title": "WCS Fourth Round - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D67 9/27",
+    "D68 9/29",
+    "D69 9/30",
+    "D70 10/1"
+   ],
+   "notes": [],
+   "games": 20,
+   "empty": false,
+   "source_row": 702
+  },
+  {
+   "round": 79,
+   "code": "WCS-R4-2",
+   "title": "WCS Fourth Round - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D67 9/27",
+    "D68 9/29",
+    "D69 9/30",
+    "D70 10/1"
+   ],
+   "notes": [
+    "New Rating Formula Instituted"
+   ],
+   "games": 20,
+   "empty": false,
+   "source_row": 703
+  },
+  {
+   "round": 80,
+   "code": "UTL-A2-1",
+   "title": "UTL Group A - Match 2 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D71 10/3"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 742
+  },
+  {
+   "round": 81,
+   "code": "UTL-A2-2",
+   "title": "UTL Group A - Match 2 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D71 10/3"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 743
+  },
+  {
+   "round": 82,
+   "code": "UTL-C2-1",
+   "title": "UTL Group C - Match 2 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D71 10/3"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 746
+  },
+  {
+   "round": 83,
+   "code": "UTL-C2-2",
+   "title": "UTL Group C - Match 2 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D71 10/3"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 747
+  },
+  {
+   "round": 84,
+   "code": "UTL-E2-1",
+   "title": "UTL Group E - Match 2 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D72 10/7"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 750
+  },
+  {
+   "round": 85,
+   "code": "UTL-E2-2",
+   "title": "UTL Group E - Match 2 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D72 10/7"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 751
+  },
+  {
+   "round": 86,
+   "code": "UTL-B2-1",
+   "title": "UTL Group B - Match 2 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D72 10/7"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 754
+  },
+  {
+   "round": 87,
+   "code": "UTL-B2-2",
+   "title": "UTL Group B - Match 2 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D72 10/7"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 755
+  },
+  {
+   "round": 88,
+   "code": "UTL-D2-1",
+   "title": "UTL Group D - Match 2 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D72 10/7",
+    "D73 10/8"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 758
+  },
+  {
+   "round": 89,
+   "code": "UTL-D2-2",
+   "title": "UTL Group D - Match 2 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D72 10/7",
+    "D73 10/8"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 759
+  },
+  {
+   "round": 90,
+   "code": "UTL-F2-1",
+   "title": "UTL Group F - Match 2 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D73 10/8"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 762
+  },
+  {
+   "round": 91,
+   "code": "UTL-F2-2",
+   "title": "UTL Group F - Match 2 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D73 10/8"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 763
+  },
+  {
+   "round": 92,
+   "code": "MD9",
+   "title": "Matchday Nine",
+   "sub": null,
+   "dates": [
+    "D74 10/10",
+    "D75 10/13",
+    "D76 10/14",
+    "D77 10/15",
+    "D78 10/17",
+    "D79 10/20"
+   ],
+   "notes": [
+    "New D-Score Formula Instituted",
+    "(Time Led and Average Led By)"
+   ],
+   "games": 56,
+   "empty": false,
+   "source_row": 766
+  },
+  {
+   "round": 93,
+   "code": "MRL-A3-1",
+   "title": "MRL Group A - Match 3 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D80 10/21"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 822
+  },
+  {
+   "round": 94,
+   "code": "MRL-A3-2",
+   "title": "MRL Group A - Match 3 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D80 10/21"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 823
+  },
+  {
+   "round": 95,
+   "code": "MRL-C3-1",
+   "title": "MRL Group C - Match 3 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D80 10/21"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 826
+  },
+  {
+   "round": 96,
+   "code": "MRL-C3-2",
+   "title": "MRL Group C - Match 3 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D80 10/21"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 827
+  },
+  {
+   "round": 97,
+   "code": "MRL-E3-1",
+   "title": "MRL Group E - Match 3 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D80 10/21"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 830
+  },
+  {
+   "round": 98,
+   "code": "MRL-E3-2",
+   "title": "MRL Group E - Match 3 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D80 10/21"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 831
+  },
+  {
+   "round": 99,
+   "code": "MRL-G3-1",
+   "title": "MRL Group G - Match 3 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D81 10/22"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 834
+  },
+  {
+   "round": 100,
+   "code": "MRL-G3-2",
+   "title": "MRL Group G - Match 3 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D81 10/22"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 835
+  },
+  {
+   "round": 101,
+   "code": "MRL-B3-1",
+   "title": "MRL Group B - Match 3 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D82 11/14"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 838
+  },
+  {
+   "round": 102,
+   "code": "MRL-B3-2",
+   "title": "MRL Group B - Match 3 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D82 11/14"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 839
+  },
+  {
+   "round": 103,
+   "code": "MRL-D3-1",
+   "title": "MRL Group D - Match 3 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D82 11/14"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 842
+  },
+  {
+   "round": 104,
+   "code": "MRL-D3-2",
+   "title": "MRL Group D - Match 3 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D82 11/14"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 843
+  },
+  {
+   "round": 105,
+   "code": "MRL-F3-1",
+   "title": "MRL Group F - Match 3 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D82 11/14"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 846
+  },
+  {
+   "round": 106,
+   "code": "MRL-F3-2",
+   "title": "MRL Group F - Match 3 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D82 11/14"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 847
+  },
+  {
+   "round": 107,
+   "code": "MRL-H3-1",
+   "title": "MRL Group H - Match 3 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D82 11/14"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 850
+  },
+  {
+   "round": 108,
+   "code": "MRL-H3-2",
+   "title": "MRL Group H - Match 3 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D82 11/14"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 851
+  },
+  {
+   "round": 109,
+   "code": "CRY-SF-1",
+   "title": "Crystal Cup Semifinal - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D83 12/1"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 854
+  },
+  {
+   "round": 110,
+   "code": "CRY-SF-2",
+   "title": "Crystal Cup Semifinal - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D83 12/1"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 855
+  },
+  {
+   "round": 111,
+   "code": "EME-SF-1",
+   "title": "Emerald Cup Semifinal - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D84 12/2"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 858
+  },
+  {
+   "round": 112,
+   "code": "EME-SF-2",
+   "title": "Emerald Cup Semifinal - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D84 12/2"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 859
+  },
+  {
+   "round": 113,
+   "code": "PLA-SF-1",
+   "title": "Platinum Cup Semifinal - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D84 12/2"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 862
+  },
+  {
+   "round": 114,
+   "code": "PLA-SF-2",
+   "title": "Platinum Cup Semifinal - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D84 12/2"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 863
+  },
+  {
+   "round": 115,
+   "code": "GRA-SF-1",
+   "title": "Gray Cup Semifinal - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D85 12/4"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 866
+  },
+  {
+   "round": 116,
+   "code": "GRA-SF-2",
+   "title": "Gray Cup Semifinal - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D85 12/4"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 867
+  },
+  {
+   "round": 117,
+   "code": "PRI-SF-1",
+   "title": "Prism Cup Semifinal - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D85 12/4"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 870
+  },
+  {
+   "round": 118,
+   "code": "PRI-SF-2",
+   "title": "Prism Cup Semifinal - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D85 12/4"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 871
+  },
+  {
+   "round": 119,
+   "code": "KAH-SF-1",
+   "title": "Kahuna Cup Semifinal - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D86 12/8"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 874
+  },
+  {
+   "round": 120,
+   "code": "KAH-SF-2",
+   "title": "Kahuna Cup Semifinal - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D86 12/8"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 875
+  },
+  {
+   "round": 121,
+   "code": "GIG-SF-1",
+   "title": "Gigantamax Cup Semifinal - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D86 12/8",
+    "D87 12/9"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 878
+  },
+  {
+   "round": 122,
+   "code": "GIG-SF-2",
+   "title": "Gigantamax Cup Semifinal - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D87 12/9"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 879
+  },
+  {
+   "round": 123,
+   "code": "MD10",
+   "title": "Matchday Ten",
+   "sub": null,
+   "dates": [
+    "D88 12/16",
+    "D89 12/17",
+    "D90 12/19",
+    "D91 12/20"
+   ],
+   "notes": [
+    "Rankings revamp, added conf. str.",
+    "Fatigue now multiplied by both"
+   ],
+   "games": 56,
+   "empty": false,
+   "source_row": 882
+  },
+  {
+   "round": 124,
+   "code": "WCS-R5-1",
+   "title": "WCS Fifth Round - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D92 12/22",
+    "D93 12/23"
+   ],
+   "notes": [],
+   "games": 16,
+   "empty": false,
+   "source_row": 938
+  },
+  {
+   "round": 125,
+   "code": "WCS-R5-2",
+   "title": "WCS Fifth Round - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D93 12/23",
+    "D94 12/24"
+   ],
+   "notes": [],
+   "games": 16,
+   "empty": false,
+   "source_row": 954
+  },
+  {
+   "round": 126,
+   "code": "UTL-A3-1",
+   "title": "UTL Group A - Match 3 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D94 12/24"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 970
+  },
+  {
+   "round": 127,
+   "code": "UTL-A3-2",
+   "title": "UTL Group A - Match 3 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D94 12/24"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 971
+  },
+  {
+   "round": 128,
+   "code": "UTL-C3-1",
+   "title": "UTL Group C - Match 3 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D94 12/24",
+    "D95 12/25"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 974
+  },
+  {
+   "round": 129,
+   "code": "UTL-C3-2",
+   "title": "UTL Group C - Match 3 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D94 12/24",
+    "D95 12/25"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 975
+  },
+  {
+   "round": 130,
+   "code": "UTL-E3-1",
+   "title": "UTL Group E - Match 3 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D95 12/25"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 978
+  },
+  {
+   "round": 131,
+   "code": "UTL-E3-2",
+   "title": "UTL Group E - Match 3 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D95 12/25"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 979
+  },
+  {
+   "round": 132,
+   "code": "UTL-B3-1",
+   "title": "UTL Group B - Match 3 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D95 12/25"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 982
+  },
+  {
+   "round": 133,
+   "code": "UTL-B3-2",
+   "title": "UTL Group B - Match 3 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D95 12/25"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 983
+  },
+  {
+   "round": 134,
+   "code": "UTL-D3-1",
+   "title": "UTL Group D - Match 3 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D95 12/25"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 986
+  },
+  {
+   "round": 135,
+   "code": "UTL-D3-2",
+   "title": "UTL Group D - Match 3 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D95 12/25"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 987
+  },
+  {
+   "round": 136,
+   "code": "UTL-F3-1",
+   "title": "UTL Group F - Match 3 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D95 12/25"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 990
+  },
+  {
+   "round": 137,
+   "code": "UTL-F3-2",
+   "title": "UTL Group F - Match 3 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D95 12/25"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 991
+  },
+  {
+   "round": 138,
+   "code": "MD11",
+   "title": "Matchday Eleven",
+   "sub": null,
+   "dates": [
+    "D96 2/3",
+    "D97 2/4",
+    "D98 2/11",
+    "D99 2/18",
+    "D100 2/20",
+    "D101 2/21",
+    "D102 2/28",
+    "D103 3/3"
+   ],
+   "notes": [],
+   "games": 56,
+   "empty": false,
+   "source_row": 994
+  },
+  {
+   "round": 139,
+   "code": "UTL-R20-1",
+   "title": "UTL Round of 20 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D104 3/4"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1050
+  },
+  {
+   "round": 140,
+   "code": "UTL-R20-2",
+   "title": "UTL Round of 20 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D104 3/4"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1054
+  },
+  {
+   "round": 141,
+   "code": "MRL-R16-1",
+   "title": "MRL Round of 16 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D105 3/5"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1058
+  },
+  {
+   "round": 142,
+   "code": "MRL-R16-2",
+   "title": "MRL Round of 16 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D106 3/7"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1066
+  },
+  {
+   "round": 143,
+   "code": "CRY-F-1",
+   "title": "Crystal Cup Final - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D107 3/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1074
+  },
+  {
+   "round": 144,
+   "code": "EME-F-1",
+   "title": "Emerald Cup Final - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D107 3/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1075
+  },
+  {
+   "round": 145,
+   "code": "PLA-F-1",
+   "title": "Platinum Cup Final - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D107 3/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1076
+  },
+  {
+   "round": 146,
+   "code": "GRA-F-1",
+   "title": "Gray Cup Final - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D107 3/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1077
+  },
+  {
+   "round": 147,
+   "code": "PRI-F-1",
+   "title": "Prism Cup Final - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D107 3/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1078
+  },
+  {
+   "round": 148,
+   "code": "KAH-F-1",
+   "title": "Kahuna Cup Final - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D107 3/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1079
+  },
+  {
+   "round": 149,
+   "code": "GIG-F-1",
+   "title": "Gigantamax Cup Final - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D107 3/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1080
+  },
+  {
+   "round": 150,
+   "code": "CRY-F-2",
+   "title": "Crystal Cup Final - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D107 3/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1081
+  },
+  {
+   "round": 151,
+   "code": "EME-F-2",
+   "title": "Emerald Cup Final - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D107 3/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1082
+  },
+  {
+   "round": 152,
+   "code": "PLA-F-2",
+   "title": "Platinum Cup Final - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D107 3/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1083
+  },
+  {
+   "round": 153,
+   "code": "GRA-F-2",
+   "title": "Gray Cup Final - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D107 3/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1084
+  },
+  {
+   "round": 154,
+   "code": "PRI-F-2",
+   "title": "Prism Cup Final - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D107 3/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1085
+  },
+  {
+   "round": 155,
+   "code": "KAH-F-2",
+   "title": "Kahuna Cup Final - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D107 3/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1086
+  },
+  {
+   "round": 156,
+   "code": "GIG-F-2",
+   "title": "Gigantamax Cup Final - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D107 3/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1087
+  },
+  {
+   "round": 157,
+   "code": "MD12",
+   "title": "Matchday Twelve",
+   "sub": null,
+   "dates": [
+    "D108 3/20",
+    "D109 3/21",
+    "D110 3/23",
+    "D111 3/24",
+    "D112 3/28",
+    "D113 3/31"
+   ],
+   "notes": [],
+   "games": 56,
+   "empty": false,
+   "source_row": 1088
+  },
+  {
+   "round": 158,
+   "code": "WCS-R16-1",
+   "title": "WCS Round of 16 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D113 3/31"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1144
+  },
+  {
+   "round": 159,
+   "code": "WCS-R16-2",
+   "title": "WCS Round of 16 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D114 4/1"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1152
+  },
+  {
+   "round": 160,
+   "code": "UTL-R16-1",
+   "title": "UTL Round of 16 - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D115 4/4"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1160
+  },
+  {
+   "round": 161,
+   "code": "UTL-R16-2",
+   "title": "UTL Round of 16 - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D115 4/4"
+   ],
+   "notes": [],
+   "games": 8,
+   "empty": false,
+   "source_row": 1168
+  },
+  {
+   "round": 162,
+   "code": "MD13",
+   "title": "Matchday Thirteen",
+   "sub": null,
+   "dates": [
+    "D115 4/4",
+    "D116 4/5",
+    "D117 4/6"
+   ],
+   "notes": [
+    "Rivalry Week",
+    "Poni Derby",
+    "Rusturf Derby",
+    "Battle Zone Derby",
+    "Chimney Derby",
+    "Circhester Derby",
+    "Thud!!! Derby",
+    "Skyarrow Derby",
+    "Wyndon Derby",
+    "Lumiose City finishes 13-0 (9-0)",
+    "Seafoam Derby",
+    "Whirl Island Derby"
+   ],
+   "games": 56,
+   "empty": false,
+   "source_row": 1176
+  },
+  {
+   "round": 163,
+   "code": "UTL-QF-1",
+   "title": "UTL Quarterfinal - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D118 4/8"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1232
+  },
+  {
+   "round": 164,
+   "code": "UTL-QF-2",
+   "title": "UTL Quarterfinal - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D118 4/8"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1236
+  },
+  {
+   "round": 165,
+   "code": "MRL-QF-1",
+   "title": "MRL Quarterfinal - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D118 4/8"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1240
+  },
+  {
+   "round": 166,
+   "code": "MRL-QF-2",
+   "title": "MRL Quarterfinal - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D118 4/8"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1244
+  },
+  {
+   "round": 167,
+   "code": "WCS-QF-1",
+   "title": "WCS Quarterfinal - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D118 4/8"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1248
+  },
+  {
+   "round": 168,
+   "code": "WCS-QF-2",
+   "title": "WCS Quarterfinal - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D119 4/9"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1252
+  },
+  {
+   "round": 169,
+   "code": "UTL-SF-1",
+   "title": "UTL Semifinal - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D120 4/11"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1256
+  },
+  {
+   "round": 170,
+   "code": "UTL-SF-2",
+   "title": "UTL Semifinal - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D120 4/11"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1258
+  },
+  {
+   "round": 171,
+   "code": "MRL-SF-1",
+   "title": "MRL Semifinal - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D120 4/11"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1260
+  },
+  {
+   "round": 172,
+   "code": "MRL-SF-2",
+   "title": "MRL Semifinal - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D120 4/11"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1262
+  },
+  {
+   "round": 173,
+   "code": "WCS-SF-1",
+   "title": "WCS Semifinal - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D120 4/11"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1264
+  },
+  {
+   "round": 174,
+   "code": "WCS-SF-2",
+   "title": "WCS Semifinal - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D120 4/11"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1266
+  },
+  {
+   "round": 175,
+   "code": "CC-F",
+   "title": "Lily Valley Conference Championship",
+   "sub": null,
+   "dates": [
+    "D120 4/11",
+    "D121 4/12"
+   ],
+   "notes": [],
+   "games": 7,
+   "empty": false,
+   "source_row": 1268
+  },
+  {
+   "round": 176,
+   "code": "UTL-F-1",
+   "title": "UTL Championship - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D121 4/13"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1275
+  },
+  {
+   "round": 177,
+   "code": "UTL-F-2",
+   "title": "UTL Championship - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D121 4/13"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1276
+  },
+  {
+   "round": 178,
+   "code": "MRL-F-1",
+   "title": "MRL Championship - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D121 4/13"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1277
+  },
+  {
+   "round": 179,
+   "code": "MRL-F-2",
+   "title": "MRL Championship - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D122 4/14"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1278
+  },
+  {
+   "round": 180,
+   "code": "WCS-F-1",
+   "title": "WCS Championship - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D122 4/14"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1279
+  },
+  {
+   "round": 181,
+   "code": "WCS-F-2",
+   "title": "WCS Championship - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D122 4/14"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1280
+  },
+  {
+   "round": 182,
+   "code": "WC-PIX-1",
+   "title": "Play-In Round - Match X - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D123 4/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1281
+  },
+  {
+   "round": 183,
+   "code": "WC-PIY-1",
+   "title": "Play-In Round - Match Y - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D123 4/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1282
+  },
+  {
+   "round": 184,
+   "code": "WC-PIX-2",
+   "title": "Play-In Round - Match X - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D123 4/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1283
+  },
+  {
+   "round": 185,
+   "code": "WC-PIY-2",
+   "title": "Play-In Round - Match Y - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D123 4/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1284
+  },
+  {
+   "round": 186,
+   "code": "WC-PIZ-1",
+   "title": "Play-in Round - Match Z - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D123 4/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1285
+  },
+  {
+   "round": 187,
+   "code": "WC-PIZ-2",
+   "title": "Play-in Round - Match Z - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D123 4/17"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1286
+  },
+  {
+   "round": 188,
+   "code": "WC-OR-1",
+   "title": "Opening Round - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D123 4/17"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1287
+  },
+  {
+   "round": 189,
+   "code": "WC-OR-2",
+   "title": "Opening Round - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D123 4/17"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1291
+  },
+  {
+   "round": 190,
+   "code": "WC-WQF-1",
+   "title": "Winners - Quarterfinal - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D124 4/18"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1295
+  },
+  {
+   "round": 191,
+   "code": "WC-WQF-2",
+   "title": "Winners - Quarterfinal - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D124 4/18"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1299
+  },
+  {
+   "round": 192,
+   "code": "WC-LR1-1",
+   "title": "Lower - First Round - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D124 4/18"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1303
+  },
+  {
+   "round": 193,
+   "code": "WC-LR1-2",
+   "title": "Lower - First Round - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D124 4/18"
+   ],
+   "notes": [],
+   "games": 4,
+   "empty": false,
+   "source_row": 1307
+  },
+  {
+   "round": 194,
+   "code": "WC-LR2-1",
+   "title": "Lower - Second Round - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D125 4/24"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1311
+  },
+  {
+   "round": 195,
+   "code": "WC-LR2-2",
+   "title": "Lower - Second Round - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D125 4/24"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1313
+  },
+  {
+   "round": 196,
+   "code": "WC-WSF-1",
+   "title": "Winners - Semifinal - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D125 4/24"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1315
+  },
+  {
+   "round": 197,
+   "code": "WC-WSF-2",
+   "title": "Winners - Semifinal - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D125 4/24"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1317
+  },
+  {
+   "round": 198,
+   "code": "WC-LQF-1",
+   "title": "Lower - Quarterfinal - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D125 4/24"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1319
+  },
+  {
+   "round": 199,
+   "code": "WC-LQF-2",
+   "title": "Lower - Quarterfinal - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D125 4/24"
+   ],
+   "notes": [],
+   "games": 2,
+   "empty": false,
+   "source_row": 1321
+  },
+  {
+   "round": 200,
+   "code": "WC-LSF-1",
+   "title": "Lower - Semifinal - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D126 4/29"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1323
+  },
+  {
+   "round": 201,
+   "code": "WC-LSF-2",
+   "title": "Lower - Semifinal - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D126 4/29"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1324
+  },
+  {
+   "round": 202,
+   "code": "WC-WF-1",
+   "title": "Winners - Final - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D126 4/29"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1325
+  },
+  {
+   "round": 203,
+   "code": "WC-WF-2",
+   "title": "Winners - Final - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D126 4/29"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1326
+  },
+  {
+   "round": 204,
+   "code": "WC-LF-1",
+   "title": "Lower - Final - 1st Leg",
+   "sub": null,
+   "dates": [
+    "D126 4/29"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1327
+  },
+  {
+   "round": 205,
+   "code": "WC-LF-2",
+   "title": "Lower - Final - 2nd Leg",
+   "sub": null,
+   "dates": [
+    "D126 4/29"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1328
+  },
+  {
+   "round": 206,
+   "code": "WC-GF-1",
+   "title": "GRAND FINAL - GAME ONE",
+   "sub": null,
+   "dates": [
+    "D126 4/29"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1329
+  },
+  {
+   "round": 207,
+   "code": "WC-GF-2",
+   "title": "GRAND FINAL - GAME TWO",
+   "sub": null,
+   "dates": [
+    "D126 4/29"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1330
+  },
+  {
+   "round": 208,
+   "code": "WC-GFR-1",
+   "title": "GRAND FINAL RESET - GAME ONE",
+   "sub": null,
+   "dates": [
+    "D126 4/29"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1331
+  },
+  {
+   "round": 209,
+   "code": "WC-GFR-2",
+   "title": "GRAND FINAL RESET - GAME TWO",
+   "sub": null,
+   "dates": [
+    "D126 4/29"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1332
+  },
+  {
+   "round": 210,
+   "code": "WC-GFR-3",
+   "title": "GRAND FINAL RESET - GAME THREE",
+   "sub": null,
+   "dates": [
+    "D126 4/29"
+   ],
+   "notes": [],
+   "games": 1,
+   "empty": false,
+   "source_row": 1333
+  }
+ ]
+}

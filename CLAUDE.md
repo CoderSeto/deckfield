@@ -87,7 +87,534 @@ database holds one season. See "Season 10" below.
   the production draw was promoted from (it reproduces the trial file byte
   for byte). Run the prototypes as `DECKFIELD_SEASON=9` against an S9
   database: they flip the outline themselves.
+- `history/` — the **historical archive** of Seasons 1-8 (see "The historical
+  archive" below). `history/s<N>/` holds that season's workbook and what
+  `extract_history.py <N> <workbook>` writes from it; `history/teams.json` is
+  the cross-season team identity map. **All eight seasons done 2026-10-11.**
+  S1-S3 share one workbook and a second for their Elo, both in
+  `history/s1-3/`, read by `history_early.py`; their output is in
+  `history/s1/`..`history/s3/`. Each season is extracted only after the one
+  after it (its final ranks and Elo are checked against how the next season
+  opened). `history/s9/` is S9 in the same format, written by
+  `extract_history_s9.py <s9_audit.db>` (see "Season 9 in the archive").
+- `build_alltime.py` — builds `alltime.db` (gitignored) and
+  `alltime_dashboard.html` (the separate all-time dashboard, rendered from
+  `alltime_template.html`) from `history/s1`..`s9` and `hall_of_fame.json`.
+  See "The all-time database".
 - `CLAUDE.md` — this file.
+
+## The historical archive (Seasons 1-8, begun 2026-10-11)
+
+Per explicit request: an archive of the early seasons for all-time statistics,
+"relitigating" them -- filling gaps in modern stats while every recorded result
+stays exactly as it was. Worked backwards from S8, one season at a time.
+
+**The archive holds only what a season RECORDED.** `extract_history.py` writes
+`history/s<N>/{games,walkovers,teams}.csv` and `events.json` straight from the
+workbook, and a stat the season never kept stays **blank**, never zero and never
+estimated. Anything filled in later (simulated or modelled) goes in a separate
+layer beside these files, marked as such and seeded so it rebuilds exactly --
+never into them.
+
+**Team identity is the team's S9 dex, not the season's own dex.** Dex slots
+moved: between S8 and S9 **Mossui Town** (S8 Terastal, dex 156) and **Fight
+Area** (S8 Lily Valley, dex 41) swapped regions and dex numbers, and Fight Area
+was renamed **Cabo Poco**; **Resort Area** became **Battle Zone** (same slot).
+Confirmed by the user (2026-10-11: "Mossui moved to Lily Valley and Fight Area
+moved to Terastal and became Cabo Poco") and by S9's own "S8 End" checkpoint,
+which ranks Mossui Town 48 and Cabo Poco 84 -- exactly Mossui Town's and Fight
+Area's S8 finishes. `RENAMED_SINCE` in the
+extractor holds the renames; `history/teams.json` maps every season's
+(dex, name, region, division) to the canonical id.
+
+**The extractor refuses to write unless everything reconciles**: both packed
+strings of every game mirror each other and name the right teams; each team's
+W-L per bucket (R/L/Swiss/playoff+finals) equals the workbook's Rankings F..M,
+byes included; the Elo chain holds game by game from each team's opening
+Elo (winner +K, loser -K, exactly); each team's last game Elo equals its final
+Elo; opening and final Elo each total exactly 1800 per team (288,000 -- the
+user's own test for a season's starting Elo; Elo is zero-sum, and S7 and S8 both
+hold it exactly); goals never exceed points; the final rank AND final Elo equal how the
+NEXT season opened (its archived `opening_rank`/`opening_elo`; for S8, S9's
+verbatim "S8 End"); the Hall of Fame's World, cup and all ten regional titles
+follow from the games; and Regional and League are complete round robins
+(every pair once, never across groups, every team every matchday). Also:
+wherever a full game string exists, the row's own score / spread / interest /
+DSCR columns must agree with it (this is what lets S5's short-form games be
+trusted), and every event's games are of one game type.
+
+**Opening Elo comes from the games**, never from a sheet column: the first
+game's Elo less the K gained (or plus the K lost). Where a sheet also kept the
+carried-in Elo and it can be trusted (S8's Rankings FV), it must agree; S7's
+block (headed "NOT FIXED") disagrees for all 160 and is not read.
+
+**A recorded inconsistency is accepted only when listed** -- per season, in
+`SEASONS[n]["anomalies"]`, by Archive row, check and reason -- and it lands in
+`events.json`. Anything unlisted still refuses, and a listed anomaly that no
+longer occurs refuses too (the list cannot go stale). **A value the user has
+ruled wrong is replaced only through `SEASONS[n]["corrections"]`** (row, field,
+the sheet's value, the corrected value, the reason), applied before validation
+and written to `events.json`; it refuses if the sheet no longer holds the value
+the correction names.
+
+**Columns that disagree with their own game string** (found by that check,
+2026-10-11): S8 Regional matchday 14, six games whose interest column reads 6
+over the string; S7 one Grand Swiss R16 spread; S6 three World Championship
+interest values. All listed as anomalies; the STRING's value is what is archived.
+
+**Event labels**: a title opens with two ALL-CAPS words (tokens without a letter,
+like "-", skipped); a round/leg label
+refines it, and a second round/leg label within one title opens the next part
+of that stage (S7's Championship Swiss round 3); anything else -- matchday
+names, the sheet's changelog notes -- is kept as the event's `notes`. A label
+that fuses the two is split by a listed `label_overrides` entry. Column A marks
+the start of a play day ("D1 5/22", S6 and S7): every game below it until the
+next mark was played that day, so each game carries its `day` and each event
+its `dates` (more than one when a matchday spanned two days).
+
+**"formula" notes (S6-S7) are OVR-scaling changes, not rule changes**: before
+S9 no team could go above 100 OVR, and the formula was adjusted during a season
+to keep it so (per the user, 2026-10-11). Each check was mutation-tested (a dropped bye, a one-sided
+score typo, a bad host flag, a missing WC game, the identity swap undone, a
+flipped regional final, a K off by one, an opening Elo off by 5, goals above
+points) and fails as it should. A re-run is byte-identical.
+
+### Season 8 (extracted 2026-10-11)
+
+**Essentially complete -- nothing needs simulating.** 3,505 games in 84 events
+(one empty: WC QF game 3), every one with host, score, raw goal scores, spread,
+interest, both DSCRs and both Elos, goals scored (`goals_a`/`goals_b`), the
+Elo K, each side's rank going into the game, and 120 byes (`walkovers.csv`). The only modern gap is **per-team EX**: S8
+banked EX for the winner only, as a differential (`ex_winner_diff`; a blank
+Archive cell is 0 -- no cell ever reads `/0/`), so `ex_a`/`ex_b` are blank.
+Archive column **E is the Elo K** (per the user) -- in practice the exact
+points exchanged: the winner gains it and the loser loses it in every one of
+the 3,425 games where both sides had a prior game -- so each team's opening Elo
+is recoverable, and it equals Rankings FV (S7's final Elo) for all 160
+(`opening_elo` in `teams.csv`). Column **N is goals scored, written
+[winner-loser]** (per the user; the data agrees: read that way no side ever has
+more goals than points, the other way 76 games break). Stored host/away like
+everything else.
+
+S8's structure, as the Archive lays it out (event codes in `events.json`):
+- **Regional R1-R15, League L1-L15**: as now, 80 games each.
+- **Grand Swiss** (in place of PA; no RDS Cups): GS1-GS14 with cuts --
+  40/60/80/80/80/80/64/64/48/48/36/36/24/24 games, i.e. 80 teams in round 1
+  (the other 80 bye), 120 in round 2 (40 bye), all 160 in rounds 3-6, then 128,
+  96, 72, 48. Byes were **scored as wins** (Calcs `3S-`, +1 or +2 Swiss W --
+  the top 40 seeds byed both rounds). Then a 24-team bracket: two-legged
+  play-in (8 ties), R16, QF, SF and Final (GS-PI/R16/QF/SF/F-1/2). Champion
+  Canalave City over Camphrier Town.
+- **Regional Playoffs**: 6 teams per region, all two-legged -- QF (seeds 3-6;
+  1-2 bye), SF, Final (RP-QF/SF/F-1/2).
+- **World Championship**: a two-legged play-in (WC-PI), a 32-team **Championship
+  Swiss** of 8 rounds (WC-S1..8, 16 games each), a two-legged finals play-in
+  (WC-FPI), then best-of-three R16, QF, SF and Final. Agate Village beat
+  Camphrier Town in the final (3 games).
+- **OT**: Regional, League and Grand Swiss OT games are 2/1 as now; Playoff and
+  Finals OT games were scored **3/0** -- confirmed as S8's rule. Recorded as
+  played; `ot` flags them all.
+
+### Season 7 (extracted 2026-10-11)
+
+**Complete as well -- nothing to simulate.** 3,442 games in 85 events, the same
+recorded fields as S8 plus play dates (26 days, "D1 5/22" to "D26 2/25").
+Column C's game IDs are not extracted (per the user: ignore them). Same 160 teams with the same dex, names and regions as S8. No
+Primary Type column; accolades span two columns (joined with "; ").
+
+The user described S7 as S8 "except the WC, which had odd swiss brackets to
+start". The Archive shows that plus two smaller differences:
+- **Grand Swiss rounds 7-8 were 48 games**, not 64 (96 teams, not 128); every
+  other round, the byes (80 + 40, scored as wins) and the 24-team bracket match.
+- **The Championship play-in was two two-legged rounds** (WC-PI1, WC-PI2, 8
+  ties each), typed **Playoffs (P)**, not Finals.
+- **Championship Swiss**: rounds 1-2 single games (16 each); round 3 split --
+  8 single games (WC-S3) and 8 two-legged ties (WC-S3-1/2, Calcs gives every
+  team two SW3 slots); rounds 4 and 5 two-legged (12 and 6 ties). No finals
+  play-in; straight to a best-of-three R16, QF, SF and Final.
+- Pueltown won both the Grand Swiss (over Cortondo) and the World
+  Championship (over Canalave City).
+
+The sheet's changelog notes are kept: at R1 "Base-2 Scoring System",
+"Increased !#$+ value", "New League System", "New Bonus System", "New OVR
+Balance", "Modified HomeAdv"; at GS7 "EYE formula fixed", "PF formula
+adjusted", "Scoring table formula adjusted"; at L14 "Five month hiatus
+(corrupted file)" (the dates jump from 9/14 to 2/8 there).
+
+**One correction**: Archive row 3222 (Delta playoff SF leg 1, Fallarbor Town at
+Lavaridge Town) moved Elo by 40 each way while its K column says 22. Per the
+user, "whatever the Elo actually changed by, that's what stays": the Elo is
+kept and `elo_k` is 40, with the sheet's 22 recorded in `events.json`.
+**The rule for every season: the recorded Elo is the truth, and K follows it.**
+
+### Season 6 (extracted 2026-10-11)
+
+**Complete -- nothing to simulate**, with one more gap than S7: **no per-game
+EX at all** (the Archive has no EX column; the notes moved into column S), even
+though the R1 notes say "Bonus EX points now awarded". 3,516 games in 84
+events, play dates for all of them (39 days, 8/9 to 2/3; eight matchdays span
+two days), the same 160 teams with the same dex, names and regions as S7. Every
+check passes with no anomalies and no corrections.
+
+What differed (per the user, and as the Archive shows):
+- **League pyramid**: Master (1 division), Ultra A-B, Great A-C, Basic A-D --
+  ten divisions of 16, each a full round robin. `division` holds the label
+  ("Great B") and `tier` 1-4 (S7 on, `division` is 1-10 and `tier` blank).
+  The Hall of Fame's league plaque for S6 is MRL (Master) and UTL (Ultra)
+  champions; it is not checked, since the standings tiebreak of the time is
+  not modelled.
+- **League Playoffs** (LP-1, LP-2: two days, 8 games each, typed P), from the
+  LPO sheet: Master Placement (Master 3rd v 4th), Master/Ultra Relegation (a
+  three-team ladder, "loser of both games relegated, 3 at 2, W at 1"), Ultra
+  Promotion, Great Promotion (a three-team ladder, "winner of both games
+  promoted, 2 at 1, 3 at L1"), and a 3rd-v-4th promotion tie in each Basic
+  division. The archive keeps the two days as recorded and does not model the
+  ties.
+- **Grand Swiss, 15 rounds and a top 16** (it "replaces WCS" from this season,
+  per the notes; the Hall of Fame's cup plaque still calls S6's "WCS"): rounds
+  of 40/60/80/80/80/64/64/64/64/64/32/32/32/32/32 games, the same 80 + 40 byes
+  scored as wins, then a 3-game single-leg play-in (GS-PI) and a two-legged
+  R16, QF, SF and Final. Seafolk Village beat Slateport City.
+- **World Championship**: a best-of-three play-in (WC-PI-1..3, typed P), a
+  Championship Swiss whose round 3 sheet lists 16 games together (singles and
+  first legs mixed) then 8 second legs (WC-S3, WC-S3-2), two-legged rounds 4-5,
+  a two-legged R16 (not best of three, unlike S7-S8), then best-of-three QF,
+  SF and Final. Canalave City beat Striaton City.
+- One label fused a note into a round name ("formula 12.3>12.4 Semifinal -
+  Game Three", Archive row 3516) and is split by `label_overrides`.
+
+### Season 4 (extracted 2026-10-11)
+
+**Complete, from Calcs.** 1,328 games in 88 events, 128 teams in 8 regions
+(Indigo, Delta, Lily Valley, Vertress, Kalosite, Lanakila, Dynamax and the new
+Phoenix; Silver and Terastal come in S5). Per the user: no leagues -- 8-team
+pods for interconference play; regions played 12 games, not a full round
+robin; a WCS of eight 16-team regional brackets; the MRL (Master) and UTL
+(Ultra) drawn from the previous season's top finishers, each a group stage
+double round robin and a 16-team playoff.
+
+- **The Archive holds NO game strings** -- every row is columns only (date,
+  label, spread, K, interest, host, ranks, names, score, goals, DSCR, mark,
+  note). Every game's strings are in **Calcs** (the per-team grid, weeks x
+  Sat/Tue/Thu/Fri/Sun slots, `1-Sa` ... `27-Su`), in S4's own format:
+  `AW!68+32-9^7(13.97)[60]{90.5}2153` = **side (H/A) and result (W/L)**, no
+  game type (`CALCS_S4_PATTERN`). Calcs pairs into exactly the Archive's 1,328
+  games; each string's side must equal the Archive's host. Results are W/L
+  only (stored 3/0; `ot` still flags OT from the notes). "^" is goals again.
+- **Game type comes from the event** (`type_by_code`), since no string has
+  one: weekend matchday games are **R** (same region) or **I** (interconference
+  pod, a new letter); MRL/UTL **M**; WCS **W**; Conference Championship **P**;
+  the Red/Blue playoffs and the World Championship **F**.
+- **Records**: Rankings keeps Se (the 12 weekend matchday games), Cf (the 9
+  of them against the team's own region -- INSIDE Se, not beside it) and Ex
+  (everything else). Proved for all 128: Se + Ex = games played. (Calcs'
+  category block, CQ..DP, does not sum to games and is not used.)
+- The **MRL and UTL** were six groups of 5 each (30 teams apiece; double round
+  robin = 8 games over matchdays A-J, byes included), then R16-QF-SF-Final,
+  two legs each. Every listed group member played. `division` holds the group
+  ("MRL C"), blank for the 68 teams in neither.
+- **Aggregate overtime.** Three ties went to AggOT (rows 1088, 1207, 1310).
+  The Archive (like S5's strings) has the leg's regulation score; Calcs folds
+  the AggOT points into it (Solaceon Town v Virbank City reads 22-22, still
+  Solaceon's win). The REGULATION score is archived and the AggOT points go in
+  `aggot_a`/`aggot_b` (a column every season now has, blank elsewhere), so each
+  tie's aggregate still matches its note. **Confirmed by the user (2026-10-11):
+  AggOT points do not count for statistics -- only the advancement matters.**
+  So anything built on the archive (all-time stats, relitigation) reads the
+  regulation score and treats `aggot_a/b` purely as how the tie was settled.
+- **One cell correction** (`cell_corrections`, applied as the row is read):
+  row 500's winner reads "a" -- Calcs says Littleroot Town (beat Snowbelle City
+  25-23 in the season's first 5OT game). Approved by the user, 2026-10-11.
+- **Phoenix's starting Elo** came from an unofficial preseason mini tournament
+  (the ...X tabs: ArchiveX, CalcsX, RankingsX -- never read for games, per the
+  user) and sits in CalcsX column H (`opening_elo_sheet`). The games agree for
+  15 of 16; for **Tilt Village** CalcsX says 1777 but its games start from
+  **1797** -- the preseason pattern (1808 down to 1792 by finish) and the value
+  that makes the opening total exactly 230,400 (1800 x 128). Listed (a
+  team-keyed anomaly); the games' 1797 is archived. Confirmed by the user
+  (2026-10-11): 1777 was a typo.
+- **Renamed before S5**: South Lakes -> Wild Area (same dex, Dynamax; the Hall
+  of Fame lists S4's MRL runner-up as "Wild Area*"). The 8 Indigo teams that
+  became Silver in S5 change dex too (Cianwood City 1 -> 129, etc.);
+  `history/teams.json` keys them by name, so each keeps one identity.
+- Checked against everything the Hall of Fame has for S4: World (Lumiose City
+  over Hulbury, 2-0), WCS (Lumiose City over Cinnabar Island), all eight
+  regional champions (each Conference Championship final is one game,
+  `regional_final: ["CC-F"]`), and -- new -- the league plaque: MRL champion
+  and second (Virbank City, South Lakes) and UTL champion and second (Solaceon
+  Town, Aqua Resort; the sheet labels them "UTL Champion A/B"). S4's final
+  ranks and Elo equal S5's opening for all 128; the round-robin check is off
+  (`round_robins: []`, regions played 12 of 15).
+
+### Season 5 (extracted 2026-10-11)
+
+**Complete after all -- but only because of Calcs.** 3,043 games in 84 events.
+The Archive's first 608 games (Regional 1-4, the WCS preliminary and first
+rounds, League 1-2) are SHORT-FORM: their game string is only `3R` / `0R` (one
+cell reads `OR`, a letter O). Their score, host, ranks, spread, interest, DSCR,
+goals and K are in the row's columns; their full strings, Elo after included,
+are in **Calcs**, the per-team game grid (columns L..CR), which holds every
+game. `fill_short_from_calcs` completes them; `string_source` in `games.csv`
+says which sheet each game's strings came from. Then:
+
+- **S5's "^" is GOALS** (equal to column M in all 2,435 full strings), not the
+  modern raw goal score, so `raw_goal_a/b` are blank. No per-game EX column.
+- **The Archive has no Game ID column**, so every column from the spread on
+  sits one place left (`archive_cols` is per season).
+- **Rankings' Regional W-L disagrees with the Archive for 26 teams, and the
+  Archive is right.** Rankings was computed from Calcs, whose R11 column is
+  MISFILED: the same 160 strings as the Archive's R11, about half in the wrong
+  team's row (Undella Town's slot holds Wedgehurst's game; Rustboro City's even
+  names a team from another region). Proved exactly: Calcs' records equal
+  Rankings' for all 160, and Calcs' R11 equals the Archive's R11 as a multiset.
+  So S5's records check is Rankings == Calcs, plus every Archive game ==
+  its Calcs strings (own rows, or anywhere in the misfiled column), plus every
+  Calcs string used once (`records_from_calcs`, `calcs_misfiled`).
+- **Elo was applied out of Archive order**, so the game-by-game chain is off
+  for S5 (`elo_chain: False`): e.g. the second WCS First Round Nature block's
+  Elo reached teams only after Regional matchday 5 (Kiloude City's +31). It is
+  conserved: the total is 288,000 at the end of the season, the opening Elo
+  (first game, from Calcs) totals exactly 288,000, and the final Elo matches
+  S6's opening for all 160. Elo was NOT reset at the "GREAT RESET" (only 1 of
+  160 back-solves to 1,800). Six games' Elo differs by 3-16 between Calcs and
+  the Archive (WCS R5 Justice, Regional 10): listed, the Archive's kept.
+- **Renamed before S6** (same dex, Terastal): South Kalos -> Blueberry
+  Terarium, East Paldea -> Mossui Town (`RENAMED_SINCE`; proved by S6's
+  "S5 End", confirmed by the user 2026-10-11 as renames of the same teams).
+- **S5 added two conferences** (per the user): **Silver, made from part of
+  Indigo, and Terastal, brand new.** "S4 End" is blank for 32 teams -- all 16
+  Terastal teams and 8 each in Indigo and Silver -- so S4 had 128 teams, and
+  the 8 Silver teams that do have an S4 rank were Indigo teams in S4.
+  `history/teams.json` keeps each season's region, so such a move shows.
+
+Structure (per the user: no Swiss; the WCS with a draw/process-style pair of
+brackets, Nature and Justice; the league pyramid with LPO):
+- **Regional R1-R15, League L1-L15** -- R1-R4 titled "Matchday One/Two/Three/
+  Six" (the sixth matchday overall; mapped by `event_code_overrides`). The
+  "GREAT RESET" note sits on League matchday 1, after a 3.5-month break: per
+  the user, it is where the old scheduling system was dropped, the league
+  structure introduced, and Regional and League play both made full round
+  robins. Everything before it (R1-R4, the WCS preliminary and first-round
+  Nature games) is the old system's, and it is exactly the stretch the
+  Archive kept in short form.
+- **WCS**: a preliminary round (32 games per bracket), first round (64, written
+  as two blocks per bracket and merged), rounds 2-5 (32/16/8/4), two-legged
+  quarterfinals (2 per bracket), each bracket's two-legged final (the "WCS
+  SEMIFINAL"), and a two-legged "Second Place" tie between their losers.
+  Resort Area won both brackets' finals (champion); Cinnabar Island won Second
+  Place (runner-up). Games typed `W`.
+- **League Playoffs**: semifinals and finals, two legs each (LP-SF/LP-F).
+- **Regional Playoffs**: a single-game first round (RP-R1), then two-legged
+  QF, SF and Championship.
+- **World Championship by class**: Great Class and Ultra Class playoffs (four
+  rounds each, WC-G/WC-U, plus a one-game "Great Class Fourth Round Reset"),
+  then the Masters Tournament: best-of-three QF and SF (WC-M) and Championship
+  (WC-F). Slateport City beat Cianwood City 2-1.
+- **MGGG promotion playoffs**: single games written one row at a time among
+  the other events (`inline_events`), each its own event (MGGG-R1/R2, legs 1-2;
+  a later second tie of the same leg gets ".2").
+
+### Seasons 1-3 (extracted 2026-10-11)
+
+**One workbook for all three** (`history/s1-3/Dice_Game_S123.xlsx`: "S1
+Archive", "S2 Archive", "Archive" for S3, with each season's Rankings), and a
+**second for their Elo** (`history/s1-3/DG_MRLUCL_Experimenting.xlsx`, supplied
+by the user as where "Elo origins can be found"). `history_early.py` reads them
+for `extract_history.py`, whose checks all still apply. No game string survives
+for any of the three: each game is its row's columns, its game type comes from
+its event (as in S4), results are W/L (3/0, `ot` from the notes).
+
+**Elo was computed afterwards, week by week**, in the Elo workbook's "Season
+1/2/3" sheets: every team's Elo after every week. Each team plays at most once
+a week, so a game's Elo after is its team's figure for that week and `elo_k` is
+the change -- the winner's gain equals the loser's loss in all 2,470 games, and
+no team's Elo moves in a week it did not play. The workbook's own copies of the
+archives carry the weeks (the S2/S3 copies reorder a few blocks by week; the
+same games, matched by winner, score, loser and goals). It chains exactly:
+S1 opens all 80 at 1800; S2 carries S1's finals and adds Lanakila's 16 at 1800;
+S3 carries S2's and adds Dynamax's 16 at 1792-1808 from their preseason (the
+XArc/XRnk tabs -- unofficial, excluded, per the user); every season totals 1800
+per team; S3's final Elo equals S4's opening for all 112. S1's own Archive
+holds an abandoned first attempt (50 games from 1600, and a column the user
+confirmed was early Elo work, not Game Interest); it is not extracted.
+
+- **S1**: 80 teams, 5 conferences of two 8-team divisions. 13 weeks of 40 (7
+  division games, 2 crossovers, 4 interconference), 5 conference
+  championships, then a World Championship of two 4-team groups (opening
+  games, winners/losers games, deciders), semifinals and a final (Saffron City
+  over Rustboro City). 538 games. Ranks: column C's "#25 v. #15" poll labels
+  (winner first) through the conference championships; codes in Rankings
+  column A identify the teams (`season_dex`). Records: Wins/Losses (all games),
+  CF (regular-season conference games). One anomaly: row 228's goals [8-9]
+  for a side that scored 8.
+- **S2**: 96 teams, 6 conferences (Lanakila new), 12 divisions. 12 weeks of 48
+  (S2 Divisions' "Division 4" round was played in pieces during the three
+  interconference weeks), 6 conference championships, then a 10-team playoff:
+  two-legged play-in, quarterfinals and semifinals, and a two-game final
+  (Geosenge Town 2-0 over Castelia City). 600 games; no spread, interest or
+  DSCR. One anomaly: Rankings gives Ambrette Town ten conference games (3-7);
+  it played nine.
+- **S3**: 112 teams, 7 conferences (Dynamax new). 13 matchdays of 56 (Rivalry
+  Week's derbies are matchday 13), the WCS (rounds 1-5, R16-Final; Cinnabar
+  Island), seven conference cups (Crystal ... Gigantamax, typed **C**, per the
+  user), the MRL and UTL (groups of two-legged matches, then playoffs; Castelia
+  City and Resort Area), the conference championships, and a double-elimination
+  World Championship whose Grand Final went to a reset (Resort Area 2-1 over
+  Kala'e Bay; `world_final` = WC-GFR-1..3). 1,332 games, 210 events (each cup
+  round and each MRL/UTL group match is its own). The MAX/INVT tags (`mark`)
+  mean the DSCR was over 100 or below the loser's (per the user). Records as
+  S4's, except that the conference championship counts inside Se. Listed: one
+  cell correction (row 177's DSCR typed `{42.2-4.8)`), one label override (row
+  742, a changelog note in the label cell of a UTL game), seven AggOT ties
+  (read from each row's note and checked against the legs; in three the leg's
+  winner lost the tie), and three teams whose Rankings count is one game off on
+  one side only (Cinnabar Island, Celestic Town, Solaceon Town).
+
+**Next-season ranks are checked by ORDER** for S3 -> S4 and S2 -> S3, since the
+new conference's teams were ranked in among the old (S3's "Preseason" rank
+equals S2's final order exactly); S2 kept no opening rank, so S1's is not
+checked (`next_rank`).
+
+**Hosts.** S3 recorded H/A for 1,080 games, but not for 252 early ones
+(matchdays 1, 2, 4 and 5, and the conference cups' round 1). **The 224 matchday
+games are rebuilt from S3's pod schedule** (per the user, 2026-10-11, with the
+odd-season rules from the Divisions sheet -- "the same as modern, just spelled
+out", Same Side 1 (U) being today's S11U): 13 weeks -- Intrapod 1, Same Side 1
+(at U), Split 1, Across 1 (at R), Diagonal 1 (at L), Split 2-3, Same Side 2 (at
+D), Split 4, Across 2 (at L), Split 5, Diagonal 2 (at R), Intrapod 3 -- with
+the first set's pods meeting 1v1 2v2 3v3 4v4 and the second set's 1v2 2v1 3v4
+4v3, Intrapod 1/2/3 "4 at 1, 3 at 2" / "1 at 3, 2 at 4" / "2 at 1, 4 at 3",
+and Intrapod 2 played inside the split weeks. Each conference's pods sit two
+by two in the sheet (upper/lower rows, left/right columns) and a team's
+position is its pod's listed order. Proved before use: every conference game
+of all 13 weeks fits its pattern, and all 280 recorded conference hosts
+(matchdays 8, 10, 12, 13 and Intrapod 2) agree; `pod_hosts` refuses on any
+disagreement (mutation-tested: a flipped host side, flipped intrapod hosts,
+reversed positions and swapped left/right pods all refuse). The first-set host
+sides (U, R, L) cannot be checked against a recorded week -- none survives --
+but the layout they act on is pinned by the second set. **The 28 cup round-1
+games take the cups' own rule**: per the user, each conference cup "is the
+modern regional championship bracket in disguise" -- still a cup (type C),
+seeded in the CCC tab (a team's seed in each round column it played: 9-16 in
+round 1, 5-8 from round 2, 1-4 from the quarterfinal), on the lanes 16-9-8-1 /
+15-10-7-2 / 14-11-6-3 / 13-12-5-4. Proved first: all 28 round-1 games are lane
+pairings (16v9 ... 13v12), and all 70 recorded cup games follow the modern
+hosting -- single games (round 2, quarterfinal) at the better seed, two-legged
+ties (semifinal, final) at the worse seed in leg 1 and the better seed in leg
+2. So round 1, a single game, goes to the better seed (`cup_hosts`, mutation-
+tested). (Ranks going in do NOT predict these hosts -- 17 of 28 in round 2 --
+which is why the seeds were needed.) **Every S3 game now has a host**, and the
+config no longer allows a blank. S1 and S2 recorded no
+hosts, so they were rebuilt under the user's rules (2026-10-11), and
+`host_source` says which rule:
+
+- **"schedule"**: S2 Divisions' template -- seven division rounds of "x=y"
+  position pairs (G15:M18), each tagged A/B/C/X (G14:M14: rounds 1 and 7 A,
+  3 and 5 B, 2 and 6 C, 4 X). **S2's positions** are the sheet's own division
+  lists (set by S1's finish); every S2 week fits them exactly. **S1's positions
+  were recovered**: each division fits the template 8 ways (8 symmetries, 8
+  different host patterns), and exactly one is the order of its teams' codes in
+  S1 Rankings column A (alphabetical, except Laverre City last in Costal). The
+  **orientation** is the user's declaration: Rustboro City hosted Verdanturf
+  Town in S3's rivalry game, so Verdanturf hosted in S2 ("1=3" -- the second
+  team hosts) and Rustboro in S1 (the first team hosts, "reversed for S1": on
+  S1's own positions, Rustboro #7 hosts Verdanturf #8 in "7=8"). The user chose
+  this reading over flipping each S2 pair (option (b); the two disagree on 146
+  of 280 games). **Crossovers**: S1 used the A rounds (the sheet's own
+  "Crossover 1 (A)"; nothing else fits once the positions are fixed), S2 the B
+  rounds. **S2's interconference games** use round 4's pairs ("4-X":
+  positions 1-4 host 5-8) between the conferences matched that week. Checked:
+  every week's games in a division or a crossover come from ONE template round
+  and a division plays each round in a different week -- without that any
+  positions would "fit", since every pair sits in some round (a mutation test
+  caught exactly this).
+- **"interc"**: S1's interconference games, from S1 InterC (all 160 match real
+  games). Its headers are read as the listed team's status -- at home in weeks
+  1 and 7, away in 2 and 11. Nothing independent can check it; the user
+  confirmed the reading (2026-10-11, "it was 12 years ago").
+- **"record"**: conference championships, the better regular-season record
+  hosting (overall, then in conference). **"poll"**: in S1 two were between
+  identical records who never met; per the user the better poll rank going in
+  hosts -- Sandgem Town (#9) over Celestic Town (#10), Cyllage City (#4) over
+  Vaniville Town (#8). Every S1 and S2 game now has a host.
+- **"seed"**: World Championship / playoff games (Rankings column E holds the
+  seeds). S1's are single games, hosted by the higher seed. S2's are two-legged
+  ties, hosted **as now: the worse seed in leg 1, the better seed in leg 2**
+  (per the user, 2026-10-11, correcting a first cut that gave the better seed
+  both legs); that includes the two-game final.
+
+Every new check was mutation-tested (each orientation flipped, the wrong
+crossover letter, two S1 positions swapped, two final ranks swapped, a division
+game dropped, an Elo off by one, a final Elo off, a championship or Grand Final
+result flipped, an unlisted AggOT note, a stale cell correction) and fails as
+it should. Adding `host_source` changed
+S4-S8's `games.csv` by that column alone ("recorded" throughout); every season
+re-runs byte-identically.
+
+## Season 9 in the archive (2026-10-12)
+
+`extract_history_s9.py <s9_audit.db>` writes `history/s9/{games,walkovers,
+teams}.csv` and `events.json` in the archive's own format, from Season 9's
+audit rebuild (see the end of the runbook). The frozen record has no
+game-level data, so the rebuild provides the games, and the archive is the
+authority over it: the script **refuses to write** unless the rebuild agrees with
+`archive/s9_final.json` on every team's overall, regional, league, cup, P/F,
+home and away records and its full game log. Final Elo, 3,525 games, Elo totals of
+288,000 at open and close, and every team's opening Elo equal to S8's archived
+final Elo must agree too.
+Output: 3,525 games, 64 walkovers (the RDS byes), 95 events (one empty: WC SF
+leg 3). Event codes R*, L*, RDS-D/P*, RDS-SF/F-<leg>, PA-D/P*, PA-SF-<leg>,
+PA-F-<game>, RT*, WC-G*, WC-PI*, WC-R16/QF/SF/F-<game>. Blank because S9 never
+stored them per game: goals scored and each side's rank going in. Every host
+is recorded. A re-run is byte-identical.
+
+## The all-time database (2026-10-12, per explicit request)
+
+"Let's build the all-time database ... S1-S9 is appropriate. How about an
+all-time dashboard that's separate?" `python3 build_alltime.py` writes
+`alltime.db` (tables `teams`, `seasons`, `team_seasons`, `events`, `games`,
+`titles`; view `team_games`, one row per team per game) and
+`alltime_dashboard.html`: 20,829 games, 160 teams (by S9 identity), 256
+honours, 770 events. Everything is computed from `history/` as recorded --
+nothing is estimated -- and a re-run is byte-identical.
+
+- **Scoring records split at S6** (per the user: "the scoring system changed
+  fundamentally in S7 and somewhat in S8 and S9"): eras S1-S6 and S7-S9, so
+  no points record compares across the line. W-L records, streaks, Elo and titles
+  run across all nine seasons.
+- **Classes that mean the same thing in every era** (`CLASS_OF`): Regional =
+  R; League = L and M (S5-S9 leagues, S3-S4 MRL/UTL); Interconference = I
+  (S1-S4); Cup = S, W, C (WCS, Grand Swiss, PA, RDS, S3's conference cups);
+  Playoffs = P; Finals = F. **Byes count in no record.**
+- **Titles** come from `hall_of_fame.json` (World, Cup, Regional Cups, League,
+  the ten regional plaques, World placings No. 3-16), plus S3's seven
+  conference cups, which are not on a plaque. They are derived from each cup's two-legged final
+  on aggregate. In S3-S4 the plaque's "UTL Champion B" is the single UTL's
+  **runner-up**; in S5-S6 the two Ultra divisions each had a real champion.
+- **The Elo chain is checked on every build** (`check_elo_chain`): every
+  season opens and closes at exactly 1800 per team, and each continuing team
+  opens a season on the Elo it closed the previous one with (1,056 links, 0
+  mismatches). A team new to the league enters on its preseason Elo, which
+  only the season total constrains. Mutation-tested (one opening Elo +5).
+- **S5's Elo was applied out of Archive order** (see Season 5), so its
+  per-game Elo-before (after minus or plus K) is unreliable. The Elo chart plots
+  S5 as recorded, with a note, and S5 is left out of the upsets table.
+- **Dashboard tabs**: Teams (sortable all-time table), Team (honours, Elo
+  across all nine seasons, season by season, record against every opponent),
+  Head-to-Head (any pair's games; most-played and most one-sided
+  rivalries), Titles, Elo (chart up to six teams; peaks, lows, biggest
+  season gains and losses, upsets, swings) and Records (era toggle: highest
+  score, highest combined score, biggest margin, most goals, and by season
+  points per game, point difference, win %, wins and fewest losses; plus the
+  longest winning and losing streaks). Verified in Chromium
+  at 1600/1000/390px: zero `pageerror`, no horizontal scroll.
+- **Reached like the season dashboard** (2026-10-12, per explicit request):
+  committed beside it and served by GitHub Pages from `main`. Each header links
+  to the other (`.dash-link`: "All-Time" on the season dashboard, "Current
+  season" back) -- the season dashboard's link is plain header markup, which
+  `regenerate_dashboard.py` leaves alone (verified: a regenerate changes
+  nothing but `TEAMS_EXPORT_TSV`). Rebuild the page with `build_alltime.py`
+  whenever `history/` or `hall_of_fame.json` changes.
 
 ## Season 9 is frozen (2026-10-10, per explicit instruction)
 
@@ -5014,6 +5541,14 @@ page errors on either path.
 
 ## Known open items
 
+- **Historical archive:** all eight seasons extracted (2026-10-11). **No
+  relitigation layer** -- per the user (2026-10-11), the gaps the early seasons
+  never recorded (per-team EX, raw goal scores, S1-S2 spread/interest/DSCR)
+  stay blank. Every game in all eight seasons has a host. S9 joined the
+  archive and the all-time database and dashboard were built 2026-10-12 (team
+  records, head-to-head, titles, Elo). Further stat families and publishing
+  the dashboard are open; S10 joins once it is frozen (re-run
+  `extract_history_s9.py`'s equivalent for S10, then `build_alltime.py`).
 - **End of S10 (B13):** append its Legacy column to `legacy_points.json` and its
   Hall of Fame season, then `freeze_season.py 10` and
   `freeze_season_inputs.py 10`; S11 is `prepare_season.py 11` +
