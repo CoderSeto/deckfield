@@ -1,0 +1,685 @@
+{
+ "season": 9,
+ "source": {
+  "games": "Season 9 audit rebuild (Baccer Game S9 Stats.xlsm + results/s9/)",
+  "checked_against": {
+   "archive/s9_final.json": "7e12c611c53448e39e57aceb3e26bd4930d79c2c409a50b62dded6e4b437e67b",
+   "archive/s9_inputs.json": "1fb61c604f0c74cba963cc2682167aefe5f41b7ba35d7e96939598ea6bb62e03"
+  }
+ },
+ "games": 3525,
+ "walkovers": 64,
+ "titles": {
+  "world": [
+   "Casseroya Lake",
+   "Nimbasa City"
+  ]
+ },
+ "events": [
+  {
+   "round": 1,
+   "code": "R1",
+   "title": "Regional Matchday 1",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 2,
+   "code": "R2",
+   "title": "Regional Matchday 2",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 3,
+   "code": "R3",
+   "title": "Regional Matchday 3",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 4,
+   "code": "RDS-D1",
+   "title": "RDS Cup Draw Round 1",
+   "games": 64,
+   "empty": false
+  },
+  {
+   "round": 5,
+   "code": "RDS-P1",
+   "title": "RDS Cup Process Round 1",
+   "games": 64,
+   "empty": false
+  },
+  {
+   "round": 6,
+   "code": "R4",
+   "title": "Regional Matchday 4",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 7,
+   "code": "L1",
+   "title": "League Matchday 1",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 8,
+   "code": "L2",
+   "title": "League Matchday 2",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 9,
+   "code": "R5",
+   "title": "Regional Matchday 5",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 10,
+   "code": "RDS-D2",
+   "title": "RDS Cup Draw Round 2",
+   "games": 48,
+   "empty": false
+  },
+  {
+   "round": 11,
+   "code": "RDS-P2",
+   "title": "RDS Cup Process Round 2",
+   "games": 48,
+   "empty": false
+  },
+  {
+   "round": 12,
+   "code": "PA-D1",
+   "title": "PA Cup Draw Round 1",
+   "games": 32,
+   "empty": false
+  },
+  {
+   "round": 13,
+   "code": "PA-P1",
+   "title": "PA Cup Process Round 1",
+   "games": 32,
+   "empty": false
+  },
+  {
+   "round": 14,
+   "code": "L3",
+   "title": "League Matchday 3",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 15,
+   "code": "RDS-D3",
+   "title": "RDS Cup Draw Round 3",
+   "games": 24,
+   "empty": false
+  },
+  {
+   "round": 16,
+   "code": "RDS-P3",
+   "title": "RDS Cup Process Round 3",
+   "games": 24,
+   "empty": false
+  },
+  {
+   "round": 17,
+   "code": "L4",
+   "title": "League Matchday 4",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 18,
+   "code": "PA-D2",
+   "title": "PA Cup Draw Round 2",
+   "games": 32,
+   "empty": false
+  },
+  {
+   "round": 19,
+   "code": "PA-P2",
+   "title": "PA Cup Process Round 2",
+   "games": 32,
+   "empty": false
+  },
+  {
+   "round": 20,
+   "code": "R6",
+   "title": "Regional Matchday 6",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 21,
+   "code": "L5",
+   "title": "League Matchday 5",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 22,
+   "code": "L6",
+   "title": "League Matchday 6",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 23,
+   "code": "R7",
+   "title": "Regional Matchday 7",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 24,
+   "code": "RDS-D4",
+   "title": "RDS Cup Draw Round 4",
+   "games": 12,
+   "empty": false
+  },
+  {
+   "round": 25,
+   "code": "RDS-P4",
+   "title": "RDS Cup Process Round 4",
+   "games": 12,
+   "empty": false
+  },
+  {
+   "round": 26,
+   "code": "L7",
+   "title": "League Matchday 7",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 27,
+   "code": "PA-D3",
+   "title": "PA Cup Draw Round 3",
+   "games": 32,
+   "empty": false
+  },
+  {
+   "round": 28,
+   "code": "PA-P3",
+   "title": "PA Cup Process Round 3",
+   "games": 32,
+   "empty": false
+  },
+  {
+   "round": 29,
+   "code": "R8",
+   "title": "Regional Matchday 8",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 30,
+   "code": "L8",
+   "title": "League Matchday 8",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 31,
+   "code": "L9",
+   "title": "League Matchday 9",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 32,
+   "code": "R9",
+   "title": "Regional Matchday 9",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 33,
+   "code": "RDS-D5",
+   "title": "RDS Cup Draw Round 5",
+   "games": 6,
+   "empty": false
+  },
+  {
+   "round": 34,
+   "code": "RDS-P5",
+   "title": "RDS Cup Process Round 5",
+   "games": 6,
+   "empty": false
+  },
+  {
+   "round": 35,
+   "code": "L10",
+   "title": "League Matchday 10",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 36,
+   "code": "PA-D4",
+   "title": "PA Cup Draw Round 4",
+   "games": 32,
+   "empty": false
+  },
+  {
+   "round": 37,
+   "code": "PA-P4",
+   "title": "PA Cup Process Round 4",
+   "games": 32,
+   "empty": false
+  },
+  {
+   "round": 38,
+   "code": "R10",
+   "title": "Regional Matchday 10",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 39,
+   "code": "RDS-SF-1",
+   "title": "RDS Cup SF, Leg 1",
+   "games": 4,
+   "empty": false
+  },
+  {
+   "round": 40,
+   "code": "RDS-SF-2",
+   "title": "RDS Cup SF, Leg 2",
+   "games": 4,
+   "empty": false
+  },
+  {
+   "round": 41,
+   "code": "L11",
+   "title": "League Matchday 11",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 42,
+   "code": "PA-D5",
+   "title": "PA Cup Draw Round 5",
+   "games": 16,
+   "empty": false
+  },
+  {
+   "round": 43,
+   "code": "PA-P5",
+   "title": "PA Cup Process Round 5",
+   "games": 16,
+   "empty": false
+  },
+  {
+   "round": 44,
+   "code": "R11",
+   "title": "Regional Matchday 11",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 45,
+   "code": "L12",
+   "title": "League Matchday 12",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 46,
+   "code": "L13",
+   "title": "League Matchday 13",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 47,
+   "code": "R12",
+   "title": "Regional Matchday 12",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 48,
+   "code": "RDS-F-1",
+   "title": "RDS Cup Final, Leg 1",
+   "games": 3,
+   "empty": false
+  },
+  {
+   "round": 49,
+   "code": "RDS-F-2",
+   "title": "RDS Cup Final, Leg 2",
+   "games": 3,
+   "empty": false
+  },
+  {
+   "round": 50,
+   "code": "L14",
+   "title": "League Matchday 14",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 51,
+   "code": "PA-D6",
+   "title": "PA Cup Draw Round 6",
+   "games": 8,
+   "empty": false
+  },
+  {
+   "round": 52,
+   "code": "PA-P6",
+   "title": "PA Cup Process Round 6",
+   "games": 8,
+   "empty": false
+  },
+  {
+   "round": 53,
+   "code": "R13",
+   "title": "Regional Matchday 13",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 54,
+   "code": "PA-D7",
+   "title": "PA Cup Draw Round 7",
+   "games": 4,
+   "empty": false
+  },
+  {
+   "round": 55,
+   "code": "PA-P7",
+   "title": "PA Cup Process Round 7",
+   "games": 4,
+   "empty": false
+  },
+  {
+   "round": 56,
+   "code": "L15",
+   "title": "League Matchday 15",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 57,
+   "code": "PA-D8",
+   "title": "PA Cup Draw Round 8",
+   "games": 2,
+   "empty": false
+  },
+  {
+   "round": 58,
+   "code": "PA-P8",
+   "title": "PA Cup Process Round 8",
+   "games": 2,
+   "empty": false
+  },
+  {
+   "round": 59,
+   "code": "R14",
+   "title": "Regional Matchday 14",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 60,
+   "code": "PA-SF-1",
+   "title": "PA Cup SF, Leg 1",
+   "games": 2,
+   "empty": false
+  },
+  {
+   "round": 61,
+   "code": "PA-SF-2",
+   "title": "PA Cup SF, Leg 2",
+   "games": 2,
+   "empty": false
+  },
+  {
+   "round": 62,
+   "code": "R15",
+   "title": "Regional Matchday 15",
+   "games": 80,
+   "empty": false
+  },
+  {
+   "round": 63,
+   "code": "PA-F-1",
+   "title": "PA Cup Final, Game 1",
+   "games": 1,
+   "empty": false
+  },
+  {
+   "round": 64,
+   "code": "PA-F-2",
+   "title": "PA Cup Final, Game 2",
+   "games": 1,
+   "empty": false
+  },
+  {
+   "round": 65,
+   "code": "PA-F-3",
+   "title": "PA Cup Final, Game 3",
+   "games": 1,
+   "empty": false
+  },
+  {
+   "round": 66,
+   "code": "RT1",
+   "title": "Regional Tournament Matchday 1",
+   "games": 40,
+   "empty": false
+  },
+  {
+   "round": 67,
+   "code": "RT2",
+   "title": "Regional Tournament Matchday 2",
+   "games": 40,
+   "empty": false
+  },
+  {
+   "round": 68,
+   "code": "RT3",
+   "title": "Regional Tournament Matchday 3",
+   "games": 40,
+   "empty": false
+  },
+  {
+   "round": 69,
+   "code": "RT4",
+   "title": "Regional Tournament Matchday 4",
+   "games": 40,
+   "empty": false
+  },
+  {
+   "round": 70,
+   "code": "RT5",
+   "title": "Regional Tournament Matchday 5",
+   "games": 40,
+   "empty": false
+  },
+  {
+   "round": 71,
+   "code": "RT6",
+   "title": "Regional Tournament Matchday 6",
+   "games": 20,
+   "empty": false
+  },
+  {
+   "round": 72,
+   "code": "RT7",
+   "title": "Regional Tournament Matchday 7",
+   "games": 20,
+   "empty": false
+  },
+  {
+   "round": 73,
+   "code": "RT8",
+   "title": "Regional Tournament Matchday 8",
+   "games": 10,
+   "empty": false
+  },
+  {
+   "round": 74,
+   "code": "RT9",
+   "title": "Regional Tournament Matchday 9",
+   "games": 10,
+   "empty": false
+  },
+  {
+   "round": 75,
+   "code": "WC-G1",
+   "title": "World Championship Group 1",
+   "games": 24,
+   "empty": false
+  },
+  {
+   "round": 76,
+   "code": "WC-G2",
+   "title": "World Championship Group 2",
+   "games": 24,
+   "empty": false
+  },
+  {
+   "round": 77,
+   "code": "WC-G3",
+   "title": "World Championship Group 3",
+   "games": 24,
+   "empty": false
+  },
+  {
+   "round": 78,
+   "code": "WC-G4",
+   "title": "World Championship Group 4",
+   "games": 24,
+   "empty": false
+  },
+  {
+   "round": 79,
+   "code": "WC-G5",
+   "title": "World Championship Group 5",
+   "games": 24,
+   "empty": false
+  },
+  {
+   "round": 80,
+   "code": "WC-G6",
+   "title": "World Championship Group 6",
+   "games": 24,
+   "empty": false
+  },
+  {
+   "round": 81,
+   "code": "WC-G7",
+   "title": "World Championship Group 7",
+   "games": 24,
+   "empty": false
+  },
+  {
+   "round": 82,
+   "code": "WC-PI1",
+   "title": "World Championship Play-in 1",
+   "games": 7,
+   "empty": false
+  },
+  {
+   "round": 83,
+   "code": "WC-PI2",
+   "title": "World Championship Play-in 2",
+   "games": 8,
+   "empty": false
+  },
+  {
+   "round": 84,
+   "code": "WC-R16-1",
+   "title": "World Championship R16 1",
+   "games": 8,
+   "empty": false
+  },
+  {
+   "round": 85,
+   "code": "WC-R16-2",
+   "title": "World Championship R16 2",
+   "games": 8,
+   "empty": false
+  },
+  {
+   "round": 86,
+   "code": "WC-R16-3",
+   "title": "World Championship R16 3",
+   "games": 4,
+   "empty": false
+  },
+  {
+   "round": 87,
+   "code": "WC-QF-1",
+   "title": "World Championship QF 1",
+   "games": 4,
+   "empty": false
+  },
+  {
+   "round": 88,
+   "code": "WC-QF-2",
+   "title": "World Championship QF 2",
+   "games": 4,
+   "empty": false
+  },
+  {
+   "round": 89,
+   "code": "WC-QF-3",
+   "title": "World Championship QF 3",
+   "games": 2,
+   "empty": false
+  },
+  {
+   "round": 90,
+   "code": "WC-SF-1",
+   "title": "World Championship SF 1",
+   "games": 2,
+   "empty": false
+  },
+  {
+   "round": 91,
+   "code": "WC-SF-2",
+   "title": "World Championship SF 2",
+   "games": 2,
+   "empty": false
+  },
+  {
+   "round": 92,
+   "code": "WC-SF-3",
+   "title": "World Championship SF 3",
+   "games": 0,
+   "empty": true
+  },
+  {
+   "round": 93,
+   "code": "WC-F-1",
+   "title": "World Championship Final 1",
+   "games": 1,
+   "empty": false
+  },
+  {
+   "round": 94,
+   "code": "WC-F-2",
+   "title": "World Championship Final 2",
+   "games": 1,
+   "empty": false
+  },
+  {
+   "round": 95,
+   "code": "WC-F-3",
+   "title": "World Championship Final 3",
+   "games": 1,
+   "empty": false
+  }
+ ]
+}

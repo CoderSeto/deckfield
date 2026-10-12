@@ -95,7 +95,12 @@ database holds one season. See "Season 10" below.
   `history/s1-3/`, read by `history_early.py`; their output is in
   `history/s1/`..`history/s3/`. Each season is extracted only after the one
   after it (its final ranks and Elo are checked against how the next season
-  opened).
+  opened). `history/s9/` is S9 in the same format, written by
+  `extract_history_s9.py <s9_audit.db>` (see "Season 9 in the archive").
+- `build_alltime.py` — builds `alltime.db` (gitignored) and
+  `alltime_dashboard.html` (the separate all-time dashboard, rendered from
+  `alltime_template.html`) from `history/s1`..`s9` and `hall_of_fame.json`.
+  See "The all-time database".
 - `CLAUDE.md` — this file.
 
 ## The historical archive (Seasons 1-8, begun 2026-10-11)
@@ -545,6 +550,64 @@ result flipped, an unlisted AggOT note, a stale cell correction) and fails as
 it should. Adding `host_source` changed
 S4-S8's `games.csv` by that column alone ("recorded" throughout); every season
 re-runs byte-identically.
+
+## Season 9 in the archive (2026-10-12)
+
+`extract_history_s9.py <s9_audit.db>` writes `history/s9/{games,walkovers,
+teams}.csv` and `events.json` in the archive's own format, from Season 9's
+audit rebuild (see the end of the runbook). The frozen record has no
+game-level data, so the rebuild provides the games, and the archive is the
+authority over it: the script **refuses to write** unless the rebuild agrees with
+`archive/s9_final.json` on every team's overall, regional, league, cup, P/F,
+home and away records and its full game log. Final Elo, 3,525 games, Elo totals of
+288,000 at open and close, and every team's opening Elo equal to S8's archived
+final Elo must agree too.
+Output: 3,525 games, 64 walkovers (the RDS byes), 95 events (one empty: WC SF
+leg 3). Event codes R*, L*, RDS-D/P*, RDS-SF/F-<leg>, PA-D/P*, PA-SF-<leg>,
+PA-F-<game>, RT*, WC-G*, WC-PI*, WC-R16/QF/SF/F-<game>. Blank because S9 never
+stored them per game: goals scored and each side's rank going in. Every host
+is recorded. A re-run is byte-identical.
+
+## The all-time database (2026-10-12, per explicit request)
+
+"Let's build the all-time database ... S1-S9 is appropriate. How about an
+all-time dashboard that's separate?" `python3 build_alltime.py` writes
+`alltime.db` (tables `teams`, `seasons`, `team_seasons`, `events`, `games`,
+`titles`; view `team_games`, one row per team per game) and
+`alltime_dashboard.html`: 20,829 games, 160 teams (by S9 identity), 256
+honours, 770 events. Everything is computed from `history/` as recorded --
+nothing is estimated -- and a re-run is byte-identical.
+
+- **Scoring records split at S6** (per the user: "the scoring system changed
+  fundamentally in S7 and somewhat in S8 and S9"): eras S1-S6 and S7-S9, so
+  no points record compares across the line. W-L records, streaks, Elo and titles
+  run across all nine seasons.
+- **Classes that mean the same thing in every era** (`CLASS_OF`): Regional =
+  R; League = L and M (S5-S9 leagues, S3-S4 MRL/UTL); Interconference = I
+  (S1-S4); Cup = S, W, C (WCS, Grand Swiss, PA, RDS, S3's conference cups);
+  Playoffs = P; Finals = F. **Byes count in no record.**
+- **Titles** come from `hall_of_fame.json` (World, Cup, Regional Cups, League,
+  the ten regional plaques, World placings No. 3-16), plus S3's seven
+  conference cups, which are not on a plaque. They are derived from each cup's two-legged final
+  on aggregate. In S3-S4 the plaque's "UTL Champion B" is the single UTL's
+  **runner-up**; in S5-S6 the two Ultra divisions each had a real champion.
+- **The Elo chain is checked on every build** (`check_elo_chain`): every
+  season opens and closes at exactly 1800 per team, and each continuing team
+  opens a season on the Elo it closed the previous one with (1,056 links, 0
+  mismatches). A team new to the league enters on its preseason Elo, which
+  only the season total constrains. Mutation-tested (one opening Elo +5).
+- **S5's Elo was applied out of Archive order** (see Season 5), so its
+  per-game Elo-before (after minus or plus K) is unreliable. The Elo chart plots
+  S5 as recorded, with a note, and S5 is left out of the upsets table.
+- **Dashboard tabs**: Teams (sortable all-time table), Team (honours, Elo
+  across all nine seasons, season by season, record against every opponent),
+  Head-to-Head (any pair's games; most-played and most one-sided
+  rivalries), Titles, Elo (chart up to six teams; peaks, lows, biggest
+  season gains and losses, upsets, swings) and Records (era toggle: highest
+  score, highest combined score, biggest margin, most goals, and by season
+  points per game, point difference, win %, wins and fewest losses; plus the
+  longest winning and losing streaks). Verified in Chromium
+  at 1600/1000/390px: zero `pageerror`, no horizontal scroll.
 
 ## Season 9 is frozen (2026-10-10, per explicit instruction)
 
@@ -5474,8 +5537,11 @@ page errors on either path.
 - **Historical archive:** all eight seasons extracted (2026-10-11). **No
   relitigation layer** -- per the user (2026-10-11), the gaps the early seasons
   never recorded (per-team EX, raw goal scores, S1-S2 spread/interest/DSCR)
-  stay blank. Every game in all eight seasons has a host. Next: an all-time
-  database or dashboard tab.
+  stay blank. Every game in all eight seasons has a host. S9 joined the
+  archive and the all-time database and dashboard were built 2026-10-12 (team
+  records, head-to-head, titles, Elo). Further stat families and publishing
+  the dashboard are open; S10 joins once it is frozen (re-run
+  `extract_history_s9.py`'s equivalent for S10, then `build_alltime.py`).
 - **End of S10 (B13):** append its Legacy column to `legacy_points.json` and its
   Hall of Fame season, then `freeze_season.py 10` and
   `freeze_season_inputs.py 10`; S11 is `prepare_season.py 11` +

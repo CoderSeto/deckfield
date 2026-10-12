@@ -11,6 +11,8 @@
 # format -- byte-identical to what deckfield.html's Download CSV produces,
 # so re-running it over an up-to-date results/s9/ is a no-op.
 deckfield.db
+# Rebuilt from history/ by build_alltime.py.
+alltime.db
 deckfield_test*.db
 deckfield_*_backup*.db
 *.db-journal
