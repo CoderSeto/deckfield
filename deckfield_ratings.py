@@ -4179,6 +4179,52 @@ def _event_adv_by_dex(season, event, games):
     return {}
 
 
+# R1 honours last season's top 16 (per explicit instruction, 2026-10-12):
+# "traditionally, in R1, the last 16 games of the week are the top 16 (per the
+# HoF tab) from the previous season". This only ever affects R1.
+R1_TOP16_LAST_FROM_SEASON = 10
+
+
+def previous_season_top16(season):
+    """Last season's World Championship top 16 in finishing order -- champion,
+    finalist, then the Hall of Fame's No. 3-16 -- as team names, read from
+    hall_of_fame.json (a finished season's record). [] if it is not there."""
+    with open(HOF_PATH) as f:
+        hof = json.load(f)
+    prev = str(season - 1)
+    final = hof["plaques"]["world"]["seasons"].get(prev)
+    placings = hof["placings"].get(prev)
+    if not final or not placings:
+        return []
+    return [t["name"] for t in final["teams"]] + [t["name"] for t in placings]
+
+
+def _play_order(season, event, games, ranks):
+    """Play order for a matchday's (home, away) games.
+
+    Worst-ranked team first, not the source bracket/pod order (e.g. PA Cup's
+    ladder-row order) -- each game sorted by its lowest-ranked (highest rank
+    number) team, descending. R1 alone (from R1_TOP16_LAST_FROM_SEASON) then
+    moves every game holding one of last season's top 16 to the end, No. 16's
+    first and the world champion's last; a game holding two goes by the better
+    finish. Everything else keeps the worst-ranked-first order ahead of them.
+    """
+    games = sorted(games, key=lambda hg: max(ranks[hg[0]], ranks[hg[1]]), reverse=True)
+    if tuple(event) != ("R", 1) or season < R1_TOP16_LAST_FROM_SEASON:
+        return games
+    top16 = previous_season_top16(season)
+    if not top16:
+        return games
+    conn = get_connection()
+    dex_of = {r["name"]: r["team_id"] for r in conn.execute("SELECT team_id, name FROM teams")}
+    conn.close()
+    finish = {dex_of[n]: i for i, n in enumerate(top16, 1) if n in dex_of}
+    best = lambda hg: min(finish.get(hg[0], 99), finish.get(hg[1], 99))
+    rest = [g for g in games if best(g) == 99]
+    honoured = sorted((g for g in games if best(g) != 99), key=best, reverse=True)
+    return rest + honoured
+
+
 def export_matchday_for_deckfield(season, event=None):
     """
     Returns the next (or a specified) matchday's games in DECKFIELD's
@@ -4204,10 +4250,7 @@ def export_matchday_for_deckfield(season, event=None):
 
     games = _games_for_event(season, event, info.get("week"), info.get("day"))
     ranks = current_rank_lookup(season)
-    # Play order is worst-ranked team first, not the source bracket/pod
-    # order (e.g. PA Cup's ladder-row order) -- sort each game by its
-    # lowest-ranked (highest rank number) team, descending.
-    games = sorted(games, key=lambda hg: max(ranks[hg[0]], ranks[hg[1]]), reverse=True)
+    games = _play_order(season, event, games, ranks)
     adv = _event_adv_by_dex(season, event, games)
     lines = ["Away Team Rank\tHome Team Rank\tAdv"]
     lines += [f"{ranks[away]}\t{ranks[home]}\t{_fmt_adv(adv.get((home, away)))}" for home, away in games]
@@ -4286,7 +4329,7 @@ def export_matchday_batches(season, event=None):
 
     def build_batch(label, game_type, agg, cup_name, cup_bracket, cup_round, games, cup_per_game=None,
                     adv_per_game=None):
-        games = sorted(games, key=lambda hg: max(ranks[hg[0]], ranks[hg[1]]), reverse=True)
+        games = _play_order(season, event, games, ranks)
         adv_per_game = adv_per_game or {}
         adv = lambda hg: _fmt_adv(adv_per_game.get(hg))
         settings_row = _batch_settings_row(game_type, agg, weekend, label, info["abs_round"],

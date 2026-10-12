@@ -1431,6 +1431,18 @@ order for the PA Cup tab itself but not for this export). Real bug, fixed
 raw order straight through, so PA Cup matchdays came out looking like a
 copy of the PA Cup tab instead of play order.
 
+**R1 saves last season's top 16 for last** (per explicit instruction,
+2026-10-12: "traditionally, in R1, the last 16 games of the week are the top
+16 (per the HoF tab) from the previous season ... This only affects R1
+ever"). `_play_order()` is the one place play order is decided (both export
+paths call it): worst-ranked first as above, then for `("R", 1)` from
+`R1_TOP16_LAST_FROM_SEASON` (10) every game holding one of
+`previous_season_top16()` -- the World Champion, the finalist and the HoF's
+No. 3-16, read from `hall_of_fame.json` -- moves to the end in reverse finish
+order. S10: Lake of Rage (No. 16) plays 65th, Casseroya Lake (champion) 80th;
+the other 64 keep worst-ranked-first. No two of S9's top 16 meet in S10's R1,
+so it is 16 games; a game holding two would go by the better finish.
+
 **What's actually reachable** via `_games_for_event()`: Regional/League any
 round (via the pod schedule), RDS Cup rounds 1-5 (resolving through real
 prior-round winners where needed — round 3+ isn't a placeholder, it's
