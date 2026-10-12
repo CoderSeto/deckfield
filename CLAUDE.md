@@ -95,7 +95,8 @@ database holds one season. See "Season 10" below.
   `history/s1-3/`, read by `history_early.py`; their output is in
   `history/s1/`..`history/s3/`. Each season is extracted only after the one
   after it (its final ranks and Elo are checked against how the next season
-  opened). `history/s9/` is S9 in the same format, written by
+  opened). `history/s5/elo_order.csv` is S5's Elo order from Calcs (see
+  Season 5). `history/s9/` is S9 in the same format, written by
   `extract_history_s9.py <s9_audit.db>` (see "Season 9 in the archive").
 - `build_alltime.py` — builds `alltime.db` (gitignored) and
   `alltime_dashboard.html` (the separate all-time dashboard, rendered from
@@ -377,7 +378,36 @@ says which sheet each game's strings came from. Then:
   (first game, from Calcs) totals exactly 288,000, and the final Elo matches
   S6's opening for all 160. Elo was NOT reset at the "GREAT RESET" (only 1 of
   160 back-solves to 1,800). Six games' Elo differs by 3-16 between Calcs and
-  the Archive (WCS R5 Justice, Regional 10): listed, the Archive's kept.
+  the Archive (WCS R5 Justice, Regional 10); **Calcs' is archived** (see below).
+- **The Elo order comes from Calcs' Elo table** (columns ANU on: an opening
+  "ELO" column, then each team's Elo after every event in the order it was
+  applied -- R1, R2, R3, D256, P256, R4, L1, L2, R5, D128, D128, L3, ...).
+  Per the user (2026-10-12): "The Elos in the Calcs tab ... starting at column
+  ANU should be correct and in order." `read_elo_table` / `elo_table_track`
+  place every game in its event's column (`s5_elo_columns` maps codes to
+  labels: D = Nature, P = Justice, by bracket size; LPO, RPO, PR1..., T8, T4,
+  Final) and write **`history/s5/elo_order.csv`**: each game's column, its
+  place in the order, and each side's Elo going in (the column before) and
+  after. The extractor refuses unless the table opens at every team's opening
+  Elo and ends at its final Elo, every column totals 288,000 (but four listed
+  WCS columns before L3, 288,107 to 288,193, back to exactly 288,000 by the
+  next Regional or League column), no team's Elo moves in a column where it
+  had no game, and every game's Elo after equals the table's -- except R11,
+  whose column carries Calcs' misfiled values (checked as the same values,
+  team to team in some order). Calcs' misfiling became real: Canalave City
+  went into L12 on 1964, Malie City's figure. In Calcs order every team's
+  chain holds (0 breaks in 6,086 team-games); in Archive order it broke 672
+  times. Where a column's step is not the game's K (R4, the WCS preliminary
+  and first round Nature, most of L3, LP SF leg 2), the Elo values still
+  agree with the Archive; only K does not follow them, and K is kept as
+  recorded.
+- **The six games now take Calcs' Elo** (`string_corrections`, the same
+  discipline as `corrections`: row, side, field, the sheet's value, the
+  corrected value, refusing if the sheet no longer holds it), per the same
+  ruling: Calcs' is the one consistent with the team's Elo going in and K.
+  games.csv changed by exactly those six values. Mutation-tested (a table
+  cell +5, two event columns swapped, an unbalanced column unlisted, a
+  balanced one listed, a stale and a dropped correction all refuse).
 - **Renamed before S6** (same dex, Terastal): South Kalos -> Blueberry
   Terarium, East Paldea -> Mossui Town (`RENAMED_SINCE`; proved by S6's
   "S5 End", confirmed by the user 2026-10-11 as renames of the same teams).
@@ -583,9 +613,11 @@ nothing is estimated -- and a re-run is byte-identical.
   no points record compares across the line. W-L records, streaks, Elo and titles
   run across all nine seasons.
 - **Classes that mean the same thing in every era** (`CLASS_OF`): Regional =
-  R; League = L and M (S5-S9 leagues, S3-S4 MRL/UTL); Interconference = I
-  (S1-S4); Cup = S, W, C (WCS, Grand Swiss, PA, RDS, S3's conference cups);
-  Playoffs = P; Finals = F. **Byes count in no record.**
+  R; League = L, M and I (S5-S9 leagues, S3-S4 MRL/UTL, and S1-S4's
+  interconference games -- combined per the user, 2026-10-12: "Interconf was
+  the precursor"); Cup = S, W, C (WCS, Grand Swiss, PA, RDS, S3's conference
+  cups); Playoffs = P; Finals = F. **Byes count in no record.** The regular
+  season is Regional + League.
 - **Titles** come from `hall_of_fame.json` (World, Cup, Regional Cups, League,
   the ten regional plaques, World placings No. 3-16), plus S3's seven
   conference cups, which are not on a plaque. They are derived from each cup's two-legged final
@@ -596,18 +628,29 @@ nothing is estimated -- and a re-run is byte-identical.
   opens a season on the Elo it closed the previous one with (1,056 links, 0
   mismatches). A team new to the league enters on its preseason Elo, which
   only the season total constrains. Mutation-tested (one opening Elo +5).
-- **S5's Elo was applied out of Archive order** (see Season 5), so its
-  per-game Elo-before (after minus or plus K) is unreliable. The Elo chart plots
-  S5 as recorded, with a note, and S5 is left out of the upsets table.
+- **S5's Elo comes from `history/s5/elo_order.csv`**: each side's Elo going in
+  and after, and the order the chart draws S5 in (`elo_order`, the Calcs column;
+  every other season's is its play order). So S5 is in the upsets table like
+  every other season. (It was left out for a day, while its Elo going in was
+  after-minus-K in Archive order and broke 672 times.)
+- **Overtimes**: a note opening "2OT" ... "5OT" gives the count (S1-S8); "OT -"
+  is one. S9 recorded only whether a game went to overtime, so its count as one
+  (`overtimes` in the database).
 - **Dashboard tabs**: Teams (sortable all-time table), Team (honours, Elo
   across all nine seasons, season by season, record against every opponent),
   Head-to-Head (any pair's games; most-played and most one-sided
   rivalries), Titles, Elo (chart up to six teams; peaks, lows, biggest
-  season gains and losses, upsets, swings) and Records (era toggle: highest
-  score, highest combined score, biggest margin, most goals, and by season
-  points per game, point difference, win %, wins and fewest losses; plus the
-  longest winning and losing streaks). Verified in Chromium
-  at 1600/1000/390px: zero `pageerror`, no horizontal scroll.
+  season gains and losses, upsets, swings), **Scoring** (era toggle: highest
+  score, highest combined score, biggest margin, most goals, season points per
+  game and point difference; then, all seasons, every shutout -- 11 -- and the
+  games with three or more overtimes), **Wins** (season win %, most wins,
+  fewest losses from S5 on, when Regional and League became full round robins)
+  and **Streaks** (longest winning and losing runs overall, in the regular
+  season, in Regional games and in League games, each across seasons and
+  counting only its own games). Records was split into Scoring and Wins, and
+  Streaks given its own tab, per the user (2026-10-12). Verified in Chromium
+  at 1600/1000/390px: every table filled, zero `pageerror`, no horizontal
+  scroll.
 - **Reached like the season dashboard** (2026-10-12, per explicit request):
   committed beside it and served by GitHub Pages from `main`. Each header links
   to the other (`.dash-link`: "All-Time" on the season dashboard, "Current
