@@ -4716,6 +4716,32 @@ fully played synthetic season: 0 uncoloured names across all three RDS cups and
 PA, exactly one dimmed name per scored row (each leg, AGG line and PA final
 game), all 160 League names coloured, zero `pageerror`.
 
+**Seed AND rank on every RDS and PA Cup line, 2026-10-15 (per explicit
+request).** The `#` beside a name used to be the bracket seed, which clashed
+with every other tab, where `#` is rank. Now the seed is a small boxed badge
+(`.sb-seed`) and `#` is the rank: away reads `[seed] #rank Name`, home mirrors
+it (`cupSideHtml`). **A played line shows the rank the team took INTO that
+game**, so an old round never shifts as the season moves on; a line not yet
+played shows the current rank, which its matchday will be exported with (the
+title on the `#` says which). `cup_entry_ranks()` in the engine supplies the
+played ranks as `CUP_ENTRY_RANKS` (derived, in the manifest):
+`{"RDS"|"PA": {bracket: {cup_round: {name: rank}}}}`, bracket Draw/Process/
+SF/Final, ranked by blended OVR at the latest rated round BEFORE the game's
+round -- exactly `current_rank_lookup()`'s order when the matchday was
+exported. A Dream/Star round-1 bye carries its walkover's rank. The mutual
+stages show each leg's own entering rank, and the AGG line the rank going into
+the tie (leg 1). Covers both brackets of every round, both Mutual Stages and
+the PA final's game rows; the frozen Season 9 tab is unchanged.
+
+Verified on a played-through scratch season (RDS done, PA through the final's
+two games): all 1,292 played-game ranks equal an independent re-rank at round
+N-1, all 160 teams carry a round-1 rank (128 playing, 32 byes), every line
+across the three RDS cups and PA has a seed badge and a rank (266/228/234/648
+cells), 0 clipped cells and no page scroll at 1920/1600/1400px (brackets
+1013-1107px wide in a 1536px panel), zero `pageerror`. On the preseason
+dashboard regenerating moved only `CUP_ENTRY_RANKS` (new, empty) and
+`TEAMS_EXPORT_TSV`, and every line shows the current rank.
+
 **Edit the live code, never the embedded S9 page.** `S9_PAGE` holds the frozen
 S9 dashboard's own copy of these renderers as one JSON string, so a
 search-and-replace across the whole file can match inside it (this change hit

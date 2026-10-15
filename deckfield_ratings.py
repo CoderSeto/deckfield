@@ -3271,6 +3271,67 @@ def current_rank_lookup(season):
     return {r["team_id"]: i + 1 for i, r in enumerate(rows)}
 
 
+def cup_entry_ranks(season):
+    """Each team's rank GOING INTO every cup game it has played (per explicit
+    request, 2026-10-15: the RDS and PA Cup tabs show seed and rank on every
+    matchup line), as {"RDS"|"PA": {bracket: {cup_round: {name: rank}}}} --
+    bracket Draw/Process/SF/Final, cup_round the bracket round, leg or game.
+
+    "Going into" is the rank the matchday was exported with: the same order
+    current_rank_lookup() gives (blended OVR, descending) at the latest rated
+    round BEFORE the game's round -- so a played line keeps the rank it was
+    played at and never moves as the season goes on. Rounds not yet played are
+    absent; the dashboard shows the current rank there. A Dream/Star round-1
+    bye has no game, so its walkover carries the bye team's rank instead."""
+    conn = get_connection()
+    rated = sorted(r["round"] for r in conn.execute(
+        "SELECT DISTINCT round FROM team_round_ratings WHERE season = ?", (season,)))
+    cache = {}
+
+    def ranks_before(rnd):
+        prior = [r for r in rated if r < rnd]
+        if not prior:
+            return {}
+        at = prior[-1]
+        if at not in cache:
+            rows = conn.execute("""
+                SELECT t.name FROM team_round_ratings r JOIN teams t ON t.team_id = r.team_id
+                WHERE r.season = ? AND r.round = ?
+                ORDER BY COALESCE(r.ovr_blend, r.ovr) DESC
+            """, (season, at)).fetchall()
+            cache[at] = {row["name"]: i + 1 for i, row in enumerate(rows)}
+        return cache[at]
+
+    out = {"RDS": {}, "PA": {}}
+    games = conn.execute("""
+        SELECT g.cup_name, g.cup_bracket, g.cup_round, g.round, ta.name a_name, tb.name b_name
+        FROM games g JOIN teams ta ON ta.team_id = g.team_a JOIN teams tb ON tb.team_id = g.team_b
+        WHERE g.season = ? AND g.cup_name IN ('Ribbon', 'Dream', 'Star', 'PA')
+          AND g.cup_bracket IS NOT NULL AND g.cup_round IS NOT NULL
+    """, (season,)).fetchall()
+    for g in games:
+        slot = out["PA" if g["cup_name"] == "PA" else "RDS"].setdefault(
+            g["cup_bracket"], {}).setdefault(str(g["cup_round"]), {})
+        ranks = ranks_before(g["round"])
+        for name in (g["a_name"], g["b_name"]):
+            if name in ranks:
+                slot[name] = ranks[name]
+    if season >= RDS_BYE_WALKOVERS_FROM_SEASON:
+        round_of = {abs_round_for_event(("RDS", b, 1)): b for b in ("Draw", "Process")}
+        for w in conn.execute("""
+            SELECT w.round, t.name FROM walkovers w JOIN teams t ON t.team_id = w.team_id
+            WHERE w.season = ? AND w.game_type = 'S'
+        """, (season,)):
+            bracket = round_of.get(w["round"])
+            # Only once that bracket's round 1 has been played: before then the
+            # whole round shows current ranks, byes included.
+            slot = out["RDS"].get(bracket, {}).get("1") if bracket else None
+            if slot is not None:
+                slot.setdefault(w["name"], ranks_before(w["round"]).get(w["name"]))
+    conn.close()
+    return out
+
+
 def _real_bracket_winner(conn, cup_name, bracket, cup_round, team_a, team_b):
     """The actual winner of a specific real cup game, or None if it hasn't
     been played yet."""

@@ -47,7 +47,7 @@ from deckfield_ratings import (
     export_matchday_batches, rank_elo_history,
     pa_cup_real_results, pa_cup_round_preview, pa_cup_round1_seeding,
     compute_strength_breakdown,
-    rds_cup_real_results, rds_cup_round_pairings,
+    rds_cup_real_results, rds_cup_round_pairings, cup_entry_ranks,
     regional_standings_seeds, regional_tournament_games, rt_game_result, REGION_COLORS,
     world_championship_field, rds_mutual_stage_data, pa_mutual_stage_data, home_away_records,
     world_championship_overview, pod_blocks, pod_round_games, CURRENT_SEASON,
@@ -597,6 +597,8 @@ DERIVED_CONSTS = {
     # and the Legacy Points table (Hall of Fame > Legacy Points), read from
     # their committed files every run so an end-of-season update reaches it.
     "SCHEDULE_ORDERS", "LEGACY_DATA",
+    # Each team's rank going into every cup game played (RDS and PA tabs).
+    "CUP_ENTRY_RANKS",
     # Each finished season's frozen page, embedded for its history tab (see
     # HISTORY_SEASONS): copied from the checksummed file, never from the db.
     *(f"S{n}_PAGE" for n in HISTORY_SEASONS),
@@ -771,6 +773,7 @@ def main():
     content = _replace_const(content, "RANK_ELO_HISTORY", build_rank_elo_history())
 
     content = _replace_const(content, "CUP_REAL_RESULTS", rds_cup_real_results(SEASON))
+    content = _replace_const(content, "CUP_ENTRY_RANKS", cup_entry_ranks(SEASON))
     content = _replace_const(content, "RDS_ROUND_PAIRINGS", rds_cup_round_pairings(SEASON))
     # The shared stage after both brackets finish round 5 -- derived, and
     # absent for any cup not there yet, so it appears on its own.
