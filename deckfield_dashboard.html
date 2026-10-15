@@ -427,6 +427,11 @@
   .sb-away { text-align: right; white-space: nowrap; }
   .sb-home { text-align: left; white-space: nowrap; }
   .sb-rank { color: var(--text-dim); font-variant-numeric: tabular-nums; font-size: 13px; }
+  /* Bracket seed on the RDS/PA Cup lines: a small box, so it never reads as
+     the #rank beside it. */
+  .sb-seed { display: inline-block; min-width: 22px; padding: 0 3px; border: 1px solid var(--border);
+    border-radius: 3px; color: var(--text-dim); font-size: 11px; line-height: 16px; text-align: center;
+    font-variant-numeric: tabular-nums; vertical-align: 1px; }
   .sb-score {
     text-align: center;
     font-family: 'Barlow Condensed', sans-serif;
@@ -963,6 +968,27 @@ const regionName = r => REGION_DISPLAY[r] || r;
 function sideNameHtml(teamName, lost) {
   const html = winnerNameHtml(teamName);
   return lost ? `<span style="opacity:.5">${html}</span>` : html;
+}
+// RDS and PA Cup matchup lines carry the bracket SEED (a boxed badge) and the
+// team's RANK (#, as everywhere else on the dashboard) -- per explicit
+// request, 2026-10-15. A played line shows the rank the team took INTO that
+// game (CUP_ENTRY_RANKS, frozen when it was played); anything not yet played
+// shows the current rank, which is what its matchday will be exported with.
+let rankNowByName = null;
+function cupRank(cup, bracket, round, name) {
+  const played = ((CUP_ENTRY_RANKS[cup] || {})[bracket] || {})[String(round)];
+  if (played && played[name] != null) return { rank: played[name], played: true };
+  if (!rankNowByName) rankNowByName = Object.fromEntries(DATA.teams.map(t => [t.name, t.rank]));
+  return { rank: rankNowByName[name], played: false };
+}
+// side 'away' reads outward from the score (seed, rank, name); 'home' mirrors it.
+function cupSideHtml(ctx, name, seed, lost, side) {
+  const nm = sideNameHtml(name, lost);
+  const r = cupRank(ctx.cup, ctx.bracket, ctx.round, name);
+  const seedHtml = seed != null ? `<span class="sb-seed" title="Seed">${seed}</span>` : '';
+  const rankHtml = r.rank != null
+    ? `<span class="sb-rank" title="${r.played ? 'Rank going into this game' : 'Current rank'}">#${r.rank}</span>` : '';
+  return side === 'away' ? `${seedHtml} ${rankHtml} ${nm}` : `${nm} ${rankHtml} ${seedHtml}`;
 }
 
 function gradeClass(g) {
@@ -1520,18 +1546,17 @@ function renderSchedule() {
 
 const CUP_BRACKET_DATA = {"Ribbon": {"draw_round1": [{"home": "Cianwood City", "away": "Cycling Road", "home_seed": 1, "away_seed": 64, "bye": false, "home_dex": 129, "away_dex": 1}, {"home": "Canalave City", "away": "Mauville City", "home_seed": 2, "away_seed": 63, "bye": false, "home_dex": 33, "away_dex": 31}, {"home": "Victory Road", "away": "Battle Zone", "home_seed": 3, "away_seed": 62, "bye": false, "home_dex": 8, "away_dex": 42}, {"home": "Sootopolis City", "away": "Ecruteak City", "home_seed": 4, "away_seed": 61, "bye": false, "home_dex": 28, "away_dex": 139}, {"home": "National Park", "away": "Jubilife City", "home_seed": 5, "away_seed": 60, "bye": false, "home_dex": 132, "away_dex": 34}, {"home": "Mount Moon", "away": "Slateport City", "home_seed": 6, "away_seed": 59, "bye": false, "home_dex": 7, "away_dex": 32}, {"home": "Mossui Town", "away": "Fighting Dojo", "home_seed": 7, "away_seed": 58, "bye": false, "home_dex": 41, "away_dex": 2}, {"home": "Dewford Town", "away": "Goldenrod City", "home_seed": 8, "away_seed": 57, "bye": false, "home_dex": 17, "away_dex": 131}, {"home": "Lake of Rage", "away": "Ever Grande City", "home_seed": 9, "away_seed": 56, "bye": false, "home_dex": 138, "away_dex": 25}, {"home": "Snowpoint City", "away": "New Bark Town", "home_seed": 10, "away_seed": 55, "bye": false, "home_dex": 40, "away_dex": 141}, {"home": "Petalburg City", "away": "Twinleaf Town", "home_seed": 11, "away_seed": 54, "bye": false, "home_dex": 20, "away_dex": 36}, {"home": "Cerulean Cape", "away": "Saffron City", "home_seed": 12, "away_seed": 53, "bye": false, "home_dex": 3, "away_dex": 11}, {"home": "Fallarbor Town", "away": "Verdanturf Town", "home_seed": 13, "away_seed": 52, "bye": false, "home_dex": 21, "away_dex": 24}, {"home": "Veilstone City", "away": "Mount Mortar", "home_seed": 14, "away_seed": 51, "bye": false, "home_dex": 44, "away_dex": 140}, {"home": "Mount Silver", "away": "Oreburgh City", "home_seed": 15, "away_seed": 50, "bye": false, "home_dex": 144, "away_dex": 39}, {"home": "Pewter City", "away": "Lavender Town", "home_seed": 16, "away_seed": 49, "bye": false, "home_dex": 15, "away_dex": 4}, {"home": "Eterna City", "away": "Sunyshore City", "home_seed": 17, "away_seed": 48, "bye": false, "home_dex": 37, "away_dex": 43}, {"home": "Lilycove City", "away": "Azalea Town", "home_seed": 18, "away_seed": 47, "bye": false, "home_dex": 30, "away_dex": 133}, {"home": "Sevii Islands", "away": "Rustboro City", "home_seed": 19, "away_seed": 46, "bye": false, "home_dex": 6, "away_dex": 23}, {"home": "Olivine City", "away": "Cerulean City", "home_seed": 20, "away_seed": 45, "bye": false, "home_dex": 130, "away_dex": 10}, {"home": "Ruins of Alph", "away": "Solaceon Town", "home_seed": 21, "away_seed": 44, "bye": false, "home_dex": 136, "away_dex": 48}, {"home": "Mossdeep City", "away": "Lavaridge Town", "home_seed": 22, "away_seed": 43, "bye": false, "home_dex": 26, "away_dex": 22}, {"home": "Hearthome City", "away": "Mahogany Town", "home_seed": 23, "away_seed": 42, "bye": false, "home_dex": 46, "away_dex": 137}, {"home": "Viridian City", "away": "Fuchsia City", "home_seed": 24, "away_seed": 41, "bye": false, "home_dex": 16, "away_dex": 14}, {"home": "Pacifidlog Town", "away": "Floaroma City", "home_seed": 25, "away_seed": 40, "bye": false, "home_dex": 27, "away_dex": 38}, {"home": "Sandgem Town", "away": "Cherrygrove City", "home_seed": 26, "away_seed": 39, "bye": false, "home_dex": 35, "away_dex": 142}, {"home": "Cinnabar Island", "away": "Pallet Town", "home_seed": 27, "away_seed": 38, "bye": false, "home_dex": 13, "away_dex": 5}, {"home": "Ilex Forest", "away": "Oldale Town", "home_seed": 28, "away_seed": 37, "bye": false, "home_dex": 134, "away_dex": 19}, {"home": "Littleroot Town", "away": "Violet City", "home_seed": 29, "away_seed": 36, "bye": false, "home_dex": 18, "away_dex": 135}, {"home": "Celestic Town", "away": "Pastoria City", "home_seed": 30, "away_seed": 35, "bye": false, "home_dex": 45, "away_dex": 47}, {"home": "Vermilion City", "away": "Celadon City", "home_seed": 31, "away_seed": 34, "bye": false, "home_dex": 12, "away_dex": 9}, {"home": "Blackthorn City", "away": "Fortree City", "home_seed": 32, "away_seed": 33, "bye": false, "home_dex": 143, "away_dex": 29}], "process_round1": [{"home": "Lavender Town", "away": "Cianwood City", "home_seed": 49, "away_seed": 1, "bye": false, "home_dex": 4, "away_dex": 129}, {"home": "Fortree City", "away": "Eterna City", "home_seed": 33, "away_seed": 17, "bye": false, "home_dex": 29, "away_dex": 37}, {"home": "Goldenrod City", "away": "Lake of Rage", "home_seed": 57, "away_seed": 9, "bye": false, "home_dex": 131, "away_dex": 138}, {"home": "Fuchsia City", "away": "Pacifidlog Town", "home_seed": 41, "away_seed": 25, "bye": false, "home_dex": 14, "away_dex": 27}, {"home": "Saffron City", "away": "National Park", "home_seed": 53, "away_seed": 5, "bye": false, "home_dex": 11, "away_dex": 132}, {"home": "Oldale Town", "away": "Ruins of Alph", "home_seed": 37, "away_seed": 21, "bye": false, "home_dex": 19, "away_dex": 136}, {"home": "Ecruteak City", "away": "Fallarbor Town", "home_seed": 61, "away_seed": 13, "bye": false, "home_dex": 139, "away_dex": 21}, {"home": "Cerulean City", "away": "Littleroot Town", "home_seed": 45, "away_seed": 29, "bye": false, "home_dex": 10, "away_dex": 18}, {"home": "Mount Mortar", "away": "Victory Road", "home_seed": 51, "away_seed": 3, "bye": false, "home_dex": 140, "away_dex": 8}, {"home": "Pastoria City", "away": "Sevii Islands", "home_seed": 35, "away_seed": 19, "bye": false, "home_dex": 47, "away_dex": 6}, {"home": "Slateport City", "away": "Petalburg City", "home_seed": 59, "away_seed": 11, "bye": false, "home_dex": 32, "away_dex": 20}, {"home": "Lavaridge Town", "away": "Cinnabar Island", "home_seed": 43, "away_seed": 27, "bye": false, "home_dex": 22, "away_dex": 13}, {"home": "New Bark Town", "away": "Mossui Town", "home_seed": 55, "away_seed": 7, "bye": false, "home_dex": 141, "away_dex": 41}, {"home": "Cherrygrove City", "away": "Hearthome City", "home_seed": 39, "away_seed": 23, "bye": false, "home_dex": 142, "away_dex": 46}, {"home": "Mauville City", "away": "Mount Silver", "home_seed": 63, "away_seed": 15, "bye": false, "home_dex": 31, "away_dex": 144}, {"home": "Azalea Town", "away": "Vermilion City", "home_seed": 47, "away_seed": 31, "bye": false, "home_dex": 133, "away_dex": 12}, {"home": "Oreburgh City", "away": "Canalave City", "home_seed": 50, "away_seed": 2, "bye": false, "home_dex": 39, "away_dex": 33}, {"home": "Celadon City", "away": "Lilycove City", "home_seed": 34, "away_seed": 18, "bye": false, "home_dex": 9, "away_dex": 30}, {"home": "Fighting Dojo", "away": "Snowpoint City", "home_seed": 58, "away_seed": 10, "bye": false, "home_dex": 2, "away_dex": 40}, {"home": "Mahogany Town", "away": "Sandgem Town", "home_seed": 42, "away_seed": 26, "bye": false, "home_dex": 137, "away_dex": 35}, {"home": "Twinleaf Town", "away": "Mount Moon", "home_seed": 54, "away_seed": 6, "bye": false, "home_dex": 36, "away_dex": 7}, {"home": "Pallet Town", "away": "Mossdeep City", "home_seed": 38, "away_seed": 22, "bye": false, "home_dex": 5, "away_dex": 26}, {"home": "Battle Zone", "away": "Veilstone City", "home_seed": 62, "away_seed": 14, "bye": false, "home_dex": 42, "away_dex": 44}, {"home": "Rustboro City", "away": "Celestic Town", "home_seed": 46, "away_seed": 30, "bye": false, "home_dex": 23, "away_dex": 45}, {"home": "Verdanturf Town", "away": "Sootopolis City", "home_seed": 52, "away_seed": 4, "bye": false, "home_dex": 24, "away_dex": 28}, {"home": "Violet City", "away": "Olivine City", "home_seed": 36, "away_seed": 20, "bye": false, "home_dex": 135, "away_dex": 130}, {"home": "Jubilife City", "away": "Cerulean Cape", "home_seed": 60, "away_seed": 12, "bye": false, "home_dex": 34, "away_dex": 3}, {"home": "Solaceon Town", "away": "Ilex Forest", "home_seed": 44, "away_seed": 28, "bye": false, "home_dex": 48, "away_dex": 134}, {"home": "Ever Grande City", "away": "Dewford Town", "home_seed": 56, "away_seed": 8, "bye": false, "home_dex": 25, "away_dex": 17}, {"home": "Floaroma City", "away": "Viridian City", "home_seed": 40, "away_seed": 24, "bye": false, "home_dex": 38, "away_dex": 16}, {"home": "Cycling Road", "away": "Pewter City", "home_seed": 64, "away_seed": 16, "bye": false, "home_dex": 1, "away_dex": 15}, {"home": "Sunyshore City", "away": "Blackthorn City", "home_seed": 48, "away_seed": 32, "bye": false, "home_dex": 43, "away_dex": 143}]}, "Dream": {"draw_round1": [{"home": "Po Town", "away": null, "home_seed": 1, "away_seed": null, "bye": true, "home_dex": 91, "away_dex": null}, {"home": "Nimbasa City", "away": null, "home_seed": 2, "away_seed": null, "bye": true, "home_dex": 55, "away_dex": null}, {"home": "Aqua Resort", "away": null, "home_seed": 3, "away_seed": null, "bye": true, "home_dex": 125, "away_dex": null}, {"home": "Mistralton City", "away": null, "home_seed": 4, "away_seed": null, "bye": true, "home_dex": 52, "away_dex": null}, {"home": "Dolce Island", "away": null, "home_seed": 5, "away_seed": null, "bye": true, "home_dex": 127, "away_dex": null}, {"home": "Mount Hokulani", "away": null, "home_seed": 6, "away_seed": null, "bye": true, "home_dex": 90, "away_dex": null}, {"home": "Anville Town", "away": null, "home_seed": 7, "away_seed": null, "bye": true, "home_dex": 49, "away_dex": null}, {"home": "Konikoni City", "away": null, "home_seed": 8, "away_seed": null, "bye": true, "home_dex": 95, "away_dex": null}, {"home": "Pueltown", "away": null, "home_seed": 9, "away_seed": null, "bye": true, "home_dex": 123, "away_dex": null}, {"home": "Ringtown", "away": null, "home_seed": 10, "away_seed": null, "bye": true, "home_dex": 118, "away_dex": null}, {"home": "Virbank City", "away": null, "home_seed": 11, "away_seed": null, "bye": true, "home_dex": 56, "away_dex": null}, {"home": "Seafolk Village", "away": null, "home_seed": 12, "away_seed": null, "bye": true, "home_dex": 83, "away_dex": null}, {"home": "Fall City", "away": null, "home_seed": 13, "away_seed": null, "bye": true, "home_dex": 117, "away_dex": null}, {"home": "Heahea City", "away": null, "home_seed": 14, "away_seed": null, "bye": true, "home_dex": 94, "away_dex": null}, {"home": "Opelucid City", "away": null, "home_seed": 15, "away_seed": null, "bye": true, "home_dex": 63, "away_dex": null}, {"home": "Agate Village", "away": null, "home_seed": 16, "away_seed": null, "bye": true, "home_dex": 113, "away_dex": null}, {"home": "Undella Town", "away": "Hau'oli City", "home_seed": 17, "away_seed": 48, "bye": false, "home_dex": 64, "away_dex": 85}, {"home": "Vast Poni Canyon", "away": "Boyleland", "home_seed": 18, "away_seed": 47, "bye": false, "home_dex": 84, "away_dex": 121}, {"home": "Phenac City", "away": "Floccesy Town", "home_seed": 19, "away_seed": 46, "bye": false, "home_dex": 115, "away_dex": 51}, {"home": "Kala'e Bay", "away": "Lacunosa Town", "home_seed": 20, "away_seed": 45, "bye": false, "home_dex": 87, "away_dex": 62}, {"home": "Nacrene City", "away": "Iki Town", "home_seed": 21, "away_seed": 44, "bye": false, "home_dex": 59, "away_dex": 86}, {"home": "Cocona Village", "away": "Tilt Village", "home_seed": 22, "away_seed": 43, "bye": false, "home_dex": 126, "away_dex": 128}, {"home": "Malie City", "away": "Paniola Town", "home_seed": 23, "away_seed": 42, "bye": false, "home_dex": 89, "away_dex": 96}, {"home": "Humilau City", "away": "Summerland", "home_seed": 24, "away_seed": 41, "bye": false, "home_dex": 61, "away_dex": 119}, {"home": "Ultra Megalopolis", "away": "Driftveil City", "home_seed": 25, "away_seed": 40, "bye": false, "home_dex": 88, "away_dex": 53}, {"home": "Pyrite Town", "away": "Poni Meadow", "home_seed": 26, "away_seed": 39, "bye": false, "home_dex": 116, "away_dex": 82}, {"home": "Accumula Town", "away": "Castelia City", "home_seed": 27, "away_seed": 38, "bye": false, "home_dex": 57, "away_dex": 58}, {"home": "Exeggutor Island", "away": "Vientown", "home_seed": 28, "away_seed": 37, "bye": false, "home_dex": 81, "away_dex": 124}, {"home": "Aspertia City", "away": "Tapu Village", "home_seed": 29, "away_seed": 36, "bye": false, "home_dex": 50, "away_dex": 92}, {"home": "Gateon Port", "away": "Haruba Village", "home_seed": 30, "away_seed": 35, "bye": false, "home_dex": 114, "away_dex": 122}, {"home": "Aether Paradise", "away": "Striaton City", "home_seed": 31, "away_seed": 34, "bye": false, "home_dex": 93, "away_dex": 60}, {"home": "Icirrus City", "away": "Wintown", "home_seed": 32, "away_seed": 33, "bye": false, "home_dex": 54, "away_dex": 120}], "process_round1": [{"home": "Po Town", "away": null, "home_seed": 1, "away_seed": null, "bye": true, "home_dex": 91, "away_dex": null}, {"home": "Wintown", "away": "Undella Town", "home_seed": 33, "away_seed": 17, "bye": false, "home_dex": 120, "away_dex": 64}, {"home": "Pueltown", "away": null, "home_seed": 9, "away_seed": null, "bye": true, "home_dex": 123, "away_dex": null}, {"home": "Summerland", "away": "Ultra Megalopolis", "home_seed": 41, "away_seed": 25, "bye": false, "home_dex": 119, "away_dex": 88}, {"home": "Dolce Island", "away": null, "home_seed": 5, "away_seed": null, "bye": true, "home_dex": 127, "away_dex": null}, {"home": "Vientown", "away": "Nacrene City", "home_seed": 37, "away_seed": 21, "bye": false, "home_dex": 124, "away_dex": 59}, {"home": "Fall City", "away": null, "home_seed": 13, "away_seed": null, "bye": true, "home_dex": 117, "away_dex": null}, {"home": "Lacunosa Town", "away": "Aspertia City", "home_seed": 45, "away_seed": 29, "bye": false, "home_dex": 62, "away_dex": 50}, {"home": "Aqua Resort", "away": null, "home_seed": 3, "away_seed": null, "bye": true, "home_dex": 125, "away_dex": null}, {"home": "Haruba Village", "away": "Phenac City", "home_seed": 35, "away_seed": 19, "bye": false, "home_dex": 122, "away_dex": 115}, {"home": "Virbank City", "away": null, "home_seed": 11, "away_seed": null, "bye": true, "home_dex": 56, "away_dex": null}, {"home": "Tilt Village", "away": "Accumula Town", "home_seed": 43, "away_seed": 27, "bye": false, "home_dex": 128, "away_dex": 57}, {"home": "Anville Town", "away": null, "home_seed": 7, "away_seed": null, "bye": true, "home_dex": 49, "away_dex": null}, {"home": "Poni Meadow", "away": "Malie City", "home_seed": 39, "away_seed": 23, "bye": false, "home_dex": 82, "away_dex": 89}, {"home": "Opelucid City", "away": null, "home_seed": 15, "away_seed": null, "bye": true, "home_dex": 63, "away_dex": null}, {"home": "Boyleland", "away": "Aether Paradise", "home_seed": 47, "away_seed": 31, "bye": false, "home_dex": 121, "away_dex": 93}, {"home": "Nimbasa City", "away": null, "home_seed": 2, "away_seed": null, "bye": true, "home_dex": 55, "away_dex": null}, {"home": "Striaton City", "away": "Vast Poni Canyon", "home_seed": 34, "away_seed": 18, "bye": false, "home_dex": 60, "away_dex": 84}, {"home": "Ringtown", "away": null, "home_seed": 10, "away_seed": null, "bye": true, "home_dex": 118, "away_dex": null}, {"home": "Paniola Town", "away": "Pyrite Town", "home_seed": 42, "away_seed": 26, "bye": false, "home_dex": 96, "away_dex": 116}, {"home": "Mount Hokulani", "away": null, "home_seed": 6, "away_seed": null, "bye": true, "home_dex": 90, "away_dex": null}, {"home": "Castelia City", "away": "Cocona Village", "home_seed": 38, "away_seed": 22, "bye": false, "home_dex": 58, "away_dex": 126}, {"home": "Heahea City", "away": null, "home_seed": 14, "away_seed": null, "bye": true, "home_dex": 94, "away_dex": null}, {"home": "Floccesy Town", "away": "Gateon Port", "home_seed": 46, "away_seed": 30, "bye": false, "home_dex": 51, "away_dex": 114}, {"home": "Mistralton City", "away": null, "home_seed": 4, "away_seed": null, "bye": true, "home_dex": 52, "away_dex": null}, {"home": "Tapu Village", "away": "Kala'e Bay", "home_seed": 36, "away_seed": 20, "bye": false, "home_dex": 92, "away_dex": 87}, {"home": "Seafolk Village", "away": null, "home_seed": 12, "away_seed": null, "bye": true, "home_dex": 83, "away_dex": null}, {"home": "Iki Town", "away": "Exeggutor Island", "home_seed": 44, "away_seed": 28, "bye": false, "home_dex": 86, "away_dex": 81}, {"home": "Konikoni City", "away": null, "home_seed": 8, "away_seed": null, "bye": true, "home_dex": 95, "away_dex": null}, {"home": "Driftveil City", "away": "Humilau City", "home_seed": 40, "away_seed": 24, "bye": false, "home_dex": 53, "away_dex": 61}, {"home": "Agate Village", "away": null, "home_seed": 16, "away_seed": null, "bye": true, "home_dex": 113, "away_dex": null}, {"home": "Hau'oli City", "away": "Icirrus City", "home_seed": 48, "away_seed": 32, "bye": false, "home_dex": 85, "away_dex": 54}]}, "Star": {"draw_round1": [{"home": "Casseroya Lake", "away": null, "home_seed": 1, "away_seed": null, "bye": true, "home_dex": 151, "away_dex": null}, {"home": "Camphrier Town", "away": null, "home_seed": 2, "away_seed": null, "bye": true, "home_dex": 69, "away_dex": null}, {"home": "Stow-on-Side", "away": null, "home_seed": 3, "away_seed": null, "bye": true, "home_dex": 98, "away_dex": null}, {"home": "Mesagoza", "away": null, "home_seed": 4, "away_seed": null, "bye": true, "home_dex": 160, "away_dex": null}, {"home": "Motostoke", "away": null, "home_seed": 5, "away_seed": null, "bye": true, "home_dex": 111, "away_dex": null}, {"home": "Vaniville Town", "away": null, "home_seed": 6, "away_seed": null, "bye": true, "home_dex": 80, "away_dex": null}, {"home": "Cyllage City", "away": null, "home_seed": 7, "away_seed": null, "bye": true, "home_dex": 66, "away_dex": null}, {"home": "Blueberry Terarium", "away": null, "home_seed": 8, "away_seed": null, "bye": true, "home_dex": 148, "away_dex": null}, {"home": "Wild Area", "away": null, "home_seed": 9, "away_seed": null, "bye": true, "home_dex": 107, "away_dex": null}, {"home": "Cabo Poco", "away": null, "home_seed": 10, "away_seed": null, "bye": true, "home_dex": 156, "away_dex": null}, {"home": "Lumiose City", "away": null, "home_seed": 11, "away_seed": null, "bye": true, "home_dex": 72, "away_dex": null}, {"home": "Spikemuth", "away": null, "home_seed": 12, "away_seed": null, "bye": true, "home_dex": 104, "away_dex": null}, {"home": "Santalune City", "away": null, "home_seed": 13, "away_seed": null, "bye": true, "home_dex": 79, "away_dex": null}, {"home": "Levincia", "away": null, "home_seed": 14, "away_seed": null, "bye": true, "home_dex": 155, "away_dex": null}, {"home": "Wyndon South", "away": null, "home_seed": 15, "away_seed": null, "bye": true, "home_dex": 100, "away_dex": null}, {"home": "Anistar City", "away": null, "home_seed": 16, "away_seed": null, "bye": true, "home_dex": 73, "away_dex": null}, {"home": "Los Platos", "away": "Laverre City", "home_seed": 17, "away_seed": 48, "bye": false, "home_dex": 159, "away_dex": 71}, {"home": "Circhester Bay", "away": "Hammerlocke", "home_seed": 18, "away_seed": 47, "bye": false, "home_dex": 102, "away_dex": 103}, {"home": "Porto Marinada", "away": "Artazon", "home_seed": 19, "away_seed": 46, "bye": false, "home_dex": 149, "away_dex": 154}, {"home": "Shalour City", "away": "Aquacorde Town", "home_seed": 20, "away_seed": 45, "bye": false, "home_dex": 68, "away_dex": 77}, {"home": "Isle of Armor", "away": "Alfornada", "home_seed": 21, "away_seed": 44, "bye": false, "home_dex": 110, "away_dex": 157}, {"home": "Cascarrafa", "away": "Turffield", "home_seed": 22, "away_seed": 43, "bye": false, "home_dex": 150, "away_dex": 112}, {"home": "Postwick", "away": "Medali", "home_seed": 23, "away_seed": 42, "bye": false, "home_dex": 106, "away_dex": 152}, {"home": "Geosenge Town", "away": "Ambrette Town", "home_seed": 24, "away_seed": 41, "bye": false, "home_dex": 67, "away_dex": 65}, {"home": "Dendemille Town", "away": "Ballonlea", "home_seed": 25, "away_seed": 40, "bye": false, "home_dex": 75, "away_dex": 97}, {"home": "Tagtree Thicket", "away": "Cortondo", "home_seed": 26, "away_seed": 39, "bye": false, "home_dex": 147, "away_dex": 158}, {"home": "Crown Tundra", "away": "Wedgehurst", "home_seed": 27, "away_seed": 38, "bye": false, "home_dex": 105, "away_dex": 108}, {"home": "Coumarine City", "away": "Snowbelle City", "home_seed": 28, "away_seed": 37, "bye": false, "home_dex": 70, "away_dex": 76}, {"home": "Glaseado Mountain", "away": "Couriway Town", "home_seed": 29, "away_seed": 36, "bye": false, "home_dex": 146, "away_dex": 74}, {"home": "Wyndon North", "away": "Montenevera", "home_seed": 30, "away_seed": 35, "bye": false, "home_dex": 99, "away_dex": 145}, {"home": "Hulbury", "away": "City of Circhester", "home_seed": 31, "away_seed": 34, "bye": false, "home_dex": 109, "away_dex": 101}, {"home": "Zapapico", "away": "Kiloude City", "home_seed": 32, "away_seed": 33, "bye": false, "home_dex": 153, "away_dex": 78}], "process_round1": [{"home": "Casseroya Lake", "away": null, "home_seed": 1, "away_seed": null, "bye": true, "home_dex": 151, "away_dex": null}, {"home": "Kiloude City", "away": "Los Platos", "home_seed": 33, "away_seed": 17, "bye": false, "home_dex": 78, "away_dex": 159}, {"home": "Wild Area", "away": null, "home_seed": 9, "away_seed": null, "bye": true, "home_dex": 107, "away_dex": null}, {"home": "Ambrette Town", "away": "Dendemille Town", "home_seed": 41, "away_seed": 25, "bye": false, "home_dex": 65, "away_dex": 75}, {"home": "Motostoke", "away": null, "home_seed": 5, "away_seed": null, "bye": true, "home_dex": 111, "away_dex": null}, {"home": "Snowbelle City", "away": "Isle of Armor", "home_seed": 37, "away_seed": 21, "bye": false, "home_dex": 76, "away_dex": 110}, {"home": "Santalune City", "away": null, "home_seed": 13, "away_seed": null, "bye": true, "home_dex": 79, "away_dex": null}, {"home": "Aquacorde Town", "away": "Glaseado Mountain", "home_seed": 45, "away_seed": 29, "bye": false, "home_dex": 77, "away_dex": 146}, {"home": "Stow-on-Side", "away": null, "home_seed": 3, "away_seed": null, "bye": true, "home_dex": 98, "away_dex": null}, {"home": "Montenevera", "away": "Porto Marinada", "home_seed": 35, "away_seed": 19, "bye": false, "home_dex": 145, "away_dex": 149}, {"home": "Lumiose City", "away": null, "home_seed": 11, "away_seed": null, "bye": true, "home_dex": 72, "away_dex": null}, {"home": "Turffield", "away": "Crown Tundra", "home_seed": 43, "away_seed": 27, "bye": false, "home_dex": 112, "away_dex": 105}, {"home": "Cyllage City", "away": null, "home_seed": 7, "away_seed": null, "bye": true, "home_dex": 66, "away_dex": null}, {"home": "Cortondo", "away": "Postwick", "home_seed": 39, "away_seed": 23, "bye": false, "home_dex": 158, "away_dex": 106}, {"home": "Wyndon South", "away": null, "home_seed": 15, "away_seed": null, "bye": true, "home_dex": 100, "away_dex": null}, {"home": "Hammerlocke", "away": "Hulbury", "home_seed": 47, "away_seed": 31, "bye": false, "home_dex": 103, "away_dex": 109}, {"home": "Camphrier Town", "away": null, "home_seed": 2, "away_seed": null, "bye": true, "home_dex": 69, "away_dex": null}, {"home": "City of Circhester", "away": "Circhester Bay", "home_seed": 34, "away_seed": 18, "bye": false, "home_dex": 101, "away_dex": 102}, {"home": "Cabo Poco", "away": null, "home_seed": 10, "away_seed": null, "bye": true, "home_dex": 156, "away_dex": null}, {"home": "Medali", "away": "Tagtree Thicket", "home_seed": 42, "away_seed": 26, "bye": false, "home_dex": 152, "away_dex": 147}, {"home": "Vaniville Town", "away": null, "home_seed": 6, "away_seed": null, "bye": true, "home_dex": 80, "away_dex": null}, {"home": "Wedgehurst", "away": "Cascarrafa", "home_seed": 38, "away_seed": 22, "bye": false, "home_dex": 108, "away_dex": 150}, {"home": "Levincia", "away": null, "home_seed": 14, "away_seed": null, "bye": true, "home_dex": 155, "away_dex": null}, {"home": "Artazon", "away": "Wyndon North", "home_seed": 46, "away_seed": 30, "bye": false, "home_dex": 154, "away_dex": 99}, {"home": "Mesagoza", "away": null, "home_seed": 4, "away_seed": null, "bye": true, "home_dex": 160, "away_dex": null}, {"home": "Couriway Town", "away": "Shalour City", "home_seed": 36, "away_seed": 20, "bye": false, "home_dex": 74, "away_dex": 68}, {"home": "Spikemuth", "away": null, "home_seed": 12, "away_seed": null, "bye": true, "home_dex": 104, "away_dex": null}, {"home": "Alfornada", "away": "Coumarine City", "home_seed": 44, "away_seed": 28, "bye": false, "home_dex": 157, "away_dex": 70}, {"home": "Blueberry Terarium", "away": null, "home_seed": 8, "away_seed": null, "bye": true, "home_dex": 148, "away_dex": null}, {"home": "Ballonlea", "away": "Geosenge Town", "home_seed": 40, "away_seed": 24, "bye": false, "home_dex": 97, "away_dex": 67}, {"home": "Anistar City", "away": null, "home_seed": 16, "away_seed": null, "bye": true, "home_dex": 73, "away_dex": null}, {"home": "Laverre City", "away": "Zapapico", "home_seed": 48, "away_seed": 32, "bye": false, "home_dex": 71, "away_dex": 153}]}};
 const CUP_REAL_RESULTS = {"Ribbon": {"Draw": {}, "Process": {}}, "Dream": {"Draw": {}, "Process": {}}, "Star": {"Draw": {}, "Process": {}}};
+const CUP_ENTRY_RANKS = {"RDS": {}, "PA": {}};
 const RDS_ROUND_PAIRINGS = {"Ribbon": {"Draw": {}, "Process": {}}, "Dream": {"Draw": {}, "Process": {}}, "Star": {"Draw": {}, "Process": {}}};
 let rdsCup = 'Ribbon';
 
-function rdsRound1RowHtml(e, winnerSet, scoreByTeam) {
+function rdsRound1RowHtml(e, winnerSet, scoreByTeam, ctx) {
   if (e.bye) {
-    return `<tr><td class="sb-away"></td><td class="sb-score">bye</td><td class="sb-home">${winnerNameHtml(e.home)} <span class="sb-rank">#${e.home_seed}</span></td></tr>`;
+    return `<tr><td class="sb-away"></td><td class="sb-score">bye</td><td class="sb-home">${cupSideHtml(ctx, e.home, e.home_seed, false, 'home')}</td></tr>`;
   }
   const homeWon = winnerSet.has(e.home);
   const awayWon = winnerSet.has(e.away);
   const result = scoreByTeam.get(e.home) || scoreByTeam.get(e.away);
-  const awayHtml = sideNameHtml(e.away, result && !awayWon);
-  const homeHtml = sideNameHtml(e.home, result && !homeWon);
   let scoreText = '&ndash;';
   if (result) {
     const homeScore = homeWon ? result.winner_score : result.loser_score;
@@ -1540,18 +1565,18 @@ function rdsRound1RowHtml(e, winnerSet, scoreByTeam) {
   }
   return `
     <tr>
-      <td class="sb-away"><span class="sb-rank">#${e.away_seed}</span> ${awayHtml}</td>
+      <td class="sb-away">${cupSideHtml(ctx, e.away, e.away_seed, result && !awayWon, 'away')}</td>
       <td class="sb-score">${scoreText}</td>
-      <td class="sb-home">${homeHtml} <span class="sb-rank">#${e.home_seed}</span></td>
+      <td class="sb-home">${cupSideHtml(ctx, e.home, e.home_seed, result && !homeWon, 'home')}</td>
     </tr>
   `;
 }
-function rdsRound3RowHtml(e) {
+function rdsRound3RowHtml(e, ctx) {
   return `
     <tr>
-      <td class="sb-away"><span class="sb-rank">#${e.away_seed}</span> ${winnerNameHtml(e.away)}</td>
+      <td class="sb-away">${cupSideHtml(ctx, e.away, e.away_seed, false, 'away')}</td>
       <td class="sb-score">&ndash;</td>
-      <td class="sb-home">${winnerNameHtml(e.home)} <span class="sb-rank">#${e.home_seed}</span></td>
+      <td class="sb-home">${cupSideHtml(ctx, e.home, e.home_seed, false, 'home')}</td>
     </tr>
   `;
 }
@@ -1575,7 +1600,8 @@ function renderRdsCup() {
     const round1Entries = bracket === 'Draw' ? data.draw_round1 : data.process_round1;
 
     const sections = [
-      { label: 'Round 1', rows: round1Entries.map(e => rdsRound1RowHtml(e, round1WinnerSet, round1ScoreByTeam)).join('') },
+      { label: 'Round 1', rows: round1Entries.map(e => rdsRound1RowHtml(e, round1WinnerSet, round1ScoreByTeam,
+                                                                     { cup: 'RDS', bracket, round: 1 })).join('') },
     ];
 
     // Rounds 2-N: bracketPairings[rnd] only exists once the round before it
@@ -1595,9 +1621,10 @@ function renderRdsCup() {
           scoreByTeam.set(g.winner, g);
           scoreByTeam.set(g.loser, g);
         });
-        sections.push({ label: `Round ${rnd}`, rows: entries.map(e => rdsRound1RowHtml(e, winnerSet, scoreByTeam)).join('') });
+        sections.push({ label: `Round ${rnd}`, rows: entries.map(e => rdsRound1RowHtml(e, winnerSet, scoreByTeam,
+                                                                                 { cup: 'RDS', bracket, round: rnd })).join('') });
       } else {
-        sections.push({ label: `Round ${rnd}`, rows: entries.map(rdsRound3RowHtml).join('') });
+        sections.push({ label: `Round ${rnd}`, rows: entries.map(e => rdsRound3RowHtml(e, { cup: 'RDS', bracket, round: rnd })).join('') });
         break;
       }
     }
@@ -1623,12 +1650,10 @@ const PA_REAL_RESULTS = {"Draw": {}, "Process": {}};
 const PA_ROUND_PAIRINGS = {};
 const PA_SWAP_LOG = [];
 const PA_CUP_DATA = {"draw_round1": [{"row": [160, 97, 96, 33, 32], "home_seed": 97, "away_seed": 160, "home": "Ballonlea", "away": "Hau'oli City", "home_dex": 97, "away_dex": 85}, {"row": [159, 98, 95, 34, 31], "home_seed": 98, "away_seed": 159, "home": "Aspertia City", "away": "Boyleland", "home_dex": 50, "away_dex": 121}, {"row": [158, 99, 94, 35, 30], "home_seed": 99, "away_seed": 158, "home": "Goldenrod City", "away": "Laverre City", "home_dex": 131, "away_dex": 71}, {"row": [157, 100, 93, 36, 29], "home_seed": 100, "away_seed": 156, "home": "Violet City", "away": "Lacunosa Town", "home_dex": 135, "away_dex": 62}, {"row": [156, 101, 92, 37, 28], "home_seed": 101, "away_seed": 157, "home": "Nacrene City", "away": "Summerland", "home_dex": 59, "away_dex": 119}, {"row": [155, 102, 91, 38, 27], "home_seed": 102, "away_seed": 155, "home": "Geosenge Town", "away": "Ecruteak City", "home_dex": 67, "away_dex": 139}, {"row": [154, 103, 90, 39, 26], "home_seed": 103, "away_seed": 153, "home": "Pastoria City", "away": "Fighting Dojo", "home_dex": 47, "away_dex": 2}, {"row": [153, 104, 89, 40, 25], "home_seed": 104, "away_seed": 154, "home": "Celadon City", "away": "Artazon", "home_dex": 9, "away_dex": 154}, {"row": [152, 105, 88, 41, 24], "home_seed": 105, "away_seed": 152, "home": "Couriway Town", "away": "Mauville City", "home_dex": 74, "away_dex": 31}, {"row": [151, 106, 87, 42, 23], "home_seed": 106, "away_seed": 151, "home": "Gateon Port", "away": "Slateport City", "home_dex": 114, "away_dex": 32}, {"row": [150, 107, 86, 43, 22], "home_seed": 107, "away_seed": 150, "home": "Paniola Town", "away": "Turffield", "home_dex": 96, "away_dex": 112}, {"row": [149, 108, 85, 44, 21], "home_seed": 108, "away_seed": 149, "home": "Ever Grande City", "away": "Solaceon Town", "home_dex": 25, "away_dex": 48}, {"row": [148, 109, 84, 45, 20], "home_seed": 109, "away_seed": 148, "home": "Vast Poni Canyon", "away": "Twinleaf Town", "home_dex": 84, "away_dex": 36}, {"row": [147, 110, 83, 46, 19], "home_seed": 110, "away_seed": 147, "home": "Fuchsia City", "away": "Tilt Village", "home_dex": 14, "away_dex": 128}, {"row": [146, 111, 82, 47, 18], "home_seed": 111, "away_seed": 146, "home": "Zapapico", "away": "Haruba Village", "home_dex": 153, "away_dex": 122}, {"row": [145, 112, 81, 48, 17], "home_seed": 112, "away_seed": 145, "home": "Hulbury", "away": "Medali", "home_dex": 109, "away_dex": 152}, {"row": [144, 113, 80, 49, 16], "home_seed": 113, "away_seed": 144, "home": "Rustboro City", "away": "Azalea Town", "home_dex": 23, "away_dex": 133}, {"row": [143, 114, 79, 50, 15], "home_seed": 114, "away_seed": 140, "home": "Cortondo", "away": "Hammerlocke", "home_dex": 158, "away_dex": 103}, {"row": [142, 115, 78, 51, 14], "home_seed": 115, "away_seed": 143, "home": "Mahogany Town", "away": "Iki Town", "home_dex": 137, "away_dex": 86}, {"row": [141, 116, 77, 52, 13], "home_seed": 116, "away_seed": 141, "home": "Montenevera", "away": "Battle Zone", "home_dex": 145, "away_dex": 42}, {"row": [140, 117, 76, 53, 12], "home_seed": 117, "away_seed": 142, "home": "Wyndon North", "away": "New Bark Town", "home_dex": 99, "away_dex": 141}, {"row": [139, 118, 75, 54, 11], "home_seed": 118, "away_seed": 139, "home": "Icirrus City", "away": "Jubilife City", "home_dex": 54, "away_dex": 34}, {"row": [138, 119, 74, 55, 10], "home_seed": 119, "away_seed": 134, "home": "Wedgehurst", "away": "Cycling Road", "home_dex": 108, "away_dex": 1}, {"row": [137, 120, 73, 56, 9], "home_seed": 120, "away_seed": 137, "home": "Dewford Town", "away": "Aquacorde Town", "home_dex": 17, "away_dex": 77}, {"row": [136, 121, 72, 57, 8], "home_seed": 121, "away_seed": 136, "home": "Mount Mortar", "away": "Saffron City", "home_dex": 140, "away_dex": 11}, {"row": [135, 122, 71, 58, 7], "home_seed": 122, "away_seed": 135, "home": "Oreburgh City", "away": "Floccesy Town", "home_dex": 39, "away_dex": 51}, {"row": [134, 123, 70, 59, 6], "home_seed": 123, "away_seed": 138, "home": "Lavender Town", "away": "Ambrette Town", "home_dex": 4, "away_dex": 65}, {"row": [133, 124, 69, 60, 5], "home_seed": 124, "away_seed": 133, "home": "City of Circhester", "away": "Lavaridge Town", "home_dex": 101, "away_dex": 22}, {"row": [132, 125, 68, 61, 4], "home_seed": 125, "away_seed": 132, "home": "Snowbelle City", "away": "Circhester Bay", "home_dex": 76, "away_dex": 102}, {"row": [131, 126, 67, 62, 3], "home_seed": 126, "away_seed": 131, "home": "Kiloude City", "away": "Cerulean City", "home_dex": 78, "away_dex": 10}, {"row": [130, 127, 66, 63, 2], "home_seed": 127, "away_seed": 130, "home": "Poni Meadow", "away": "Verdanturf Town", "home_dex": 82, "away_dex": 24}, {"row": [129, 128, 65, 64, 1], "home_seed": 128, "away_seed": 129, "home": "Vientown", "away": "Alfornada", "home_dex": 124, "away_dex": 157}], "process_round1": [{"row": [160, 97, 96, 33, 32], "home_seed": 160, "away_seed": 97, "home": "Hau'oli City", "away": "Slateport City", "home_dex": 85, "away_dex": 32}, {"row": [159, 98, 95, 34, 31], "home_seed": 159, "away_seed": 98, "home": "Summerland", "away": "Hulbury", "home_dex": 119, "away_dex": 109}, {"row": [158, 99, 94, 35, 30], "home_seed": 158, "away_seed": 99, "home": "Turffield", "away": "Lavender Town", "home_dex": 112, "away_dex": 4}, {"row": [157, 100, 93, 36, 29], "home_seed": 157, "away_seed": 100, "home": "Lacunosa Town", "away": "Oldale Town", "home_dex": 62, "away_dex": 19}, {"row": [156, 101, 92, 37, 28], "home_seed": 156, "away_seed": 101, "home": "Ecruteak City", "away": "Battle Zone", "home_dex": 139, "away_dex": 42}, {"row": [155, 102, 91, 38, 27], "home_seed": 155, "away_seed": 102, "home": "Medali", "away": "Ilex Forest", "home_dex": 152, "away_dex": 134}, {"row": [154, 103, 90, 39, 26], "home_seed": 154, "away_seed": 103, "home": "City of Circhester", "away": "Phenac City", "home_dex": 101, "away_dex": 115}, {"row": [153, 104, 89, 40, 25], "home_seed": 153, "away_seed": 104, "home": "Artazon", "away": "Geosenge Town", "home_dex": 154, "away_dex": 67}, {"row": [152, 105, 88, 41, 24], "home_seed": 152, "away_seed": 105, "home": "Iki Town", "away": "Humilau City", "home_dex": 86, "away_dex": 61}, {"row": [151, 106, 87, 42, 23], "home_seed": 151, "away_seed": 106, "home": "Tilt Village", "away": "Kiloude City", "home_dex": 128, "away_dex": 78}, {"row": [150, 107, 86, 43, 22], "home_seed": 150, "away_seed": 107, "home": "Solaceon Town", "away": "Couriway Town", "home_dex": 48, "away_dex": 74}, {"row": [149, 108, 85, 44, 21], "home_seed": 149, "away_seed": 108, "home": "Alfornada", "away": "Wyndon North", "home_dex": 157, "away_dex": 99}, {"row": [148, 109, 84, 45, 20], "home_seed": 148, "away_seed": 109, "home": "Mauville City", "away": "Paniola Town", "home_dex": 31, "away_dex": 96}, {"row": [147, 110, 83, 46, 19], "home_seed": 147, "away_seed": 110, "home": "Jubilife City", "away": "Aspertia City", "home_dex": 34, "away_dex": 50}, {"row": [146, 111, 82, 47, 18], "home_seed": 146, "away_seed": 111, "home": "Azalea Town", "away": "Vast Poni Canyon", "home_dex": 133, "away_dex": 84}, {"row": [145, 112, 81, 48, 17], "home_seed": 145, "away_seed": 112, "home": "Verdanturf Town", "away": "Wedgehurst", "home_dex": 24, "away_dex": 108}, {"row": [144, 113, 80, 49, 16], "home_seed": 144, "away_seed": 113, "home": "Twinleaf Town", "away": "Cerulean Cape", "home_dex": 36, "away_dex": 3}, {"row": [143, 114, 79, 50, 15], "home_seed": 141, "away_seed": 114, "home": "Ambrette Town", "away": "Nacrene City", "home_dex": 65, "away_dex": 59}, {"row": [142, 115, 78, 51, 14], "home_seed": 142, "away_seed": 115, "home": "Laverre City", "away": "Lavaridge Town", "home_dex": 71, "away_dex": 22}, {"row": [141, 116, 77, 52, 13], "home_seed": 143, "away_seed": 116, "home": "Fighting Dojo", "away": "Snowbelle City", "home_dex": 2, "away_dex": 76}, {"row": [140, 117, 76, 53, 12], "home_seed": 140, "away_seed": 117, "home": "Circhester Bay", "away": "Aquacorde Town", "home_dex": 102, "away_dex": 77}, {"row": [139, 118, 75, 54, 11], "home_seed": 139, "away_seed": 118, "home": "Dewford Town", "away": "Mount Mortar", "home_dex": 17, "away_dex": 140}, {"row": [138, 119, 74, 55, 10], "home_seed": 138, "away_seed": 119, "home": "Gateon Port", "away": "Pewter City", "home_dex": 114, "away_dex": 15}, {"row": [137, 120, 73, 56, 9], "home_seed": 137, "away_seed": 120, "home": "Viridian City", "away": "Mossdeep City", "home_dex": 16, "away_dex": 26}, {"row": [136, 121, 72, 57, 8], "home_seed": 136, "away_seed": 121, "home": "Saffron City", "away": "New Bark Town", "home_dex": 11, "away_dex": 141}, {"row": [135, 122, 71, 58, 7], "home_seed": 135, "away_seed": 122, "home": "Cycling Road", "away": "Coumarine City", "home_dex": 1, "away_dex": 70}, {"row": [134, 123, 70, 59, 6], "home_seed": 134, "away_seed": 123, "home": "Poni Meadow", "away": "Floccesy Town", "home_dex": 82, "away_dex": 51}, {"row": [133, 124, 69, 60, 5], "home_seed": 133, "away_seed": 124, "home": "Oreburgh City", "away": "Cerulean City", "home_dex": 39, "away_dex": 10}, {"row": [132, 125, 68, 61, 4], "home_seed": 132, "away_seed": 125, "home": "Vientown", "away": "Heahea City", "home_dex": 124, "away_dex": 94}, {"row": [131, 126, 67, 62, 3], "home_seed": 131, "away_seed": 126, "home": "Haruba Village", "away": "Blackthorn City", "home_dex": 122, "away_dex": 143}, {"row": [130, 127, 66, 63, 2], "home_seed": 130, "away_seed": 127, "home": "Montenevera", "away": "Icirrus City", "home_dex": 145, "away_dex": 54}, {"row": [129, 128, 65, 64, 1], "home_seed": 129, "away_seed": 128, "home": "Boyleland", "away": "Mahogany Town", "home_dex": 121, "away_dex": 137}], "swap_log": [{"bracket": "Draw", "row": 5, "swapped_seed": 156, "with_seed": 157, "reason": "same region"}, {"bracket": "Draw", "row": 8, "swapped_seed": 153, "with_seed": 154, "reason": "same region"}, {"bracket": "Draw", "row": 19, "swapped_seed": 142, "with_seed": 143, "reason": "same division"}, {"bracket": "Draw", "row": 21, "swapped_seed": 140, "with_seed": 142, "reason": "same region"}, {"bracket": "Draw", "row": 27, "swapped_seed": 134, "with_seed": 138, "reason": "same region"}, {"bracket": "Process", "row": 20, "swapped_seed": 141, "with_seed": 143, "reason": "same region"}], "process_is_placeholder": false};
-function pacupRowHtml(g, winnerSet, scoreByTeam) {
+function pacupRowHtml(g, winnerSet, scoreByTeam, ctx) {
   const homeWon = winnerSet.has(g.home);
   const awayWon = winnerSet.has(g.away);
   const result = scoreByTeam.get(g.home) || scoreByTeam.get(g.away);
-  const awayHtml = sideNameHtml(g.away, result && !awayWon);
-  const homeHtml = sideNameHtml(g.home, result && !homeWon);
   let scoreText = '&ndash;';
   if (result) {
     const homeScore = homeWon ? result.winner_score : result.loser_score;
@@ -1637,18 +1662,18 @@ function pacupRowHtml(g, winnerSet, scoreByTeam) {
   }
   return `
     <tr>
-      <td class="sb-away"><span class="sb-rank">#${g.away_seed}</span> ${awayHtml}</td>
+      <td class="sb-away">${cupSideHtml(ctx, g.away, g.away_seed, result && !awayWon, 'away')}</td>
       <td class="sb-score">${scoreText}</td>
-      <td class="sb-home">${homeHtml} <span class="sb-rank">#${g.home_seed}</span></td>
+      <td class="sb-home">${cupSideHtml(ctx, g.home, g.home_seed, result && !homeWon, 'home')}</td>
     </tr>
   `;
 }
-function pacupPreviewRowHtml(e) {
+function pacupPreviewRowHtml(e, ctx) {
   return `
     <tr>
-      <td class="sb-away"><span class="sb-rank">#${e.away_seed}</span> ${winnerNameHtml(e.away)}</td>
+      <td class="sb-away">${cupSideHtml(ctx, e.away, e.away_seed, false, 'away')}</td>
       <td class="sb-score">&ndash;</td>
-      <td class="sb-home">${winnerNameHtml(e.home)} <span class="sb-rank">#${e.home_seed}</span></td>
+      <td class="sb-home">${cupSideHtml(ctx, e.home, e.home_seed, false, 'home')}</td>
     </tr>
   `;
 }
@@ -1676,7 +1701,8 @@ function renderPaCup() {
     });
 
     const sections = [
-      { label: 'Round 1', rows: round1Entries.map(e => pacupRowHtml(e, round1WinnerSet, round1ScoreByTeam)).join('') },
+      { label: 'Round 1', rows: round1Entries.map(e => pacupRowHtml(e, round1WinnerSet, round1ScoreByTeam,
+                                                                { cup: 'PA', bracket, round: 1 })).join('') },
     ];
 
     // Rounds 2-N (N = the last bracket round the engine emitted):
@@ -1701,9 +1727,10 @@ function renderPaCup() {
           scoreByTeam.set(g.winner, g);
           scoreByTeam.set(g.loser, g);
         });
-        sections.push({ label: `Round ${rnd}`, rows: entries.map(e => pacupRowHtml(e, winnerSet, scoreByTeam)).join('') });
+        sections.push({ label: `Round ${rnd}`, rows: entries.map(e => pacupRowHtml(e, winnerSet, scoreByTeam,
+                                                                            { cup: 'PA', bracket, round: rnd })).join('') });
       } else {
-        sections.push({ label: `Round ${rnd}`, rows: entries.map(pacupPreviewRowHtml).join('') });
+        sections.push({ label: `Round ${rnd}`, rows: entries.map(e => pacupPreviewRowHtml(e, { cup: 'PA', bracket, round: rnd })).join('') });
         break;
       }
     }
@@ -1752,7 +1779,7 @@ const PA_MUTUAL_STAGE = {};
 // winner's name -- so a tie split 1-1 showed BOTH teams as the winner of
 // the matchup. Only the aggregate decides a tie, so only the aggregate row
 // colours anybody as having won it.
-function rdsMutualTieRows(g, results) {
+function rdsMutualTieRows(g, results, cup, stage) {
   const legs = (results || []).filter(r => r.winner === g.home || r.winner === g.away
                                         || r.loser === g.home || r.loser === g.away);
   const byLeg = new Map(legs.map(r => [r.leg, r]));
@@ -1770,11 +1797,11 @@ function rdsMutualTieRows(g, results) {
     const away = flip ? g.home : g.away, awaySeed = flip ? g.home_seed : g.away_seed;
     const r = byLeg.get(leg);
     const score = r ? `${scoreOf(r, away)}&ndash;${scoreOf(r, home)}` : '&ndash;';
-    const nm = (n) => sideNameHtml(n, r && r.winner !== n);
+    const ctx = { cup, bracket: stage, round: leg };
     return `<tr>
-      <td class="sb-away"><span class="sb-rank">#${awaySeed}</span> ${nm(away)}</td>
+      <td class="sb-away">${cupSideHtml(ctx, away, awaySeed, r && r.winner !== away, 'away')}</td>
       <td class="sb-score"><span class="sb-leg">L${leg}</span>${score}</td>
-      <td class="sb-home">${nm(home)} <span class="sb-rank">#${homeSeed}</span></td>
+      <td class="sb-home">${cupSideHtml(ctx, home, homeSeed, r && r.winner !== home, 'home')}</td>
     </tr>`;
   }).join('');
 
@@ -1788,11 +1815,12 @@ function rdsMutualTieRows(g, results) {
     // _rds_mutual_tie_winner() in the engine.
     const winner = homeTot !== awayTot ? (homeTot > awayTot ? g.home : g.away)
                                        : (g.home_seed <= g.away_seed ? g.home : g.away);
-    const nm = (n) => sideNameHtml(n, n !== winner);
+    // The aggregate line carries the rank each team took into the tie (leg 1).
+    const ctx = { cup, bracket: stage, round: 1 };
     html += `<tr class="sb-agg">
-      <td class="sb-away"><span class="sb-rank">#${g.away_seed}</span> ${nm(g.away)}</td>
+      <td class="sb-away">${cupSideHtml(ctx, g.away, g.away_seed, g.away !== winner, 'away')}</td>
       <td class="sb-score"><span class="sb-leg">AGG</span>${awayTot}&ndash;${homeTot}</td>
-      <td class="sb-home">${nm(g.home)} <span class="sb-rank">#${g.home_seed}</span></td>
+      <td class="sb-home">${cupSideHtml(ctx, g.home, g.home_seed, g.home !== winner, 'home')}</td>
     </tr>`;
   }
   return html;
@@ -1800,7 +1828,7 @@ function rdsMutualTieRows(g, results) {
 // Shared by the RDS and PA tabs. `bo3Final` marks PA, whose final is a
 // best of three rather than two legs + aggregate: until that is modelled it
 // renders as the bare pairing, since two-leg rows would misstate the format.
-function renderMutualStage(sectionId, tableId, d, cupLabel, bo3Final) {
+function renderMutualStage(sectionId, tableId, d, cupLabel, bo3Final, cup) {
   const section = document.getElementById(sectionId);
   const tbody = document.querySelector(`#${tableId} tbody`);
   if (!section || !tbody) return;
@@ -1810,7 +1838,7 @@ function renderMutualStage(sectionId, tableId, d, cupLabel, bo3Final) {
   if (!d) { section.hidden = true; tbody.innerHTML = ''; return; }
   section.hidden = false;
   let html = `<tr><td colspan="3" class="sb-round">${cupLabel} &mdash; Semifinal</td></tr>`;
-  html += d.semifinal.map(g => rdsMutualTieRows(g, d.results.SF)).join('');
+  html += d.semifinal.map(g => rdsMutualTieRows(g, d.results.SF, cup, 'SF')).join('');
   if (d.bye) {
     html += `<tr><td colspan="3" class="qual-sub" style="padding:4px 10px">${winnerNameHtml(d.bye)} byes to the final</td></tr>`;
   }
@@ -1818,9 +1846,9 @@ function renderMutualStage(sectionId, tableId, d, cupLabel, bo3Final) {
   if (!d.final) {
     html += '<tr><td colspan="3" class="qual-sub" style="padding:4px 10px">Awaiting the semifinal.</td></tr>';
   } else if (bo3Final) {
-    html += bo3SeriesRows(d.final, d.final_series);
+    html += bo3SeriesRows(d.final, d.final_series, cup);
   } else {
-    html += rdsMutualTieRows(d.final, d.results.Final);
+    html += rdsMutualTieRows(d.final, d.results.Final, cup, 'Final');
   }
   html += `<tr><td colspan="3" class="qual-sub" style="padding:4px 10px">${escQ(d.note)}</td></tr>`;
   tbody.innerHTML = html;
@@ -1830,16 +1858,16 @@ function renderMutualStage(sectionId, tableId, d, cupLabel, bo3Final) {
 // engine (pa_final_series) decides every host; this only draws them. Game 3
 // is listed as soon as the series is level, and a 2-0 series says outright
 // that it owed no decider.
-function bo3SeriesRows(f, series) {
+function bo3SeriesRows(f, series, cup) {
   const seedOf = {[f.home]: f.home_seed, [f.away]: f.away_seed};
   const legs = (series && series.legs) || [];
   let html = legs.map(l => {
     const r = l.result;
-    const nm = n => sideNameHtml(n, r && r.winner !== n);
+    const ctx = { cup, bracket: 'Final', round: l.leg };
     return `<tr>
-      <td class="sb-away"><span class="sb-rank">#${seedOf[l.away]}</span> ${nm(l.away)}</td>
+      <td class="sb-away">${cupSideHtml(ctx, l.away, seedOf[l.away], r && r.winner !== l.away, 'away')}</td>
       <td class="sb-score"><span class="sb-leg">G${l.leg}</span>${r ? `${r.away_score}&ndash;${r.home_score}` : '&ndash;'}</td>
-      <td class="sb-home">${nm(l.home)} <span class="sb-rank">#${seedOf[l.home]}</span></td>
+      <td class="sb-home">${cupSideHtml(ctx, l.home, seedOf[l.home], r && r.winner !== l.home, 'home')}</td>
     </tr>`;
   }).join('');
   if (legs.length === 2 && !series.swept) {
@@ -1852,10 +1880,10 @@ function bo3SeriesRows(f, series) {
   return html;
 }
 function renderRdsMutual() {
-  renderMutualStage('rds-mutual-section', 'rds-mutual-table', RDS_MUTUAL_STAGE[rdsCup], `${rdsCup} Cup`, false);
+  renderMutualStage('rds-mutual-section', 'rds-mutual-table', RDS_MUTUAL_STAGE[rdsCup], `${rdsCup} Cup`, false, 'RDS');
 }
 function renderPaMutual() {
-  renderMutualStage('pa-mutual-section', 'pa-mutual-table', PA_MUTUAL_STAGE.PA, 'PA Cup', true);
+  renderMutualStage('pa-mutual-section', 'pa-mutual-table', PA_MUTUAL_STAGE.PA, 'PA Cup', true, 'PA');
 }
 
 // ---------- Qualification tab ----------
