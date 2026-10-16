@@ -34,7 +34,7 @@
     padding: 28px 32px 20px;
     border-bottom: 1px solid var(--border);
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 12px;
@@ -43,17 +43,22 @@
     letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); text-decoration: none;
     border: 1px solid var(--border); border-radius: 4px; padding: 6px 12px; }
   .dash-link:hover { border-color: var(--accent); }
+  /* The wordmark fills the header's height, with the season line beside it on
+     the same baseline (per explicit request, 2026-10-16) -- it used to sit
+     beneath a 32px wordmark. */
+  .brand { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 18px; }
   .wordmark {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 800;
-    font-size: 32px;
+    font-size: 54px;
+    line-height: 1;
     letter-spacing: 0.03em;
     color: var(--text);
     text-transform: uppercase;
   }
   .wordmark span { color: var(--accent); }
   .subtitle {
-    font-size: 13px;
+    font-size: 15px;
     color: var(--text-dim);
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -567,7 +572,7 @@
 </head>
 <body>
 <header>
-  <div>
+  <div class="brand">
     <div class="wordmark">DECK<span>FIELD</span></div>
     <div class="subtitle">Season 10 &mdash; preseason</div>
   </div>

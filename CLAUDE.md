@@ -3728,6 +3728,13 @@ DECKFIELD's Schedule/Teams/Region Climate inputs), Calendar (the full
 one sub-tab each), Qualification, and World
 Championship (Groups / Play-in / Bracket).
 
+**The header puts the season line beside the wordmark** (per explicit
+request, 2026-10-16): `.brand` sets the `DECKFIELD` wordmark at 54px (line-height
+1, filling the header's old two-line height, which stays 103px) with
+`Season 10 -- preseason` on its baseline to the right. `_replace_subtitle()`
+still finds the unchanged `<div class="subtitle">`. Below ~500px the season
+line wraps under the wordmark.
+
 **Per explicit instruction, the dashboard must always be regenerated
 whenever new results are added.** `regenerate_dashboard.py` (added
 2026-08-05) does this: `python3 regenerate_dashboard.py` after any
