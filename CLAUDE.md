@@ -3736,7 +3736,8 @@ still finds the unchanged `<div class="subtitle">`. Below ~500px the season
 line wraps under the wordmark.
 
 **Rankings shows each team's rank movement** (per explicit request,
-2026-10-16): a sortable `±` column after Team, green `▲n` / red `▼n` / a dim
+2026-10-16): a sortable `±` column between the rank and the team name
+(pinned with them when the table scrolls sideways), green `▲n` / red `▼n` / a dim
 dash for no change, blank when there is no earlier ranking (preseason).
 Renderer-only: `setRankMoves()` reads `RANK_ELO_HISTORY` -- the previous
 ranking is the checkpoint before the one the current ranks ARE (the last
