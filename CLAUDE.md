@@ -3728,6 +3728,28 @@ DECKFIELD's Schedule/Teams/Region Climate inputs), Calendar (the full
 one sub-tab each), Qualification, and World
 Championship (Groups / Play-in / Bracket).
 
+**The header puts the season line beside the wordmark** (per explicit
+request, 2026-10-16): `.brand` sets the `DECKFIELD` wordmark at 54px (line-height
+1, filling the header's old two-line height, which stays 103px) with
+`Season 10 -- preseason` on its baseline to the right. `_replace_subtitle()`
+still finds the unchanged `<div class="subtitle">`. Below ~500px the season
+line wraps under the wordmark.
+
+**Rankings shows each team's rank movement** (per explicit request,
+2026-10-16): a sortable `±` column between the rank and the team name
+(pinned with them when the table scrolls sideways), green `▲n` / red `▼n` / a dim
+dash for no change, blank when there is no earlier ranking (preseason).
+Renderer-only: `setRankMoves()` reads `RANK_ELO_HISTORY` -- the previous
+ranking is the checkpoint before the one the current ranks ARE (the last
+checkpoint, when every team's last entry equals its current rank; otherwise
+the last checkpoint itself), so `t.move = previous - current`. **The
+`RANK_ELO_HISTORY` const now sits just above the Rankings renderer**: the
+first `renderRankings()` call runs at load, and a top-level `const` read before
+its line throws (temporal dead zone); `_replace_const` finds it anywhere.
+Verified on a played-through scratch season: 0 of 160 moves differ from the
+last two Rank History columns, they sum to 0, both sort directions work, and
+zero `pageerror`.
+
 **Per explicit instruction, the dashboard must always be regenerated
 whenever new results are added.** `regenerate_dashboard.py` (added
 2026-08-05) does this: `python3 regenerate_dashboard.py` after any
