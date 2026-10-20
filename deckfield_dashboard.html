@@ -147,6 +147,22 @@
   .move-none { color: var(--text-dim); }
   .team-name { font-weight: 600; }
   .num { font-variant-numeric: tabular-nums; text-align: right; }
+  /* Division chip: Season 6's pyramid tiers (Master / Ultra / Great / Basic),
+     each band fading from its top division to its bottom one. Outlined, so it
+     never reads as a region's filled badge. */
+  .div-chip {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 5px;
+    border: 1px solid;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    min-width: 26px;
+    text-align: center;
+    white-space: nowrap;
+  }
   .region-tag {
     font-size: 11px;
     color: var(--text-dim);
@@ -969,6 +985,27 @@ function regionTextStyle(region) {
   const c = REGION_COLORS[region];
   return c ? `color:${c.bright};font-weight:700` : '';
 }
+// Division colours follow Season 6's league pyramid -- Master (D1), Ultra
+// (D2-3), Great (D4-6), Basic (D7-10) -- and fade within each band from its
+// top division to its bottom one.
+function divisionTier(d) {
+  d = Number(d);
+  return d === 1 ? 'Master' : d <= 3 ? 'Ultra' : d <= 6 ? 'Great' : 'Basic';
+}
+function divisionColor(d) {
+  const c = {1: '#C77DFF', 2: '#F2D04B', 3: '#A7923D', 4: '#5AA9FF', 5: '#4A86C8',
+             6: '#3E6A9C', 7: '#E06A5C', 8: '#B95B51', 9: '#9B4F48', 10: '#7E4440'}[Number(d)];
+  return c || 'var(--text-dim)';
+}
+function divisionChipHtml(d, label) {
+  if (d == null) return '';
+  const c = divisionColor(d);
+  const flush = label != null ? 'margin-left:0;' : '';
+  return `<span class="div-chip" style="${flush}color:${c};border-color:${c}" title="Division ${d} (${divisionTier(d)} tier)">${label ?? 'D' + d}</span>`;
+}
+function divisionTextStyle(d) {
+  return `color:${divisionColor(d)};font-weight:700`;
+}
 const REGION_BY_NAME = Object.fromEntries(DATA.teams.map(t => [t.name, t.region]));
 function winnerNameHtml(teamName) {
   const region = REGION_BY_NAME[teamName];
@@ -1091,7 +1128,7 @@ function renderRankings() {
       <td class="rank-num col-sticky-1 ${t.rank<=3?'top3':''}">${t.rank}</td>
       <td class="num narrow col-sticky-move">${rankMoveHtml(t.move)}</td>
       <td class="team-name col-sticky-2">${winnerNameHtml(t.name)}</td>
-      <td>${regionBadgeHtml(t.region)}<span class="region-tag">&middot;D${t.division}</span></td>
+      <td style="white-space:nowrap">${regionBadgeHtml(t.region)}${divisionChipHtml(t.division)}</td>
       <td class="num group-start">${t.overall}</td>
       <td class="num">${t.regional}</td>
       <td class="num">${t.league}</td>
@@ -1323,7 +1360,7 @@ function renderStandings() {
 
     const rows = standingsOrder(groupTeams, standingsMode);
     const label = standingsMode === 'region' ? regionName(groupVal) : `Division ${groupVal}`;
-    const headerStyle = standingsMode === 'region' ? regionTextStyle(groupVal) : '';
+    const headerStyle = standingsMode === 'region' ? regionTextStyle(groupVal) : divisionTextStyle(groupVal);
     const rowsHtml = rows.map((t, i) => {
       const marker = standingsMode === 'division' ? PROMO_RELEGATION[String(groupVal)][i] : null;
       const markerClass = marker && marker[0] === 'P' ? 'promo-marker' : marker ? 'releg-marker' : '';
@@ -1391,7 +1428,7 @@ function renderOrders() {
   const regions = REGION_ORDER.filter(r => d.regions[r])
     .map(r => box(regionName(r), regionTextStyle(r), d.regions[r], true));
   const divisions = Object.keys(d.divisions).sort((a, b) => a - b)
-    .map(k => box(`Division ${k}`, '', d.divisions[k], false));
+    .map(k => box(`Division ${k}`, divisionTextStyle(k), d.divisions[k], false));
   grid.innerHTML = regions.join('') + divisions.join('');
   const note = document.getElementById('orders-note');
   note.innerHTML = `Season ${d.season} plays Outline ${d.outline}: the fifteen round definitions with every host `
@@ -1432,7 +1469,7 @@ function renderStrengthTable(mode, tbodySelector) {
   tbody.innerHTML = groups.map((g, i) => {
     const row = data[g];
     if (!row) return '';
-    const label = mode === 'regional' ? regionBadgeHtml(g) : `Division ${g}`;
+    const label = mode === 'regional' ? regionBadgeHtml(g) : divisionChipHtml(g, `Division ${g}`);
     return `
       <tr>
         <td class="rank-num ${i<3?'top3':''}">${i+1}</td>
@@ -2034,7 +2071,7 @@ function renderQualification() {
     <tr>
       <td class="rank-num col-sticky-1">${r.seq}</td>
       <td class="team-name left col-sticky-2">${winnerNameHtml(r.name)}</td>
-      <td class="left">${r.region ? regionBadgeHtml(r.region, regionName(r.region)) : ''}${r.division ? ` <span class="qual-sub">D${r.division}</span>` : ''}</td>
+      <td class="left">${r.region ? regionBadgeHtml(r.region, regionName(r.region)) : ''}${divisionChipHtml(r.division)}</td>
       <td class="num">${r.ovr == null ? '&ndash;' : r.ovr.toFixed(2)}</td>
       <td class="num">${r.rank == null ? '&ndash;' : r.rank}</td>
       <td class="num">${r.playoff_score == null ? '&ndash;' : r.playoff_score.toFixed(2)}</td>

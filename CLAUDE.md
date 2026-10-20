@@ -3750,6 +3750,21 @@ Verified on a played-through scratch season: 0 of 160 moves differ from the
 last two Rank History columns, they sum to 0, both sort directions work, and
 zero `pageerror`.
 
+**Divisions have colours, Season 6's pyramid** (per explicit request,
+2026-10-20, chosen from three mock-ups: "a nice throwback to the original
+system"): Master D1 purple, Ultra D2-3 yellow, Great D4-6 blue, Basic D7-10
+red, each band fading from its top division to its bottom one
+(`divisionColor()`; `divisionTier()` names the band in the tooltip). Drawn as
+an OUTLINED chip (`divisionChipHtml`, `.div-chip`) so it never reads as a
+region's filled badge -- the ten regions already use nearly every hue. Used on
+Rankings' Reg/Div, Qualification's Reg/Div and RL Strength's League table; the
+League Standings and Standings > Orders box headers take the colour as text
+(`divisionTextStyle`). Renderer-only, and the colours live inside the function
+rather than a top-level `const`, so the manifest is untouched. Verified at
+1920/1600/1240px: all 160 Rankings rows and 48 Qualification rows carry the
+right chip, row height unchanged, 0 clipped cells or Standings boxes, zero
+`pageerror` on every tab and sub-view.
+
 **Per explicit instruction, the dashboard must always be regenerated
 whenever new results are added.** `regenerate_dashboard.py` (added
 2026-08-05) does this: `python3 regenerate_dashboard.py` after any
